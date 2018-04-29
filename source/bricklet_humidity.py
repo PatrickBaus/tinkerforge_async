@@ -234,7 +234,7 @@ class BrickletHumidity(Device):
             device=self,
             function_id=BrickletHumidity.FunctionID.set_analog_value_callback_threshold,
             data=pack_payload((option.value.encode(), int(minimum), int(maximum)), 'c H H'),
-            response_expected=True
+            response_expected=response_expected
         )
         if response_expected:
             header, _ = result
@@ -273,7 +273,7 @@ class BrickletHumidity(Device):
             device=self,
             function_id=BrickletHumidity.FunctionID.set_debounce_period,
             data=pack_payload((int(debounce_period),), 'I'),
-            response_expected=True
+            response_expected=response_expected
         )
         if response_expected:
             header, _ = result
