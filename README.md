@@ -4,5 +4,4 @@ This is a reimplementation of the Tinkerforge Python bindings ([Original Python 
 # Supported Bricks/Bricklets
 |Bricklet|Supported|Tested|
 |--|--|--|
-|[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|![supported](/images/light_green_check.png)|![tested](/images/light_green_check.png)
-
+|[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|  :heavy_check_mark:|
