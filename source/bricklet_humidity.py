@@ -189,6 +189,7 @@ class BrickletHumidity(Device):
 
         The default value is ('x', 0, 0).
         """
+        assert type(option) is BrickletHumidity.ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidity.FunctionID.set_humidity_callback_threshold,
@@ -230,6 +231,7 @@ class BrickletHumidity(Device):
 
         The default value is ('x', 0, 0).
         """
+        assert type(option) is BrickletHumidity.ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidity.FunctionID.set_analog_value_callback_threshold,
@@ -311,14 +313,15 @@ class BrickletHumidity(Device):
         payload[1] = base58decode(payload[1])
         return GetIdentity(*payload)
 
-    def register_callback_queue(self, callback_id, queue):
+    def register_callback_queue(self, callback_function, queue):
         """
         Registers the given *function* with the given *callback_id*.
         """
+        assert type(callback_function) is BrickletHumidity.CallbackID
         if queue is None:
-            self.registered_queues.pop(callback_id, None)
+            self.registered_queues.pop(callback_function, None)
         else:
-            self.registered_queues[callback_id] = queue
+            self.registered_queues[callback_function] = queue
 
     def __value_to_SI(self, value):
         """

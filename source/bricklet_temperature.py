@@ -132,6 +132,7 @@ class BrickletTemperature(Device):
 
         The default value is ('x', 0, 0).
         """
+        assert type(option) is BrickletTemperature.ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletTemperture.FunctionID.set_temperature_callback_threshold,
@@ -190,7 +191,7 @@ class BrickletTemperature(Device):
         )
         return unpack_payload(payload, 'I')
 
-    def set_i2c_mode(self, mode=I2cOption.fast, response_expected=True):
+    def set_i2c_mode(self, mode=BrickletTemperature.I2cOption.fast, response_expected=True):
         """
         Sets the I2C mode. Possible modes are:
 
@@ -206,10 +207,11 @@ class BrickletTemperature(Device):
 
         .. versionadded:: 2.0.1$nbsp;(Plugin)
         """
+        assert type(mode) is BrickletTemperature.I2cOption
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletTemperature.FunctionID.set_i2c_mode,
-            data=pack_payload(mode,), 'B'),
+            data=pack_payload(mode.value,), 'B'),
             response_expected=response_expected
         )
         if response_expected:
@@ -250,14 +252,15 @@ class BrickletTemperature(Device):
         payload[1] = base58decode(payload[1])
         return GetIdentity(*payload)
 
-    def register_callback_queue(self, callback_id, queue):
+    def register_callback_queue(self, callback_function, queue):
         """
         Registers the given *function* with the given *callback_id*.
         """
+        assert type(callback_function) is BrickletTemperature.CallbackID
         if queue is None:
-            self.registered_queues.pop(callback_id, None)
+            self.registered_queues.pop(callback_function, None)
         else:
-            self.registered_queues[callback_id] = queue
+            self.registered_queues[callback_function] = queue
 
     def __value_to_SI(self, value):
         """
