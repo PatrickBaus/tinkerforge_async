@@ -11,7 +11,7 @@ GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardw
 
 class BrickletTemperature(Device):
     """
-    Measures ambient temperature with 0.5°C accuracy
+    Measures ambient temperature with 0.5 K accuracy
     """
 
     DEVICE_IDENTIFIER = 216
@@ -90,8 +90,6 @@ class BrickletTemperature(Device):
 
         The default value is 0.
         """
-        period = int(period)
-
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletTemperture.FunctionID.set_temperature_callback_period,
@@ -103,7 +101,7 @@ class BrickletTemperature(Device):
             # TODO raise errors
             return header['flags'] == Flags.ok
 
-    def get_temperature_callback_period(self):
+    async def get_temperature_callback_period(self):
         """
         Returns the period as set by :func:`Set Temperature Callback Period`.
         """
@@ -180,7 +178,7 @@ class BrickletTemperature(Device):
             header, _ = result
             return header['flags'] == Flags.ok
 
-    def get_debounce_period(self):
+    async def get_debounce_period(self):
         """
         Returns the debounce period as set by :func:`Set Debounce Period`.
         """
@@ -191,7 +189,7 @@ class BrickletTemperature(Device):
         )
         return unpack_payload(payload, 'I')
 
-    def set_i2c_mode(self, mode=BrickletTemperature.I2cOption.fast, response_expected=True):
+    async def set_i2c_mode(self, mode=BrickletTemperature.I2cOption.fast, response_expected=True):
         """
         Sets the I2C mode. Possible modes are:
 
@@ -218,7 +216,7 @@ class BrickletTemperature(Device):
             header, _ = result
             return header['flags'] == Flags.ok
 
-    def get_i2c_mode(self):
+    async def get_i2c_mode(self):
         """
         Returns the I2C mode as set by :func:`Set I2C Mode`.
 
@@ -231,7 +229,7 @@ class BrickletTemperature(Device):
         )
         return I2cOption(unpack_payload(payload, 'B'))
 
-    def get_identity(self):
+    async def get_identity(self):
         """
         Returns the UID, the UID where the Bricklet is connected to,
         the position, the hardware and firmware version as well as the
@@ -252,7 +250,7 @@ class BrickletTemperature(Device):
         payload[1] = base58decode(payload[1])
         return GetIdentity(*payload)
 
-    def register_callback_queue(self, callback_function, queue):
+    async def register_callback_queue(self, callback_function, queue):
         """
         Registers the given *function* with the given *callback_id*.
         """
