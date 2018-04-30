@@ -4,6 +4,7 @@ from decimal import Decimal
 from enum import Enum, IntEnum, unique
 
 from .ip_connection import Device, IPConnectionAsync, Flags, UnknownFunctionError
+from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'min', 'max'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
@@ -37,11 +38,11 @@ class BrickletTemperature(Device):
 
     @unique
     class ThresholdOption(Enum):
-        off = 'x'
-        outside = 'o'
-        inside = 'i'
-        less_than = '<'
-        greater_than = '>'
+        off = b'x'
+        outside = b'o'
+        inside = b'i'
+        less_than = b'<'
+        greater_than = b'>'
 
     @unique
     class I2cOption(IntEnum):
@@ -77,7 +78,7 @@ class BrickletTemperature(Device):
             function_id=BrickletTemperture.FunctionID.get_temperature,
             response_expected=True
         )
-        return self.value_to_SI(unpack_payload(payload, 'h'))
+        return self.__value_to_SI(unpack_payload(payload, 'h'))
 
     async def set_temperature_callback_period(self, period=0, response_expected=True):
         """
@@ -134,7 +135,7 @@ class BrickletTemperature(Device):
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletTemperture.FunctionID.set_temperature_callback_threshold,
-            data=pack_payload((option.value.encode(), int(minimum), int(maximum)), 'c h h'),
+            data=pack_payload((option.value, int(minimum), int(maximum)), 'c h h'),
             response_expected=response_expected
         )
         if response_expected:
@@ -246,6 +247,7 @@ class BrickletTemperature(Device):
         )
         payload = unpack_payload(payload, '8s 8s c 3B 3B H')
         payload[0] = base58decode(payload[0])
+        payload[1] = base58decode(payload[1])
         return GetIdentity(*payload)
 
     def register_callback_queue(self, callback_id, queue):
@@ -257,7 +259,7 @@ class BrickletTemperature(Device):
         else:
             self.registered_queues[callback_id] = queue
 
-    def value_to_SI(self, value):
+    def __value_to_SI(self, value):
         """
         Convert to the sensor value to SI units
         """
@@ -270,7 +272,7 @@ class BrickletTemperature(Device):
             # ValueError: raised if the callbackID is unknown
             raise UnknownFunctionError from None
         else:
-            payload = self.value_to_SI(
+            payload = self.__value_to_SI(
                           unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
                       )
             super().process_callback(header, payload)

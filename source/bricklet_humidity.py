@@ -44,11 +44,11 @@ class BrickletHumidity(Device):
 
     @unique
     class ThresholdOption(Enum):
-        off = 'x'
-        outside = 'o'
-        inside = 'i'
-        less_than = '<'
-        greater_than = '>'
+        off = b'x'
+        outside = b'o'
+        inside = b'i'
+        less_than = b'<'
+        greater_than = b'>'
 
     CALLBACK_FORMATS = {
         CallbackID.humidity: 'H',
@@ -81,7 +81,7 @@ class BrickletHumidity(Device):
             function_id=BrickletHumidity.FunctionID.get_humidity,
             response_expected=True
         )
-        return self.value_to_SI(unpack_payload(payload, 'H'))
+        return self.__value_to_SI(unpack_payload(payload, 'H'))
 
     async def get_analog_value(self):
         """
@@ -192,7 +192,7 @@ class BrickletHumidity(Device):
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidity.FunctionID.set_humidity_callback_threshold,
-            data=pack_payload((option.value.encode(), int(minimum), int(maximum)), 'c H H'),
+            data=pack_payload((option.value, int(minimum), int(maximum)), 'c H H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -233,7 +233,7 @@ class BrickletHumidity(Device):
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidity.FunctionID.set_analog_value_callback_threshold,
-            data=pack_payload((option.value.encode(), int(minimum), int(maximum)), 'c H H'),
+            data=pack_payload((option.value, int(minimum), int(maximum)), 'c H H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -308,6 +308,7 @@ class BrickletHumidity(Device):
         )
         payload = unpack_payload(payload, '8s 8s c 3B 3B H')
         payload[0] = base58decode(payload[0])
+        payload[1] = base58decode(payload[1])
         return GetIdentity(*payload)
 
     def register_callback_queue(self, callback_id, queue):
@@ -319,7 +320,7 @@ class BrickletHumidity(Device):
         else:
             self.registered_queues[callback_id] = queue
 
-    def value_to_SI(self, value):
+    def __value_to_SI(self, value):
         """
         Convert to the sensor value to SI units
         """
@@ -334,5 +335,5 @@ class BrickletHumidity(Device):
         else:
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             if header['function_id'] in (BrickletHumidity.CallbackID.humidity, BrickletHumidity.CallbackID.humidity_reached):
-                payload = self.value_to_SI(payload)
+                payload = self.__value_to_SI(payload)
             super().process_callback(header, payload)
