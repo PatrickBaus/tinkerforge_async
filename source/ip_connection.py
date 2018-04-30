@@ -45,7 +45,7 @@ class Flags(IntEnum):
     invalid_parameter = 1
     function_not_supported = 2
 
-DEFAULT_WAIT_TIMEOUT = 1 # in seconds
+DEFAULT_WAIT_TIMEOUT = 2.5 # in seconds
 def parse_header(data):
     uid, payload_size, function_id, options, flags = struct.unpack_from(IPConnectionAsync.HEADER_FORMAT, data)
     try:
