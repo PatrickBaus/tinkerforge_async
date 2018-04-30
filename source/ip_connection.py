@@ -85,7 +85,7 @@ class Device(object):
         self.uid = uid if uid <= 0xFFFFFFFF else uid64_to_uid32(uid)
         self.ipcon = ipcon
         self.api_version = (0, 0, 0)
-        self.registered_queues = {}
+        self.__registered_queues = {}
         self.high_level_callbacks = {}
 
         self.response_expected = [Device.RESPONSE_EXPECTED_INVALID_FUNCTION_ID] * 256
@@ -112,7 +112,7 @@ class Device(object):
         """
         try:
             # Try to push it to the output queue. If the queue is full, drop the oldest packet and insert it again
-            self.registered_queues[header['function_id']].put_nowait({
+            self.__registered_queues[header['function_id']].put_nowait({
                 'timestamp': int(time.time()),
                 'uid': self.uid,
                 'device_id': self.DEVICE_IDENTIFIER,
@@ -121,8 +121,17 @@ class Device(object):
             })
         except asyncio.QueueFull:
             # TODO: log a warning, that we are dropping packets
-            self.registered_queues[header['function_id']].get_nowait()
-            self.registered_queues[header['function_id']].put_nowait(payload)
+            self.__registered_queues[header['function_id']].get_nowait()
+            self.__registered_queues[header['function_id']].put_nowait(payload)
+
+    def register_event_queue(self, event_id, queue):
+        """
+        Registers the given *function* with the given *callback_id*.
+        """
+        if queue is None:
+            self.__registered_queues.pop(event_id, None)
+        else:
+            self.__registered_queues[event_id] = queue
 
 class IPConnectionAsync(object):
     FUNCTION_ENUMERATE = 254
@@ -327,15 +336,6 @@ class IPConnectionAsync(object):
     async def connect(self, host, port=4223):
         self.__reader, self.__writer = await asyncio.open_connection(host, port, loop=self.__loop)
         self.__main_loop_task = self.__loop.create_task(self.main_loop(host, port))
-
-    def register_queue(self, queue):
-        """
-        Registers the given *function* with the given *callback_id*.
-        """
-        if function is None:
-            self.registered_callbacks.pop(callback_id, None)
-        else:
-            self.registered_callbacks[callback_id] = function
 
     async def disconnect(self):
         self.__main_loop_task.cancel()

@@ -313,15 +313,12 @@ class BrickletHumidity(Device):
         payload[1] = base58decode(payload[1])
         return GetIdentity(*payload)
 
-    def register_callback_queue(self, callback_function, queue):
+    def register_event_queue(self, event_id, queue):
         """
         Registers the given *function* with the given *callback_id*.
         """
-        assert type(callback_function) is BrickletHumidity.CallbackID
-        if queue is None:
-            self.registered_queues.pop(callback_function, None)
-        else:
-            self.registered_queues[callback_function] = queue
+        assert type(event_id) is BrickletHumidity.CallbackID
+        super().register_event_queue(event_id, queue)
 
     def __value_to_SI(self, value):
         """
