@@ -177,7 +177,7 @@ class IPConnectionAsync(object):
 
     def __init__(self, loop):
         self.__loop = loop
-        self.__sequence_number = 11
+        self.__sequence_number = 0
         self.__timeout = DEFAULT_WAIT_TIMEOUT
         self.__pending_requests = {}
 
