@@ -220,7 +220,7 @@ class BrickletHumidity(Device):
         minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
         return GetHumidityCallbackThreshold(option, minimum, maximum)
 
-    async def set_analog_value_callback_threshold(self, option, minimum, maximum, response_expected=True):
+    async def set_analog_value_callback_threshold(self, option=ThresholdOption.off, minimum=0, maximum=0, response_expected=True):
         """
         Sets the thresholds for the :cb:`Analog Value Reached` callback.
 
