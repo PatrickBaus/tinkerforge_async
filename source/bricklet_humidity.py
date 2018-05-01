@@ -11,6 +11,37 @@ GetHumidityCallbackThreshold = namedtuple('HumidityCallbackThreshold', ['option'
 GetAnalogValueCallbackThreshold = namedtuple('AnalogValueCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
+@unique
+class CallbackID(IntEnum):
+    humidity = 13
+    analog_value = 14
+    humidity_reached = 15
+    analog_value_reached = 16
+
+@unique
+class FunctionID(IntEnum):
+    get_humidity = 1
+    get_analog_value = 2
+    set_humidity_callback_period = 3
+    get_humidity_callback_period = 4
+    set_analog_value_callback_period = 5
+    get_analog_value_callback_period = 6
+    set_humidity_callback_threshold = 7
+    get_humidity_callback_threshold = 8
+    set_analog_value_callback_threshold = 9
+    get_analog_value_callback_threshold = 10
+    set_debounce_period = 11
+    get_debounce_period = 12
+    get_identity = 255
+
+@unique
+class ThresholdOption(Enum):
+    off = 'x'
+    outside = 'o'
+    inside = 'i'
+    less_than = '<'
+    greater_than = '>'
+
 class BrickletHumidity(Device):
     """
     Measures relative humidity
@@ -20,36 +51,10 @@ class BrickletHumidity(Device):
     DEVICE_DISPLAY_NAME = 'Humidity Bricklet'
     DEVICE_URL_PART = 'humidity' # internal
 
-    @unique
-    class CallbackID(IntEnum):
-        humidity = 13
-        analog_value = 14
-        humidity_reached = 15
-        analog_value_reached = 16
-
-    @unique
-    class FunctionID(IntEnum):
-        get_humidity = 1
-        get_analog_value = 2
-        set_humidity_callback_period = 3
-        get_humidity_callback_period = 4
-        set_analog_value_callback_period = 5
-        get_analog_value_callback_period = 6
-        set_humidity_callback_threshold = 7
-        get_humidity_callback_threshold = 8
-        set_analog_value_callback_threshold = 9
-        get_analog_value_callback_threshold = 10
-        set_debounce_period = 11
-        get_debounce_period = 12
-        get_identity = 255
-
-    @unique
-    class ThresholdOption(Enum):
-        off = 'x'
-        outside = 'o'
-        inside = 'i'
-        less_than = '<'
-        greater_than = '>'
+    # Convenience imports, so that the user does not need to additionally import them
+    CallbackID = CallbackID
+    FunctionID = FunctionID
+    ThresholdOption = ThresholdOption
 
     CALLBACK_FORMATS = {
         CallbackID.humidity: 'H',
@@ -172,7 +177,7 @@ class BrickletHumidity(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_humidity_callback_threshold(self, option, minimum=0, maximum=0, response_expected=True):
+    async def set_humidity_callback_threshold(self, option=ThresholdOption.off, minimum=0, maximum=0, response_expected=True):
         """
         Sets the thresholds for the :cb:`Humidity Reached` callback.
 
@@ -190,7 +195,7 @@ class BrickletHumidity(Device):
 
         The default value is ('x', 0, 0).
         """
-        assert type(option) is BrickletHumidity.ThresholdOption
+        assert type(option) is ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidity.FunctionID.set_humidity_callback_threshold,
@@ -211,7 +216,7 @@ class BrickletHumidity(Device):
             response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, 'c h h')
-        option = BrickletHumidity.ThresholdOption(option)
+        option = ThresholdOption(option)
         minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
         return GetHumidityCallbackThreshold(option, minimum, maximum)
 
@@ -233,7 +238,7 @@ class BrickletHumidity(Device):
 
         The default value is ('x', 0, 0).
         """
-        assert type(option) is BrickletHumidity.ThresholdOption
+        assert type(option) is ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidity.FunctionID.set_analog_value_callback_threshold,
@@ -254,7 +259,7 @@ class BrickletHumidity(Device):
             response_expected=True
         )
         payload = unpack_payload(payload, 'c H H')
-        payload[0] = BrickletHumidity.ThresholdOption(payload[0])
+        payload[0] = ThresholdOption(payload[0])
         return GetAnalogValueCallbackThreshold(*payload)
 
     async def set_debounce_period(self, debounce_period=100, response_expected=True):
