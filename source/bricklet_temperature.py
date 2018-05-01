@@ -31,7 +31,7 @@ class BrickletTemperature(Device):
         get_temperature_callback_period = 3
         set_temperature_callback_threshold = 4
         get_temperature_callback_threshold = 5
-        set_debouce_period = 6
+        set_debounce_period = 6
         get_debounce_period = 7
         set_i2c_mode = 10
         get_i2c_mode = 11
@@ -39,11 +39,11 @@ class BrickletTemperature(Device):
 
     @unique
     class ThresholdOption(Enum):
-        off = b'x'
-        outside = b'o'
-        inside = b'i'
-        less_than = b'<'
-        greater_than = b'>'
+        off = 'x'
+        outside = 'o'
+        inside = 'i'
+        less_than = '<'
+        greater_than = '>'
 
     @unique
     class I2cOption(IntEnum):
@@ -76,7 +76,7 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperture.FunctionID.get_temperature,
+            function_id=BrickletTemperature.FunctionID.get_temperature,
             response_expected=True
         )
         return self.__value_to_SI(unpack_payload(payload, 'h'))
@@ -93,7 +93,7 @@ class BrickletTemperature(Device):
         """
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperture.FunctionID.set_temperature_callback_period,
+            function_id=BrickletTemperature.FunctionID.set_temperature_callback_period,
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
@@ -108,12 +108,12 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperture.FunctionID.get_temperature_callback_period,
+            function_id=BrickletTemperature.FunctionID.get_temperature_callback_period,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
 
-    async def set_temperature_callback_threshold(self, option, minimum, maximum, response_expected=True):
+    async def set_temperature_callback_threshold(self, option=None, minimum=0, maximum=0, response_expected=True):
         """
         Sets the thresholds for the :cb:`Temperature Reached` callback.
 
@@ -131,11 +131,13 @@ class BrickletTemperature(Device):
 
         The default value is ('x', 0, 0).
         """
+        # Can't set default value during declaration, because it is not yet defined
+        option = option if option is not None else BrickletTemperature.ThresholdOption.off
         assert type(option) is BrickletTemperature.ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperture.FunctionID.set_temperature_callback_threshold,
-            data=pack_payload((option.value, int(minimum), int(maximum)), 'c h h'),
+            function_id=BrickletTemperature.FunctionID.set_temperature_callback_threshold,
+            data=pack_payload((option.value.encode(), self.__SI_to_value(minimum), self.__SI_to_value(maximum)), 'c h h'),
             response_expected=response_expected
         )
         if response_expected:
@@ -148,14 +150,15 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperture.FunctionID.get_temperature_callback_threshold,
+            function_id=BrickletTemperature.FunctionID.get_temperature_callback_threshold,
             response_expected=True
         )
-        payload = unpack_payload(payload, 'c h h')
-        payload[0] = BrickletTemperature.ThresholdOption(payload[0])
-        return GetTemperatureCallbackThreshold(*payload)
+        option, minimum, maximum = unpack_payload(payload, 'c h h')
+        option = BrickletTemperature.ThresholdOption(option)
+        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
+        return GetTemperatureCallbackThreshold(option, minimum, maximum)
 
-    async def set_debounce_period(self, debounce_period, response_expected=True)):
+    async def set_debounce_period(self, debounce_period=100, response_expected=True):
         """
         Sets the period in ms with which the threshold callback
 
@@ -190,7 +193,7 @@ class BrickletTemperature(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_i2c_mode(self, mode=BrickletTemperature.I2cOption.fast, response_expected=True):
+    async def set_i2c_mode(self, mode=None, response_expected=True):
         """
         Sets the I2C mode. Possible modes are:
 
@@ -206,11 +209,13 @@ class BrickletTemperature(Device):
 
         .. versionadded:: 2.0.1$nbsp;(Plugin)
         """
+        # Can't set default value during declaration, because it is not yet defined
+        mode = mode if mode is not None else BrickletTemperature.I2cOption.fast
         assert type(mode) is BrickletTemperature.I2cOption
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletTemperature.FunctionID.set_i2c_mode,
-            data=pack_payload(mode.value,), 'B'),
+            data=pack_payload((mode.value,), 'B'),
             response_expected=response_expected
         )
         if response_expected:
@@ -228,7 +233,7 @@ class BrickletTemperature(Device):
             function_id=BrickletTemperature.FunctionID.get_i2c_mode,
             response_expected=True
         )
-        return I2cOption(unpack_payload(payload, 'B'))
+        return BrickletTemperature.I2cOption(unpack_payload(payload, 'B'))
 
     async def get_identity(self):
         """
@@ -246,10 +251,10 @@ class BrickletTemperature(Device):
             function_id=BrickletTemperature.FunctionID.get_identity,
             response_expected=True
         )
-        payload = unpack_payload(payload, '8s 8s c 3B 3B H')
-        payload[0] = base58decode(payload[0])
-        payload[1] = base58decode(payload[1])
-        return GetIdentity(*payload)
+        uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, '8s 8s c 3B 3B H')
+        uid, connected_uid = base58decode(uid), base58decode(connected_uid)
+        device_id = DeviceIdentifier(device_id)
+        return GetIdentity(uid, connected_uid, position, hw_version, fw_version, device_id)
 
     def register_event_queue(self, event_id, queue):
         """
@@ -263,6 +268,9 @@ class BrickletTemperature(Device):
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 100
+
+    def __SI_to_value(self, value):
+        return int(value * 100)
 
     def process_callback(self, header, payload):
         try:

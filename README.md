@@ -9,8 +9,8 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 
 |Bricklet|Supported|Tested|
 |--|--|--|
-|[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|  :heavy_check_mark:|
-|[Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)|:heavy_check_mark:|  :x:|
+|[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|:heavy_check_mark:|
+|[Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)|:heavy_check_mark:|:heavy_check_mark:|
 
 # Changes made to the API
 Some of the design choices of the original Tinkerforge API are overly complex. I therefore replaced them with a simpler and more intuitive approach. A list of things that were changed can be found below:
