@@ -3,6 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, IntEnum, unique
 
+from .devices import DeviceIdentifier
 from .ip_connection import Device, IPConnectionAsync, Flags, UnknownFunctionError#, Error, create_char, create_char_list, create_string, create_chunk_data
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
@@ -15,7 +16,7 @@ class BrickletHumidity(Device):
     Measures relative humidity
     """
 
-    DEVICE_IDENTIFIER = 27
+    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletHumidity
     DEVICE_DISPLAY_NAME = 'Humidity Bricklet'
     DEVICE_URL_PART = 'humidity' # internal
 

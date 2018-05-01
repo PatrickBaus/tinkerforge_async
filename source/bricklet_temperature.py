@@ -3,6 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, IntEnum, unique
 
+from .devices import DeviceIdentifier
 from .ip_connection import Device, IPConnectionAsync, Flags, UnknownFunctionError
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
@@ -14,7 +15,7 @@ class BrickletTemperature(Device):
     Measures ambient temperature with 0.5 K accuracy
     """
 
-    DEVICE_IDENTIFIER = 216
+    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletTemperature
     DEVICE_DISPLAY_NAME = 'Temperature Bricklet'
     DEVICE_URL_PART = 'temperature' # internal
 
