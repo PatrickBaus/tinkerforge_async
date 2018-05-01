@@ -9,6 +9,7 @@ import time
 import traceback
 
 from .ip_connection_helper import base58decode, unpack_payload
+from .devices import DeviceIdentifier
 
 class UnknownFunctionError(Exception):
     pass
@@ -61,7 +62,7 @@ def parse_header(data):
     except ValueError:
         # Do not assign an enum, leave the int
         pass
-    
+
     return payload_size, \
            {'uid': uid,
             'sequence_number': sequence_number,
@@ -178,6 +179,7 @@ class IPConnectionAsync(object):
         self.__loop = loop
         self.__sequence_number = 0
         self.__timeout = DEFAULT_WAIT_TIMEOUT
+        self.__pending_requests = {}
 
         self.__enumeration_queue = asyncio.Queue(maxsize=20, loop=self.__loop)
         self.__reply_queue = asyncio.Queue(maxsize=20, loop=self.__loop)
@@ -187,7 +189,6 @@ class IPConnectionAsync(object):
         self.__logger = logger = logging.getLogger(__name__)
 
     def __get_sequence_number(self):
-        # counter is a 'static' variable bound to the function
         self.__sequence_number = (self.__sequence_number + 1) % 15
 
         return self.__sequence_number 
@@ -233,18 +234,15 @@ class IPConnectionAsync(object):
             return header, payload
 
     async def __get_response(self, sequence_number):
+        self.__pending_requests[sequence_number] = asyncio.Condition()
         async with async_timeout.timeout(self.__timeout) as cm:
-            while 'waiting for reply':
+            with await self.__pending_requests[sequence_number]:
                 try:
+                    await self.__pending_requests[sequence_number].wait()
                     header, payload = await self.__reply_queue.get()
-                    if header['sequence_number'] == sequence_number:
-                        return header, payload
-                    elif header['sequence_number'] < sequnce_number:
-                        # this is an old reply we do not care about
-                        continue
-                    else:
-                        raise asyncio.TimeoutError()
+                    return header, payload
                 except asyncio.CancelledError:
+                    del self.__pending_requests[sequence_number]
                     if cm.expired:
                         raise asyncio.TimeoutError() from None
                     else:
@@ -255,6 +253,12 @@ class IPConnectionAsync(object):
             = unpack_payload(payload, '8s 8s c 3B 3B H B')
 
         enumeration_type = EnumerationType(enumeration_type)
+        
+        try:
+            device_identifier = DeviceIdentifier(device_identifier)
+        except ValueError:
+            # Do not assign an enum, leave the int
+            pass
 
         # See https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#callbacks for details on the payload
         # We will return None for all 'invalid' fields instead of garbage like the Tinkerforge API
@@ -263,7 +267,7 @@ class IPConnectionAsync(object):
                 'position':  None if enumeration_type is EnumerationType.disconnected else position,
                 'hardware_version': None if enumeration_type is EnumerationType.disconnected else hardware_version,
                 'firmware_version': None if enumeration_type is EnumerationType.disconnected else firmware_version,
-                'device_identifier': None if enumeration_type is EnumerationType.disconnected else device_identifier,
+                'device_id': None if enumeration_type is EnumerationType.disconnected else device_identifier,
                 'enumeration_type': enumeration_type,
         }
 
@@ -279,7 +283,7 @@ class IPConnectionAsync(object):
         except asyncio.TimeoutError:
             return None, None
 
-    def __process_packet(self, header, payload):
+    async def __process_packet(self, header, payload):
         # There are two types of packets:
         # - Broadcasts/Callbacks
         # - Replies
@@ -313,11 +317,17 @@ class IPConnectionAsync(object):
 
         elif header['response_expected']:
             try:
-                self.__reply_queue.put_nowait((header, payload,))
+                with await self.__pending_requests[header['sequence_number']]:
+                    self.__pending_requests[header['sequence_number']].notify()
+                    self.__reply_queue.put_nowait((header, payload,))
+                await asyncio.sleep(0)
             except asyncio.QueueFull:
                 # TODO: log a warning, that we are dropping packets
                 self.__self.__reply_queue.get_nowait()
                 self.__self.__reply_queue.put_nowait(payload)
+            except KeyError:
+                # Drop the packet, because it is not our sequence number
+                pass
         else:
             self.logger.debug('Unkown packet:\nheader: {header}\npayload: {payload}'.format(header=header, payload=payload))
 
@@ -327,7 +337,7 @@ class IPConnectionAsync(object):
                 # Read packets from the socket and process them.
                 header, payload = await self.__read_packet()
                 if header is not None:
-                    self.__process_packet(header, payload)
+                    await self.__process_packet(header, payload)
         except asyncio.CancelledError:
             self.logger.info('Tinkerforge IP connection closed')
         except Exception as e:
