@@ -191,7 +191,6 @@ class IPConnectionAsync(object):
     def __get_sequence_number(self):
         self.__sequence_number = (self.__sequence_number % 15) + 1
 
-        print('sequence_number', self.__sequence_number)
         return self.__sequence_number 
 
     def __create_packet_header(self, payload_size, function_id, uid=None, response_expected=False):
