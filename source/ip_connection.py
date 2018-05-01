@@ -177,7 +177,7 @@ class IPConnectionAsync(object):
 
     def __init__(self, loop):
         self.__loop = loop
-        self.__sequence_number = 0
+        self.__sequence_number = 11
         self.__timeout = DEFAULT_WAIT_TIMEOUT
         self.__pending_requests = {}
 
@@ -189,8 +189,9 @@ class IPConnectionAsync(object):
         self.__logger = logger = logging.getLogger(__name__)
 
     def __get_sequence_number(self):
-        self.__sequence_number = (self.__sequence_number + 1) % 15
+        self.__sequence_number = (self.__sequence_number % 15) + 1
 
+        print('sequence_number', self.__sequence_number)
         return self.__sequence_number 
 
     def __create_packet_header(self, payload_size, function_id, uid=None, response_expected=False):
@@ -234,19 +235,25 @@ class IPConnectionAsync(object):
             return header, payload
 
     async def __get_response(self, sequence_number):
+        # Create a lock for the sequence number
         self.__pending_requests[sequence_number] = asyncio.Condition()
         async with async_timeout.timeout(self.__timeout) as cm:
+            # Aquire the lock
             with await self.__pending_requests[sequence_number]:
                 try:
+                    # wait for the lock to be released
                     await self.__pending_requests[sequence_number].wait()
+                    # Once released the worker (streamreader) will have put the packet in the queue
                     header, payload = await self.__reply_queue.get()
                     return header, payload
                 except asyncio.CancelledError:
-                    del self.__pending_requests[sequence_number]
                     if cm.expired:
                         raise asyncio.TimeoutError() from None
                     else:
                         raise
+                finally:
+                    # Remove the lock
+                    del self.__pending_requests[sequence_number]
 
     def __parse_enumerate_payload(self, payload):
         uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type \
