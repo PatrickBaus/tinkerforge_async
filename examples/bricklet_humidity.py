@@ -7,7 +7,7 @@ import warnings
 
 from source.ip_connection import IPConnectionAsync
 from source.devices import DeviceIdentifier
-from source.bricklet_temperature import BrickletTemperature
+from source.bricklet_humidity import BrickletHumidity
 
 loop = asyncio.get_event_loop()
 ipcon = IPConnectionAsync(loop=loop)
@@ -37,39 +37,47 @@ async def process_enumerations():
     try:
         while 'queue not canceled':
             packet = await ipcon.enumeration_queue.get()
-            if packet['device_id'] is DeviceIdentifier.BrickletTemperature:
+            if packet['device_id'] is DeviceIdentifier.BrickletHumidity:
                 await run_example(packet)
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
 async def run_example(packet):
-    print('Registering temperature bricklet')
-    bricklet = BrickletTemperature(packet['uid'], ipcon) # Create device object
+    print('Registering humidity bricklet')
+    bricklet = BrickletHumidity(packet['uid'], ipcon) # Create device object
     # Register the callback queue used by process_callbacks()
-    bricklet.register_event_queue(BrickletTemperature.CallbackID.temperature_reached, callback_queue)
+    # We can register the same queue for multiple callbacks.
+    bricklet.register_event_queue(BrickletHumidity.CallbackID.humidity_reached, callback_queue)
+    bricklet.register_event_queue(BrickletHumidity.CallbackID.analog_value_reached, callback_queue)
 
     print('Set callback period to', 1000, 'ms')
-    await bricklet.set_temperature_callback_period(1000)
-    print('Get callback period:', await bricklet.get_temperature_callback_period())
-    print('Get I²C mode:', await bricklet.get_i2c_mode())
-    print('Set I²C mode to', bricklet.I2cOption.slow)
-    await bricklet.set_i2c_mode(bricklet.I2cOption.slow)
-    print('Get I²C mode:', await bricklet.get_i2c_mode())
-    print('Set I²C mode to default')
-    await bricklet.set_i2c_mode()
+    await bricklet.set_humidity_callback_period(1000)
+    print('Get callback period:', await bricklet.get_humidity_callback_period())
     print('Identity:', await bricklet.get_identity())
     print('Set bricklet debounce period to', 1000, 'ms')
     await bricklet.set_debounce_period(1000)
     print('Get bricklet debounce period:', await bricklet.get_debounce_period())
-    print('Set threshold to >10 °C and wait for callbacks')
-    # We use a low temperature on purpose, so that the callback will be triggered
-    await bricklet.set_temperature_callback_threshold(bricklet.ThresholdOption.greater_than, 10, 0)
-    print('Temperature threshold:', await bricklet.get_temperature_callback_threshold())
+
+    # Use a humidity callback
+    print('Get humidity:', await bricklet.get_humidity())
+    print('Set threshold to >10 %rH and wait for callbacks')
+    # We use a low humidity on purpose, so that the callback will be triggered
+    await bricklet.set_humidity_callback_threshold(bricklet.ThresholdOption.greater_than, 10, 0)
+    print('Humidity threshold:', await bricklet.get_humidity_callback_threshold())
     await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
     print('Disabling threshold callback')
-    await bricklet.set_temperature_callback_threshold()
-    print('Temperature threshold:', await bricklet.get_temperature_callback_threshold())
-    print('Get temperature:', await bricklet.get_temperature())
+    await bricklet.set_humidity_callback_threshold()
+    print('Humidity threshold:', await bricklet.get_humidity_callback_threshold())
+
+    # Use an analog value callback
+    print('Get analog value:', await bricklet.get_analog_value())
+    print('Set threshold to >10 and wait for callbacks')
+    await bricklet.set_analog_value_callback_threshold(bricklet.ThresholdOption.greater_than, 10, 0)
+    print('Analog value threshold:', await bricklet.get_analog_value_callback_threshold())
+    await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
+    print('Disabling threshold callback')
+    await bricklet.set_analog_value_callback_threshold()
+    print('Analog value threshold:', await bricklet.get_analog_value_callback_threshold())
 
     # Terminate the loop
     asyncio.ensure_future(stop_loop())
