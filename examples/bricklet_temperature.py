@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import asyncio
+import sys
+sys.path.append("..") # Adds higher directory to python modules path.
+import warnings
+
+from source.ip_connection import IPConnectionAsync
+from source.devices import DeviceIdentifier
+from source.bricklet_temperature import BrickletTemperature
+
+loop = asyncio.get_event_loop()
+ipcon = IPConnectionAsync(loop=loop)
+callback_queue = asyncio.Queue(loop=loop)
+
+running_tasks = []
+
+async def process_callbacks():
+    """
+    This infinite loop will print all callbacks.
+    It waits for packets from the callback queue,
+    which the ip connection will push.
+    """
+    try:
+        while 'queue not canceled':
+            packet = await callback_queue.get()
+            print('callback received', packet)
+    except asyncio.CancelledError:
+        print('Callback queue canceled')
+
+async def process_enumerations():
+    """
+    This infinite loop pulls events from the internal enumeration queue
+    of the ip connection and waits for an enumeration event with a
+    certain device id, then it will run the example code.
+    """
+    try:
+        while 'queue not canceled':
+            packet = await ipcon.enumeration_queue.get()
+            if packet['device_id'] is DeviceIdentifier.BrickletTemperature:
+                await run_example(packet)
+    except asyncio.CancelledError:
+        print('Enumeration queue canceled')
+
+async def run_example(packet):
+    print('Registering temperature bricklet')
+    bricklet = BrickletTemperature(packet['uid'], ipcon) # Create device object
+    # Register the callback queue used by process_callbacks()
+    bricklet.register_event_queue(BrickletTemperature.CallbackID.temperature_reached, callback_queue)
+
+    print('Set callback period to', 1000, 'ms')
+    await bricklet.set_temperature_callback_period(1000)
+    print('Get callback period:', await bricklet.get_temperature_callback_period())
+    print('Get I²C mode:', await bricklet.get_i2c_mode())
+    print('Set I²C mode to', bricklet.I2cOption.slow)
+    await bricklet.set_i2c_mode(bricklet.I2cOption.slow)
+    print('Get I²C mode:', await bricklet.get_i2c_mode())
+    print('Set I²C mode to default')
+    await bricklet.set_i2c_mode()
+    print('Identity:', await bricklet.get_identity())
+    print('Set bricklet debounce period to', 1000, 'ms')
+    await bricklet.set_debounce_period(1000)
+    print('Get bricklet debounce period:', await bricklet.get_debounce_period())
+    print('Set threshold to >10 °C and wait for callbacks')
+    # We use a low temperature on purpose, so that the callback will be triggered
+    await bricklet.set_temperature_callback_threshold(bricklet.ThresholdOption.greater_than, 10, 0)
+    print('Temperature threshold:', await bricklet.get_temperature_callback_threshold())
+    await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
+    print('Disabling threshold callback')
+    await bricklet.set_temperature_callback_threshold()
+    print('Temperature threshold:', await bricklet.get_temperature_callback_threshold())
+    print('Get temperature:', await bricklet.get_temperature())
+
+    # Terminate the loop
+    asyncio.ensure_future(stop_loop())
+
+async def stop_loop():
+    # Clean up: Disconnect ip connection and stop the consumers
+    await ipcon.disconnect()
+    for task in running_tasks:
+        task.cancel()
+    await asyncio.gather(*running_tasks)
+    loop.stop()    
+
+async def main():
+    try: 
+        await ipcon.connect(host='127.0.0.1', port=4223)
+        running_tasks.append(asyncio.ensure_future(process_callbacks()))
+        running_tasks.append(asyncio.ensure_future(process_enumerations()))
+        await ipcon.enumerate()
+    except ConnectionRefusedError:
+        print('Could not connect to server. Connection refused. Is the brick daemon up?')
+    except asyncio.CancelledError:
+        print('Stopped the main loop')
+
+# Report all mistakes managing asynchronous resources.
+warnings.simplefilter('always', ResourceWarning)
+#import logging
+#logging.basicConfig(level=logging.INFO)    # enable this to see some logging from the ip connection. Set to debug for even more info
+
+# Start the main loop, the run the async loop forever
+running_tasks.append(asyncio.ensure_future(main()))
+loop.run_forever()
+loop.close()
