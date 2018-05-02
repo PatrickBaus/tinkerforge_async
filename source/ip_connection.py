@@ -186,7 +186,7 @@ class IPConnectionAsync(object):
 
         self.__devices = {}
         
-        self.__logger = logger = logging.getLogger(__name__)
+        self.__logger = logging.getLogger(__name__)
 
     def __get_sequence_number(self):
         self.__sequence_number = (self.__sequence_number % 15) + 1
@@ -205,6 +205,7 @@ class IPConnectionAsync(object):
                 sequence_number)
 
     def add_device(self, device):
+        self.logger.debug('Adding device: %(device)s', {'device': device})
         self.__devices[device.uid] = device
 
     async def enumerate(self):
@@ -212,6 +213,7 @@ class IPConnectionAsync(object):
         Broadcasts an enumerate request. All devices will respond with an enumerate callback.
         Returns: None, it does not support 'response_expected'
         """
+        self.logger.debug('Enumerating Node')
         await self.send_request(
             device=None,
             function_id=FunctionID.enumerate
@@ -228,9 +230,12 @@ class IPConnectionAsync(object):
         request = header + data
 
         # If we are waiting for a response, send the request, then pass on the response as a future
+        self.logger.debug('Sending request: %(header)s - %(payload)s', {'header': header, 'payload': data})
         self.__writer.write(request)
         if response_expected:
+            self.logger.debug('Waiting for reply for request number %(sequence_number)s.', {'sequence_number': sequence_number})
             header, payload = await self.__get_response(sequence_number)
+            self.logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
             return header, payload
 
     async def __get_response(self, sequence_number):
@@ -311,6 +316,7 @@ class IPConnectionAsync(object):
                     if header['function_id'] is FunctionID.callback_enumerate:
                         payload = self.__parse_enumerate_payload(payload)
                         try:
+                            self.logger.debug('Received enumeration: %(header)s - %(payload)s', {'header': header, 'payload': payload})
                             self.__enumeration_queue.put_nowait(payload)
                         except asyncio.QueueFull:
                             # TODO: log a warning, that we are dropping packets
@@ -335,10 +341,11 @@ class IPConnectionAsync(object):
                 # Drop the packet, because it is not our sequence number
                 pass
         else:
-            self.logger.debug('Unkown packet:\nheader: {header}\npayload: {payload}'.format(header=header, payload=payload))
+            self.logger.info('Unknown packet: %(header)s - %(payload)s', {'header': header, 'payload': payload})
 
     async def main_loop(self, host, port):
         try:
+            self.logger.info('Tinkerforge IP connection connected')
             while 'loop not canceled':
                 # Read packets from the socket and process them.
                 header, payload = await self.__read_packet()
@@ -347,17 +354,22 @@ class IPConnectionAsync(object):
         except asyncio.CancelledError:
             self.logger.info('Tinkerforge IP connection closed')
         except Exception as e:
-            logging.exception("Error while running main_loop")
+            self.logger.exception("Error while running main_loop")
 
     async def connect(self, host, port=4223):
         self.__reader, self.__writer = await asyncio.open_connection(host, port, loop=self.__loop)
         self.__main_loop_task = self.__loop.create_task(self.main_loop(host, port))
 
+    async def cancel(self):
+        return await self.disconnect()
+
     async def disconnect(self):
         self.__main_loop_task.cancel()
+        await self.__main_loop_task
         self.__reader = None
-        self.__writer = None   # TODO: Flush data
-
-        return await self.__main_loop_task
-        
+        # Flush data
+        self.__writer.write_eof()
+        await self.__writer.drain()
+        self.__writer.close()
+        self.__writer = None
 
