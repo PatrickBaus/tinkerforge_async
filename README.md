@@ -30,6 +30,44 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    result = await bricklet.set_humidity_callback_period(1000, response_expected=True)    # True if successful
    ```
  - Replaced all constants with Enums and enforced their use using assertions. This will allow beginners to spot their mistakes earlier and make the code more readable, including any debug output statements.
+
+   Old style:
+   ```python
+   class BrickletHumidity(Device):
+       FUNCTION_GET_HUMIDITY = 1
+       FUNCTION_GET_ANALOG_VALUE = 2
+       FUNCTION_SET_HUMIDITY_CALLBACK_PERIOD = 3
+       FUNCTION_GET_HUMIDITY_CALLBACK_PERIOD = 4
+       FUNCTION_SET_ANALOG_VALUE_CALLBACK_PERIOD = 5
+       FUNCTION_GET_ANALOG_VALUE_CALLBACK_PERIOD = 6
+       FUNCTION_SET_HUMIDITY_CALLBACK_THRESHOLD = 7
+       FUNCTION_GET_HUMIDITY_CALLBACK_THRESHOLD = 8
+       FUNCTION_SET_ANALOG_VALUE_CALLBACK_THRESHOLD = 9
+       FUNCTION_GET_ANALOG_VALUE_CALLBACK_THRESHOLD = 10
+       FUNCTION_SET_DEBOUNCE_PERIOD = 11
+       FUNCTION_GET_DEBOUNCE_PERIOD = 12
+       FUNCTION_GET_IDENTITY = 255
+   ```
+
+   New style:
+   ```python
+   class BrickletHumidity(Device):
+       @unique
+       class FunctionID(IntEnum):
+       get_humidity = 1
+       get_analog_value = 2
+       set_humidity_callback_period = 3
+       get_humidity_callback_period = 4
+       set_analog_value_callback_period = 5
+       get_analog_value_callback_period = 6
+       set_humidity_callback_threshold = 7
+       get_humidity_callback_threshold = 8
+       set_analog_value_callback_threshold = 9
+       get_analog_value_callback_threshold = 10
+       set_debounce_period = 11
+       get_debounce_period = 12
+       get_identity = 255
+   ```
  - Moved from base58 encoded uids to integers
  - Moved from callbacks to queues in to keep users out of the callback hell. It makes the code style more readable when using the *await* syntax anyway.
  - Payloads will now be decoded by the *Device* object and not by the *ip_connection* any more. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it, if possible, and pass it on to the queue.
