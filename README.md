@@ -17,13 +17,14 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
 - Only Python 3 is supported (3.5+)
  - Replaced threads with an async event loop
  - Completely rewritten how responses from bricks/bricklets work. All setters now have a response_expected parameter, which when set to true will make the function call either return *True* or raise an error. There are no set_response_expected() functions any more.
- Old Style:
+   
+   Old style:
    ```python
    bricklet = BrickletHumidity(UID, ipcon)
    bricklet.set_response_expected(BrickletHumidity.FUNCTION_SET_HUMIDITY_CALLBACK_PERIOD, False)
    bricklet.set_humidity_callback_period(1000)
    ```
-   New Style:
+   New style:
    ```python
    bricklet = BrickletHumidity(UID, ipcon)
    result = await bricklet.set_humidity_callback_period(1000, response_expected=False)    # True if successful
