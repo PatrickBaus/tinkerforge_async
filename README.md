@@ -21,13 +21,13 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    Old style:
    ```python
    bricklet = BrickletHumidity(UID, ipcon)
-   bricklet.set_response_expected(BrickletHumidity.FUNCTION_SET_HUMIDITY_CALLBACK_PERIOD, False)
+   bricklet.set_response_expected(BrickletHumidity.FUNCTION_SET_HUMIDITY_CALLBACK_PERIOD, True)
    bricklet.set_humidity_callback_period(1000)
    ```
    New style:
    ```python
    bricklet = BrickletHumidity(UID, ipcon)
-   result = await bricklet.set_humidity_callback_period(1000, response_expected=False)    # True if successful
+   result = await bricklet.set_humidity_callback_period(1000, response_expected=True)    # True if successful
    ```
  - Replaced all constants with Enums and enforced their use using assertions. This will allow beginners to spot their mistakes earlier and make the code more readable, including any debug output statements.
  - Moved from base58 encoded uids to integers
