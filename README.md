@@ -16,8 +16,8 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
 ### Design Changes
 - Only Python 3 is supported (3.5+)
  - Replaced threads with an async event loop
- - Completely rewritten how responses from bricks/bricklets work. All setters now have a response_expected parameter, which when set to true will make the function call either return *True* or raise an error. There are no set_response_expected() functions any more.
-   
+ - Completely rewritten how responses from bricks/bricklets work. All setters now have a *response_expected* parameter, which when set to true will make the function call either return *True* or raise an error. There are no *set_response_expected()* functions any more.
+
    Old style:
    ```python
    bricklet = BrickletHumidity(UID, ipcon)
@@ -31,10 +31,15 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    ```
  - Replaced all constants with Enums and enforced their use using assertions. This will allow beginners to spot their mistakes earlier and make the code more readable, including any debug output statements.
  - Moved from base58 encoded uids to integers
- - Moved from callbacks to queues in an attempt to keep users out of the callback hell. It makes the code style more readable when using the *await* syntax anyway.
- - Payloads will now be decoded by the Device object and not by the ip_connection any more. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it if possible and pass it on the queue.
+ - Moved from callbacks to queues in to keep users out of the callback hell. It makes the code style more readable when using the *await* syntax anyway.
+ - Payloads will now be decoded by the *Device* object and not by the *ip_connection* any more. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it, if possible, and pass it on to the queue.
  - If physical quantities are measured we will now return standard SI units, not some unexpected stuff like centi°C (Temperature Bricklet). To preserve the precision the Decimal package is used. The only exception to this rule is the use of °C for temperature. This is for convenience.
- - All callbacks now contain a timestamp (Unix timestamp) and the device uid
+ - All callbacks now contain a timestamp (Unix timestamp) and the device uid.
+
+   Example:
+   ```python
+   {'timestamp': 1525308878, 'uid': 30842, 'device_id': <DeviceIdentifier.BrickletHumidity: 27>, 'function_id': <CallbackID.humidity_reached: 15>, 'payload': Decimal('43.6')}
+   ```
 
 ### [IP Connection](https://www.tinkerforge.com/de/doc/Software/IPConnection_Python.html#api)
 
