@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import asyncio
+import logging
 import sys
 sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
@@ -45,6 +46,7 @@ async def process_enumerations():
 async def run_example(packet):
     print('Registering temperature bricklet')
     bricklet = BrickletTemperature(packet['uid'], ipcon) # Create device object
+    print('Identity:', await bricklet.get_identity())
     # Register the callback queue used by process_callbacks()
     bricklet.register_event_queue(BrickletTemperature.CallbackID.temperature_reached, callback_queue)
 
@@ -57,7 +59,6 @@ async def run_example(packet):
     print('Get I²C mode:', await bricklet.get_i2c_mode())
     print('Set I²C mode to default')
     await bricklet.set_i2c_mode()
-    print('Identity:', await bricklet.get_identity())
     print('Set bricklet debounce period to', 1000, 'ms')
     await bricklet.set_debounce_period(1000)
     print('Get bricklet debounce period:', await bricklet.get_debounce_period())
@@ -95,8 +96,7 @@ async def main():
 
 # Report all mistakes managing asynchronous resources.
 warnings.simplefilter('always', ResourceWarning)
-#import logging
-#logging.basicConfig(level=logging.INFO)    # enable this to see some logging from the ip connection. Set to debug for even more info
+logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection. Set to debug for even more info
 
 # Start the main loop, the run the async loop forever
 running_tasks.append(asyncio.ensure_future(main()))
