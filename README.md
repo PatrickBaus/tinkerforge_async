@@ -1,4 +1,3 @@
-
 # TinkerforgeAsync
 This is a reimplementation of the Tinkerforge Python bindings ([original Python bindings](https://www.tinkerforge.com/en/doc/Software/API_Bindings_Python.html)) using Python 3 asyncio. The original bindings used threads to manage the blocking operations. A much cleaner implementation can be done using the *await* syntax from asyncio. 
 
@@ -18,7 +17,18 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
 - Only Python 3 is supported (3.5+)
  - Replaced threads with an async event loop
  - Completely rewritten how responses from bricks/bricklets work. All setters now have a response_expected parameter, which when set to true will make the function call either return *True* or raise an error. There are no set_response_expected() functions any more.
- - Replaced all constants used by Enums and enforced them use using assertions. This will allow beginners to spot their mistakes earlier and make the code more readable, including any debug output statements.
+ Old Style:
+   ```python
+   bricklet = BrickletHumidity(UID, ipcon)
+   bricklet.set_response_expected(BrickletHumidity.FUNCTION_SET_HUMIDITY_CALLBACK_PERIOD, False)
+   bricklet.set_humidity_callback_period(1000)
+   ```
+   New Style:
+   ```python
+   bricklet = BrickletHumidity(UID, ipcon)
+   result = await bricklet.set_humidity_callback_period(1000, response_expected=False)    # True if successful
+   ```
+ - Replaced all constants with Enums and enforced their use using assertions. This will allow beginners to spot their mistakes earlier and make the code more readable, including any debug output statements.
  - Moved from base58 encoded uids to integers
  - Moved from callbacks to queues in an attempt to keep users out of the callback hell. It makes the code style more readable when using the *await* syntax anyway.
  - Payloads will now be decoded by the Device object and not by the ip_connection any more. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it if possible and pass it on the queue.
