@@ -11,6 +11,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 |Bricklet|Supported|Tested|
 |--|--|--|
 |[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|:heavy_check_mark:|
+|[Humidity 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Humidity_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)|:heavy_check_mark:|:heavy_check_mark:|
 
 # Changes made to the API
@@ -81,9 +82,8 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    {'timestamp': 1525308878, 'uid': 30842, 'device_id': <DeviceIdentifier.BrickletHumidity: 27>, 'function_id': <CallbackID.humidity_reached: 15>, 'payload': Decimal('43.6')}
    ```
 
-### [IP Connection](https://www.tinkerforge.com/de/doc/Software/IPConnection_Python.html#api)
-
- - IPConnection.authenticate(_secret_): removed. This can now be done through connect()
- - IPConnection.set_timeout/IPConnection.get_timeout: Replaced by a property
- - IPConnection.register_callback(_callback_id_, _function_): Replaced by register_queue()
+- #### [IP Connection](https://www.tinkerforge.com/de/doc/Software/IPConnection_Python.html#api)
+   - *IPConnection.authenticate(_secret_)*: removed. This can now be done through connect()
+   - *IPConnection.set_timeout/IPConnection.get_timeout*: Replaced by a property
+   - *IPConnection.register_callback(_callback_id_, _function_)*: Replaced by register_queue()
 
