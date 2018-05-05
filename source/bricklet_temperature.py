@@ -6,6 +6,7 @@ from enum import Enum, IntEnum, unique
 from .devices import DeviceIdentifier
 from .ip_connection import Device, IPConnectionAsync, Flags, UnknownFunctionError
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
+from .brick_master import BrickletPort
 
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
@@ -97,10 +98,11 @@ class BrickletTemperature(Device):
 
         The default value is 0.
         """
+        assert type(period) is int and period >= 0
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletTemperature.FunctionID.set_temperature_callback_period,
-            data=pack_payload((int(period),), 'I'),
+            data=pack_payload((period,), 'I'),
             response_expected = response_expected,
         )
         if response_expected:
@@ -176,10 +178,11 @@ class BrickletTemperature(Device):
 
         The default value is 100.
         """
+        assert type(debounce_period) is int and debounce_period >= 0
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletTemperature.FunctionID.set_debounce_period,
-            data=pack_payload((int(debounce_period),), 'I'),
+            data=pack_payload((debounce_period,), 'I'),
             response_expected=response_expected
         )
         if response_expected:
@@ -197,7 +200,7 @@ class BrickletTemperature(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_i2c_mode(self, mode=I2cOption.fast, response_expected=True):
+    async def set_i2c_mode(self, mode=I2cOption.fast, response_expected=False):
         """
         Sets the I2C mode. Possible modes are:
 
@@ -254,9 +257,14 @@ class BrickletTemperature(Device):
             response_expected=True
         )
         uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, '8s 8s c 3B 3B H')
-        uid, connected_uid = base58decode(uid), base58decode(connected_uid)
-        device_id = DeviceIdentifier(device_id)
-        return GetIdentity(uid, connected_uid, position, hw_version, fw_version, device_id)
+        return GetIdentity(
+            base58decode(uid),
+            base58decode(connected_uid),
+            BrickletPort(position),
+            hw_version,
+            fw_version,
+            DeviceIdentifier(device_id)
+        )
 
     def register_event_queue(self, event_id, queue):
         """

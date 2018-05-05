@@ -6,6 +6,7 @@ from enum import Enum, IntEnum, unique
 from .devices import DeviceIdentifier
 from .ip_connection import Device, IPConnectionAsync, Flags, UnknownFunctionError#, Error, create_char, create_char_list, create_string, create_chunk_data
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
+from .brick_master import BrickletPort
 
 GetHumidityCallbackThreshold = namedtuple('HumidityCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetAnalogValueCallbackThreshold = namedtuple('AnalogValueCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -124,6 +125,7 @@ class BrickletHumidity(Device):
 
         The default value is 0.
         """
+        assert period >= 0
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidity.FunctionID.set_humidity_callback_period,
@@ -156,6 +158,7 @@ class BrickletHumidity(Device):
 
         The default value is 0.
         """
+        assert period >= 0
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidity.FunctionID.set_analog_value_callback_period,
@@ -278,6 +281,7 @@ class BrickletHumidity(Device):
 
         The default value is 100.
         """
+        assert debounce_period >= 0
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidity.FunctionID.set_debounce_period,
@@ -316,9 +320,14 @@ class BrickletHumidity(Device):
             response_expected=True
         )
         uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, '8s 8s c 3B 3B H')
-        uid, connected_uid = base58decode(uid), base58decode(connected_uid)
-        device_id = DeviceIdentifier(device_id)
-        return GetIdentity(uid, connected_uid, position, hw_version, fw_version, device_id)
+        return GetIdentity(
+            base58decode(uid),
+            base58decode(connected_uid),
+            BrickletPort(position),
+            hw_version,
+            fw_version,
+            DeviceIdentifier(device_id)
+        )
 
     def register_event_queue(self, event_id, queue):
         """

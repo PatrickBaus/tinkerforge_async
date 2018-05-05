@@ -44,9 +44,14 @@ async def process_enumerations():
         print('Enumeration queue canceled')
 
 async def run_example(packet):
-    print('Registering humidity_v2 bricklet')
+    print('Registering humidity Bricklet 2.0')
     bricklet = BrickletHumidityV2(packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
+
+    uid = await bricklet.read_uid()
+    print('Device uid:', uid)
+    await bricklet.write_uid(uid)
+
     # Register the callback queue used by process_callbacks()
     # We can register the same queue for multiple callbacks.
     bricklet.register_event_queue(BrickletHumidityV2.CallbackID.humidity, callback_queue)

@@ -6,6 +6,7 @@ from enum import Enum, IntEnum, unique
 from .devices import DeviceIdentifier
 from .ip_connection import Device, IPConnectionAsync, Flags, UnknownFunctionError
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
+from .brick_master import BrickletPort
 
 GetHumidityCallbackConfiguration = namedtuple('HumidityCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'min', 'max'])
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'min', 'max'])
@@ -163,12 +164,15 @@ class BrickletHumidityV2(Device):
         The default value is (0, false, 'x', 0, 0).
         """
         assert type(option) is ThresholdOption
+        assert type(period) is int and period >= 0
+        assert type(minimum) is int and minimum >= 0
+        assert type(maximum) is int and maximum >= 0
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidityV2.FunctionID.set_humidity_callback_configuraton,
             data=pack_payload(
               (
-                int(period),
+                period,
                 bool(value_has_to_change),
                 option.value.encode(),
                 self.__SI_to_humidity_sensor(minimum),
@@ -246,12 +250,15 @@ class BrickletHumidityV2(Device):
         The default value is (0, false, 'x', 0, 0).
         """
         assert type(option) is ThresholdOption
+        assert type(period) is int and period >= 0
+        assert type(minimum) is int and minimum >= 0
+        assert type(maximum) is int and maximum >= 0
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidityV2.FunctionID.set_temperature_callback_configuraton,
             data=pack_payload(
               (
-                int(period),
+                period,
                 bool(value_has_to_change),
                 option.value.encode(),
                 self.__SI_to_temperature_sensor(minimum),
@@ -277,7 +284,7 @@ class BrickletHumidityV2(Device):
         minimum, maximum = self.__temperature_sensor_to_SI(minimum), self.__temperature_sensor_to_SI(maximum)
         return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
-    async def set_heater_configuration(self, heater_config=HeaterConfig.disabled, response_expected=True):
+    async def set_heater_configuration(self, heater_config=HeaterConfig.disabled, response_expected=False):
         """
         Enables/disables the heater. The heater can be used to dry the sensor in
         extremely wet conditions.
@@ -308,7 +315,7 @@ class BrickletHumidityV2(Device):
 
         return HeaterConfig(unpack_payload(payload, 'B'))
 
-    async def set_moving_average_configuration(self, moving_average_length_humidity=100, moving_average_length_temperature=100, response_expected=True):
+    async def set_moving_average_configuration(self, moving_average_length_humidity=100, moving_average_length_temperature=100, response_expected=False):
         """
         Sets the length of a `moving averaging <https://en.wikipedia.org/wiki/Moving_average>`__
         for the humidity and temperature.
@@ -324,10 +331,12 @@ class BrickletHumidityV2(Device):
 
         The default value is 100.
         """
+        assert type(moving_average_length_humidity) is int and moving_average_length_humidity > 0
+        assert type(moving_average_length_temperature) is int and moving_average_length_temperature > 0
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidityV2.FunctionID.set_moving_average_configuration,
-            data=pack_payload((int(moving_average_length_humidity),int(moving_average_length_temperature)), 'H H'),
+            data=pack_payload((moving_average_length_humidity,moving_average_length_temperature), 'H H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -410,10 +419,11 @@ class BrickletHumidityV2(Device):
         This function is used by Brick Viewer during flashing. It should not be
         necessary to call it in a normal user program.
         """
+        assert type(pointer) is int and pointer >= 0
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidityV2.FunctionID.set_write_firmware_pointer,
-            data=pack_payload((int(pointer),), 'I'),
+            data=pack_payload((pointer,), 'I'),
             response_expected=response_expected
         )
         if response_expected:
@@ -503,6 +513,37 @@ class BrickletHumidityV2(Device):
             response_expected=False
         )
 
+    async def write_uid(self, uid, response_expected=False):
+        """
+        Writes a new UID into flash. If you want to set a new UID
+        you have to decode the Base58 encoded UID string into an
+        integer first.
+
+        We recommend that you use Brick Viewer to change the UID.
+        """
+        assert type(uid) is int and uid >= 0
+        result = await self.ipcon.send_request(
+            device=self,
+            function_id=BrickletHumidityV2.FunctionID.write_uid,
+            data=pack_payload((uid,), 'I'),
+            response_expected=response_expected
+        )
+        if response_expected:
+            header, _ = result
+            return header['flags'] == Flags.ok
+
+    async def read_uid(self):
+        """
+        Returns the current UID as an integer. Encode as
+        Base58 to get the usual string version.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=BrickletHumidityV2.FunctionID.read_uid,
+            response_expected=True
+        )
+        return unpack_payload(payload, 'I')
+
     async def get_identity(self):
         """
         Returns the UID, the UID where the Bricklet is connected to,
@@ -520,9 +561,14 @@ class BrickletHumidityV2(Device):
             response_expected=True
         )
         uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, '8s 8s c 3B 3B H')
-        uid, connected_uid = base58decode(uid), base58decode(connected_uid)
-        device_id = DeviceIdentifier(device_id)
-        return GetIdentity(uid, connected_uid, position, hw_version, fw_version, device_id)
+        return GetIdentity(
+            base58decode(uid),
+            base58decode(connected_uid),
+            BrickletPort(position),
+            hw_version,
+            fw_version,
+            DeviceIdentifier(device_id)
+        )
 
     def register_event_queue(self, event_id, queue):
         """
