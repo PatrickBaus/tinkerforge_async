@@ -271,6 +271,12 @@ class IPConnectionAsync(object):
             # Do not assign an enum, leave the int
             pass
 
+        try:
+            position = int(position)
+        except ValueError:
+            # It is probably a bricklet, which does have an alphabetic position desciptor
+            pass
+
         # See https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#callbacks for details on the payload
         # We will return None for all 'invalid' fields instead of garbage like the Tinkerforge API
         return {'uid': base58decode(uid),   # Stop the base58 encoded nonsense and use the uint32_t id
