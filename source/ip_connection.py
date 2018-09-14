@@ -313,9 +313,9 @@ class IPConnectionAsync(object):
                 # Try to process the callback by handing it to the device
                 self.__devices[header['uid']].process_callback(header, payload)
             except (KeyError, UnknownFunctionError):
-                # KeyError: raised if the either device is not registered with us or there is no output queue registered
+                # KeyError: raised if either the device is not registered with us or there is no output queue registered
                 # UnknownFunctionError is raised by process_callback if there is no local function to process the callback.
-                # maybe it is a global callback like an enumeration callback
+                # Maybe it is a global callback like an enumeration callback
                 try:
                     header['function_id'] = FunctionID(header['function_id'])
                     # This packet must be processed by the ip connection
