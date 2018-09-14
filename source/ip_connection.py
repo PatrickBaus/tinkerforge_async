@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import asyncio, async_timeout
+import asyncio
 import async_timeout
 from enum import IntEnum, unique
 import logging
@@ -166,14 +166,14 @@ class IPConnectionAsync(object):
         Returns the timeout for async operations in seconds
         """
         return self.__timeout
-        
-    @property
-    def logger(self):
-        return self.__logger
 
     @timeout.setter
     def timeout(self, value):
         self.__timeout = abs(int(value))
+
+    @property
+    def logger(self):
+        return self.__logger
 
     def __init__(self, loop):
         self.__loop = loop
@@ -349,7 +349,7 @@ class IPConnectionAsync(object):
         else:
             self.logger.info('Unknown packet: %(header)s - %(payload)s', {'header': header, 'payload': payload})
 
-    async def main_loop(self, host, port):
+    async def main_loop(self):
         try:
             self.logger.info('Tinkerforge IP connection connected')
             while 'loop not canceled':
@@ -364,7 +364,7 @@ class IPConnectionAsync(object):
 
     async def connect(self, host, port=4223):
         self.__reader, self.__writer = await asyncio.open_connection(host, port, loop=self.__loop)
-        self.__main_loop_task = self.__loop.create_task(self.main_loop(host, port))
+        self.__main_loop_task = self.__loop.create_task(self.main_loop())
 
     async def cancel(self):
         return await self.disconnect()
