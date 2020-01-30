@@ -72,9 +72,9 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
            get_identity = 255
    ```
  - Moved from base58 encoded uids to integers
- - Moved from callbacks to queues in to keep users out of the callback hell. It makes the code style more readable when using the *await* syntax anyway.
+ - Moved from callbacks to queues in order to keep users out of the callback hell. It makes the code style more readable when using the *await* syntax anyway.
  - Payloads will now be decoded by the *Device* object and not by the *ip_connection* any more. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it, if possible, and pass it on to the queue.
- - If physical quantities are measured we will now return standard SI units, not some unexpected stuff like centi°C (Temperature Bricklet). To preserve the precision the Decimal package is used. The only exception to this rule is the use of °C for temperature. This is for convenience.
+ - If physical quantities are measured we will now return standard SI units, not some unexpected stuff like centi °C (Temperature Bricklet). To preserve the precision the Decimal package is used. The only exception to this rule is the use of °C for temperature. This is for convenience.
  - All callbacks now contain a timestamp (Unix timestamp) and the device uid.
 
    Example:
