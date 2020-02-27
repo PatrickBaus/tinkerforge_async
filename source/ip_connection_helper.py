@@ -99,7 +99,7 @@ def unpack_payload(data, form):
 
             # strip null bytes
             ret.append(s)
-            
+
         elif len(x) > 1:
             ret.append(x)
         else:

@@ -147,7 +147,7 @@ class IPConnectionAsync(object):
     CALLBACK_ENUMERATE = 253
     CALLBACK_CONNECTED = 0
     CALLBACK_DISCONNECTED = 1
-    
+
     BROADCAST_UID = 0
 
     # See https://www.tinkerforge.com/en/doc/Low_Level_Protocols/TCPIP.html for details
@@ -177,6 +177,8 @@ class IPConnectionAsync(object):
 
     def __init__(self, loop):
         self.__loop = loop
+        self.__running_tasks = []
+        self.__reader, self.__writer = None, None
         self.__sequence_number = 0
         self.__timeout = DEFAULT_WAIT_TIMEOUT
         self.__pending_requests = {}
@@ -185,13 +187,13 @@ class IPConnectionAsync(object):
         self.__reply_queue = asyncio.Queue(maxsize=20, loop=self.__loop)
 
         self.__devices = {}
-        
+
         self.__logger = logging.getLogger(__name__)
 
     def __get_sequence_number(self):
         self.__sequence_number = (self.__sequence_number % 15) + 1
 
-        return self.__sequence_number 
+        return self.__sequence_number
 
     def __create_packet_header(self, payload_size, function_id, uid=None, response_expected=False):
         uid = IPConnectionAsync.BROADCAST_UID if uid is None else uid
@@ -226,7 +228,7 @@ class IPConnectionAsync(object):
             uid=0 if device is None else device.uid,
             response_expected=response_expected,
         )
-        
+
         request = header + data
 
         # If we are waiting for a response, send the request, then pass on the response as a future
@@ -264,7 +266,7 @@ class IPConnectionAsync(object):
             = unpack_payload(payload, '8s 8s c 3B 3B H B')
 
         enumeration_type = EnumerationType(enumeration_type)
-        
+
         try:
             device_identifier = DeviceIdentifier(device_identifier)
         except ValueError:
@@ -305,7 +307,7 @@ class IPConnectionAsync(object):
         # - Broadcasts/Callbacks
         # - Replies
         # We need to treat them differently
-        
+
         # Callbacks first, because most packets will be callbacks,
         # so it is more efficient to do them first
         if header['sequence_number'] is None:
@@ -364,18 +366,23 @@ class IPConnectionAsync(object):
 
     async def connect(self, host, port=4223):
         self.__reader, self.__writer = await asyncio.open_connection(host, port, loop=self.__loop)
-        self.__main_loop_task = self.__loop.create_task(self.main_loop())
-
-    async def cancel(self):
-        return await self.disconnect()
+        self.__running_tasks.append(self.__loop.create_task(self.main_loop()))
 
     async def disconnect(self):
-        self.__main_loop_task.cancel()
-        await self.__main_loop_task
+        for task in self.__running_tasks:
+            task.cancel()
+        try:
+            await asyncio.gather(*self.__running_tasks)
+            return await self.__flush()
+        except asyncio.CancelledError:
+            pass
+
+    async def __flush(self):
         self.__reader = None
         # Flush data
-        self.__writer.write_eof()
-        await self.__writer.drain()
-        self.__writer.close()
-        self.__writer = None
+        if self.__writer is not None:
+            self.__writer.write_eof()
+            await self.__writer.drain()
+            self.__writer.close()
+            self.__writer = None
 
