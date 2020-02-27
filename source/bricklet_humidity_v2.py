@@ -31,6 +31,8 @@ class FunctionID(IntEnum):
     get_heater_configuration = 10
     set_moving_average_configuration = 11
     get_moving_average_configuration = 12
+    set_samples_per_second = 13
+    get_samples_per_second = 14
     get_spitfp_error_count = 234
     set_bootloader_mode = 235
     get_bootloader_mode = 236
@@ -81,6 +83,15 @@ class LedConfig(IntEnum):
     show_heartbeat = 2
     show_status = 3
 
+@unique
+class SamplesPerSecond(IntEnum):
+    sps20 = 0
+    sps10 = 1
+    sps5  = 2
+    sps1  = 3
+    sps02 = 4
+    sps01 = 5
+
 class BrickletHumidityV2(Device):
     """
     Measures relative humidity
@@ -98,6 +109,7 @@ class BrickletHumidityV2(Device):
     BootloaderMode = BootloaderMode
     BootloaderStatus = BootloaderStatus
     LedConfig = LedConfig
+    SamplesPerSecond = SamplesPerSecond
 
     CALLBACK_FORMATS = {
         CallbackID.humidity: 'H',
@@ -315,7 +327,7 @@ class BrickletHumidityV2(Device):
 
         return HeaterConfig(unpack_payload(payload, 'B'))
 
-    async def set_moving_average_configuration(self, moving_average_length_humidity=100, moving_average_length_temperature=100, response_expected=False):
+    async def set_moving_average_configuration(self, moving_average_length_humidity=5, moving_average_length_temperature=5, response_expected=False):
         """
         Sets the length of a `moving averaging <https://en.wikipedia.org/wiki/Moving_average>`__
         for the humidity and temperature.
@@ -329,10 +341,16 @@ class BrickletHumidityV2(Device):
         averaging window has a length of 50s. If you want to do long term measurements the longest
         moving average will give the cleanest results.
 
-        The default value is 100.
+        * In firmware version 2.0.3 we added the set_samples_per_second() function. It configures
+        the measurement frequency. Since high frequencies can result in self-heating of th IC,
+        changed the default value from 20 samples per second to 1. With 1 sample per second a
+         moving average length of 1000 would result in an averaging window of 1000 seconds!
+
+        The default value is 5.
         """
         assert type(moving_average_length_humidity) is int and moving_average_length_humidity > 0
         assert type(moving_average_length_temperature) is int and moving_average_length_temperature > 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=BrickletHumidityV2.FunctionID.set_moving_average_configuration,
@@ -354,6 +372,46 @@ class BrickletHumidityV2(Device):
         )
 
         return GetMovingAverageConfiguration(*unpack_payload(payload, 'H H'))
+
+    async def set_samples_per_second(self, sps=SamplesPerSecond.sps1, response_expected=False):
+        """
+        Sets the samples per second that are gathered by the humidity/temperature sensor HDC1080.
+        We added this function since we found out that a high measurement frequency can lead to
+        self-heating of the sensor. Which can distort the temperature measurement.
+        If you don't need a lot of measurements, you can use the lowest available measurement
+        frequency of 0.1 samples per second for the least amount of self-heating.
+
+        Before version 2.0.3 the default was 20 samples per second. The new default is 1 sample per second.
+        """
+        assert type(sps) is SamplesPerSecond
+
+        result = await self.ipcon.send_request(
+            device=self,
+            function_id=BrickletHumidityV2.FunctionID.set_samples_per_second,
+            data=pack_payload((sps,), 'B'),
+            response_expected=response_expected
+        )
+        if response_expected:
+            header, _ = result
+            return header['flags'] == Flags.ok
+
+    async def get_samples_per_second(self):
+        """
+        Sets the samples per second that are gathered by the humidity/temperature sensor HDC1080.
+        We added this function since we found out that a high measurement frequency can lead to
+        self-heating of the sensor. Which can distort the temperature measurement.
+        If you don't need a lot of measurements, you can use the lowest available measurement
+        frequency of 0.1 samples per second for the least amount of self-heating.
+
+        Before version 2.0.3 the default was 20 samples per second. The new default is 1 sample per second.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=BrickletHumidityV2.FunctionID.get_samples_per_second,
+            response_expected=True
+        )
+
+        return SamplesPerSecond(unpack_payload(payload, 'B'))
 
     async def get_spitfp_error_count(self):
         """
@@ -605,4 +663,6 @@ class BrickletHumidityV2(Device):
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             if header['function_id'] is BrickletHumidityV2.CallbackID.humidity:
                 payload = self.__humidity_sensor_to_SI(payload)
+            elif header['function_id'] is BrickletHumidityV2.CallbackID.temperature:
+                payload = self.__temperature_sensor_to_SI(payload)
             super().process_callback(header, payload)

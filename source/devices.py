@@ -8,4 +8,3 @@ class DeviceIdentifier(IntEnum):
     BrickletHumidity = 27
     BrickletTemperature = 216
     BrickletHumidityV2 = 283
-    
