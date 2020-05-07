@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, IntEnum, unique
 
-from .devices import DeviceIdentifier, Device
+from .devices import DeviceIdentifier, DeviceWithMCU
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -53,7 +53,7 @@ class SamplesPerSecond(IntEnum):
     sps02 = 4
     sps01 = 5
 
-class BrickletHumidityV2(Device):
+class BrickletHumidityV2(DeviceWithMCU):
     """
     Measures relative humidity
     """
@@ -67,9 +67,6 @@ class BrickletHumidityV2(Device):
     FunctionID = FunctionID
     ThresholdOption = ThresholdOption
     HeaterConfig = HeaterConfig
-    BootloaderMode = BootloaderMode
-    BootloaderStatus = BootloaderStatus
-    LedConfig = LedConfig
     SamplesPerSecond = SamplesPerSecond
 
     CALLBACK_FORMATS = {
@@ -82,7 +79,7 @@ class BrickletHumidityV2(Device):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        Device.__init__(self, uid, ipcon)
+        DeviceWithMCU.__init__(self, uid, ipcon)
 
         self.api_version = (2, 0, 2)
 
