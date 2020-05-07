@@ -1,33 +1,16 @@
 # -*- coding: utf-8 -*-
-
 import asyncio
 import async_timeout
 from enum import IntEnum, unique
 import logging
 import struct
-import time
 import traceback
 
-from .ip_connection_helper import base58decode, unpack_payload
-from .devices import DeviceIdentifier
+from .ip_connection_helper import base58decode, pack_payload, unpack_payload
+from .devices import DeviceIdentifier, FunctionID
 
 class UnknownFunctionError(Exception):
     pass
-
-@unique
-class FunctionID(IntEnum):
-    enumerate = 254
-    adc_calibrate = 251
-    get_adc_calibration = 250
-    read_bricklet_uid = 249
-    write_bricklet_uid = 248
-    read_bricklet_plugin = 247
-    write_bricklet_plugin = 246
-    disconnect_probe = 128
-
-    callback_enumerate = 253
-#    callback_connected = 0
-#    callback_disconnected = 1
 
 @unique
 class EnumerationType(IntEnum):
@@ -47,6 +30,7 @@ class Flags(IntEnum):
     function_not_supported = 2
 
 DEFAULT_WAIT_TIMEOUT = 2.5 # in seconds
+
 def parse_header(data):
     uid, payload_size, function_id, options, flags = struct.unpack_from(IPConnectionAsync.HEADER_FORMAT, data)
     try:
@@ -70,69 +54,6 @@ def parse_header(data):
             'function_id': function_id,
             'flags': flags
            }
-
-class Device(object):
-    RESPONSE_EXPECTED_INVALID_FUNCTION_ID = 0
-    RESPONSE_EXPECTED_ALWAYS_TRUE = 1 # getter
-    RESPONSE_EXPECTED_TRUE = 2 # setter
-    RESPONSE_EXPECTED_FALSE = 3 # setter, default
-
-    def __init__(self, uid, ipcon):
-        """
-        Creates the device object with the unique device ID *uid* and adds
-        it to the IPConnection *ipcon*.
-        """
-
-        self.uid = uid if uid <= 0xFFFFFFFF else uid64_to_uid32(uid)
-        self.ipcon = ipcon
-        self.api_version = (0, 0, 0)
-        self.__registered_queues = {}
-        self.high_level_callbacks = {}
-
-        self.response_expected = [Device.RESPONSE_EXPECTED_INVALID_FUNCTION_ID] * 256
-        self.response_expected[IPConnectionAsync.FUNCTION_ADC_CALIBRATE] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-        self.response_expected[IPConnectionAsync.FUNCTION_GET_ADC_CALIBRATION] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-        self.response_expected[IPConnectionAsync.FUNCTION_READ_BRICKLET_UID] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-        self.response_expected[IPConnectionAsync.FUNCTION_WRITE_BRICKLET_UID] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-        self.response_expected[IPConnectionAsync.FUNCTION_READ_BRICKLET_PLUGIN] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-        self.response_expected[IPConnectionAsync.FUNCTION_WRITE_BRICKLET_PLUGIN] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-
-        ipcon.add_device(self)
-
-    def get_api_version(self):
-        """
-        Returns the API version (major, minor, revision) of the bindings for
-        this device.
-        """
-        return self.api_version
-
-    def process_callback(self, header, payload):
-        """
-        This function will only push the payload to the output queue. The payload still needs to be unpacked.
-        This is to be done by the bricklet and then the payload is to be handed down to this function via super().
-        """
-        try:
-            # Try to push it to the output queue. If the queue is full, drop the oldest packet and insert it again
-            self.__registered_queues[header['function_id']].put_nowait({
-                'timestamp': int(time.time()),
-                'uid': self.uid,
-                'device_id': self.DEVICE_IDENTIFIER,
-                'function_id': header['function_id'],
-                'payload': payload,
-            })
-        except asyncio.QueueFull:
-            # TODO: log a warning, that we are dropping packets
-            self.__registered_queues[header['function_id']].get_nowait()
-            self.__registered_queues[header['function_id']].put_nowait(payload)
-
-    def register_event_queue(self, event_id, queue):
-        """
-        Registers the given *function* with the given *callback_id*.
-        """
-        if queue is None:
-            self.__registered_queues.pop(event_id, None)
-        else:
-            self.__registered_queues[event_id] = queue
 
 class IPConnectionAsync(object):
     FUNCTION_ENUMERATE = 254
@@ -313,10 +234,10 @@ class IPConnectionAsync(object):
         if header['sequence_number'] is None:
             try:
                 # Try to process the callback by handing it to the device
-                self.__devices[header['uid']].process_callback(header, payload)
+                self.__devices[header['uid']]._process_callback(header, payload)
             except (KeyError, UnknownFunctionError):
                 # KeyError: raised if either the device is not registered with us or there is no output queue registered
-                # UnknownFunctionError is raised by process_callback if there is no local function to process the callback.
+                # UnknownFunctionError is raised by _process_callback if there is no local function to process the callback.
                 # Maybe it is a global callback like an enumeration callback
                 try:
                     header['function_id'] = FunctionID(header['function_id'])

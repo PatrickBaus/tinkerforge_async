@@ -3,16 +3,13 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, IntEnum, unique
 
-from .devices import DeviceIdentifier
-from .ip_connection import Device, IPConnectionAsync, Flags, UnknownFunctionError
-from .ip_connection_helper import base58decode, pack_payload, unpack_payload
-from .brick_master import BrickletPort
+from .devices import DeviceIdentifier, Device
+from .ip_connection import Flags, UnknownFunctionError
+from .ip_connection_helper import pack_payload, unpack_payload
 
-GetHumidityCallbackConfiguration = namedtuple('HumidityCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximummax'])
+GetHumidityCallbackConfiguration = namedtuple('HumidityCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 GetMovingAverageConfiguration = namedtuple('MovingAverageConfiguration', ['moving_average_length_humidity', 'moving_average_length_temperature'])
-GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
-GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
 @unique
 class CallbackID(IntEnum):
@@ -33,18 +30,6 @@ class FunctionID(IntEnum):
     get_moving_average_configuration = 12
     set_samples_per_second = 13
     get_samples_per_second = 14
-    get_spitfp_error_count = 234
-    set_bootloader_mode = 235
-    get_bootloader_mode = 236
-    set_write_firmware_pointer = 237
-    write_firmare = 238
-    set_status_led_config = 239
-    get_status_led_config = 240
-    get_chip_temperature = 242
-    reset = 243
-    write_uid = 248
-    read_uid = 249
-    get_identity = 255
 
 @unique
 class ThresholdOption(Enum):
@@ -58,30 +43,6 @@ class ThresholdOption(Enum):
 class HeaterConfig(IntEnum):
     disabled = 0
     enabled = 1
-
-@unique
-class BootloaderMode(IntEnum):
-    bootloader = 0
-    firmware = 1
-    bootloader_wait_for_reboot = 2
-    firmware_wait_for_reboot = 3
-    firmware_wait_for_erase_and_reboot = 4
-
-@unique
-class BootloaderStatus(IntEnum):
-    ok = 0
-    invalid_mode = 1
-    no_change = 2
-    entry_function_not_present = 3
-    device_identifier_incorrect = 4
-    crc_mismatch = 5
-
-@unique
-class LedConfig(IntEnum):
-    off = 0
-    on = 1
-    show_heartbeat = 2
-    show_status = 3
 
 @unique
 class SamplesPerSecond(IntEnum):
@@ -123,7 +84,7 @@ class BrickletHumidityV2(Device):
         """
         Device.__init__(self, uid, ipcon)
 
-        self.api_version = (2, 0, 0)
+        self.api_version = (2, 0, 2)
 
     async def get_humidity(self):
         """
@@ -413,221 +374,6 @@ class BrickletHumidityV2(Device):
 
         return SamplesPerSecond(unpack_payload(payload, 'B'))
 
-    async def get_spitfp_error_count(self):
-        """
-        Returns the error count for the communication between Brick and Bricklet.
-
-        The errors are divided into
-
-        * ack checksum errors,
-        * message checksum errors,
-        * frameing errors and
-        * overflow errors.
-
-        The errors counts are for errors that occur on the Bricklet side. All
-        Bricks have a similar function that returns the errors on the Brick side.
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_spitfp_error_count,
-            response_expected=True
-        )
-
-        return GetSPITFPErrorCount(*unpack_payload(payload, 'I I I I'))
-
-    async def set_bootloader_mode(self, mode):
-        """
-        Sets the bootloader mode and returns the status after the requested
-        mode change was instigated.
-
-        You can change from bootloader mode to firmware mode and vice versa. A change
-        from bootloader mode to firmware mode will only take place if the entry function,
-        device identifier und crc are present and correct.
-
-        This function is used by Brick Viewer during flashing. It should not be
-        necessary to call it in a normal user program.
-        """
-        assert type(mode) is BootloaderMode
-
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.set_bootloader_mode,
-            data=pack_payload((mode.value,), 'B'),
-            response_expected=True
-        )
-        return BootloaderStatus(unpack_payload(payload, 'B'))
-
-    async def get_bootloader_mode(self):
-        """
-        Returns the current bootloader mode, see :func:`Set Bootloader Mode`.
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_bootloader_mode,
-            response_expected=True
-        )
-        return BootloaderMode(unpack_payload(payload, 'B'))
-
-    async def set_write_firmware_pointer(self, pointer, response_expected=False):
-        """
-        Sets the firmware pointer for :func:`Write Firmware`. The pointer has
-        to be increased by chunks of size 64. The data is written to flash
-        every 4 chunks (which equals to one page of size 256).
-
-        This function is used by Brick Viewer during flashing. It should not be
-        necessary to call it in a normal user program.
-        """
-        assert type(pointer) is int and pointer >= 0
-        result = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.set_write_firmware_pointer,
-            data=pack_payload((pointer,), 'I'),
-            response_expected=response_expected
-        )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.ok
-
-    async def write_firmware(self, data):
-        """
-        Writes 64 Bytes of firmware at the position as written by
-        :func:`Set Write Firmware Pointer` before. The firmware is written
-        to flash every 4 chunks.
-
-        You can only write firmware in bootloader mode.
-
-        This function is used by Brick Viewer during flashing. It should not be
-        necessary to call it in a normal user program.
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.write_firmware,
-            data=pack_payload((list(map(int, data)),), '64B'),
-            response_expected=True
-        )
-        return unpack_payload(payload, 'B')
-
-    async def set_status_led_config(self, config=LedConfig.show_status, response_expected=False):
-        """
-        Sets the status LED configuration. By default the LED shows
-        communication traffic between Brick and Bricklet, it flickers once
-        for every 10 received data packets.
-
-        You can also turn the LED permanently on/off or show a heartbeat.
-
-        If the Bricklet is in bootloader mode, the LED is will show heartbeat by default.
-        """
-        assert type(config) is LedConfig
-
-        result = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.set_status_led_config,
-            data=pack_payload((config.value,), 'B'),
-            response_expected=response_expected
-        )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.ok
-
-    async def get_status_led_config(self):
-        """
-        Returns the configuration as set by :func:`Set Status LED Config`
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_status_led_config,
-            response_expected=True
-        )
-        return LedConfig(unpack_payload(payload, 'B'))
-
-    async def get_chip_temperature(self):
-        """
-        Returns the temperature in °C as measured inside the microcontroller. The
-        value returned is not the ambient temperature!
-
-        The temperature is only proportional to the real temperature and it has bad
-        accuracy. Practically it is only useful as an indicator for
-        temperature changes.
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_chip_temperature,
-            response_expected=True
-        )
-        return unpack_payload(payload, 'h')
-
-    async def reset(self):
-        """
-        Calling this function will reset the Bricklet. All configurations
-        will be lost.
-
-        After a reset you have to create new device objects,
-        calling functions on the existing ones will result in
-        undefined behavior!
-        """
-        await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.reset,
-            response_expected=False
-        )
-
-    async def write_uid(self, uid, response_expected=False):
-        """
-        Writes a new UID into flash. If you want to set a new UID
-        you have to decode the Base58 encoded UID string into an
-        integer first.
-
-        We recommend that you use Brick Viewer to change the UID.
-        """
-        assert type(uid) is int and uid >= 0
-        result = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.write_uid,
-            data=pack_payload((uid,), 'I'),
-            response_expected=response_expected
-        )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.ok
-
-    async def read_uid(self):
-        """
-        Returns the current UID as an integer. Encode as
-        Base58 to get the usual string version.
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.read_uid,
-            response_expected=True
-        )
-        return unpack_payload(payload, 'I')
-
-    async def get_identity(self):
-        """
-        Returns the UID, the UID where the Bricklet is connected to,
-        the position, the hardware and firmware version as well as the
-        device identifier.
-
-        The position can be 'a', 'b', 'c' or 'd'.
-
-        The device identifier numbers can be found :ref:`here <device_identifier>`.
-        |device_identifier_constant|
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_identity,
-            response_expected=True
-        )
-        uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, '8s 8s c 3B 3B H')
-        return GetIdentity(
-            base58decode(uid),
-            base58decode(connected_uid),
-            BrickletPort(position),
-            hw_version,
-            fw_version,
-            DeviceIdentifier(device_id)
-        )
-
     def register_event_queue(self, event_id, queue):
         """
         Registers the given *function* with the given *callback_id*.
@@ -653,7 +399,7 @@ class BrickletHumidityV2(Device):
     def __SI_to_temperature_sensor(self, value):
         return int(value * 100)
 
-    def process_callback(self, header, payload):
+    def _process_callback(self, header, payload):
         try:
             header['function_id'] = self.CallbackID(header['function_id'])
         except ValueError:
@@ -665,4 +411,4 @@ class BrickletHumidityV2(Device):
                 payload = self.__humidity_sensor_to_SI(payload)
             elif header['function_id'] is BrickletHumidityV2.CallbackID.temperature:
                 payload = self.__temperature_sensor_to_SI(payload)
-            super().process_callback(header, payload)
+            super()._process_callback(header, payload)

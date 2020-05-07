@@ -3,14 +3,12 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, IntEnum, unique
 
-from .devices import DeviceIdentifier
-from .ip_connection import Device, IPConnectionAsync, Flags, UnknownFunctionError#, Error, create_char, create_char_list, create_string, create_chunk_data
-from .ip_connection_helper import base58decode, pack_payload, unpack_payload
-from .brick_master import BrickletPort
+from .devices import DeviceIdentifier, Device
+from .ip_connection import Flags, UnknownFunctionError
+from .ip_connection_helper import pack_payload, unpack_payload
 
 GetHumidityCallbackThreshold = namedtuple('HumidityCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetAnalogValueCallbackThreshold = namedtuple('AnalogValueCallbackThreshold', ['option', 'minimum', 'maximum'])
-GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
 @unique
 class CallbackID(IntEnum):
@@ -33,7 +31,6 @@ class FunctionID(IntEnum):
     get_analog_value_callback_threshold = 10
     set_debounce_period = 11
     get_debounce_period = 12
-    get_identity = 255
 
 @unique
 class ThresholdOption(Enum):
@@ -303,32 +300,6 @@ class BrickletHumidity(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def get_identity(self):
-        """
-        Returns the UID, the UID where the Bricklet is connected to,
-        the position, the hardware and firmware version as well as the
-        device identifier.
-
-        The position can be 'a', 'b', 'c' or 'd'.
-
-        The device identifier numbers can be found :ref:`here <device_identifier>`.
-        |device_identifier_constant|
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletHumidity.FunctionID.get_identity,
-            response_expected=True
-        )
-        uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, '8s 8s c 3B 3B H')
-        return GetIdentity(
-            base58decode(uid),
-            base58decode(connected_uid),
-            BrickletPort(position),
-            hw_version,
-            fw_version,
-            DeviceIdentifier(device_id)
-        )
-
     def register_event_queue(self, event_id, queue):
         """
         Registers the given *function* with the given *callback_id*.
@@ -345,7 +316,7 @@ class BrickletHumidity(Device):
     def __SI_to_value(self, value):
         return int(value * 10)
 
-    def process_callback(self, header, payload):
+    def _process_callback(self, header, payload):
         try:
             header['function_id'] = self.CallbackID(header['function_id'])
         except ValueError:
@@ -355,4 +326,4 @@ class BrickletHumidity(Device):
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             if header['function_id'] in (BrickletHumidity.CallbackID.humidity, BrickletHumidity.CallbackID.humidity_reached):
                 payload = self.__value_to_SI(payload)
-            super().process_callback(header, payload)
+            super()._process_callback(header, payload)

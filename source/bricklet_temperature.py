@@ -3,13 +3,11 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, IntEnum, unique
 
-from .devices import DeviceIdentifier
-from .ip_connection import Device, IPConnectionAsync, Flags, UnknownFunctionError
-from .ip_connection_helper import base58decode, pack_payload, unpack_payload
-from .brick_master import BrickletPort
+from .devices import DeviceIdentifier, Device
+from .ip_connection import Flags, UnknownFunctionError
+from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'minimum', 'maximum'])
-GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
 @unique
 class CallbackID(IntEnum):
@@ -27,7 +25,6 @@ class FunctionID(IntEnum):
     get_debounce_period = 7
     set_i2c_mode = 10
     get_i2c_mode = 11
-    get_identity = 255
 
 @unique
 class ThresholdOption(Enum):
@@ -240,32 +237,6 @@ class BrickletTemperature(Device):
         )
         return BrickletTemperature.I2cOption(unpack_payload(payload, 'B'))
 
-    async def get_identity(self):
-        """
-        Returns the UID, the UID where the Bricklet is connected to,
-        the position, the hardware and firmware version as well as the
-        device identifier.
-
-        The position can be 'a', 'b', 'c' or 'd'.
-
-        The device identifier numbers can be found :ref:`here <device_identifier>`.
-        |device_identifier_constant|
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=BrickletTemperature.FunctionID.get_identity,
-            response_expected=True
-        )
-        uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, '8s 8s c 3B 3B H')
-        return GetIdentity(
-            base58decode(uid),
-            base58decode(connected_uid),
-            BrickletPort(position),
-            hw_version,
-            fw_version,
-            DeviceIdentifier(device_id)
-        )
-
     def register_event_queue(self, event_id, queue):
         """
         Registers the given *function* with the given *callback_id*.
@@ -282,7 +253,7 @@ class BrickletTemperature(Device):
     def __SI_to_value(self, value):
         return int(value * 100)
 
-    def process_callback(self, header, payload):
+    def _process_callback(self, header, payload):
         try:
             header['function_id'] = self.CallbackID(header['function_id'])
         except ValueError:
@@ -290,7 +261,7 @@ class BrickletTemperature(Device):
             raise UnknownFunctionError from None
         else:
             payload = self.__value_to_SI(
-                          unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-                      )
-            super().process_callback(header, payload)
+                unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+            )
+            super()._process_callback(header, payload)
 

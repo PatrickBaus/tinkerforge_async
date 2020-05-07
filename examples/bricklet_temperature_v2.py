@@ -8,7 +8,7 @@ import warnings
 
 from source.ip_connection import IPConnectionAsync
 from source.devices import DeviceIdentifier
-from source.bricklet_temperature import BrickletTemperature
+from source.bricklet_temperature_v2 import BrickletTemperatureV2
 
 loop = asyncio.get_event_loop()
 ipcon = IPConnectionAsync(loop=loop)
@@ -38,39 +38,61 @@ async def process_enumerations():
     try:
         while 'queue not canceled':
             packet = await ipcon.enumeration_queue.get()
-            if packet['device_id'] is DeviceIdentifier.BrickletTemperature:
+            if packet['device_id'] is DeviceIdentifier.BrickletTemperatureV2:
                 await run_example(packet)
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
 async def run_example(packet):
-    print('Registering temperature bricklet')
-    bricklet = BrickletTemperature(packet['uid'], ipcon) # Create device object
+    print('Registering temperature bricklet 2.0')
+    bricklet = BrickletTemperatureV2(packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
-    # Register the callback queue used by process_callbacks()
-    bricklet.register_event_queue(BrickletTemperature.CallbackID.temperature_reached, callback_queue)
 
-    print('Set callback period to', 1000, 'ms')
-    await bricklet.set_temperature_callback_period(1000)
-    print('Get callback period:', await bricklet.get_temperature_callback_period())
-    print('Get I²C mode:', await bricklet.get_i2c_mode())
-    print('Set I²C mode to', bricklet.I2cOption.slow)
-    await bricklet.set_i2c_mode(bricklet.I2cOption.slow)
-    print('Get I²C mode:', await bricklet.get_i2c_mode())
-    print('Set I²C mode to default')
-    await bricklet.set_i2c_mode()
-    print('Set bricklet debounce period to', 1000, 'ms')
-    await bricklet.set_debounce_period(1000)
-    print('Get bricklet debounce period:', await bricklet.get_debounce_period())
-    print('Set threshold to >10 °C and wait for callbacks')
-    # We use a low temperature on purpose, so that the callback will be triggered
-    await bricklet.set_temperature_callback_threshold(bricklet.ThresholdOption.greater_than, 10, 0)
-    print('Temperature threshold:', await bricklet.get_temperature_callback_threshold())
-    await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
-    print('Disabling threshold callback')
-    await bricklet.set_temperature_callback_threshold()
-    print('Temperature threshold:', await bricklet.get_temperature_callback_threshold())
+    uid = await bricklet.read_uid()
+    print('Device uid:', uid)
+    await bricklet.write_uid(uid)
+
+    # Register the callback queue used by process_callbacks()
+    # We can register the same queue for multiple callbacks.
+    bricklet.register_event_queue(BrickletTemperatureV2.CallbackID.temperature, callback_queue)
+
+    # Query the value
     print('Get temperature:', await bricklet.get_temperature())
+    print('Set callback period to', 1000, 'ms')
+    print('Set threshold to >10 °C and wait for callbacks')
+    # We use a low temperature value on purpose, so that the callback will be triggered
+    await bricklet.set_temperature_callback_configuration(1000, False, bricklet.ThresholdOption.greater_than, 10, 0)
+    print('Temperature callback configuration:', await bricklet.get_temperature_callback_configuration())
+    await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
+    print('Disable threshold callback')
+    await bricklet.set_temperature_callback_configuration()
+    print('Temperature callback configuration:', await bricklet.get_temperature_callback_configuration())
+
+    print('Enabling heater')
+    await bricklet.set_heater_configuration(bricklet.HeaterConfig.enabled)
+    print('Heater config:', await bricklet.get_heater_configuration())
+    print('Disabling heater')
+    await bricklet.set_heater_configuration()
+    print('Heater config:', await bricklet.get_heater_configuration())
+
+    print('SPI error count:', await bricklet.get_spitfp_error_count())
+    
+    print('Current bootloader mode:', await bricklet.get_bootloader_mode())
+    bootloader_mode = bricklet.BootloaderMode.firmware
+    print('Setting bootloader mode to', bootloader_mode, ':', await bricklet.set_bootloader_mode(bootloader_mode))
+
+    print('Disable status LED')
+    await bricklet.set_status_led_config(bricklet.LedConfig.off)
+    print('Current status:', await bricklet.get_status_led_config())
+    await asyncio.sleep(1)
+    print('Enable status LED')
+    await bricklet.set_status_led_config(bricklet.LedConfig.show_status)
+    print('Current status:', await bricklet.get_status_led_config())
+
+    print('Get Chip temperature:', await bricklet.get_chip_temperature())
+
+    print('Reset Bricklet')
+    await bricklet.reset()
 
     # Terminate the loop
     asyncio.ensure_future(stop_loop())

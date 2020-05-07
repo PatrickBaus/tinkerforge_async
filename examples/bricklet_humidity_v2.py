@@ -12,7 +12,7 @@ from source.bricklet_humidity_v2 import BrickletHumidityV2
 
 loop = asyncio.get_event_loop()
 ipcon = IPConnectionAsync(loop=loop)
-callback_queue = asyncio.Queue(loop=loop)
+callback_queue = asyncio.Queue()
 
 running_tasks = []
 
@@ -44,7 +44,7 @@ async def process_enumerations():
         print('Enumeration queue canceled')
 
 async def run_example(packet):
-    print('Registering humidity Bricklet 2.0')
+    print('Registering humidity bricklet 2.0')
     bricklet = BrickletHumidityV2(packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
 
@@ -56,17 +56,17 @@ async def run_example(packet):
     # We can register the same queue for multiple callbacks.
     bricklet.register_event_queue(BrickletHumidityV2.CallbackID.humidity, callback_queue)
     bricklet.register_event_queue(BrickletHumidityV2.CallbackID.temperature, callback_queue)
-    
+
     print('Setting moving average to 20 samples -> 50 ms/sample * 20 samples = 1 s')
     await bricklet.set_moving_average_configuration(20, 20)
     print('Moving average configuration:', await bricklet.get_moving_average_configuration())
 
-
-    # Use a humidity callback
+    # Query a value
     print('Get humidity:', await bricklet.get_humidity())
+    # Use a humidity callback
     print('Set callback period to', 1000, 'ms')
     print('Set threshold to >10 %rH and wait for callbacks')
-    # We use a low humidity on purpose, so that the callback will be triggered
+    # We use a low humidity value on purpose, so that the callback will be triggered
     await bricklet.set_humidity_callback_configuration(1000, False, bricklet.ThresholdOption.greater_than, 10, 0)
     print('Humidity callback configuration:', await bricklet.get_humidity_callback_configuration())
     await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
@@ -135,6 +135,7 @@ async def main():
         await ipcon.connect(host='127.0.0.1', port=4223)
         running_tasks.append(asyncio.ensure_future(process_callbacks()))
         running_tasks.append(asyncio.ensure_future(process_enumerations()))
+        print("Enumerating brick and waiting for bricklets to reply")
         await ipcon.enumerate()
     except ConnectionRefusedError:
         print('Could not connect to server. Connection refused. Is the brick daemon up?')

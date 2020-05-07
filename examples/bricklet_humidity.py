@@ -12,7 +12,7 @@ from source.bricklet_humidity import BrickletHumidity
 
 loop = asyncio.get_event_loop()
 ipcon = IPConnectionAsync(loop=loop)
-callback_queue = asyncio.Queue(loop=loop)
+callback_queue = asyncio.Queue()
 
 running_tasks = []
 
@@ -96,6 +96,7 @@ async def main():
         await ipcon.connect(host='127.0.0.1', port=4223)
         running_tasks.append(asyncio.ensure_future(process_callbacks()))
         running_tasks.append(asyncio.ensure_future(process_enumerations()))
+        print("Enumerating brick and waiting for bricklets to reply")
         await ipcon.enumerate()
     except ConnectionRefusedError:
         print('Could not connect to server. Connection refused. Is the brick daemon up?')
