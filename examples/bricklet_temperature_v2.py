@@ -43,6 +43,12 @@ async def process_enumerations():
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
+def error_handler(task):
+    try:
+      task.result()
+    except Exception:
+      asyncio.ensure_future(stop_loop())
+
 async def run_example(packet):
     print('Registering temperature bricklet 2.0')
     bricklet = BrickletTemperatureV2(packet['uid'], ipcon) # Create device object
@@ -105,11 +111,19 @@ async def stop_loop():
     await asyncio.gather(*running_tasks)
     loop.stop()    
 
+def error_handler(task):
+    try:
+      task.result()
+    except Exception:
+      asyncio.ensure_future(stop_loop())
+
 async def main():
     try: 
         await ipcon.connect(host='127.0.0.1', port=4223)
         running_tasks.append(asyncio.ensure_future(process_callbacks()))
+        running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
         running_tasks.append(asyncio.ensure_future(process_enumerations()))
+        running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
         print("Enumerating brick and waiting for bricklets to reply")
         await ipcon.enumerate()
     except ConnectionRefusedError:
@@ -123,5 +137,7 @@ logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection.
 
 # Start the main loop, the run the async loop forever
 running_tasks.append(asyncio.ensure_future(main()))
+running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
+loop.set_debug(enabled=True)    # Raise all execption and log all callbacks taking longer than 100 ms
 loop.run_forever()
 loop.close()
