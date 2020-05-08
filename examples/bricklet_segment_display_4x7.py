@@ -69,8 +69,8 @@ async def run_example(packet):
         await asyncio.sleep(1)    # Wait for 1 second
         print('Counter value: ', await bricklet.get_counter_value())
 
-#    print('Turning off segments')
-#    await bricklet.set_segments(segments=[0,0,0,0], brightness=0, colon=True)
+    print('Turning off segments')
+    await bricklet.set_segments(segments=[0,0,0,0], brightness=0, colon=True)
 
     # Terminate the loop
     asyncio.ensure_future(stop_loop())
