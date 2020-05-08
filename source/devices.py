@@ -17,6 +17,7 @@ class DeviceIdentifier(IntEnum):
     BrickletHumidity = 27
     BrickletTemperature = 216
     BrickletSegmentDisplay4x7 = 237
+    BrickletAmbientLightV2 = 259
     BrickletHumidityV2 = 283
     BrickletTemperatureV2 = 2113
 
@@ -56,6 +57,13 @@ class Device(object):
     RESPONSE_EXPECTED_TRUE = 2 # setter
     RESPONSE_EXPECTED_FALSE = 3 # setter, default
 
+    @property
+    def ipcon(self):
+        """
+        Get the ip connection associated with the device
+        """
+        return self.__ipcon
+
     def __init__(self, uid, ipcon):
         """
         Creates the device object with the unique device ID *uid* and adds
@@ -63,20 +71,12 @@ class Device(object):
         """
 
         self.uid = uid if uid <= 0xFFFFFFFF else uid64_to_uid32(uid)
-        self.ipcon = ipcon
+        self.__ipcon = ipcon
         self.api_version = (0, 0, 0)
         self.__registered_queues = {}
         self.high_level_callbacks = {}
 
-#        self.response_expected = [Device.RESPONSE_EXPECTED_INVALID_FUNCTION_ID] * 256
-#        self.response_expected[IPConnectionAsync.FUNCTION_ADC_CALIBRATE] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-#        self.response_expected[IPConnectionAsync.FUNCTION_GET_ADC_CALIBRATION] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-#        self.response_expected[IPConnectionAsync.FUNCTION_READ_BRICKLET_UID] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-#        self.response_expected[IPConnectionAsync.FUNCTION_WRITE_BRICKLET_UID] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-#        self.response_expected[IPConnectionAsync.FUNCTION_READ_BRICKLET_PLUGIN] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-#        self.response_expected[IPConnectionAsync.FUNCTION_WRITE_BRICKLET_PLUGIN] = Device.RESPONSE_EXPECTED_ALWAYS_TRUE
-
-        ipcon.add_device(self)
+        self.ipcon.add_device(self)
 
     def get_api_version(self):
         """
@@ -112,6 +112,33 @@ class Device(object):
             self.__registered_queues.pop(event_id, None)
         else:
             self.__registered_queues[event_id] = queue
+
+    async def set_debounce_period(self, debounce_period=100, response_expected=True):
+        """
+        Sets the period in ms with which the threshold callbacks
+
+        * :cb:`Humidity Reached`,
+        * :cb:`Analog Value Reached`
+
+        are triggered, if the thresholds
+
+        * :func:`Set Humidity Callback Threshold`,
+        * :func:`Set Analog Value Callback Threshold`
+
+        keep being reached.
+
+        The default value is 100.
+        """
+        assert debounce_period >= 0
+        result = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.set_debounce_period,
+            data=pack_payload((int(debounce_period),), 'I'),
+            response_expected=response_expected
+        )
+        if response_expected:
+            header, _ = result
+            return header['flags'] == Flags.ok
 
     async def get_identity(self):
         """
