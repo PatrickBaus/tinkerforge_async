@@ -95,7 +95,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_humidity,
+            function_id=FunctionID.get_humidity,
             response_expected=True
         )
         return self.__humidity_sensor_to_SI(unpack_payload(payload, 'H'))
@@ -139,7 +139,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         assert type(maximum) is int and maximum >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.set_humidity_callback_configuraton,
+            function_id=FunctionID.set_humidity_callback_configuraton,
             data=pack_payload(
               (
                 period,
@@ -160,7 +160,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_humidity_callback_configuraton,
+            function_id=FunctionID.get_humidity_callback_configuraton,
             response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c H H')
@@ -181,7 +181,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_temperature,
+            function_id=FunctionID.get_temperature,
             response_expected=True
         )
         return self.__temperature_sensor_to_SI(unpack_payload(payload, 'h'))
@@ -225,7 +225,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         assert type(maximum) is int and maximum >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.set_temperature_callback_configuraton,
+            function_id=FunctionID.set_temperature_callback_configuraton,
             data=pack_payload(
               (
                 period,
@@ -246,7 +246,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_temperature_callback_configuraton,
+            function_id=FunctionID.get_temperature_callback_configuraton,
             response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c H H')
@@ -265,7 +265,7 @@ class BrickletHumidityV2(DeviceWithMCU):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.set_heater_configuration,
+            function_id=FunctionID.set_heater_configuration,
             data=pack_payload((heater_config.value,), 'B'),
             response_expected=response_expected
         )
@@ -279,7 +279,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_heater_configuration,
+            function_id=FunctionID.get_heater_configuration,
             response_expected=True
         )
 
@@ -311,7 +311,7 @@ class BrickletHumidityV2(DeviceWithMCU):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.set_moving_average_configuration,
+            function_id=FunctionID.set_moving_average_configuration,
             data=pack_payload((moving_average_length_humidity,moving_average_length_temperature), 'H H'),
             response_expected=response_expected
         )
@@ -325,7 +325,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_moving_average_configuration,
+            function_id=FunctionID.get_moving_average_configuration,
             response_expected=True
         )
 
@@ -345,7 +345,7 @@ class BrickletHumidityV2(DeviceWithMCU):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.set_samples_per_second,
+            function_id=FunctionID.set_samples_per_second,
             data=pack_payload((sps,), 'B'),
             response_expected=response_expected
         )
@@ -365,7 +365,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletHumidityV2.FunctionID.get_samples_per_second,
+            function_id=FunctionID.get_samples_per_second,
             response_expected=True
         )
 
@@ -375,7 +375,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         """
         Registers the given *function* with the given *callback_id*.
         """
-        assert type(event_id) is BrickletHumidityV2.CallbackID
+        assert type(event_id) is CallbackID
         super().register_event_queue(event_id, queue)
 
     def __humidity_sensor_to_SI(self, value):
@@ -404,8 +404,8 @@ class BrickletHumidityV2(DeviceWithMCU):
             raise UnknownFunctionError from None
         else:
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            if header['function_id'] is BrickletHumidityV2.CallbackID.humidity:
+            if header['function_id'] is CallbackID.humidity:
                 payload = self.__humidity_sensor_to_SI(payload)
-            elif header['function_id'] is BrickletHumidityV2.CallbackID.temperature:
+            elif header['function_id'] is CallbackID.temperature:
                 payload = self.__temperature_sensor_to_SI(payload)
             super()._process_callback(header, payload)

@@ -68,7 +68,7 @@ class BrickletSegmentDisplay4x7(Device):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletSegmentDisplay4x7.FunctionID.set_segments,
+            function_id=FunctionID.set_segments,
             data=pack_payload((segments, brightness, colon), '4B B !'),
             response_expected=response_expected
         )
@@ -88,7 +88,7 @@ class BrickletSegmentDisplay4x7(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletSegmentDisplay4x7.FunctionID.get_segments,
+            function_id=FunctionID.get_segments,
             response_expected=True
         )
         return GetSegments(*unpack_payload(payload, '4B B !'))
@@ -114,7 +114,7 @@ class BrickletSegmentDisplay4x7(Device):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletSegmentDisplay4x7.FunctionID.start_counter,
+            function_id=FunctionID.start_counter,
             data=pack_payload((value_from, value_to, increment, length, ), 'h h h I'),
             response_expected=response_expected
         )
@@ -131,7 +131,7 @@ class BrickletSegmentDisplay4x7(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletSegmentDisplay4x7.FunctionID.get_counter_value,
+            function_id=FunctionID.get_counter_value,
             response_expected=True
         )
         return unpack_payload(payload, 'H')
@@ -140,7 +140,7 @@ class BrickletSegmentDisplay4x7(Device):
         """
         Registers the given *function* with the given *callback_id*.
         """
-        assert type(event_id) is BrickletSegmentDisplay4x7.CallbackID
+        assert type(event_id) is CallbackID
         super().register_event_queue(event_id, queue)
 
     def _process_callback(self, header, payload):

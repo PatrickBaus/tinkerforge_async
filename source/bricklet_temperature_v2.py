@@ -74,7 +74,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperatureV2.FunctionID.get_temperature,
+            function_id=FunctionID.get_temperature,
             response_expected=True
         )
         return self.__value_to_SI(unpack_payload(payload, 'h'))
@@ -118,7 +118,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         assert type(maximum) is int and maximum >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperatureV2.FunctionID.set_temperature_callback_configuraton,
+            function_id=FunctionID.set_temperature_callback_configuraton,
             data=pack_payload(
               (
                 period,
@@ -140,7 +140,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperatureV2.FunctionID.get_temperature_callback_configuraton,
+            function_id=FunctionID.get_temperature_callback_configuraton,
             response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c h h')
@@ -156,7 +156,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperatureV2.FunctionID.set_heater_configuration,
+            function_id=FunctionID.set_heater_configuration,
             data=pack_payload((heater_config.value,), 'B'),
             response_expected=response_expected
         )
@@ -170,7 +170,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperatureV2.FunctionID.get_heater_configuration,
+            function_id=FunctionID.get_heater_configuration,
             response_expected=True
         )
 

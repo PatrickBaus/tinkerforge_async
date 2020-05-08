@@ -80,7 +80,7 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperature.FunctionID.get_temperature,
+            function_id=FunctionID.get_temperature,
             response_expected=True
         )
         return self.__value_to_SI(unpack_payload(payload, 'h'))
@@ -98,7 +98,7 @@ class BrickletTemperature(Device):
         assert type(period) is int and period >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperature.FunctionID.set_temperature_callback_period,
+            function_id=FunctionID.set_temperature_callback_period,
             data=pack_payload((period,), 'I'),
             response_expected = response_expected,
         )
@@ -113,7 +113,7 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperature.FunctionID.get_temperature_callback_period,
+            function_id=FunctionID.get_temperature_callback_period,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
@@ -139,7 +139,7 @@ class BrickletTemperature(Device):
         assert type(option) is ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperature.FunctionID.set_temperature_callback_threshold,
+            function_id=FunctionID.set_temperature_callback_threshold,
             data=pack_payload((option.value.encode(), self.__SI_to_value(minimum), self.__SI_to_value(maximum)), 'c h h'),
             response_expected=response_expected
         )
@@ -153,7 +153,7 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperature.FunctionID.get_temperature_callback_threshold,
+            function_id=FunctionID.get_temperature_callback_threshold,
             response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, 'c h h')
@@ -178,7 +178,7 @@ class BrickletTemperature(Device):
         assert type(debounce_period) is int and debounce_period >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperature.FunctionID.set_debounce_period,
+            function_id=FunctionID.set_debounce_period,
             data=pack_payload((debounce_period,), 'I'),
             response_expected=response_expected
         )
@@ -192,7 +192,7 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperature.FunctionID.get_debounce_period,
+            function_id=FunctionID.get_debounce_period,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
@@ -213,10 +213,10 @@ class BrickletTemperature(Device):
 
         .. versionadded:: 2.0.1$nbsp;(Plugin)
         """
-        assert type(mode) is BrickletTemperature.I2cOption
+        assert type(mode) is I2cOption
         result = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperature.FunctionID.set_i2c_mode,
+            function_id=FunctionID.set_i2c_mode,
             data=pack_payload((mode.value,), 'B'),
             response_expected=response_expected
         )
@@ -232,16 +232,16 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=BrickletTemperature.FunctionID.get_i2c_mode,
+            function_id=FunctionID.get_i2c_mode,
             response_expected=True
         )
-        return BrickletTemperature.I2cOption(unpack_payload(payload, 'B'))
+        return I2cOption(unpack_payload(payload, 'B'))
 
     def register_event_queue(self, event_id, queue):
         """
         Registers the given *function* with the given *callback_id*.
         """
-        assert type(event_id) is BrickletTemperature.CallbackID
+        assert type(event_id) is CallbackID
         super().register_event_queue(event_id, queue)
 
     def __value_to_SI(self, value):
