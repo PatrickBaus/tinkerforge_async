@@ -4,7 +4,6 @@ from collections import namedtuple
 from enum import Enum, unique
 import time
 
-from .ip_connection import Flags
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
 GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
@@ -158,28 +157,28 @@ class Device(object):
         )
 
 @unique
-class BootloaderMode(IntEnum):
-    bootloader = 0
-    firmware = 1
-    bootloader_wait_for_reboot = 2
-    firmware_wait_for_reboot = 3
-    firmware_wait_for_erase_and_reboot = 4
+class BootloaderMode(Enum):
+    BOOTLOADER = 0
+    FIRMARE = 1
+    BOOTLOADER_WAIT_FOR_REBOOT = 2
+    FIRMWARE_WAIT_FOR_REBOOT = 3
+    FIRMWARE_WAIT_FOR_ERASE_AND_REBOOT = 4
 
 @unique
-class BootloaderStatus(IntEnum):
-    ok = 0
-    invalid_mode = 1
-    no_change = 2
-    entry_function_not_present = 3
-    device_identifier_incorrect = 4
-    crc_mismatch = 5
+class BootloaderStatus(Enum):
+    OK = 0
+    INVALID_MODE = 1
+    NO_CHANGE = 2
+    ENTRY_FUNCTION_NOT_PRESENT = 3
+    DEVICE_IDENTIFIER_INCORRECT = 4
+    CRC_MISMATCH = 5
 
 @unique
-class LedConfig(IntEnum):
-    off = 0
-    on = 1
-    show_heartbeat = 2
-    show_status = 3
+class LedConfig(Enum):
+    OFF = 0
+    ON = 1
+    SHOW_HEARTBEAT = 2
+    SHOW_STATUS = 3
 
 class DeviceWithMCU(Device):
     # Convenience imports, so that the user does not need to additionally import them
@@ -281,7 +280,7 @@ class DeviceWithMCU(Device):
         )
         return unpack_payload(payload, 'B')
 
-    async def set_status_led_config(self, config=LedConfig.show_status, response_expected=False):
+    async def set_status_led_config(self, config=LedConfig.SHOW_STATUS, response_expected=False):
         """
         Sets the status LED configuration. By default the LED shows
         communication traffic between Brick and Bricklet, it flickers once
