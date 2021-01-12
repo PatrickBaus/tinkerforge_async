@@ -324,7 +324,7 @@ class BrickletHumidity(Device):
             raise UnknownFunctionError from None
         else:
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            if header['function_id'] in (CallbackID.humidity, CallbackID.humidity_reached):
+            if header['function_id'] in (CallbackID.HUMIDITY, CallbackID.HUMIDITY_REACHED):
                 payload = self.__value_to_SI(payload)
             super()._process_callback(header, payload)
 
