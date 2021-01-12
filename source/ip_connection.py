@@ -116,7 +116,7 @@ class IPConnectionAsync(object):
 
         sequence_number_and_options = (sequence_number << 4) | response_expected << 3
 
-        return (struct.pack(IPConnectionAsync.HEADER_FORMAT, uid, packet_size, function_id, sequence_number_and_options, Flags.OK),
+        return (struct.pack(IPConnectionAsync.HEADER_FORMAT, uid, packet_size, function_id, sequence_number_and_options, Flags.OK.value),
                 sequence_number)
 
     def add_device(self, device):
