@@ -131,7 +131,7 @@ class IPConnectionAsync(object):
         self.__logger.debug('Enumerating Node')
         await self.send_request(
             device=None,
-            function_id=FunctionID.enumerate
+            function_id=FunctionID.ENUMERATE
         )
 
     async def send_request(self, device, function_id, data=b'', response_expected=False):
@@ -234,7 +234,7 @@ class IPConnectionAsync(object):
                 try:
                     header['function_id'] = FunctionID(header['function_id'])
                     # This packet must be processed by the ip connection
-                    if header['function_id'] is FunctionID.callback_enumerate:
+                    if header['function_id'] is FunctionID.CALLBACK_ENUMERATE:
                         payload = self.__parse_enumerate_payload(payload)
                         self.__logger.debug('Received enumeration: %(header)s - %(payload)s', {'header': header, 'payload': payload})
                         if self.__self.__enumeration_queue.full():
