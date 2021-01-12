@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import async_timeout
-from enum import IntEnum, unique
+from enum import Enum, Flag
 import logging
 import struct
 import traceback
@@ -12,22 +12,15 @@ from .devices import DeviceIdentifier, FunctionID
 class UnknownFunctionError(Exception):
     pass
 
-@unique
-class EnumerationType(IntEnum):
-    available = 0
-    connected = 1
-    disconnected = 2
+class EnumerationType(Enum):
+    AVAILABLE = 0
+    CONNECTED = 1
+    DISCONNECTED = 2
 
-@unique
-class MessageType(IntEnum):
-    device_connected = 0
-    device_disconnected = 1
-
-@unique
-class Flags(IntEnum):
-    ok = 0
-    invalid_parameter = 1
-    function_not_supported = 2
+class Flags(Flag):
+    OK = 0
+    INVALID_PARAMETER = 1
+    FUNCTION_NOT_SUPPORTED = 2
 
 DEFAULT_WAIT_TIMEOUT = 2.5 # in seconds
 
@@ -124,7 +117,7 @@ class IPConnectionAsync(object):
 
         sequence_number_and_options = (sequence_number << 4) | response_expected << 3
 
-        return (struct.pack(IPConnectionAsync.HEADER_FORMAT, uid, packet_size, function_id, sequence_number_and_options, Flags.ok),
+        return (struct.pack(IPConnectionAsync.HEADER_FORMAT, uid, packet_size, function_id, sequence_number_and_options, Flags.OK),
                 sequence_number)
 
     def add_device(self, device):
@@ -145,7 +138,7 @@ class IPConnectionAsync(object):
     async def send_request(self, device, function_id, data=b'', response_expected=False):
         header, sequence_number = self.__create_packet_header(
             payload_size=len(data),
-            function_id=function_id,
+            function_id=function_id.value,
             uid=0 if device is None else device.uid,
             response_expected=response_expected,
         )

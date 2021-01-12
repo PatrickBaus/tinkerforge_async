@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import asyncio
 from collections import namedtuple
-from enum import Enum, IntEnum, unique
+from enum import Enum, unique
 import time
 
+from .ip_connection import Flags
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
 GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
@@ -11,7 +12,7 @@ GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardw
 
 
 @unique
-class DeviceIdentifier(IntEnum):
+class DeviceIdentifier(Enum):
     BrickMaster = 13
     BrickletAmbientLight = 21
     BrickletHumidity = 27
@@ -23,27 +24,29 @@ class DeviceIdentifier(IntEnum):
     BrickletTemperatureV2 = 2113
 
 @unique
-class FunctionID(IntEnum):
-    enumerate = 254
-    adc_calibrate = 251
-    get_adc_calibration = 250
-    read_bricklet_uid = 249
-    write_bricklet_uid = 248
-    read_bricklet_plugin = 247
-    write_bricklet_plugin = 246
-    disconnect_probe = 128
+class FunctionID(Enum):
+    ENUMERATE = 254
+    ADC_CALIBRATE = 251
+    GET_ADC_CALIBRATION = 250
+    READ_BRICKLET_UID = 249
+    WRITE_BRICKLET_UID = 248
+    READ_BRICKLET_PLUGIN = 247
+    WRITE_BRICKLET_PLUGIN = 246
+    DISCONNECT_PROBE = 128
 
-    callback_enumerate = 253
+    CALLBACK_ENUMERATE = 253
     # Available only on bricklets with MCUs (aka the new 7p bricklets)
-    get_spitfp_error_count = 234
-    set_bootloader_mode = 235
-    get_bootloader_mode = 236
-    set_status_led_config = 239
-    get_status_led_config = 240
-    get_chip_temperature = 242
-    reset = 243
+    GET_SPITFP_ERROR_COUNT = 234
+    SET_BOOTLOADER_MODE = 235
+    GET_BOOTLOADER_MODE = 236
+    SET_WRITE_FIRMWARE_POINTER = 237
+    WRITE_FIRMWARE = 238
+    SET_STATUS_LED_CONFIG = 239
+    GET_STATUS_LED_CONFIG = 240
+    GET_CHIP_TEMPERATURE = 242
+    RESET = 243
     # Available on all bricklets
-    get_identity = 255
+    GET_IDENTITY = 255
 
 @unique
 class BrickletPort(Enum):
@@ -114,33 +117,6 @@ class Device(object):
         else:
             self.__registered_queues[event_id] = queue
 
-    async def set_debounce_period(self, debounce_period=100, response_expected=True):
-        """
-        Sets the period in ms with which the threshold callbacks
-
-        * :cb:`Humidity Reached`,
-        * :cb:`Analog Value Reached`
-
-        are triggered, if the thresholds
-
-        * :func:`Set Humidity Callback Threshold`,
-        * :func:`Set Analog Value Callback Threshold`
-
-        keep being reached.
-
-        The default value is 100.
-        """
-        assert debounce_period >= 0
-        result = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.set_debounce_period,
-            data=pack_payload((int(debounce_period),), 'I'),
-            response_expected=response_expected
-        )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.ok
-
     async def get_identity(self):
         """
         Returns the UID, the UID where the Bricklet is connected to,
@@ -154,7 +130,7 @@ class Device(object):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_identity,
+            function_id=FunctionID.GET_IDENTITY,
             response_expected=True
         )
         uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, '8s 8s c 3B 3B H')
@@ -213,7 +189,7 @@ class DeviceWithMCU(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_spitfp_error_count,
+            function_id=FunctionID.GET_SPITFP_ERROR_COUNT,
             response_expected=True
         )
 
@@ -235,7 +211,7 @@ class DeviceWithMCU(Device):
 
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_bootloader_mode,
+            function_id=FunctionID.SET_BOOTLOADER_MODE,
             data=pack_payload((mode.value,), 'B'),
             response_expected=True
         )
@@ -247,7 +223,7 @@ class DeviceWithMCU(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_bootloader_mode,
+            function_id=FunctionID.GET_BOOTLOADER_MODE,
             response_expected=True
         )
         return BootloaderMode(unpack_payload(payload, 'B'))
@@ -264,13 +240,13 @@ class DeviceWithMCU(Device):
         assert type(pointer) is int and pointer >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_write_firmware_pointer,
+            function_id=FunctionID.SET_WRITE_FIRMWARE_POINTER,
             data=pack_payload((pointer,), 'I'),
             response_expected=response_expected
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def write_firmware(self, data):
         """
@@ -285,7 +261,7 @@ class DeviceWithMCU(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.write_firmware,
+            function_id=FunctionID.WRITE_FIRMWARE,
             data=pack_payload((list(map(int, data)),), '64B'),
             response_expected=True
         )
@@ -305,13 +281,13 @@ class DeviceWithMCU(Device):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_status_led_config,
+            function_id=FunctionID.SET_STATUS_LED_CONFIG,
             data=pack_payload((config.value,), 'B'),
             response_expected=response_expected
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_status_led_config(self):
         """
@@ -319,7 +295,7 @@ class DeviceWithMCU(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_status_led_config,
+            function_id=FunctionID.GET_STATUS_LED_CONFIG,
             response_expected=True
         )
         return LedConfig(unpack_payload(payload, 'B'))
@@ -335,7 +311,7 @@ class DeviceWithMCU(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_chip_temperature,
+            function_id=FunctionID.GET_CHIP_TEMPERATURE,
             response_expected=True
         )
         return unpack_payload(payload, 'h')
@@ -351,7 +327,7 @@ class DeviceWithMCU(Device):
         """
         await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.reset,
+            function_id=FunctionID.RESET,
             response_expected=False
         )
 
@@ -366,13 +342,13 @@ class DeviceWithMCU(Device):
         assert type(uid) is int and uid >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.write_bricklet_uid,
+            function_id=FunctionID.WRITE_BRICKLET_UID,
             data=pack_payload((uid,), 'I'),
             response_expected=response_expected
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def read_uid(self):
         """
@@ -381,7 +357,7 @@ class DeviceWithMCU(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.read_bricklet_uid,
+            function_id=FunctionID.READ_BRICKLET_UID,
             response_expected=True
         )
         return unpack_payload(payload, 'I')

@@ -1,43 +1,43 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
 from decimal import Decimal
-from enum import Enum, IntEnum, unique
+from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device
+from .devices import DeviceIdentifier, Device, device_factory
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'minimum', 'maximum'])
 
 @unique
-class CallbackID(IntEnum):
-    temperature = 8
-    temperature_reached = 9
+class CallbackID(Enum):
+    TEMPERATURE = 8
+    TEMPERATURE_REACHED = 9
 
 @unique
-class FunctionID(IntEnum):
-    get_temperature = 1
-    set_temperature_callback_period = 2
-    get_temperature_callback_period = 3
-    set_temperature_callback_threshold = 4
-    get_temperature_callback_threshold = 5
-    set_debounce_period = 6
-    get_debounce_period = 7
-    set_i2c_mode = 10
-    get_i2c_mode = 11
+class FunctionID(Enum):
+    GET_TEMPERATURE = 1
+    SET_TEMPERATURE_CALLBACK_PERIOD = 2
+    GET_TEMPERATURE_CALLBACK_PERIOD = 3
+    SET_TEMPERATURE_CALLBACK_THRESHOLD = 4
+    GET_TEMPERATURE_CALLBACK_THRESHOLD = 5
+    SET_DEBOUNCE_PERIOD = 6
+    GET_DEBOUNCE_PERIOD = 7
+    SET_I2C_MODE = 10
+    GET_I2C_MODE = 11
 
 @unique
 class ThresholdOption(Enum):
-    off = 'x'
-    outside = 'o'
-    inside = 'i'
-    less_than = '<'
-    greater_than = '>'
+    OFF = 'x'
+    OUTSIDE = 'o'
+    INSIDE = 'i'
+    LESS_THAN = '<'
+    GREATER_THAN = '>'
 
 @unique
-class I2cOption(IntEnum):
-  fast = 0
-  slow = 1
+class I2cOption(Enum):
+  FAST = 0
+  SLOW = 1
 
 class BrickletTemperature(Device):
     """
@@ -55,8 +55,8 @@ class BrickletTemperature(Device):
     I2cOption = I2cOption
 
     CALLBACK_FORMATS = {
-        CallbackID.temperature: 'h',
-        CallbackID.temperature_reached: 'h',
+        CallbackID.TEMPERATURE: 'h',
+        CallbackID.TEMPERATURE_REACHED: 'h',
     }
 
     def __init__(self, uid, ipcon):
@@ -80,7 +80,7 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_temperature,
+            function_id=FunctionID.GET_TEMPERATURE,
             response_expected=True
         )
         return self.__value_to_SI(unpack_payload(payload, 'h'))
@@ -98,7 +98,7 @@ class BrickletTemperature(Device):
         assert type(period) is int and period >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_temperature_callback_period,
+            function_id=FunctionID.SET_TEMPERATURE_CALLBACK_PERIOD,
             data=pack_payload((period,), 'I'),
             response_expected = response_expected,
         )
@@ -113,12 +113,12 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_temperature_callback_period,
+            function_id=FunctionID.GET_TEMPERATURE_CALLBACK_PERIOD,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
 
-    async def set_temperature_callback_threshold(self, option=ThresholdOption.off, minimum=0, maximum=0, response_expected=True):
+    async def set_temperature_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
         Sets the thresholds for the :cb:`Temperature Reached` callback.
 
@@ -139,8 +139,8 @@ class BrickletTemperature(Device):
         assert type(option) is ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_temperature_callback_threshold,
-            data=pack_payload((option.value.encode(), self.__SI_to_value(minimum), self.__SI_to_value(maximum)), 'c h h'),
+            function_id=FunctionID.SET_TEMPERATURE_CALLBACK_THRESHOLD,
+            data=pack_payload((option.value.encode('ascii'), self.__SI_to_value(minimum), self.__SI_to_value(maximum)), 'c h h'),
             response_expected=response_expected
         )
         if response_expected:
@@ -153,7 +153,7 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_temperature_callback_threshold,
+            function_id=FunctionID.GET_TEMPERATURE_CALLBACK_THRESHOLD,
             response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, 'c h h')
@@ -178,7 +178,7 @@ class BrickletTemperature(Device):
         assert type(debounce_period) is int and debounce_period >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_debounce_period,
+            function_id=FunctionID.SET_DEBOUNCE_PERIOD,
             data=pack_payload((debounce_period,), 'I'),
             response_expected=response_expected
         )
@@ -192,12 +192,12 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_debounce_period,
+            function_id=FunctionID.GET_DEBOUNCE_PERIOD,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
 
-    async def set_i2c_mode(self, mode=I2cOption.fast, response_expected=False):
+    async def set_i2c_mode(self, mode=I2cOption.FAST, response_expected=False):
         """
         Sets the I2C mode. Possible modes are:
 
@@ -216,7 +216,7 @@ class BrickletTemperature(Device):
         assert type(mode) is I2cOption
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_i2c_mode,
+            function_id=FunctionID.SET_I2C_MODE,
             data=pack_payload((mode.value,), 'B'),
             response_expected=response_expected
         )
@@ -232,7 +232,7 @@ class BrickletTemperature(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_i2c_mode,
+            function_id=FunctionID.GET_I2C_MODE,
             response_expected=True
         )
         return I2cOption(unpack_payload(payload, 'B'))
@@ -264,4 +264,6 @@ class BrickletTemperature(Device):
                 unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             )
             super()._process_callback(header, payload)
+
+device_factory.register(DeviceIdentifier.BrickletTemperature, BrickletTemperature)
 

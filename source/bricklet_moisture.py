@@ -1,38 +1,38 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
 from decimal import Decimal
-from enum import Enum, IntEnum, unique
+from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device
+from .devices import DeviceIdentifier, Device, device_factory
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetMoistureCallbackThreshold = namedtuple('MoistureCallbackThreshold', ['option', 'minimum', 'maximum'])
 
 @unique
-class CallbackID(IntEnum):
-    moisture = 8
-    moisture_reached = 9
+class CallbackID(Enum):
+    MOISTURE = 8
+    MOISTURE_REACHED = 9
 
 @unique
-class FunctionID(IntEnum):
-    get_moisture = 1
-    set_moisture_callback_period = 2
-    get_moisture_callback_period = 3
-    set_moisture_callback_threshold = 4
-    get_moisture_callback_threshold = 5
-    set_debounce_period = 6
-    get_debounce_period = 7
-    set_moving_average = 10
-    get_moving_average = 11
+class FunctionID(Enum):
+    GET_MOISTURE = 1
+    SET_MOISTURE_CALLBACK_PERIOD = 2
+    GET_MOISTURE_CALLBACK_PERIOD = 3
+    SET_MOISTURE_CALLBACK_THRESHOLD = 4
+    GET_MOISTURE_CALLBACK_THRESHOLD = 5
+    SET_DEBOUNCE_PERIOD = 6
+    GET_DEBOUNCE_PERIOD = 7
+    SET_MOVING_AVERAGE = 10
+    GET_MOVING_AVERAGE = 11
 
 @unique
 class ThresholdOption(Enum):
-    off = 'x'
-    outside = 'o'
-    inside = 'i'
-    less_than = '<'
-    greater_than = '>'
+    OFF = 'x'
+    OUTSIDE = 'o'
+    INSIDE = 'i'
+    LESS_THAN = '<'
+    GREATER_THAN = '>'
 
 
 class BrickletMoisture(Device):
@@ -50,8 +50,8 @@ class BrickletMoisture(Device):
     ThresholdOption = ThresholdOption
 
     CALLBACK_FORMATS = {
-        CallbackID.moisture: 'H',
-        CallbackID.moisture_reached: 'H',
+        CallbackID.MOISTURE: 'H',
+        CallbackID.MOISTURE_REACHED: 'H',
     }
 
     def __init__(self, uid, ipcon):
@@ -75,7 +75,7 @@ class BrickletMoisture(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_moisture,
+            function_id=FunctionID.GET_MOISTURE,
             response_expected=True
         )
         return unpack_payload(payload, 'H')
@@ -91,7 +91,7 @@ class BrickletMoisture(Device):
         assert type(period) is int and period >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_moisture_callback_period,
+            function_id=FunctionID.SET_MOISTURE_CALLBACK_PERIOD,
             data=pack_payload((period,), 'I'),
             response_expected = response_expected,
         )
@@ -106,12 +106,12 @@ class BrickletMoisture(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_moisture_callback_period,
+            function_id=FunctionID.GET_MOISTURE_CALLBACK_PERIOD,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
 
-    async def set_moisture_callback_threshold(self, option=ThresholdOption.off, minimum=0, maximum=0, response_expected=True):
+    async def set_moisture_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
         Sets the thresholds for the :cb:`Moisture Reached` callback.
 
@@ -132,8 +132,8 @@ class BrickletMoisture(Device):
         assert type(maximum) is int and minimum >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_moisture_callback_threshold,
-            data=pack_payload((option.value.encode(), minimum, maximum), 'c H H'),
+            function_id=FunctionID.SET_MOISTURE_CALLBACK_THRESHOLD,
+            data=pack_payload((option.value.encode('ascii'), minimum, maximum), 'c H H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -146,7 +146,7 @@ class BrickletMoisture(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_moisture_callback_threshold,
+            function_id=FunctionID.GET_MOISTURE_CALLBACK_THRESHOLD,
             response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, 'c H H')
@@ -168,7 +168,7 @@ class BrickletMoisture(Device):
         assert type(debounce_period) is int and debounce_period >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_debounce_period,
+            function_id=FunctionID.SET_DEBOUNCE_PERIOD,
             data=pack_payload((debounce_period,), 'I'),
             response_expected=response_expected
         )
@@ -182,7 +182,7 @@ class BrickletMoisture(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_debounce_period,
+            function_id=FunctionID.GET_DEBOUNCE_PERIOD,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
@@ -198,7 +198,7 @@ class BrickletMoisture(Device):
         assert type(average) is int and average >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_moving_average,
+            function_id=FunctionID.SET_MOVING_AVERAGE,
             data=pack_payload((average,), 'B'),
             response_expected=response_expected
         )
@@ -212,7 +212,7 @@ class BrickletMoisture(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_moving_average,
+            function_id=FunctionID.GET_MOVING_AVERAGE,
             response_expected=True
         )
         return unpack_payload(payload, 'B')
@@ -234,4 +234,6 @@ class BrickletMoisture(Device):
         else:
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             super()._process_callback(header, payload)
+
+device_factory.register(DeviceIdentifier.BrickletMoisture, BrickletMoisture)
 

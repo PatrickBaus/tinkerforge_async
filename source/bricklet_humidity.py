@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
 from decimal import Decimal
-from enum import Enum, IntEnum, unique
+from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device
+from .devices import DeviceIdentifier, Device, device_factory
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -11,34 +11,34 @@ GetHumidityCallbackThreshold = namedtuple('HumidityCallbackThreshold', ['option'
 GetAnalogValueCallbackThreshold = namedtuple('AnalogValueCallbackThreshold', ['option', 'minimum', 'maximum'])
 
 @unique
-class CallbackID(IntEnum):
-    humidity = 13
-    analog_value = 14
-    humidity_reached = 15
-    analog_value_reached = 16
+ CallbackID(Enum):
+    HUMIDITY = 13
+    ANALOG_VALUE = 14
+    HUMIDITY_REACHED = 15
+    ANALOG_VALUE_REACHED = 16
 
 @unique
-class FunctionID(IntEnum):
-    get_humidity = 1
-    get_analog_value = 2
-    set_humidity_callback_period = 3
-    get_humidity_callback_period = 4
-    set_analog_value_callback_period = 5
-    get_analog_value_callback_period = 6
-    set_humidity_callback_threshold = 7
-    get_humidity_callback_threshold = 8
-    set_analog_value_callback_threshold = 9
-    get_analog_value_callback_threshold = 10
-    set_debounce_period = 11
-    get_debounce_period = 12
+class FunctionID(Enum):
+    GET_HUMIDITY = 1
+    GET_ANALOG_VALUE = 2
+    SET_HUMIDITY_CALLBACK_PERIOD = 3
+    GET_HUMIDITY_CALLBACK_PERIOD = 4
+    SET_ANALOG_VALUE_CALLBACK_PERIOD = 5
+    GET_ANALOG_VALUE_CALLBACK_PERIOD = 6
+    SET_HUMIDITY_CALLBACK_THRESHOLD = 7
+    GET_HUMIDITY_CALLBACK_THRESHOLD = 8
+    SET_ANALOG_VALUE_CALLBACK_THRESHOLD = 9
+    GET_ANALOG_VALUE_CALLBACK_THRESHOLD = 10
+    SET_DEBOUNCE_PERIOD = 11
+    GET_DEBOUNCE_PERIOD = 12
 
 @unique
 class ThresholdOption(Enum):
-    off = 'x'
-    outside = 'o'
-    inside = 'i'
-    less_than = '<'
-    greater_than = '>'
+    OFF = 'x'
+    OUTSIDE = 'o'
+    INSIDE = 'i'
+    LESS_THAN = '<'
+    GREATER_THAN = '>'
 
 class BrickletHumidity(Device):
     """
@@ -55,10 +55,10 @@ class BrickletHumidity(Device):
     ThresholdOption = ThresholdOption
 
     CALLBACK_FORMATS = {
-        CallbackID.humidity: 'H',
-        CallbackID.analog_value: 'H',
-        CallbackID.humidity_reached: 'H',
-        CallbackID.analog_value_reached: 'H',
+        CallbackID.HUMIDITY: 'H',
+        CallbackID.ANALOG_VALUE: 'H',
+        CallbackID.HUMIDITY_REACHED: 'H',
+        CallbackID.ANALOG_VALUE_REACHED: 'H',
     }
 
     def __init__(self, uid, ipcon):
@@ -82,7 +82,7 @@ class BrickletHumidity(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_humidity,
+            function_id=FunctionID.GET_HUMIDITY,
             response_expected=True
         )
         return self.__value_to_SI(unpack_payload(payload, 'H'))
@@ -107,7 +107,7 @@ class BrickletHumidity(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_analog_value,
+            function_id=FunctionID.GET_ANALOG_VALUE,
             response_expected=True
         )
         return unpack_payload(payload, 'H')
@@ -125,7 +125,7 @@ class BrickletHumidity(Device):
         assert period >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_humidity_callback_period,
+            function_id=FunctionID.SET_HUMIDITY_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
@@ -140,7 +140,7 @@ class BrickletHumidity(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_humidity_callback_period,
+            function_id=FunctionID.GET_HUMIDITY_CALLBACK_PERIOD,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
@@ -158,7 +158,7 @@ class BrickletHumidity(Device):
         assert period >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_analog_value_callback_period,
+            function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
@@ -172,12 +172,12 @@ class BrickletHumidity(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_analog_value_callback_period,
+            function_id=FunctionID.GET_ANALOG_VALUE_CALLBACK_PERIOD,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
 
-    async def set_humidity_callback_threshold(self, option=ThresholdOption.off, minimum=0, maximum=0, response_expected=True):
+    async def set_humidity_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
         Sets the thresholds for the :cb:`Humidity Reached` callback.
 
@@ -198,8 +198,8 @@ class BrickletHumidity(Device):
         assert type(option) is ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_humidity_callback_threshold,
-            data=pack_payload((option.value.encode(), self.__SI_to_value(minimum), self.__SI_to_value(maximum)), 'c H H'),
+            function_id=FunctionID.SET_HUMIDITY_CALLBACK_THRESHOLD,
+            data=pack_payload((option.value.encode('ascii'), self.__SI_to_value(minimum), self.__SI_to_value(maximum)), 'c H H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -212,7 +212,7 @@ class BrickletHumidity(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_humidity_callback_threshold,
+            function_id=FunctionID.GET_HUMIDITY_CALLBACK_THRESHOLD,
             response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, 'c h h')
@@ -220,7 +220,7 @@ class BrickletHumidity(Device):
         minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
         return GetHumidityCallbackThreshold(option, minimum, maximum)
 
-    async def set_analog_value_callback_threshold(self, option=ThresholdOption.off, minimum=0, maximum=0, response_expected=True):
+    async def set_analog_value_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
         Sets the thresholds for the :cb:`Analog Value Reached` callback.
 
@@ -241,8 +241,8 @@ class BrickletHumidity(Device):
         assert type(option) is ThresholdOption
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_analog_value_callback_threshold,
-            data=pack_payload((option.value.encode(), int(minimum), int(maximum)), 'c H H'),
+            function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_THRESHOLD,
+            data=pack_payload((option.value.encode('ascii'), int(minimum), int(maximum)), 'c H H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -255,12 +255,50 @@ class BrickletHumidity(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_analog_value_callback_threshold,
+            function_id=FunctionID.GET_ANALOG_VALUE_CALLBACK_THRESHOLD,
             response_expected=True
         )
         payload = unpack_payload(payload, 'c H H')
         payload[0] = ThresholdOption(payload[0])
         return GetAnalogValueCallbackThreshold(*payload)
+
+    async def set_debounce_period(self, debounce_period=100, response_expected=True):
+        """
+        Sets the period in ms with which the threshold callbacks
+
+        * :cb:`Humidity Reached`,
+        * :cb:`Analog Value Reached`
+
+        are triggered, if the thresholds
+
+        * :func:`Set Humidity Callback Threshold`,
+        * :func:`Set Analog Value Callback Threshold`
+
+        keep being reached.
+
+        The default value is 100.
+        """
+        assert debounce_period >= 0
+        result = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_DEBOUNCE_PERIOD,
+            data=pack_payload((int(debounce_period),), 'I'),
+            response_expected=response_expected
+        )
+        if response_expected:
+            header, _ = result
+            return header['flags'] == Flags.ok
+
+    async def get_debounce_period(self):
+        """
+        Returns the debounce period as set by :func:`Set Debounce Period`.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_DEBOUNCE_PERIOD,
+            response_expected=True
+        )
+        return unpack_payload(payload, 'I')
 
     def register_event_queue(self, event_id, queue):
         """
@@ -289,3 +327,6 @@ class BrickletHumidity(Device):
             if header['function_id'] in (CallbackID.humidity, CallbackID.humidity_reached):
                 payload = self.__value_to_SI(payload)
             super()._process_callback(header, payload)
+
+device_factory.register(DeviceIdentifier.BrickletHumidity, BrickletHumidity)
+

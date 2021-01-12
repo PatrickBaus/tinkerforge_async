@@ -2,7 +2,7 @@
 from collections import namedtuple
 from enum import IntEnum, unique
 
-from .devices import DeviceIdentifier, Device
+from .devices import DeviceIdentifier, Device, device_factory
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -11,14 +11,14 @@ GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardw
 
 @unique
 class CallbackID(IntEnum):
-    counter_finished = 5
+    COUNTER_FINISHED = 5
 
 @unique
 class FunctionID(IntEnum):
-    set_segments = 1
-    get_segments = 2
-    start_counter = 3
-    get_counter_value = 4
+    SET_SEGMENTS = 1
+    GET_SEGMENTS = 2
+    START_COUNTER = 3
+    GET_COUNTER_VALUE = 4
 
 class BrickletSegmentDisplay4x7(Device):
     """
@@ -34,7 +34,7 @@ class BrickletSegmentDisplay4x7(Device):
     FunctionID = FunctionID
 
     CALLBACK_FORMATS = {
-        CallbackID.counter_finished: '',
+        CallbackID.COUNTER_FINISHED: '',
     }
 
     def __init__(self, uid, ipcon):
@@ -68,7 +68,7 @@ class BrickletSegmentDisplay4x7(Device):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_segments,
+            function_id=FunctionID.SET_SEGMENTS,
             data=pack_payload((segments, brightness, colon), '4B B !'),
             response_expected=response_expected
         )
@@ -88,7 +88,7 @@ class BrickletSegmentDisplay4x7(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_segments,
+            function_id=FunctionID.GET_SEGMENTS,
             response_expected=True
         )
         return GetSegments(*unpack_payload(payload, '4B B !'))
@@ -114,7 +114,7 @@ class BrickletSegmentDisplay4x7(Device):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.start_counter,
+            function_id=FunctionID.START_COUNTER,
             data=pack_payload((value_from, value_to, increment, length, ), 'h h h I'),
             response_expected=response_expected
         )
@@ -131,7 +131,7 @@ class BrickletSegmentDisplay4x7(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_counter_value,
+            function_id=FunctionID.GET_COUNTER_VALUE,
             response_expected=True
         )
         return unpack_payload(payload, 'H')
@@ -152,4 +152,6 @@ class BrickletSegmentDisplay4x7(Device):
         else:
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             super()._process_callback(header, payload)
+
+device_factory.register(DeviceIdentifier.BrickletSegmentDisplay4x7, BrickletSegmentDisplay4x7)
 

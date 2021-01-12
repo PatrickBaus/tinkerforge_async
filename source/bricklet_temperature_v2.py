@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, IntEnum, unique
 
-from .devices import DeviceIdentifier, DeviceWithMCU
+from .devices import DeviceIdentifier, DeviceWithMCU, device_factory
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -11,28 +11,28 @@ GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfigurati
 
 @unique
 class CallbackID(IntEnum):
-    temperature = 4
+    TEMPERATURE = 4
 
 @unique
 class FunctionID(IntEnum):
-    get_temperature = 1
-    set_temperature_callback_configuraton = 2
-    get_temperature_callback_configuraton = 3
-    set_heater_configuration = 5
-    get_heater_configuration = 6
+    GET_TEMPERATURE = 1
+    SET_TEMPERATURE_CALLBACK_CONFIGURATION = 2
+    GET_TEMPERATURE_CALLBACK_CONFIGURATION = 3
+    SET_HEATER_CONFIGURATION = 5
+    GET_HEATER_CONFIGURATION = 6
 
 @unique
 class ThresholdOption(Enum):
-    off = 'x'
-    outside = 'o'
-    inside = 'i'
-    less_than = '<'
-    greater_than = '>'
+    OFF = 'x'
+    OUTSIDE = 'o'
+    INSIDE = 'i'
+    LESS_THAN = '<'
+    GREATER_THAN = '>'
 
 @unique
-class HeaterConfig(IntEnum):
-    disabled = 0
-    enabled = 1
+class HeaterConfig(Enum):
+    DISABLED = 0
+    ENABLED = 1
 
 class BrickletTemperatureV2(DeviceWithMCU):
     """
@@ -50,7 +50,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
     HeaterConfig = HeaterConfig
 
     CALLBACK_FORMATS = {
-        CallbackID.temperature: 'h',
+        CallbackID.TEMPERATURE: 'h',
     }
 
     def __init__(self, uid, ipcon):
@@ -74,12 +74,12 @@ class BrickletTemperatureV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_temperature,
+            function_id=FunctionID.GET_TEMPERATURE,
             response_expected=True
         )
         return self.__value_to_SI(unpack_payload(payload, 'h'))
 
-    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.off, minimum=0, maximum=0, response_expected=True):
+    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
         The period in ms is the period with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -118,12 +118,12 @@ class BrickletTemperatureV2(DeviceWithMCU):
         assert type(maximum) is int and maximum >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_temperature_callback_configuraton,
+            function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
                 period,
                 bool(value_has_to_change),
-                option.value.encode(),
+                option.value.encode('ascii'),
                 self.__SI_to_value(minimum),
                 self.__SI_to_value(maximum)
               ), 'I ! c h h'),
@@ -140,7 +140,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_temperature_callback_configuraton,
+            function_id=FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION,
             response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c h h')
@@ -148,7 +148,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
         return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
-    async def set_heater_configuration(self, heater_config=HeaterConfig.disabled, response_expected=False):
+    async def set_heater_configuration(self, heater_config=HeaterConfig.DISABLED, response_expected=False):
         """
         Enables/disables the heater. The heater can be used to test the sensor.
         """
@@ -156,7 +156,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.set_heater_configuration,
+            function_id=FunctionID.SET_HEATER_CONFIGURATION,
             data=pack_payload((heater_config.value,), 'B'),
             response_expected=response_expected
         )
@@ -170,7 +170,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.get_heater_configuration,
+            function_id=FunctionID.GET_HEATER_CONFIGURATION,
             response_expected=True
         )
 
@@ -196,3 +196,6 @@ class BrickletTemperatureV2(DeviceWithMCU):
                 unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             )
             super()._process_callback(header, payload)
+
+device_factory.register(DeviceIdentifier.BrickletTemperatureV2, BrickletTemperatureV2)
+
