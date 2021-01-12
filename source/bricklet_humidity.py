@@ -132,7 +132,7 @@ class BrickletHumidity(Device):
         if response_expected:
             header, _ = result
             # TODO raise errors
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_humidity_callback_period(self):
         """
@@ -164,7 +164,7 @@ class BrickletHumidity(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_analog_value_callback_period(self):
         """
@@ -204,7 +204,7 @@ class BrickletHumidity(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_humidity_callback_threshold(self):
         """
@@ -247,7 +247,7 @@ class BrickletHumidity(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_analog_value_callback_threshold(self):
         """
@@ -287,7 +287,7 @@ class BrickletHumidity(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """

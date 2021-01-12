@@ -98,7 +98,7 @@ class BrickletMoisture(Device):
         if response_expected:
             header, _ = result
             # TODO raise errors
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_moisture_callback_period(self):
         """
@@ -138,7 +138,7 @@ class BrickletMoisture(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_moisture_callback_threshold(self):
         """
@@ -174,7 +174,7 @@ class BrickletMoisture(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -204,7 +204,7 @@ class BrickletMoisture(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_moving_average(self):
         """

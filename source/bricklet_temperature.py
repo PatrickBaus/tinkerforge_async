@@ -105,7 +105,7 @@ class BrickletTemperature(Device):
         if response_expected:
             header, _ = result
             # TODO raise errors
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_period(self):
         """
@@ -145,7 +145,7 @@ class BrickletTemperature(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_threshold(self):
         """
@@ -184,7 +184,7 @@ class BrickletTemperature(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -222,7 +222,7 @@ class BrickletTemperature(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_i2c_mode(self):
         """

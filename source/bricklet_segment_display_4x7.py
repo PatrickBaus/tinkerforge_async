@@ -74,7 +74,7 @@ class BrickletSegmentDisplay4x7(Device):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_segments(self):
         """
@@ -121,7 +121,7 @@ class BrickletSegmentDisplay4x7(Device):
 
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_counter_value(self):
         """

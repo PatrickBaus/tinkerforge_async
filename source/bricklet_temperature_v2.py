@@ -132,7 +132,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         if response_expected:
             header, _ = result
             # TODO raise errors
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_configuration(self):
         """
@@ -162,7 +162,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         )
         if response_expected:
             header, _ = result
-            return header['flags'] == Flags.ok
+            return header['flags'] == Flags.OK
 
     async def get_heater_configuration(self):
         """
