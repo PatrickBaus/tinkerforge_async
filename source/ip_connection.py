@@ -86,15 +86,11 @@ class IPConnectionAsync(object):
         self.__timeout = abs(int(value))
 
     @property
-    def logger(self):
-        return self.__logger
-
-    @property
     def is_connected(self):
         return self.__writer is not None and not self.__writer.is_closing()
 
     def __init__(self):
-        self.__running_tasks = []
+        self.__main_task = None
         self.__reader, self.__writer = None, None
         self.__sequence_number = 0
         self.__timeout = DEFAULT_WAIT_TIMEOUT
@@ -124,7 +120,7 @@ class IPConnectionAsync(object):
                 sequence_number)
 
     def add_device(self, device):
-        self.logger.debug('Adding device: %(device)s', {'device': device})
+        self.__logger.debug('Adding device: %(device)s', {'device': device})
         self.__devices[device.uid] = device
 
     async def enumerate(self):
@@ -132,7 +128,7 @@ class IPConnectionAsync(object):
         Broadcasts an enumerate request. All devices will respond with an enumerate callback.
         Returns: None, it does not support 'response_expected'
         """
-        self.logger.debug('Enumerating Node')
+        self.__logger.debug('Enumerating Node')
         await self.send_request(
             device=None,
             function_id=FunctionID.enumerate
@@ -149,12 +145,12 @@ class IPConnectionAsync(object):
         request = header + data
 
         # If we are waiting for a response, send the request, then pass on the response as a future
-        self.logger.debug('Sending request: %(header)s - %(payload)s', {'header': header, 'payload': data})
+        self.__logger.debug('Sending request: %(header)s - %(payload)s', {'header': header, 'payload': data})
         self.__writer.write(request)
         if response_expected:
-            self.logger.debug('Waiting for reply for request number %(sequence_number)s.', {'sequence_number': sequence_number})
+            self.__logger.debug('Waiting for reply for request number %(sequence_number)s.', {'sequence_number': sequence_number})
             header, payload = await self.__get_response(sequence_number)
-            self.logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
+            self.__logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
             return header, payload
 
     async def __get_response(self, sequence_number):
@@ -240,7 +236,7 @@ class IPConnectionAsync(object):
                     # This packet must be processed by the ip connection
                     if header['function_id'] is FunctionID.callback_enumerate:
                         payload = self.__parse_enumerate_payload(payload)
-                        self.logger.debug('Received enumeration: %(header)s - %(payload)s', {'header': header, 'payload': payload})
+                        self.__logger.debug('Received enumeration: %(header)s - %(payload)s', {'header': header, 'payload': payload})
                         if self.__self.__enumeration_queue.full():
                             # TODO: log a warning, that we are dropping packets
                             self.__self.__enumeration_queue.get_nowait()
@@ -264,39 +260,34 @@ class IPConnectionAsync(object):
                 # Drop the packet, because it is not our sequence number
                 pass
         else:
-            self.logger.info('Unknown packet: %(header)s - %(payload)s', {'header': header, 'payload': payload})
+            self.__logger.info('Unknown packet: %(header)s - %(payload)s', {'header': header, 'payload': payload})
 
     async def main_loop(self):
         try:
-            self.logger.info('Tinkerforge IP connection connected')
+            self.__logger.info('Tinkerforge IP connection connected')
             while 'loop not canceled':
                 # Read packets from the socket and process them.
                 header, payload = await self.__read_packet()
                 if header is not None:
                     await self.__process_packet(header, payload)
-        except asyncio.CancelledError:
-            self.logger.info('Tinkerforge IP connection closed')
-        except Exception as e:
-            self.logger.exception("Error while running main_loop")
+        finally:
+            self.__main_task = None
+            if self.is_connected:
+                await self.__close_transport()
 
     async def connect(self, host, port=4223):
         self.__reader, self.__writer = await asyncio.open_connection(host, port)
-        self.__running_tasks.append(asyncio.create_task(self.main_loop()))
+        self.__main_task = asyncio.create_task(self.main_loop())
 
     async def disconnect(self):
-        for task in self.__running_tasks:
-            task.cancel()
-        try:
-            await asyncio.gather(*self.__running_tasks)
-            if self.is_connected:
-                await self.__flush()
-        except asyncio.CancelledError:
-            pass
-        finally:
-            # We guarantee, that the connection is removed
-           self.__host, self.__writer, self.__reader = None, None, None
+       if self.__main_task is not None and not self.__main_task.done():
+            self.__main_task.cancel()
+            try:
+                await self.__main_task
+            except asyncio.CancelledError:
+                pass
 
-    async def __flush(self):
+    async def __close_transport(self):
         # Flush data
         try:
             self.__writer.write_eof()
@@ -308,3 +299,6 @@ class IPConnectionAsync(object):
                 pass # Socket is no longer connected, so we can't send the EOF.
             else:
                 raise
+        finally:
+            self.__writer, self.__reader = None, None
+            self.__logger.info('Tinkerforge IP connection closed')
