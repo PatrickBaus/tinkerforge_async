@@ -89,16 +89,19 @@ class IPConnectionAsync(object):
     def logger(self):
         return self.__logger
 
-    def __init__(self, loop):
-        self.__loop = loop
+    @property
+    def is_connected(self):
+        return self.__writer is not None and not self.__writer.is_closing()
+
+    def __init__(self):
         self.__running_tasks = []
         self.__reader, self.__writer = None, None
         self.__sequence_number = 0
         self.__timeout = DEFAULT_WAIT_TIMEOUT
         self.__pending_requests = {}
 
-        self.__enumeration_queue = asyncio.Queue(maxsize=20, loop=self.__loop)
-        self.__reply_queue = asyncio.Queue(maxsize=20, loop=self.__loop)
+        self.__enumeration_queue = asyncio.Queue(maxsize=20)
+        self.__reply_queue = asyncio.Queue(maxsize=20)
 
         self.__devices = {}
 
@@ -159,7 +162,7 @@ class IPConnectionAsync(object):
         self.__pending_requests[sequence_number] = asyncio.Condition()
         async with async_timeout.timeout(self.__timeout) as cm:
             # Aquire the lock
-            with await self.__pending_requests[sequence_number]:
+            async with self.__pending_requests[sequence_number]:
                 try:
                     # wait for the lock to be released
                     await self.__pending_requests[sequence_number].wait()
@@ -196,11 +199,11 @@ class IPConnectionAsync(object):
         # See https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#callbacks for details on the payload
         # We will return None for all 'invalid' fields instead of garbage like the Tinkerforge API
         return {'uid': base58decode(uid),   # Stop the base58 encoded nonsense and use the uint32_t id
-                'connected_uid': None if (enumeration_type is EnumerationType.disconnected or connected_uid == '0') else base58decode(connected_uid),
-                'position':  None if enumeration_type is EnumerationType.disconnected else position,
-                'hardware_version': None if enumeration_type is EnumerationType.disconnected else hardware_version,
-                'firmware_version': None if enumeration_type is EnumerationType.disconnected else firmware_version,
-                'device_id': None if enumeration_type is EnumerationType.disconnected else device_identifier,
+                'connected_uid': None if (enumeration_type is EnumerationType.DISCONNECTED or connected_uid == '0') else base58decode(connected_uid),
+                'position':  None if enumeration_type is EnumerationType.DISCONNECTED else position,
+                'hardware_version': None if enumeration_type is EnumerationType.DISCONNECTED else hardware_version,
+                'firmware_version': None if enumeration_type is EnumerationType.DISCONNECTED else firmware_version,
+                'device_id': None if enumeration_type is EnumerationType.DISCONNECTED else device_identifier,
                 'enumeration_type': enumeration_type,
         }
 
@@ -237,13 +240,11 @@ class IPConnectionAsync(object):
                     # This packet must be processed by the ip connection
                     if header['function_id'] is FunctionID.callback_enumerate:
                         payload = self.__parse_enumerate_payload(payload)
-                        try:
-                            self.logger.debug('Received enumeration: %(header)s - %(payload)s', {'header': header, 'payload': payload})
-                            self.__enumeration_queue.put_nowait(payload)
-                        except asyncio.QueueFull:
+                        self.logger.debug('Received enumeration: %(header)s - %(payload)s', {'header': header, 'payload': payload})
+                        if self.__self.__enumeration_queue.full():
                             # TODO: log a warning, that we are dropping packets
                             self.__self.__enumeration_queue.get_nowait()
-                            self.__self.__enumeration_queue.put_nowait(payload)
+                        self.__enumeration_queue.put_nowait(payload)
                 except ValueError:
                     # raised if the functionID is unknown. This can happen if there was no device output queue
                     # registered with the callback.
@@ -251,14 +252,14 @@ class IPConnectionAsync(object):
 
         elif header['response_expected']:
             try:
-                with await self.__pending_requests[header['sequence_number']]:
-                    self.__pending_requests[header['sequence_number']].notify()
+                async with self.__pending_requests[header['sequence_number']]:
+                    if self.__reply_queue.full():
+                        # TODO: log a warning, that we are dropping packets
+                        self.__self.__reply_queue.get_nowait()
+
                     self.__reply_queue.put_nowait((header, payload,))
-                await asyncio.sleep(0)
-            except asyncio.QueueFull:
-                # TODO: log a warning, that we are dropping packets
-                self.__self.__reply_queue.get_nowait()
-                self.__self.__reply_queue.put_nowait(payload)
+                    self.__pending_requests[header['sequence_number']].notify()
+                    await asyncio.sleep(0)
             except KeyError:
                 # Drop the packet, because it is not our sequence number
                 pass
@@ -279,24 +280,31 @@ class IPConnectionAsync(object):
             self.logger.exception("Error while running main_loop")
 
     async def connect(self, host, port=4223):
-        self.__reader, self.__writer = await asyncio.open_connection(host, port, loop=self.__loop)
-        self.__running_tasks.append(self.__loop.create_task(self.main_loop()))
+        self.__reader, self.__writer = await asyncio.open_connection(host, port)
+        self.__running_tasks.append(asyncio.create_task(self.main_loop()))
 
     async def disconnect(self):
         for task in self.__running_tasks:
             task.cancel()
         try:
             await asyncio.gather(*self.__running_tasks)
-            return await self.__flush()
+            if self.is_connected:
+                await self.__flush()
         except asyncio.CancelledError:
             pass
+        finally:
+            # We guarantee, that the connection is removed
+           self.__host, self.__writer, self.__reader = None, None, None
 
     async def __flush(self):
-        self.__reader = None
         # Flush data
-        if self.__writer is not None:
+        try:
             self.__writer.write_eof()
             await self.__writer.drain()
             self.__writer.close()
-            self.__writer = None
-
+            await self.__writer.wait_closed()
+        except OSError as exc:
+            if exc.errno == errno.ENOTCONN:
+                pass # Socket is no longer connected, so we can't send the EOF.
+            else:
+                raise
