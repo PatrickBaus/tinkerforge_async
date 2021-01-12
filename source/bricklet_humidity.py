@@ -11,7 +11,7 @@ GetHumidityCallbackThreshold = namedtuple('HumidityCallbackThreshold', ['option'
 GetAnalogValueCallbackThreshold = namedtuple('AnalogValueCallbackThreshold', ['option', 'minimum', 'maximum'])
 
 @unique
-CallbackID(Enum):
+class CallbackID(Enum):
     HUMIDITY = 13
     ANALOG_VALUE = 14
     HUMIDITY_REACHED = 15
