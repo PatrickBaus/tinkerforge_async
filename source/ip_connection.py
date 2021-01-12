@@ -237,9 +237,9 @@ class IPConnectionAsync(object):
                     if header['function_id'] is FunctionID.CALLBACK_ENUMERATE:
                         payload = self.__parse_enumerate_payload(payload)
                         self.__logger.debug('Received enumeration: %(header)s - %(payload)s', {'header': header, 'payload': payload})
-                        if self.__self.__enumeration_queue.full():
+                        if self.__enumeration_queue.full():
                             # TODO: log a warning, that we are dropping packets
-                            self.__self.__enumeration_queue.get_nowait()
+                            self.__enumeration_queue.get_nowait()
                         self.__enumeration_queue.put_nowait(payload)
                 except ValueError:
                     # raised if the functionID is unknown. This can happen if there was no device output queue
@@ -251,7 +251,7 @@ class IPConnectionAsync(object):
                 async with self.__pending_requests[header['sequence_number']]:
                     if self.__reply_queue.full():
                         # TODO: log a warning, that we are dropping packets
-                        self.__self.__reply_queue.get_nowait()
+                        self.__reply_queue.get_nowait()
 
                     self.__reply_queue.put_nowait((header, payload,))
                     self.__pending_requests[header['sequence_number']].notify()
