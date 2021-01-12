@@ -18,7 +18,7 @@ class DeviceFactory:
 
     def get(self, device_id, uid, ipcon):
         device = self.__available_devices.get(device_id)
-        if host is None:
+        if device is None:
             raise ValueError(f"No device available for id {device_id}")
         return device(uid, ipcon)
 
