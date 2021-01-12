@@ -13,10 +13,10 @@ class DeviceFactory:
     def __init__(self):
         self.__available_devices= {}
 
-    def register_host(self, device_id, device):
+    def register(self, device_id, device):
         self.__available_devices[device_id] = device
 
-    def get_host(self, device_id, uid, ipcon):
+    def get(self, device_id, uid, ipcon):
         device = self.__available_devices.get(device_id)
         if host is None:
             raise ValueError(f"No device available for id {device_id}")
