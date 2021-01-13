@@ -38,7 +38,7 @@ class BrickletAmbientLightV2(Device):
     Measures ambient light up to 64000lux
     """
 
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletAmbientLightV2
+    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletAmbientLight_V2
     DEVICE_DISPLAY_NAME = 'Ambient Light Bricklet 2.0'
     DEVICE_URL_PART = 'ambient_light_v2' # internal
 

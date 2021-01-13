@@ -58,7 +58,7 @@ class BrickletHumidityV2(DeviceWithMCU):
     Measures relative humidity
     """
 
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletHumidityV2
+    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletHumidity_V2
     DEVICE_DISPLAY_NAME = 'Humidity Bricklet 2.0'
     DEVICE_URL_PART = 'humidity_v2' # internal
 

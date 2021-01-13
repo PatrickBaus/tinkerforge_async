@@ -39,7 +39,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
     Measures ambient temperature with 0.2 K accuracy
     """
 
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletTemperatureV2
+    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletTemperature_V2
     DEVICE_DISPLAY_NAME = 'Temperature Bricklet 2.0'
     DEVICE_URL_PART = 'temperature_v2' # internal
 
