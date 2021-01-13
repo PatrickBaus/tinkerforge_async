@@ -328,5 +328,5 @@ class BrickletHumidity(Device):
                 payload = self.__value_to_SI(payload)
             super()._process_callback(header, payload)
 
-device_factory.register(DeviceIdentifier.BrickletHumidity, BrickletHumidity)
+device_factory.register(BrickletHumidity.DEVICE_IDENTIFIER, BrickletHumidity)
 

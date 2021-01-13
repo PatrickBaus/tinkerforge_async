@@ -153,5 +153,5 @@ class BrickletSegmentDisplay4x7(Device):
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             super()._process_callback(header, payload)
 
-device_factory.register(DeviceIdentifier.BrickletSegmentDisplay4x7, BrickletSegmentDisplay4x7)
+device_factory.register(BrickletSegmentDisplay4x7.DEVICE_IDENTIFIER, BrickletSegmentDisplay4x7)
 

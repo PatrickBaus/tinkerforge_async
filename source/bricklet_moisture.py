@@ -235,5 +235,5 @@ class BrickletMoisture(Device):
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             super()._process_callback(header, payload)
 
-device_factory.register(DeviceIdentifier.BrickletMoisture, BrickletMoisture)
+device_factory.register(BrickletMoisture.DEVICE_IDENTIFIER, BrickletMoisture)
 

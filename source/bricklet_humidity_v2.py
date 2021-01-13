@@ -410,5 +410,5 @@ class BrickletHumidityV2(DeviceWithMCU):
                 payload = self.__temperature_sensor_to_SI(payload)
             super()._process_callback(header, payload)
 
-device_factory.register(DeviceIdentifier.BrickletHumidityV2, BrickletHumidityV2)
+device_factory.register(BrickletHumidityV2.DEVICE_IDENTIFIER, BrickletHumidityV2)
 

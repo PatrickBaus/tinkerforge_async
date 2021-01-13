@@ -265,5 +265,5 @@ class BrickletTemperature(Device):
             )
             super()._process_callback(header, payload)
 
-device_factory.register(DeviceIdentifier.BrickletTemperature, BrickletTemperature)
+device_factory.register(BrickletTemperature.DEVICE_IDENTIFIER, BrickletTemperature)
 

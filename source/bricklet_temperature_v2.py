@@ -197,5 +197,5 @@ class BrickletTemperatureV2(DeviceWithMCU):
             )
             super()._process_callback(header, payload)
 
-device_factory.register(DeviceIdentifier.BrickletTemperatureV2, BrickletTemperatureV2)
+device_factory.register(BrickletTemperatureV2.DEVICE_IDENTIFIER, BrickletTemperatureV2)
 

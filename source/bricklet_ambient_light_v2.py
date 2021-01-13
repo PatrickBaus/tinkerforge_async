@@ -205,5 +205,5 @@ class BrickletAmbientLightV2(Device):
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             super()._process_callback(header, payload)
 
-device_factory.register(DeviceIdentifier.BrickletAmbientLightV2, BrickletAmbientLightV2)
+device_factory.register(BrickletAmbientLightV2.DEVICE_IDENTIFIER, BrickletAmbientLightV2)
 
