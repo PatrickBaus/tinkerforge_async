@@ -26,15 +26,20 @@ device_factory = DeviceFactory()
 
 @unique
 class DeviceIdentifier(Enum):
-    BrickMaster = 13
-    BrickletAmbientLight = 21
-    BrickletHumidity = 27
-    BrickletTemperature = 216
-    BrickletMoisture = 232
-    BrickletSegmentDisplay4x7 = 237
-    BrickletAmbientLightV2 = 259
-    BrickletHumidityV2 = 283
-    BrickletTemperatureV2 = 2113
+    BrickMaster                      = 13
+    BrickletAmbientLight             = 21
+    BrickletHumidity                 = 27
+    BrickletTemperature              = 216
+    BrickletBarometer                = 221
+    BrickletPTC                      = 226
+    BrickletMoisture                 = 232
+    BrickletSegmentDisplay4x7        = 237
+    BrickletAmbientLightV2           = 259
+    BrickletHumidityV2               = 283
+    BrickletPTCV2                    = 2101
+    BrickletTemperatureV2            = 2113
+    BrickletIndustrialDualAnalogInV2 = 2121
+    BrickletSegmentDisplay4x7V2      = 2137
 
 @unique
 class FunctionID(Enum):
