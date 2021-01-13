@@ -397,7 +397,7 @@ class BrickletPtc(Device):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION,
-            data=pack_payload(bool(enabled),), '!'),
+            data=pack_payload((bool(enabled),), '!'),
             response_expected=response_expected
         )
         if response_expected:
