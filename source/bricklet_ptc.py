@@ -102,7 +102,7 @@ class BrickletPtc(Device):
         )
         return self.__value_to_SI(unpack_payload(payload, 'i'))
 
-    def get_resistance(self):
+    async def get_resistance(self):
         """
         Returns the value as measured by the MAX31865 precision delta-sigma ADC.
 
