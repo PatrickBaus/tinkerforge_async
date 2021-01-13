@@ -12,8 +12,11 @@ GetResistanceCallbackThreshold = namedtuple('ResistanceCallbackThreshold', ['opt
 
 @unique
 class CallbackID(Enum):
-    TEMPERATURE = 8
-    TEMPERATURE_REACHED = 9
+    TEMPERATURE = 13
+    TEMPERATURE_REACHED = 14
+    RESISTANCE = 15
+    RESISTANCE_REACHED = 16
+    SENSOR_CONNECTED = 24
 
 @unique
 class FunctionID(Enum):
@@ -54,7 +57,7 @@ class LineFilter(Enum):
 class WireMode(Enum):
   WIRE_2 = 2
   WIRE_3 = 3
-  WIRE_4 = 3
+  WIRE_4 = 4
 
 class BrickletPtc(Device):
     """
@@ -69,11 +72,16 @@ class BrickletPtc(Device):
     CallbackID = CallbackID
     FunctionID = FunctionID
     ThresholdOption = ThresholdOption
-    I2cOption = I2cOption
+    LineFilter = LineFilter
+    WireMode = WireMode
 
     CALLBACK_FORMATS = {
-        CallbackID.TEMPERATURE: 'h',
-        CallbackID.TEMPERATURE_REACHED: 'h',
+        CallbackID.TEMPERATURE: 'i',
+        CallbackID.TEMPERATURE_REACHED: 'i',
+        CallbackID.RESISTANCE: 'i',
+        CallbackID.RESISTANCE: 'i',
+        CallbackID.RESISTANCE_REACHED: 'i',
+        CallbackID.SENSOR_CONNECTED: 'i',
     }
 
     def __init__(self, uid, ipcon):
@@ -83,7 +91,7 @@ class BrickletPtc(Device):
         """
         Device.__init__(self, uid, ipcon)
 
-        self.api_version = (2, 0, 0)
+        self.api_version = (2, 0, 1)
 
     async def get_temperature(self):
         """
