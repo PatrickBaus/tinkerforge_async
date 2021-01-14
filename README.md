@@ -18,7 +18,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 |[Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)|:x:|:x:|
 |[Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)|:heavy_check_mark:|:x:|
-|[PTC Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)|:x:|:x:|
+|[PTC Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)|:heavy_check_mark:|:x:|
 |[Segment Display 4x7 Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)|:x:|:x:|
 |[Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)|:heavy_check_mark:|:heavy_check_mark:|
