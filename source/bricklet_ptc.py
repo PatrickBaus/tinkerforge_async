@@ -346,7 +346,7 @@ class BrickletPtc(Device):
             function_id=FunctionID.GET_NOISE_REJECTION_FILTER,
             response_expected=True
         )
-        return I2cOption(unpack_payload(payload, 'B'))
+        return LineFilter(unpack_payload(payload, 'B'))
 
     async def is_sensor_connected(self):
         """
@@ -361,7 +361,7 @@ class BrickletPtc(Device):
             function_id=FunctionID.IS_SENSOR_CONNECTED,
             response_expected=True
         )
-        return I2cOption(unpack_payload(payload, '!'))
+        return unpack_payload(payload, '!')
 
     async def set_wire_mode(self, mode=WireMode.WIRE_2, response_expected=False):
         """
@@ -391,7 +391,7 @@ class BrickletPtc(Device):
             function_id=FunctionID.GET_WIRE_MODE,
             response_expected=True
         )
-        return I2cOption(unpack_payload(payload, 'B'))
+        return WireMode(unpack_payload(payload, 'B'))
 
     async def set_sensor_connected_callback_configuration(self, enabled):
         """
@@ -423,7 +423,7 @@ class BrickletPtc(Device):
             function_id=FunctionID.GET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION,
             response_expected=True
         )
-        return I2cOption(unpack_payload(payload, '!'))
+        return unpack_payload(payload, '!')
 
     def register_event_queue(self, event_id, queue):
         """

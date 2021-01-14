@@ -66,7 +66,7 @@ class BrickletTemperature(Device):
         """
         Device.__init__(self, uid, ipcon)
 
-        self.api_version = (2, 0, 0)
+        self.api_version = (2, 0, 1)
 
     async def get_temperature(self):
         """
