@@ -15,6 +15,8 @@ GetMovingAverageConfiguration = namedtuple('MovingAverageConfiguration', ['movin
 @unique
 class CallbackID(Enum):
     TEMPERATURE = 4
+    RESISTANCE = 8
+    SENSOR_CONNECTED = 18
 
 @unique
 class FunctionID(Enum):
@@ -66,10 +68,13 @@ class BrickletPtcV2(DeviceWithMCU):
     CallbackID = CallbackID
     FunctionID = FunctionID
     ThresholdOption = ThresholdOption
-    HeaterConfig = HeaterConfig
+    LineFilter = LineFilter
+    WireMode = WireMode
 
     CALLBACK_FORMATS = {
-        CallbackID.TEMPERATURE: 'h',
+        CallbackID.TEMPERATURE: 'i',
+        CallbackID.RESISTANCE: 'i',
+        CallbackID.SENSOR_CONNECTED: '!',
     }
 
     def __init__(self, uid, ipcon):
