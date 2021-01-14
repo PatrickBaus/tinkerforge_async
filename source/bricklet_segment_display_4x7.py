@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
-from enum import IntEnum, unique
+from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, device_factory
 from .ip_connection import Flags, UnknownFunctionError
@@ -10,11 +10,11 @@ GetSegments = namedtuple('Segments', ['segments', 'brightness', 'colon'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
 @unique
-class CallbackID(IntEnum):
+class CallbackID(Enum):
     COUNTER_FINISHED = 5
 
 @unique
-class FunctionID(IntEnum):
+class FunctionID(Enum):
     SET_SEGMENTS = 1
     GET_SEGMENTS = 2
     START_COUNTER = 3

@@ -55,9 +55,9 @@ class LineFilter(Enum):
 
 @unique
 class WireMode(Enum):
-  WIRE_2 = 2
-  WIRE_3 = 3
-  WIRE_4 = 4
+    WIRE_2 = 2
+    WIRE_3 = 3
+    WIRE_4 = 4
 
 class BrickletPtc(Device):
     """

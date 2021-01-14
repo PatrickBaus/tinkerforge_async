@@ -66,20 +66,19 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    ```python
    class BrickletHumidity(Device):
        @unique
-       class FunctionID(IntEnum):
-           get_humidity = 1
-           get_analog_value = 2
-           set_humidity_callback_period = 3
-           get_humidity_callback_period = 4
-           set_analog_value_callback_period = 5
-           get_analog_value_callback_period = 6
-           set_humidity_callback_threshold = 7
-           get_humidity_callback_threshold = 8
-           set_analog_value_callback_threshold = 9
-           get_analog_value_callback_threshold = 10
-           set_debounce_period = 11
-           get_debounce_period = 12
-           get_identity = 255
+       class FunctionID(Enum):
+           GET_HUMIDITY = 1
+           GET_ANALOG_VALUE = 2
+           SET_HUMIDITY_CALLBACK_PERIOD = 3
+           GET_HUMIDITY_CALLBACK_PERIOD = 4
+           SET_ANALOG_VALUE_CALLBACK_PERIOD = 5
+           GET_ANALOG_VALUE_CALLBACK_PERIOD = 6
+           SET_HUMIDITY_CALLBACK_THRESHOLD = 7
+           GET_HUMIDITY_CALLBACK_THRESHOLD = 8
+           SET_ANALOG_VALUE_CALLBACK_THRESHOLD = 9
+           GET_ANALOG_VALUE_CALLBACK_THRESHOLD = 10
+           SET_DEBOUNCE_PERIOD = 11
+           GET_DEBOUNCE_PERIOD = 12
    ```
  - Moved from base58 encoded uids to integers
  - Moved from callbacks to queues in order to keep users out of the callback hell. It makes the code style more readable when using the *await* syntax anyway.

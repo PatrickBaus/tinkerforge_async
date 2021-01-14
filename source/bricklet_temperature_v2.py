@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
 from decimal import Decimal
-from enum import Enum, IntEnum, unique
+from enum import Enum, unique
 
 from .devices import DeviceIdentifier, DeviceWithMCU, device_factory
 from .ip_connection import Flags, UnknownFunctionError
@@ -10,11 +10,11 @@ from .ip_connection_helper import pack_payload, unpack_payload
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 
 @unique
-class CallbackID(IntEnum):
+class CallbackID(Enum):
     TEMPERATURE = 4
 
 @unique
-class FunctionID(IntEnum):
+class FunctionID(Enum):
     GET_TEMPERATURE = 1
     SET_TEMPERATURE_CALLBACK_CONFIGURATION = 2
     GET_TEMPERATURE_CALLBACK_CONFIGURATION = 3
