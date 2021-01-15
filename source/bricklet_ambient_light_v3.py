@@ -65,7 +65,8 @@ class BrickletAmbientLightV3(DeviceWithMCU):
     CallbackID = CallbackID
     FunctionID = FunctionID
     ThresholdOption = ThresholdOption
-    HeaterConfig = HeaterConfig
+    IlluminanceRange = IlluminanceRange
+    IntegrationTime = IntegrationTime
 
     CALLBACK_FORMATS = {
         CallbackID.TEMPERATURE: 'I',
