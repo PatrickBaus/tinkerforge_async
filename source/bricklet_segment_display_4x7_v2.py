@@ -188,7 +188,7 @@ class BrickletSegmentDisplay4x7V2(DeviceWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_SELECTED_SEGMENT,
-            data=pack_payload((segment,)), 'B'),
+            data=pack_payload((segment,), 'B'),
             response_expected=True
         )
 
