@@ -7,19 +7,20 @@ from .devices import DeviceIdentifier, DeviceWithMCU, device_factory
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
-GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
+GetIlluminanceCallbackConfiguration = namedtuple('IlluminanceCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'min', 'max'])
+GetConfiguration = namedtuple('Configuration', ['illuminance_range', 'integration_time'])
 
 @unique
 class CallbackID(Enum):
-    TEMPERATURE = 4
+    ILLUMINANCE = 4
 
 @unique
 class FunctionID(Enum):
-    GET_TEMPERATURE = 1
-    SET_TEMPERATURE_CALLBACK_CONFIGURATION = 2
-    GET_TEMPERATURE_CALLBACK_CONFIGURATION = 3
-    SET_HEATER_CONFIGURATION = 5
-    GET_HEATER_CONFIGURATION = 6
+    GET_ILLUMINANCE = 1
+    SET_ILLUMINANCE_CALLBACK_CONFIGURATION = 2
+    GET_ILLUMINANCE_CALLBACK_CONFIGURATION = 3
+    SET_CONFIGURATION = 5
+    GET_CONFIGURATION = 6
 
 @unique
 class ThresholdOption(Enum):
@@ -30,18 +31,35 @@ class ThresholdOption(Enum):
     GREATER_THAN = '>'
 
 @unique
-class HeaterConfig(Enum):
-    DISABLED = 0
-    ENABLED = 1
+class IlluminanceRange(Enum):
+    UNLIMIETED = 6
+    LUX64000 = 0
+    LUX32000 = 1
+    LUX16000 = 2
+    LUX8000 = 3
+    LUX1300 = 4
+    LUX600 = 5
 
-class BrickletTemperatureV2(DeviceWithMCU):
+@unique
+class IntegrationTime(Enum):
+    T50MS = 0
+    T100MS = 1
+    T150MS = 2
+    T200MS = 3
+    T250MS = 4
+    T300MS = 5
+    T350MS = 6
+    T400MS = 7
+
+
+class BrickletAmbientLightV3(DeviceWithMCU):
     """
     Measures ambient temperature with 0.2 K accuracy
     """
 
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletTemperature_V2
-    DEVICE_DISPLAY_NAME = 'Temperature Bricklet 2.0'
-    DEVICE_URL_PART = 'temperature_v2' # internal
+    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletAmbientLight_V3
+    DEVICE_DISPLAY_NAME = 'Ambient Light Bricklet 3.0'
+    DEVICE_URL_PART = 'ambient_light_v3' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
@@ -50,7 +68,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
     HeaterConfig = HeaterConfig
 
     CALLBACK_FORMATS = {
-        CallbackID.TEMPERATURE: 'h',
+        CallbackID.TEMPERATURE: 'I',
     }
 
     def __init__(self, uid, ipcon):
@@ -62,26 +80,31 @@ class BrickletTemperatureV2(DeviceWithMCU):
 
         self.api_version = (2, 0, 0)
 
-    async def get_temperature(self):
+    async def get_illuminance(self):
         """
-        Returns the temperature of the sensor. The value
-        has a range of -2500 to 8500 and is given in °C/100,
-        e.g. a value of 4223 means that a temperature of 42.23 °C is measured.
+        Returns the illuminance of the ambient light sensor. The measurement range goes
+        up to about 100000lux, but above 64000lux the precision starts to drop.
+        The illuminance is given in lux/100, i.e. a value of 450000 means that an
+        illuminance of 4500lux is measured.
 
-        If you want to get the temperature periodically, it is recommended
-        to use the :cb:`Temperature` callback and set the period with
-        :func:`Set Temperature Callback Period`.
+        An illuminance of 0lux indicates that the sensor is saturated and the
+        configuration should be modified, see :func:`Set Configuration`.
+
+
+        If you want to get the value periodically, it is recommended to use the
+        :cb:`Illuminance` callback. You can set the callback configuration
+        with :func:`Set Illuminance Callback Configuration`.
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.GET_TEMPERATURE,
+            function_id=FunctionID.GET_ILLUMINANCE,
             response_expected=True
         )
-        return self.__value_to_SI(unpack_payload(payload, 'h'))
+        return self.__value_to_SI(unpack_payload(payload, 'I'))
 
-    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_illuminance_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
-        The period in ms is the period with which the :cb:`Temperature` callback is triggered
+        The period is the period with which the :cb:`Illuminance` callback is triggered
         periodically. A value of 0 turns the callback off.
 
         If the `value has to change`-parameter is set to true, the callback is only
@@ -93,7 +116,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
 
         It is furthermore possible to constrain the callback with thresholds.
 
-        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback.
+        The `option`-parameter together with min/max sets a threshold for the :cb:`Illuminance` callback.
 
         The following options are possible:
 
@@ -103,14 +126,11 @@ class BrickletTemperatureV2(DeviceWithMCU):
 
          "'x'",    "Threshold is turned off"
          "'o'",    "Threshold is triggered when the value is *outside* the min and max values"
-         "'i'",    "Threshold is triggered when the value is *inside* the min and max values"
+         "'i'",    "Threshold is triggered when the value is *inside* or equal to the min and max values"
          "'<'",    "Threshold is triggered when the value is smaller than the min value (max is ignored)"
          "'>'",    "Threshold is triggered when the value is greater than the min value (max is ignored)"
 
-
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
-
-        The default value is (0, false, 'x', 0, 0).
         """
         assert type(option) is ThresholdOption
         assert isinstance(period, int) and period >= 0
@@ -118,7 +138,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
         assert isinstance(maximum, int) and maximum >= 0
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
+            function_id=FunctionID.SET_ILLUMINANCE_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
                 period,
@@ -126,7 +146,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
                 option.value.encode('ascii'),
                 self.__SI_to_value(minimum),
                 self.__SI_to_value(maximum)
-              ), 'I ! c h h'),
+              ), 'I ! c I I'),
             response_expected=response_expected
         )
         if response_expected:
@@ -134,7 +154,7 @@ class BrickletTemperatureV2(DeviceWithMCU):
             # TODO raise errors
             return header['flags'] == Flags.OK
 
-    async def get_temperature_callback_configuration(self):
+    async def get_illuminance_callback_configuration(self):
         """
         Returns the callback configuration as set by :func:`Set Temperature Callback Configuration`.
         """
@@ -143,38 +163,60 @@ class BrickletTemperatureV2(DeviceWithMCU):
             function_id=FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION,
             response_expected=True
         )
-        period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c h h')
+        period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c I I')
         option = ThresholdOption(option)
         minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
-        return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return GetIlluminanceCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
-    async def set_heater_configuration(self, heater_config=HeaterConfig.DISABLED, response_expected=False):
+    async def set_configuration(self, illuminance_range=IlluminanceRange.LUX8000, integration_time=IntegrationTime.T150MS, response_expected=False):
         """
-        Enables/disables the heater. The heater can be used to test the sensor.
+        Sets the configuration. It is possible to configure an illuminance range
+        between 0-600lux and 0-64000lux and an integration time between 50ms and 400ms.
+
+        The unlimited illuminance range allows to measure up to about 100000lux, but
+        above 64000lux the precision starts to drop.
+
+        A smaller illuminance range increases the resolution of the data. A longer
+        integration time will result in less noise on the data.
+
+        If the actual measure illuminance is out-of-range then the current illuminance
+        range maximum +0.01lux is reported by :func:`Get Illuminance` and the
+        :cb:`Illuminance` callback. For example, 800001 for the 0-8000lux range.
+
+        With a long integration time the sensor might be saturated before the measured
+        value reaches the maximum of the selected illuminance range. In this case 0lux
+        is reported by :func:`Get Illuminance` and the :cb:`Illuminance` callback.
+
+        If the measurement is out-of-range or the sensor is saturated then you should
+        configure the next higher illuminance range. If the highest range is already
+        in use, then start to reduce the integration time.
+
+        The default values are 0-8000lux illuminance range and 150ms integration time.
         """
-        assert type(heater_config) is HeaterConfig
+        assert type(illuminance_range) is IlluminanceRange
+        assert type(integration_time) is IntegrationTime
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.SET_HEATER_CONFIGURATION,
-            data=pack_payload((heater_config.value,), 'B'),
+            function_id=FunctionID.SET_CONFIGURATION,
+            data=pack_payload((illuminance_range.value,integration_time.value), 'B B'),
             response_expected=response_expected
         )
         if response_expected:
             header, _ = result
             return header['flags'] == Flags.OK
 
-    async def get_heater_configuration(self):
+    async def get_configuration(self):
         """
         Returns the heater configuration as set by :func:`Set Heater Configuration`.
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.GET_HEATER_CONFIGURATION,
+            function_id=FunctionID.FUNCTION_GET_CONFIGURATION,
             response_expected=True
         )
 
-        return HeaterConfig(unpack_payload(payload, 'B'))
+        return GetConfiguration(*unpack_payload(payload, 'B B'))
 
     def register_event_queue(self, event_id, queue):
         """
@@ -204,5 +246,5 @@ class BrickletTemperatureV2(DeviceWithMCU):
             )
             super()._process_callback(header, payload)
 
-device_factory.register(BrickletTemperatureV2.DEVICE_IDENTIFIER, BrickletTemperatureV2)
+device_factory.register(BrickletAmbientLightV3.DEVICE_IDENTIFIER, BrickletAmbientLightV3)
 
