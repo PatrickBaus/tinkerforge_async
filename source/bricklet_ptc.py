@@ -123,7 +123,6 @@ class BrickletPtc(Device):
         to use the :cb:`Resistance` callback and set the period with
         :func:`Set Resistance Callback Period`.
         """
-        
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_RESISTANCE,
