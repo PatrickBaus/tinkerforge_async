@@ -69,7 +69,7 @@ class BrickletAmbientLightV3(DeviceWithMCU):
     IntegrationTime = IntegrationTime
 
     CALLBACK_FORMATS = {
-        CallbackID.TEMPERATURE: 'I',
+        CallbackID.ILLUMINANCE: 'I',
     }
 
     def __init__(self, uid, ipcon):
