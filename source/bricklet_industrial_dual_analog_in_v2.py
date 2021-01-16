@@ -327,12 +327,6 @@ class BrickletIndustrialDualAnalogInV2(DeviceWithMCU):
         assert type(event_id) is CallbackID
         super().register_event_queue(event_id, queue)
 
-    def __value_to_SI(self, value):
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value) / 100
-
     def __SI_to_value(self, value):
         return int(value * 100)
 
@@ -343,9 +337,7 @@ class BrickletIndustrialDualAnalogInV2(DeviceWithMCU):
             # ValueError: raised if the callbackID is unknown
             raise UnknownFunctionError from None
         else:
-            payload = self.__value_to_SI(
-                unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            )
+            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             super()._process_callback(header, payload)
 
 device_factory.register(BrickletIndustrialDualAnalogInV2.DEVICE_IDENTIFIER, BrickletIndustrialDualAnalogInV2)
