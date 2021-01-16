@@ -209,11 +209,11 @@ class BrickletAmbientLightV3(DeviceWithMCU):
 
     async def get_configuration(self):
         """
-        Returns the heater configuration as set by :func:`Set Heater Configuration`.
+        Returns the configuration as set by :func:`Set Configuration`.
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.FUNCTION_GET_CONFIGURATION,
+            function_id=FunctionID.GET_CONFIGURATION,
             response_expected=True
         )
 
