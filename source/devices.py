@@ -9,6 +9,9 @@ from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
+class UnknownFunctionError(Exception):
+    pass
+
 class DeviceFactory:
     def __init__(self):
         self.__available_devices= {}
@@ -113,8 +116,16 @@ class Device(object):
         This function will only push the payload to the output queue. The payload still needs to be unpacked.
         This is to be done by the bricklet and then the payload is to be handed down to this function via super().
         """
+        # CallbackID and CALLBACK_FORMATS is defined by the brick/bricklet
         try:
-            # Try to push it to the output queue. If the queue is full, drop the oldest packet and insert it again
+            header['function_id'] = self.CallbackID(header['function_id'])
+        except ValueError:
+            # ValueError: raised if the function_id is unknown
+            raise UnknownFunctionError from None
+        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+
+        # Try to push it to the output queue. If the queue is full, drop the oldest packet and insert it again
+        try:
             self.__registered_queues[header['function_id']].put_nowait({
                 'timestamp': int(time.time()),
                 'uid': self.uid,
@@ -131,12 +142,12 @@ class Device(object):
         """
         Registers the given *function* with the given *callback_id*.
         """
-        # We need to use the enum value, because the ip connection has no knowlege about the enums
-        # and will look for the value
+        # CallbackID is defined by the brick/bricklet
+        assert type(event_id) is self.CallbackID
         if queue is None:
-            self.__registered_queues.pop(event_id.value, None)
+            self.__registered_queues.pop(event_id, None)
         else:
-            self.__registered_queues[event_id.value] = queue
+            self.__registered_queues[event_id] = queue
 
     async def get_identity(self):
         """

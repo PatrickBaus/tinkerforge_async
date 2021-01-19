@@ -237,13 +237,6 @@ class BrickletTemperature(Device):
         )
         return I2cOption(unpack_payload(payload, 'B'))
 
-    def register_event_queue(self, event_id, queue):
-        """
-        Registers the given *function* with the given *callback_id*.
-        """
-        assert type(event_id) is CallbackID
-        super().register_event_queue(event_id, queue)
-
     def __value_to_SI(self, value):
         """
         Convert to the sensor value to SI units

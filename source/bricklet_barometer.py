@@ -380,13 +380,6 @@ class BrickletBarometer(Device):
         )
         return GetAveraging(unpack_payload(payload, 'B B B'))
 
-    def register_event_queue(self, event_id, queue):
-        """
-        Registers the given *function* with the given *callback_id*.
-        """
-        assert type(event_id) is CallbackID
-        super().register_event_queue(event_id, queue)
-
     def __value_to_SI_altitude(self, value):
         """
         Convert to the sensor value to SI units

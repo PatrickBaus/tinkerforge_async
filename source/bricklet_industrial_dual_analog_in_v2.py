@@ -320,13 +320,6 @@ class BrickletIndustrialDualAnalogInV2(DeviceWithMCU):
         config = ChannelLedStatusConfig(config)
         return GetChannelLEDStatusConfig(minimum, maximum, config)
 
-    def register_event_queue(self, event_id, queue):
-        """
-        Registers the given *function* with the given *callback_id*.
-        """
-        assert type(event_id) is CallbackID
-        super().register_event_queue(event_id, queue)
-
     def __SI_to_value(self, value):
         return int(value * 100)
 

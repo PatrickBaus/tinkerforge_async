@@ -411,13 +411,6 @@ class BrickletPtcV2(DeviceWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    def register_event_queue(self, event_id, queue):
-        """
-        Registers the given *function* with the given *callback_id*.
-        """
-        assert type(event_id) is CallbackID
-        super().register_event_queue(event_id, queue)
-
     def __value_to_SI(self, value):
         """
         Convert to the sensor value to SI units
