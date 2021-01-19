@@ -27,7 +27,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 # Changes made to the API
 Some of the design choices of the original Tinkerforge API are overly complex. I therefore replaced them with a simpler and more intuitive approach. A list of things that were changed can be found below:
 ### Design Changes
-- Only Python 3 is supported (3.5+)
+- Only Python 3 is supported (3.7+)
  - Replaced threads with an async event loop
  - Completely rewritten how responses from bricks/bricklets work. All setters now have a *response_expected* parameter, which when set to true will make the function call either return *True* or raise an error. There are no *set_response_expected()* functions any more.
 
@@ -91,10 +91,17 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    {'timestamp': 1525308878, 'uid': 30842, 'device_id': <DeviceIdentifier.BrickletHumidity: 27>, 'function_id': <CallbackID.humidity_reached: 15>, 'payload': Decimal('43.6')}
    ```
 
+ - New functions
+   *BrickMaster.set_wpa_enterprise_username(username)*: Set the WPA enterprise username without calling *BrickMaster.set_wifi_certificate()*. Takes a `string` instead of an array of `int`.
+   *BrickMaster.set_wpa_enterprise_password(password)*: Set the WPA enterprise password without calling *BrickMaster.set_wifi_certificate()*. Takes a `string` instead of an array of `int`.
+   *BrickMaster.get_wpa_enterprise_username()*: Get the WPA enterprise password without calling *BrickMaster.get_wifi_certificate()*. Also returns a `string` instead of an array of `int`.
+   *BrickMaster.get_wpa_enterprise_password()*: Get the WPA enterprise password without calling *BrickMaster.get_wifi_certificate()*. Also returns a `string` instead of an array of `int`.
 - #### [IP Connection](https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#api)
    - *IPConnection.authenticate(_secret_)*: removed. This can now be done through connect()
    - *IPConnection.set_timeout/IPConnection.get_timeout*: Replaced by a property
    - *IPConnection.register_callback(_callback_id_, _function_)*: Replaced by register_queue()
 
 - #### [Master Brick](https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html)
-   - BrickMaster.set_wifi_configuration()/BrickMaster.get_wifi_configuration() will take/return all ips in natural order
+   - *BrickMaster.set_wifi_configuration()*/*BrickMaster.get_wifi_configuration()* will take/return all ips in natural order
+   - *BrickMaster.set_ethernet_configuration()*/*BrickMaster.get_ethernet_configuration()* will take/return all ips in natural order
+     *BrickMaster.write_wifi2_serial_port()* will only accept a `bytestring` and no length argument any more. The length will be automatically determined from the string.

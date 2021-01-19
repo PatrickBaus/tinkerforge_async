@@ -50,7 +50,7 @@ def pack_payload(data, form):
             else:
                 packed += struct.pack('<' + f, bytes([ord(d)]))
         elif 's' in f:
-            packed += struct.pack('<' + f, bytes(map(ord, d)))
+            packed += struct.pack('<' + f, d)
         elif len(f) > 1:
             packed += struct.pack('<' + f, *d)
         else:

@@ -131,10 +131,12 @@ class Device(object):
         """
         Registers the given *function* with the given *callback_id*.
         """
+        # We need to use the enum value, because the ip connection has no knowlege about the enums
+        # and will look for the value
         if queue is None:
-            self.__registered_queues.pop(event_id, None)
+            self.__registered_queues.pop(event_id.value, None)
         else:
-            self.__registered_queues[event_id] = queue
+            self.__registered_queues[event_id.value] = queue
 
     async def get_identity(self):
         """
@@ -153,10 +155,15 @@ class Device(object):
             response_expected=True
         )
         uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, '8s 8s c 3B 3B H')
+        try:
+            position = BrickletPort(position)
+        except ValueError:
+            position = int(position)    # It is a Master brick. The position is its position in the stack.
+
         return GetIdentity(
             base58decode(uid),
-            base58decode(connected_uid),
-            BrickletPort(position),
+            None if connected_uid == '0' else base58decode(connected_uid),
+            position,
             hw_version,
             fw_version,
             DeviceIdentifier(device_id)
