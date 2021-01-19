@@ -1,12 +1,12 @@
 # TinkerforgeAsync
-This is a reimplementation of the Tinkerforge Python bindings ([original Python bindings](https://www.tinkerforge.com/en/doc/Software/API_Bindings_Python.html)) using Python 3 asyncio. The original bindings used threads to manage the blocking operations. A much cleaner implementation is possible using the *await* syntax from asyncio.
+This is a reimplementation of the Tinkerforge Python bindings ([original Python bindings](https://www.tinkerforge.com/en/doc/Software/API_Bindings_Python.html)) using Python 3 asyncio. The original bindings used threads to manage the blocking operations. A much cleaner implementation is possible using the `await` syntax from asyncio.
 
 **Note: This API implementation is not an official Tinkerforge implementation. I am in no way affiliated with the Tinkerforge GmbH. Use at your own risk. If you find any bugs, please report them.**
 
 # Supported Bricks/Bricklets
 |Brick|Supported|Tested|Comments|
 |--|--|--|--|
-|[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:x:|  :x:| WIP |
+|[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:heavy_check_mark:|  :x:| WIP |
 
 |Bricklet|Supported|Tested|
 |--|--|--|
@@ -29,7 +29,7 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
 ### Design Changes
 - Only Python 3 is supported (3.7+)
  - Replaced threads with an async event loop
- - Completely rewritten how responses from bricks/bricklets work. All setters now have a *response_expected* parameter, which when set to true will make the function call either return *True* or raise an error. There are no *set_response_expected()* functions any more.
+ - Completely rewritten how responses from bricks/bricklets work. All setters now have a `response_expected` parameter, which when set to true will make the function call either return `True` or raise an error. There are no `set_response_expected()` functions any more.
 
    Old style:
    ```python
@@ -81,8 +81,8 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
            GET_DEBOUNCE_PERIOD = 12
    ```
  - Moved from base58 encoded uids to integers
- - Moved from callbacks to queues in order to keep users out of the callback hell. It makes the code style more readable when using the *await* syntax anyway.
- - Payloads will now be decoded by the *Device* object and not by the *ip_connection* any more. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it, if possible, and pass it on to the queue.
+ - Moved from callbacks to queues in order to keep users out of the callback hell. It makes the code style more readable when using the `await` syntax anyway.
+ - Payloads will now be decoded by the `Device` object and not by the `ip_connection` any more. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it, if possible, and pass it on to the queue.
  - If physical quantities are measured we will now return standard SI units, not some unexpected stuff like centi °C (Temperature Bricklet). To preserve the precision the Decimal package is used. The only exception to this rule is the use of °C for temperature. This is for convenience.
  - All callbacks now contain a timestamp (Unix timestamp) and the device uid.
 
@@ -92,16 +92,18 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    ```
 
  - New functions
-   *BrickMaster.set_wpa_enterprise_username(username)*: Set the WPA enterprise username without calling *BrickMaster.set_wifi_certificate()*. Takes a `string` instead of an array of `int`.
-   *BrickMaster.set_wpa_enterprise_password(password)*: Set the WPA enterprise password without calling *BrickMaster.set_wifi_certificate()*. Takes a `string` instead of an array of `int`.
-   *BrickMaster.get_wpa_enterprise_username()*: Get the WPA enterprise password without calling *BrickMaster.get_wifi_certificate()*. Also returns a `string` instead of an array of `int`.
-   *BrickMaster.get_wpa_enterprise_password()*: Get the WPA enterprise password without calling *BrickMaster.get_wifi_certificate()*. Also returns a `string` instead of an array of `int`.
+
+   `BrickMaster.set_wpa_enterprise_username(username)`: Set the WPA enterprise username without calling `BrickMaster.set_wifi_certificate()`. Takes a `string` instead of an array of `int`.
+   `BrickMaster.set_wpa_enterprise_password(password)`: Set the WPA enterprise password without calling `BrickMaster.set_wifi_certificate()`. Takes a `string` instead of an array of `int`.
+   `BrickMaster.get_wpa_enterprise_username()`: Get the WPA enterprise password without calling `BrickMaster.get_wifi_certificate()`. Also returns a `string` instead of an array of `int`.
+   `BrickMaster.get_wpa_enterprise_password()`: Get the WPA enterprise password without calling `BrickMaster.get_wifi_certificate()`. Also returns a `string` instead of an array of `int`.
+
 - #### [IP Connection](https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#api)
-   - *IPConnection.authenticate(_secret_)*: removed. This can now be done through connect()
-   - *IPConnection.set_timeout/IPConnection.get_timeout*: Replaced by a property
-   - *IPConnection.register_callback(_callback_id_, _function_)*: Replaced by register_queue()
+   - `IPConnection.authenticate(_secret_)`: removed. This can now be done through connect()
+   - `IPConnection.set_timeout/IPConnection.get_timeout`: Replaced by a property
+   - `IPConnection.register_callback(_callback_id_, _function_)`: Replaced by `register_event_queue()`
 
 - #### [Master Brick](https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html)
-   - *BrickMaster.set_wifi_configuration()*/*BrickMaster.get_wifi_configuration()* will take/return all ips in natural order
-   - *BrickMaster.set_ethernet_configuration()*/*BrickMaster.get_ethernet_configuration()* will take/return all ips in natural order
-     *BrickMaster.write_wifi2_serial_port()* will only accept a `bytestring` and no length argument any more. The length will be automatically determined from the string.
+   - `BrickMaster.set_wifi_configuration()`/`BrickMaster.get_wifi_configuration()` will take/return all ips in natural order
+   - `BrickMaster.set_ethernet_configuration()`/`BrickMaster.get_ethernet_configuration()` will take/return all ips in natural order
+     `BrickMaster.write_wifi2_serial_port()` will only accept a `bytestring` and no length argument any more. The length will be automatically determined from the string.
