@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, DeviceWithMCU, device_factory
+from .devices import DeviceIdentifier, BrickletWithMCU, device_factory, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -37,14 +37,6 @@ class FunctionID(Enum):
     GET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION = 17
 
 @unique
-class ThresholdOption(Enum):
-    OFF = 'x'
-    OUTSIDE = 'o'
-    INSIDE = 'i'
-    LESS_THAN = '<'
-    GREATER_THAN = '>'
-
-@unique
 class LineFilter(Enum):
     FREQUENCY_50HZ = 0
     FREQUENCY_60HZ = 1
@@ -55,7 +47,7 @@ class WireMode(Enum):
     WIRE_3 = 3
     WIRE_4 = 4
 
-class BrickletPtcV2(DeviceWithMCU):
+class BrickletPtcV2(BrickletWithMCU):
     """
     Measures ambient temperature with 0.2 K accuracy
     """

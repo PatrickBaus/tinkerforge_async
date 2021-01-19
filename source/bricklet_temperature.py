@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, device_factory
+from .devices import DeviceIdentifier, Device, device_factory, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -25,14 +25,6 @@ class FunctionID(Enum):
     GET_DEBOUNCE_PERIOD = 7
     SET_I2C_MODE = 10
     GET_I2C_MODE = 11
-
-@unique
-class ThresholdOption(Enum):
-    OFF = 'x'
-    OUTSIDE = 'o'
-    INSIDE = 'i'
-    LESS_THAN = '<'
-    GREATER_THAN = '>'
 
 @unique
 class I2cOption(Enum):

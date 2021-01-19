@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, DeviceWithMCU, device_factory
+from .devices import DeviceIdentifier, BrickletWithMCU, device_factory, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -31,14 +31,6 @@ class FunctionID(Enum):
     GET_CHANNEL_LED_STATUS_CONFIG = 13
 
 @unique
-class ThresholdOption(Enum):
-    OFF = 'x'
-    OUTSIDE = 'o'
-    INSIDE = 'i'
-    LESS_THAN = '<'
-    GREATER_THAN = '>'
-
-@unique
 class ChannelLedConfig(Enum):
     OFF = 0
     ON = 1
@@ -51,7 +43,7 @@ class ChannelLedStatusConfig(Enum):
     INTENSITY = 1
 
 
-class BrickletIndustrialDualAnalogInV2(DeviceWithMCU):
+class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
     """
     Measures two DC voltages between -35V and +35V with 24bit resolution each
     """

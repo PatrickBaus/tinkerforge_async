@@ -28,6 +28,14 @@ class DeviceFactory:
 device_factory = DeviceFactory()
 
 @unique
+class ThresholdOption(Enum):
+    OFF = 'x'
+    OUTSIDE = 'o'
+    INSIDE = 'i'
+    LESS_THAN = '<'
+    GREATER_THAN = '>'
+
+@unique
 class DeviceIdentifier(Enum):
     BrickMaster                       = 13
     BrickletAmbientLight              = 21
@@ -180,10 +188,42 @@ class Device(object):
             DeviceIdentifier(device_id)
         )
 
+class DeviceWithMCU(Device):
+    async def get_chip_temperature(self):
+        """
+        Returns the temperature in °C as measured inside the microcontroller. The
+        value returned is not the ambient temperature!
+
+        The temperature is only proportional to the real temperature and it has bad
+        accuracy. Practically it is only useful as an indicator for
+        temperature changes.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_CHIP_TEMPERATURE,
+            response_expected=True
+        )
+        return unpack_payload(payload, 'h')
+
+    async def reset(self):
+        """
+        Calling this function will reset the Bricklet. All configurations
+        will be lost.
+
+        After a reset you have to create new device objects,
+        calling functions on the existing ones will result in
+        undefined behavior!
+        """
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.RESET,
+            response_expected=False
+        )
+
 @unique
 class BootloaderMode(Enum):
     BOOTLOADER = 0
-    FIRMARE = 1
+    FIRMWARE = 1
     BOOTLOADER_WAIT_FOR_REBOOT = 2
     FIRMWARE_WAIT_FOR_REBOOT = 3
     FIRMWARE_WAIT_FOR_ERASE_AND_REBOOT = 4
@@ -204,33 +244,11 @@ class LedConfig(Enum):
     SHOW_HEARTBEAT = 2
     SHOW_STATUS = 3
 
-class DeviceWithMCU(Device):
+class BrickletWithMCU(DeviceWithMCU):
     # Convenience imports, so that the user does not need to additionally import them
-    BootloaderMode = BootloaderMode
     BootloaderStatus = BootloaderStatus
     LedConfig = LedConfig
-
-    async def get_spitfp_error_count(self):
-        """
-        Returns the error count for the communication between Brick and Bricklet.
-
-        The errors are divided into
-
-        * ack checksum errors,
-        * message checksum errors,
-        * frameing errors and
-        * overflow errors.
-
-        The errors counts are for errors that occur on the Bricklet side. All
-        Bricks have a similar function that returns the errors on the Brick side.
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_SPITFP_ERROR_COUNT,
-            response_expected=True
-        )
-
-        return GetSPITFPErrorCount(*unpack_payload(payload, 'I I I I'))
+    BootloaderMode = BootloaderMode
 
     async def set_bootloader_mode(self, mode):
         """
@@ -337,37 +355,6 @@ class DeviceWithMCU(Device):
         )
         return LedConfig(unpack_payload(payload, 'B'))
 
-    async def get_chip_temperature(self):
-        """
-        Returns the temperature in °C as measured inside the microcontroller. The
-        value returned is not the ambient temperature!
-
-        The temperature is only proportional to the real temperature and it has bad
-        accuracy. Practically it is only useful as an indicator for
-        temperature changes.
-        """
-        _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_CHIP_TEMPERATURE,
-            response_expected=True
-        )
-        return unpack_payload(payload, 'h')
-
-    async def reset(self):
-        """
-        Calling this function will reset the Bricklet. All configurations
-        will be lost.
-
-        After a reset you have to create new device objects,
-        calling functions on the existing ones will result in
-        undefined behavior!
-        """
-        await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.RESET,
-            response_expected=False
-        )
-
     async def write_uid(self, uid, response_expected=False):
         """
         Writes a new UID into flash. If you want to set a new UID
@@ -398,3 +385,26 @@ class DeviceWithMCU(Device):
             response_expected=True
         )
         return unpack_payload(payload, 'I')
+
+    async def get_spitfp_error_count(self):
+        """
+        Returns the error count for the communication between Brick and Bricklet.
+
+        The errors are divided into
+
+        * ack checksum errors,
+        * message checksum errors,
+        * frameing errors and
+        * overflow errors.
+
+        The errors counts are for errors that occur on the Bricklet side. All
+        Bricks have a similar function that returns the errors on the Brick side.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_SPITFP_ERROR_COUNT,
+            response_expected=True
+        )
+
+        return GetSPITFPErrorCount(*unpack_payload(payload, 'I I I I'))
+

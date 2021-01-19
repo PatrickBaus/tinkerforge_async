@@ -2,7 +2,7 @@
 from collections import namedtuple
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, DeviceWithMCU, device_factory
+from .devices import DeviceIdentifier, BrickletWithMCU, device_factory
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -24,7 +24,7 @@ class FunctionID(Enum):
     START_COUNTER = 8
     GET_COUNTER_VALUE = 9
 
-class BrickletSegmentDisplay4x7V2(DeviceWithMCU):
+class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
     """
     Four 7-segment displays with switchable dots
     """

@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, device_factory
+from .devices import DeviceIdentifier, Device, device_factory, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -39,14 +39,6 @@ class FunctionID(Enum):
     GET_WIRE_MODE = 21
     SET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION = 22
     GET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION = 23
-
-@unique
-class ThresholdOption(Enum):
-    OFF = 'x'
-    OUTSIDE = 'o'
-    INSIDE = 'i'
-    LESS_THAN = '<'
-    GREATER_THAN = '>'
 
 @unique
 class LineFilter(Enum):

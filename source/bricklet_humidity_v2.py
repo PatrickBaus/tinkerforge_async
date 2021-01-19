@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, DeviceWithMCU, device_factory
+from .devices import DeviceIdentifier, BrickletWithMCU, device_factory, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -32,14 +32,6 @@ class FunctionID(Enum):
     GET_SAMPLES_PER_SECOND = 14
 
 @unique
-class ThresholdOption(Enum):
-    OFF = 'x'
-    OUTSIDE = 'o'
-    INSIDE = 'i'
-    LESS_THAN = '<'
-    GREATER_THAN = '>'
-
-@unique
 class HeaterConfig(Enum):
     DISABLED = 0
     ENABLED = 1
@@ -53,7 +45,7 @@ class SamplesPerSecond(Enum):
     SPS_02 = 4
     SPS_01 = 5
 
-class BrickletHumidityV2(DeviceWithMCU):
+class BrickletHumidityV2(BrickletWithMCU):
     """
     Measures relative humidity
     """
@@ -79,7 +71,7 @@ class BrickletHumidityV2(DeviceWithMCU):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        DeviceWithMCU.__init__(self, uid, ipcon)
+        super().__init__(uid, ipcon)
 
         self.api_version = (2, 0, 2)
 
@@ -389,19 +381,19 @@ class BrickletHumidityV2(DeviceWithMCU):
     def __SI_to_temperature_sensor(self, value):
         return int(value * 100)
 
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            if header['function_id'] is CallbackID.HUMIDITY:
-                payload = self.__humidity_sensor_to_SI(payload)
-            elif header['function_id'] is CallbackID.TEMPERATURE:
-                payload = self.__temperature_sensor_to_SI(payload)
-            super()._process_callback(header, payload)
+#    def _process_callback(self, header, payload):
+#        try:
+#            header['function_id'] = self.CallbackID(header['function_id'])
+#        except ValueError:
+#            # ValueError: raised if the callbackID is unknown
+#            raise UnknownFunctionError from None
+#        else:
+#            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+#            if header['function_id'] is CallbackID.HUMIDITY:
+#                payload = self.__humidity_sensor_to_SI(payload)
+#            elif header['function_id'] is CallbackID.TEMPERATURE:
+#                payload = self.__temperature_sensor_to_SI(payload)
+#            super()._process_callback(header, payload)
 
 device_factory.register(BrickletHumidityV2.DEVICE_IDENTIFIER, BrickletHumidityV2)
 

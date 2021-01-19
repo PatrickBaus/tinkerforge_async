@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, device_factory
+from .devices import DeviceIdentifier, Device, device_factory, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -31,14 +31,6 @@ class FunctionID(Enum):
     GET_ANALOG_VALUE_CALLBACK_THRESHOLD = 10
     SET_DEBOUNCE_PERIOD = 11
     GET_DEBOUNCE_PERIOD = 12
-
-@unique
-class ThresholdOption(Enum):
-    OFF = 'x'
-    OUTSIDE = 'o'
-    INSIDE = 'i'
-    LESS_THAN = '<'
-    GREATER_THAN = '>'
 
 class BrickletHumidity(Device):
     """

@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, device_factory
+from .devices import DeviceIdentifier, Device, device_factory, ThresholdOption
 from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -23,15 +23,6 @@ class FunctionID(Enum):
     GET_ILLUMINANCE_CALLBACK_THRESHOLD = 5
     SET_DEBOUNCE_PERIOD = 6
     GET_DEBOUNCE_PERIOD = 7
-
-@unique
-class ThresholdOption(Enum):
-    OFF = 'x'
-    OUTSIDE = 'o'
-    INSIDE = 'i'
-    LESS_THAN = '<'
-    GREATER_THAN = '>'
-
 
 class BrickletAmbientLightV2(Device):
     """

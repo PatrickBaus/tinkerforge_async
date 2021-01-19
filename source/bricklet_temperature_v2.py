@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, DeviceWithMCU, device_factory
+from .devices import DeviceIdentifier, BrickletWithMCU, device_factory, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -22,19 +22,11 @@ class FunctionID(Enum):
     GET_HEATER_CONFIGURATION = 6
 
 @unique
-class ThresholdOption(Enum):
-    OFF = 'x'
-    OUTSIDE = 'o'
-    INSIDE = 'i'
-    LESS_THAN = '<'
-    GREATER_THAN = '>'
-
-@unique
 class HeaterConfig(Enum):
     DISABLED = 0
     ENABLED = 1
 
-class BrickletTemperatureV2(DeviceWithMCU):
+class BrickletTemperatureV2(BrickletWithMCU):
     """
     Measures ambient temperature with 0.2 K accuracy
     """
