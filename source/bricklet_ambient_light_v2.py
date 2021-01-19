@@ -4,7 +4,7 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, device_factory
-from .ip_connection import Flags, UnknownFunctionError
+from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetIlluminanceCallbackThreshold = namedtuple('IlluminanceCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -187,23 +187,6 @@ class BrickletAmbientLightV2(Device):
             response_expected=True
         )
         return unpack_payload(payload, 'I')
-
-    def register_event_queue(self, event_id, queue):
-        """
-        Registers the given *function* with the given *callback_id*.
-        """
-        assert type(event_id) is CallbackID
-        super().register_event_queue(event_id, queue)
-
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            super()._process_callback(header, payload)
 
 device_factory.register(BrickletAmbientLightV2.DEVICE_IDENTIFIER, BrickletAmbientLightV2)
 

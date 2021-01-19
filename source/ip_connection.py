@@ -7,10 +7,7 @@ import struct
 import traceback
 
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
-from .devices import DeviceIdentifier, FunctionID
-
-class UnknownFunctionError(Exception):
-    pass
+from .devices import DeviceIdentifier, FunctionID, UnknownFunctionError
 
 class EnumerationType(Enum):
     AVAILABLE = 0
