@@ -93,7 +93,7 @@ class IPConnectionAsync(object):
         self.__timeout = DEFAULT_WAIT_TIMEOUT
         self.__pending_requests = {}
         self.__sequence_number_queue = asyncio.Queue(maxsize=14)
-        for i in range(1,15):
+        for i in range(1,16):
             self.__sequence_number_queue.put_nowait(i)
 
         self.__enumeration_queue = asyncio.Queue(maxsize=20)
