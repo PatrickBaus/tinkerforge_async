@@ -92,23 +92,20 @@ class IPConnectionAsync(object):
         self.__sequence_number = 0
         self.__timeout = DEFAULT_WAIT_TIMEOUT
         self.__pending_requests = {}
+        self.__sequence_number_queue = asyncio.Queue(maxsize=14)
+        for i in range(1,15):
+            self.__sequence_number_queue.put_nowait(i)
 
         self.__enumeration_queue = asyncio.Queue(maxsize=20)
-        self.__reply_queue = asyncio.Queue(maxsize=20)
 
         self.__devices = {}
 
         self.__logger = logging.getLogger(__name__)
 
-    def __get_sequence_number(self):
-        self.__sequence_number = (self.__sequence_number % 15) + 1
-
-        return self.__sequence_number
-
-    def __create_packet_header(self, payload_size, function_id, uid=None, response_expected=False):
+    async def __create_packet_header(self, payload_size, function_id, uid=None, response_expected=False):
         uid = IPConnectionAsync.BROADCAST_UID if uid is None else uid
         packet_size = payload_size + struct.calcsize(IPConnectionAsync.HEADER_FORMAT)
-        sequence_number = self.__get_sequence_number()
+        sequence_number = await self.__sequence_number_queue.get()
         response_expected = bool(response_expected)
 
         sequence_number_and_options = (sequence_number << 4) | response_expected << 3
@@ -132,7 +129,7 @@ class IPConnectionAsync(object):
         )
 
     async def send_request(self, device, function_id, data=b'', response_expected=False):
-        header, sequence_number = self.__create_packet_header(
+        header, sequence_number = await self.__create_packet_header(
             payload_size=len(data),
             function_id=function_id.value,
             uid=0 if device is None else device.uid,
@@ -143,33 +140,18 @@ class IPConnectionAsync(object):
 
         # If we are waiting for a response, send the request, then pass on the response as a future
         self.__logger.debug('Sending request: %(header)s - %(payload)s', {'header': header, 'payload': data})
-        self.__writer.write(request)
-        if response_expected:
-            self.__logger.debug('Waiting for reply for request number %(sequence_number)s.', {'sequence_number': sequence_number})
-            header, payload = await self.__get_response(sequence_number)
-            self.__logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
-            return header, payload
-
-    async def __get_response(self, sequence_number):
-        # Create a lock for the sequence number
-        self.__pending_requests[sequence_number] = asyncio.Condition()
-        async with async_timeout.timeout(self.__timeout) as cm:
-            # Aquire the lock
-            async with self.__pending_requests[sequence_number]:
-                try:
-                    # wait for the lock to be released
-                    await self.__pending_requests[sequence_number].wait()
-                    # Once released the worker (streamreader) will have put the packet in the queue
-                    header, payload = await self.__reply_queue.get()
-                    return header, payload
-                except asyncio.CancelledError:
-                    if cm.expired:
-                        raise asyncio.TimeoutError() from None
-                    else:
-                        raise
-                finally:
-                    # Remove the lock
-                    del self.__pending_requests[sequence_number]
+        try:
+            self.__writer.write(request)
+            if response_expected:
+                self.__logger.debug('Waiting for reply for request number %(sequence_number)s.', {'sequence_number': sequence_number})
+                self.__pending_requests[sequence_number] = asyncio.Future()
+                header, payload  = await asyncio.wait_for(self.__pending_requests[sequence_number], self.__timeout)
+                #header, payload = await self.__get_response(sequence_number)
+                self.__logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
+                return header, payload
+        finally:
+            # Return the sequency number
+            self.__sequence_number_queue.put_nowait(sequence_number)
 
     def __parse_enumerate_payload(self, payload):
         uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type \
@@ -245,14 +227,8 @@ class IPConnectionAsync(object):
 
         elif header['response_expected']:
             try:
-                async with self.__pending_requests[header['sequence_number']]:
-                    if self.__reply_queue.full():
-                        # TODO: log a warning, that we are dropping packets
-                        self.__reply_queue.get_nowait()
-
-                    self.__reply_queue.put_nowait((header, payload,))
-                    self.__pending_requests[header['sequence_number']].notify()
-                    await asyncio.sleep(0)
+                # Mark the future as done
+                self.__pending_requests[header['sequence_number']].set_result((header, payload,))
             except KeyError:
                 # Drop the packet, because it is not our sequence number
                 pass
