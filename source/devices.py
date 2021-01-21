@@ -47,6 +47,7 @@ class DeviceIdentifier(Enum):
     BrickletSegmentDisplay4x7         = 237
     BrickletAmbientLight_V2           = 259
     BrickletHumidity_V2               = 283
+    BrickletMotionDetector_V2         = 292
     BrickletPtc_V2                    = 2101
     BrickletTemperature_V2            = 2113
     BrickletIndustrialDualAnalogIn_V2 = 2121
