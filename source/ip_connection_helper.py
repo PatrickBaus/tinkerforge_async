@@ -60,7 +60,7 @@ def pack_payload(data, form):
 
 def unpack_payload(data, form):
     ret = []
-    if not len(data) and form == '':
+    if not form or not len(data):
         return None
 
     for f in form.split(' '):
