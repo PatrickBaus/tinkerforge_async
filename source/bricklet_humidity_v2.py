@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, BrickletWithMCU, device_factory, ThresholdOption
+from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -394,6 +394,4 @@ class BrickletHumidityV2(BrickletWithMCU):
 #            elif header['function_id'] is CallbackID.TEMPERATURE:
 #                payload = self.__temperature_sensor_to_SI(payload)
 #            super()._process_callback(header, payload)
-
-device_factory.register(BrickletHumidityV2.DEVICE_IDENTIFIER, BrickletHumidityV2)
 

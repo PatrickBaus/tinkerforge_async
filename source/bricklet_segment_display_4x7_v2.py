@@ -2,7 +2,7 @@
 from collections import namedtuple
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, BrickletWithMCU, device_factory
+from .devices import DeviceIdentifier, BrickletWithMCU
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -232,6 +232,4 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
             response_expected=True
         )
         return unpack_payload(payload, 'H')
-
-device_factory.register(BrickletSegmentDisplay4x7V2.DEVICE_IDENTIFIER, BrickletSegmentDisplay4x7V2)
 

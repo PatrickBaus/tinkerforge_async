@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, device_factory, ThresholdOption
+from .devices import DeviceIdentifier, Device, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -207,6 +207,4 @@ class BrickletMoisture(Device):
             response_expected=True
         )
         return unpack_payload(payload, 'B')
-
-device_factory.register(BrickletMoisture.DEVICE_IDENTIFIER, BrickletMoisture)
 

@@ -12,21 +12,6 @@ GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardw
 class UnknownFunctionError(Exception):
     pass
 
-class DeviceFactory:
-    def __init__(self):
-        self.__available_devices= {}
-
-    def register(self, device_id, device):
-        self.__available_devices[device_id] = device
-
-    def get(self, device_id, uid, ipcon):
-        device = self.__available_devices.get(device_id)
-        if device is None:
-            raise ValueError(f"No device available for id {device_id}")
-        return device(uid, ipcon)
-
-device_factory = DeviceFactory()
-
 @unique
 class ThresholdOption(Enum):
     OFF = 'x'

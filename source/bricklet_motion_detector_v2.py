@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, BrickletWithMCU, device_factory
+from .devices import DeviceIdentifier, BrickletWithMCU
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -141,6 +141,4 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         else:
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             super()._process_callback(header, payload)
-
-device_factory.register(BrickletMotionDetectorV2.DEVICE_IDENTIFIER, BrickletMotionDetectorV2)
 

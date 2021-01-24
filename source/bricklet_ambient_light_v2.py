@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, device_factory, ThresholdOption
+from .devices import DeviceIdentifier, Device, ThresholdOption
 from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -178,6 +178,4 @@ class BrickletAmbientLightV2(Device):
             response_expected=True
         )
         return unpack_payload(payload, 'I')
-
-device_factory.register(BrickletAmbientLightV2.DEVICE_IDENTIFIER, BrickletAmbientLightV2)
 

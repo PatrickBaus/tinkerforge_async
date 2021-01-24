@@ -3,7 +3,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, device_factory, ThresholdOption
+from .devices import DeviceIdentifier, Device, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -249,6 +249,4 @@ class BrickletTemperature(Device):
                 unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             )
             super()._process_callback(header, payload)
-
-device_factory.register(BrickletTemperature.DEVICE_IDENTIFIER, BrickletTemperature)
 

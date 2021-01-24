@@ -8,6 +8,7 @@ import warnings
 
 from source.ip_connection import IPConnectionAsync
 from source.devices import DeviceIdentifier
+from source.device_factory import device_factory
 from source.bricklet_ambient_light_v2 import BrickletAmbientLightV2
 
 loop = asyncio.get_event_loop()
@@ -44,11 +45,11 @@ async def process_enumerations():
         print('Enumeration queue canceled')
 
 async def run_example(packet):
-    print('Registering illumiance bricklet 2.0')
-    bricklet = BrickletAmbientLightV2(packet['uid'], ipcon) # Create device object
+    print('Registering bricklet')
+    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
     # Register the callback queue used by process_callbacks()
-    bricklet.register_event_queue(BrickletAmbientLightV2.CallbackID.illuminance_reached, callback_queue)
+    bricklet.register_event_queue(bricklet.CallbackID.illuminance_reached, callback_queue)
 
     print('Set callback period to', 1000, 'ms')
     await bricklet.set_illuminance_callback_period(1000)
@@ -67,7 +68,7 @@ async def run_example(packet):
     print('Get illumiance:', await bricklet.get_illuminance())
 
     # Terminate the loop
-    asyncio.ensure_future(stop_loop())
+    asyncio.create_task(stop_loop())
 
 async def stop_loop():
     # Clean up: Disconnect ip connection and stop the consumers
@@ -81,14 +82,14 @@ def error_handler(task):
     try:
       task.result()
     except Exception:
-      asyncio.ensure_future(stop_loop())
+      asyncio.create_task(stop_loop())
 
 async def main():
     try: 
         await ipcon.connect(host='127.0.0.1', port=4223)
-        running_tasks.append(asyncio.ensure_future(process_callbacks()))
+        running_tasks.append(asyncio.create_task(process_callbacks()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        running_tasks.append(asyncio.ensure_future(process_enumerations()))
+        running_tasks.append(asyncio.create_task(process_enumerations()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
         print("Enumerating brick and waiting for bricklets to reply")
         await ipcon.enumerate()
