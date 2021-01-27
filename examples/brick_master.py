@@ -110,7 +110,19 @@ async def run_example(packet):
         await master.set_chibi_channel(chibi_channel)
 
     if await master.is_rs485_present():
-        pass
+        config = await master.get_rs485_configuration()
+        print('RS-485 configuration:', config)
+        new_config = config._asdict()
+        new_config['speed'] = 1000000
+        #await master.set_rs485_configuration(**new_config)
+
+        #await master.set_rs485_address(0)   # 0 = master
+        print('RS-485 address:', await master.get_rs485_address())
+
+        #await master.set_rs485_slave_addresses([42,])
+        print('RS-485 slave addresses:', await master.get_rs485_slave_addresses())
+
+        print('RS-485 CRC error count:', await master.get_rs485_error_log())
 
     if await master.is_wifi_present():
         config = await master.get_wifi_configuration()

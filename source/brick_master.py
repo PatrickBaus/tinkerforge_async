@@ -562,13 +562,16 @@ class BrickMaster(DeviceWithMCU):
             return header['flags'] == Flags.OK
 
     async def set_chibi_slave_addresses(self, addresses, response_expected=False):
-        tasks = [self.__set_chibi_slave_address(index, address, response_expected) for index, address in enumerate(addresses)]
-        result = await asyncio.gather(*tasks)
-        # We need to terminate with the a paket looking like (max_index + 1, 0)
-        terminator_result = await self.__set_chibi_slave_address(len(tasks), 0, response_expected)
+        assert (isinstance(addresses, tuple) or isinstance(addresses, list))
+
+        if addresses[-1] != 0:
+            addresses += type(addresses)([0])    # add a trailing [0], because it is the delimiter
+
+        coros = [self.__set_chibi_slave_address(index, address, response_expected) for index, address in enumerate(addresses)]
+        result = await asyncio.gather(*coros)
 
         if response_expected:
-            return result + terminator_result
+            return result
 
     async def __get_chibi_slave_address(self, num):
         """
@@ -913,10 +916,10 @@ class BrickMaster(DeviceWithMCU):
         """
         if not type(connection) is WifiConnection:
             connection = WifiConnection(connection)
-        assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
-        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
-        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
-        assert isinstance(port, int) and (1 <= port <= 65535)
+        assert ((isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4)
+        assert ((isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4)
+        assert ((isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4)
+        assert (isinstance(port, int) and (1 <= port <= 65535))
         try:
             ssid = ssid.encode('utf-8')
         except AttributeError:
@@ -1016,7 +1019,7 @@ class BrickMaster(DeviceWithMCU):
             encryption = WifiEncryptionMode(encryption)
         if not type(eap_options) is EapOptions:
             EapOptions(eap_options)
-        assert (key_index is None or (isinstance(key_index, int)) and (1 <= key_index <= 4))
+        assert (key_index is None or (isinstance(key_index, int) and (1 <= key_index <= 4)))
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1349,7 +1352,7 @@ class BrickMaster(DeviceWithMCU):
             key = key.encode("utf-8")
         except AttributeError:
             pass    # already a bytestring
-        assert 8 <= len(key) <= 63
+        assert (8 <= len(key) <= 63)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1810,10 +1813,10 @@ class BrickMaster(DeviceWithMCU):
         """
         if not type(connection) is EthernetConnection:
             connection = EthernetConnection(connection)
-        assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
-        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
-        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
-        assert isinstance(port, int) and (1 <= port <= 65535)
+        assert ((isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4)
+        assert ((isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4)
+        assert ((isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4)
+        assert (isinstance(port, int) and (1 <= port <= 65535))
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1922,7 +1925,7 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.1.0$nbsp;(Firmware)
         """
-        assert (isinstance(mac_address, list) or isinstance(mac_address, tuple)) and len(mac_address) == 6
+        assert (isinstance(mac_address, list) or isinstance(mac_address, tuple) and len(mac_address) == 6)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1953,8 +1956,8 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.2.0$nbsp;(Firmware)
         """
-        assert isinstance(sockets, int) and (0 <= sockets <= 7)
-        assert isinstance(port, int) and (1 <= port <= 65535)
+        assert ((isinstance(sockets, int) and (0 <= sockets <= 7)))
+        assert (isinstance(port, int) and (1 <= port <= 65535))
 
         result = await self.ipcon.send_request(
             device=self,
@@ -2183,7 +2186,7 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert isinstance(length, int) and (0 <= length <= 60)
+        assert (isinstance(length, int) and (0 <= length <= 60))
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -2276,9 +2279,9 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert isinstance(port, int) and (1 <= port <= 65535)
-        assert isinstance(websocket_port, int) and (1 <= websocket_port <= 65535)
-        assert isinstance(website_port, int) and (1 <= website_port <= 65535)
+        assert ((isinstance(port, int) and (1 <= port <= 65535)))
+        assert ((isinstance(websocket_port, int) and (1 <= websocket_port <= 65535)))
+        assert ((isinstance(website_port, int) and (1 <= website_port <= 65535)))
         if not type(phy_mode) is PhyMode:
             phy_mode = PhyMode(PhyMode)
 
@@ -2375,11 +2378,11 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
-        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
-        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
-        assert (isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6
-        assert (isinstance(bssid, tuple) or isinstance(bssid, list)) and len(bssid) == 6
+        assert ((isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4)
+        assert ((isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4)
+        assert ((isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4)
+        assert ((isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6)
+        assert ((isinstance(bssid, tuple) or isinstance(bssid, list)) and len(bssid) == 6)
 
         try:
             ssid = ssid.encode('utf-8')
@@ -2566,12 +2569,12 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
-        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
-        assert (isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6
+        assert ((isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4)
+        assert ((isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4)
+        assert ((isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6)
         if not type(encryption) is WifiApEncryption:
             encryption = WifiApEncryption(encryption)
-        assert isinstance(channel, int) and (1 <= channel <= 13)
+        assert (isinstance(channel, int) and (1 <= channel <= 13))
         try:
             ssid = ssid.encode('utf-8')
         except AttributeError:
@@ -2792,14 +2795,14 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.2$nbsp;(Firmware)
         """
-        assert (isinstance(root_ip, tuple) or isinstance(root_ip, list)) and len(root_ip) == 4
-        assert (isinstance(root_subnet_mask, tuple) or isinstance(root_subnet_mask, list)) and len(root_subnet_mask) == 4
-        assert (isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4
-        assert (isinstance(gateway_ip, tuple) or isinstance(gateway_ip, list)) and len(gateway_ip) == 4
-        assert (isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4
-        assert (isinstance(router_bssid, tuple) or isinstance(router_bssid, list)) and len(router_bssid) == 6
-        assert (isinstance(group_id, tuple) or isinstance(group_id, list)) and len(group_id) == 6
-        assert isinstance(gateway_port, int) and (1 <= gateway_port <= 65535)
+        assert ((isinstance(root_ip, tuple) or isinstance(root_ip, list)) and len(root_ip) == 4)
+        assert ((isinstance(root_subnet_mask, tuple) or isinstance(root_subnet_mask, list)) and len(root_subnet_mask) == 4)
+        assert ((isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4)
+        assert ((isinstance(gateway_ip, tuple) or isinstance(gateway_ip, list)) and len(gateway_ip) == 4)
+        assert ((isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4)
+        assert ((isinstance(router_bssid, tuple) or isinstance(router_bssid, list)) and len(router_bssid) == 6)
+        assert ((isinstance(group_id, tuple) or isinstance(group_id, list)) and len(group_id) == 6)
+        assert (isinstance(gateway_port, int) and (1 <= gateway_port <= 65535))
         try:
             group_ssid_prefix = group_ssid_prefix.encode('utf-8')
         except AttributeError:
