@@ -902,9 +902,9 @@ class BrickMaster(DeviceWithMCU):
         It is recommended to use the Brick Viewer to set the WIFI configuration.
         """
         assert type(connection) is WifiConnection
-        assert isinstance(ip, tuple) or isinstance(ip, list) and len(ip) == 4
-        assert isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list) and len(subnet_mask) == 4
-        assert isinstance(gateway, tuple) or isinstance(gateway, list) and len(gateway) == 4
+        assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
+        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
+        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
         assert isinstance(port, int) and (1 <= port <= 65535)
         try:
             ssid = ssid.encode('utf-8')
@@ -1003,7 +1003,7 @@ class BrickMaster(DeviceWithMCU):
             eap_options = EapOptions(0)
         assert type(encryption) is WifiEncryptionMode
         assert eap_options is None or type(eap_options) is EapOptions
-        assert key_index is None or (isinstance(key_index, int) and (1 <= key_index <= 4))
+        assert (key_index is None or (isinstance(key_index, int)) and (1 <= key_index <= 4))
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1381,11 +1381,15 @@ class BrickMaster(DeviceWithMCU):
             pass    # already a bytestring
 
         # Test if the hostname is valid
-        hostname = hostname.lower()
+        # Check for hostnames as per RFC 1123. This allows labels that start with
+        # a digit or hyphen, which was not allowed in RFC 952 originally
+        # The bricks only allow 32 characters as opposed to 63 as per RFC.
         # Allow 0 characters to reset the hostname (this is TF specific)
-        allowed = re.compile(rb'(?!-)[a-z0-9-]{0,32}(?<!-)$')
-        if not bool(allowed.match(hostname)):
-            raise ValueError('Invalid hostname')
+        hostname = hostname.lower()
+        if len(hostname) != 0:
+            allowed = re.compile(rb'^(?!-)[a-z0-9-]{2,32}(?<!-)$')
+            if not bool(allowed.match(hostname)):
+                raise ValueError('Invalid hostname')
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1790,9 +1794,9 @@ class BrickMaster(DeviceWithMCU):
         .. versionadded:: 2.1.0$nbsp;(Firmware)
         """
         assert type(connection) is EthernetConnection
-        assert isinstance(ip, tuple) or isinstance(ip, list) and len(ip) == 4
-        assert isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list) and len(subnet_mask) == 4
-        assert isinstance(gateway, tuple) or isinstance(gateway, list) and len(gateway) == 4
+        assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
+        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
+        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
         assert isinstance(port, int) and (1 <= port <= 65535)
 
         result = await self.ipcon.send_request(
@@ -1872,11 +1876,15 @@ class BrickMaster(DeviceWithMCU):
             pass    # already a bytestring
 
         # Test if the hostname is valid
-        hostname = hostname.lower()
+        # Check for hostnames as per RFC 1123. This allows labels that start with
+        # a digit or hyphen, which was not allowed in RFC 952 originally
+        # The bricks only allow 32 characters as opposed to 63 as per RFC.
         # Allow 0 characters to reset the hostname (this is TF specific)
-        allowed = re.compile(rb'(?!-)[a-z0-9-]{0,32}(?<!-)$')
-        if not bool(allowed.match(hostname)):
-            raise ValueError('Invalid hostname')
+        hostname = hostname.lower()
+        if len(hostname) != 0:
+            allowed = re.compile(rb'^(?!-)[a-z0-9-]{2,32}(?<!-)$')
+            if not bool(allowed.match(hostname)):
+                raise ValueError('Invalid hostname')
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1898,7 +1906,7 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.1.0$nbsp;(Firmware)
         """
-        assert isinstance(mac_address, list) or isinstance(mac_address, tuple) and len(mac_address) == 6
+        assert (isinstance(mac_address, list) or isinstance(mac_address, tuple)) and len(mac_address) == 6
 
         result = await self.ipcon.send_request(
             device=self,
@@ -2218,8 +2226,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, '64s')
 
-    # TODO: Needs testing
-    async def set_wifi2_configuration(self, port=4223, websocket_port=4280, website_port=80, phy_mode=PhyMode.WIFI_G, sleep_mode=0, website=0, response_expected=False):
+    async def set_wifi2_configuration(self, port=4223, websocket_port=4280, website_port=80, phy_mode=PhyMode.WIFI_G, sleep_mode=0, website=False, response_expected=False):
         """
         Sets the general configuration of the WIFI Extension 2.0.
 
@@ -2256,7 +2263,8 @@ class BrickMaster(DeviceWithMCU):
         assert isinstance(port, int) and (1 <= port <= 65535)
         assert isinstance(websocket_port, int) and (1 <= websocket_port <= 65535)
         assert isinstance(website_port, int) and (1 <= website_port <= 65535)
-        assert type(phy_mode) is PhyMode
+        if not isinstance(phy_mode, PhyMode):
+            phy_mode = PhyMode(PhyMode)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -2268,7 +2276,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_configuration(self):
         """
         Returns the general configuration as set by :func:`Set Wifi2 Configuration`.
@@ -2283,9 +2290,9 @@ class BrickMaster(DeviceWithMCU):
 
         port, websocket_port, website_port, phy_mode, sleep_mode, website = unpack_payload(payload, 'H H H B B B')
         phy_mode = PhyMode(phy_mode)
+        website = bool(website)
         return GetWifi2Configuration(port, websocket_port, website_port, phy_mode, sleep_mode, website)
 
-    # TODO: Needs testing
     async def get_wifi2_status(self):
         """
         Returns the client and access point status of the WIFI Extension 2.0.
@@ -2298,30 +2305,29 @@ class BrickMaster(DeviceWithMCU):
             response_expected=True
         )
 
-        client_enabled, client_status, client_ip, client_subnet_mask, client_gateway, client_mac_address, client_rx_count, client_tx_count, client_rssi, ap_enabled, ap_subnet_mask, ap_gateway, ap_mac_address, ap_rx_count, ap_tx_count, ap_connected_count = unpack_payload(payload, '! B 4B 4B 4B 6B I I b ! 4B 4B 4B 6B I I B')
+        client_enabled, client_status, client_ip, client_subnet_mask, client_gateway, client_mac_address, client_rx_count, client_tx_count, client_rssi, ap_enabled, ap_ip, ap_subnet_mask, ap_gateway, ap_mac_address, ap_rx_count, ap_tx_count, ap_connected_count = unpack_payload(payload, '! B 4B 4B 4B 6B I I b ! 4B 4B 4B 6B I I B')
 
-        # Note ip, subnet_mask, gateway and mac addresses need to be reversed
         return GetWifi2Status(
             client_enabled,
             WifiClientStatus(client_status),
-            client_ip[::-1],
-            client_subnet_mask[::-1],
-            client_gateway[::-1],
-            client_mac_address[::-1],
+            client_ip,
+            client_subnet_mask,
+            client_gateway,
+            client_mac_address,
             client_rx_count,
             client_tx_count,
             client_rssi,
             ap_enabled,
-            ap_subnet_mask[::-1],
-            ap_gateway[::-1],
-            ap_mac_address[::-1],
+            ap_ip,
+            ap_subnet_mask,
+            ap_gateway,
+            ap_mac_address,
             ap_rx_count,
             ap_tx_count,
             ap_connected_count
         )
 
-    # TODO: Needs testing
-    async def set_wifi2_client_configuration(self, enable=True, ssid='tinkerforge', ip=(0,0,0,0,0), subnet_mask=(0,0,0,0,0), gateway=(0,0,0,0,0), mac_address=(0,0,0,0,0,0), bssid=(0,0,0,0,0,0), response_expected=False):
+    async def set_wifi2_client_configuration(self, enable=True, ssid='tinkerforge', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), mac_address=(0,0,0,0,0,0), bssid=(0,0,0,0,0,0), response_expected=False):
         """
         Sets the client specific configuration of the WIFI Extension 2.0.
 
@@ -2353,11 +2359,11 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert isinstance(ip, tuple) or isinstance(ip, list) and len(ip) == 4
-        assert isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list) and len(subnet_mask) == 4
-        assert isinstance(gateway, tuple) or isinstance(gateway, list) and len(gateway) == 4
-        assert isinstance(mac_address, tuple) or isinstance(mac_address, list) and len(mac_address) == 6
-        assert isinstance(bssid, tuple) or isinstance(bssid, list) and len(bssid) == 6
+        assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
+        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
+        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
+        assert (isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6
+        assert (isinstance(bssid, tuple) or isinstance(bssid, list)) and len(bssid) == 6
 
         try:
             ssid = ssid.encode('utf-8')
@@ -2372,11 +2378,11 @@ class BrickMaster(DeviceWithMCU):
                 (
                     bool(enable),
                     ssid,
-                    list(map(int, reversed(ip))),
-                    list(map(int, reversed(subnet_mask))),
-                    list(map(int, reversed(gateway))),
-                    list(map(int, reversed(mac_address))),
-                    list(map(int, reversed(bssid)))
+                    list(map(int, ip)),
+                    list(map(int, subnet_mask)),
+                    list(map(int, gateway)),
+                    list(map(int, mac_address)),
+                    list(map(int, bssid))
                 ), '! 32s 4B 4B 4B 6B 6B'),
             response_expected=response_expected
         )
@@ -2384,7 +2390,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_client_configuration(self):
         """
         Returns the client configuration as set by :func:`Set Wifi2 Client Configuration`.
@@ -2398,19 +2403,17 @@ class BrickMaster(DeviceWithMCU):
         )
 
         enable, ssid, ip, subnet_mask, gateway, mac_address, bssid = unpack_payload(payload, '! 32s 4B 4B 4B 6B 6B')
-        # Note mac, bssid, ip, subnet_mask and gateway need to be reversed
         return GetWifi2ClientConfiguration(
             enable,
             ssid,
-            ip[::-1],
-            subnet_mask[::-1],
-            gateway[::-1],
-            mac_address[::-1],
-            bssid[::-1]
+            ip,
+            subnet_mask,
+            gateway,
+            mac_address,
+            bssid
         )
 
-    # TODO: Needs testing
-    async def set_wifi2_client_hostname(self, hostname='', response_expected=False):
+    async def set_wifi2_client_hostname(self, hostname='wifi-extension-v2', response_expected=False):
         """
         Sets the client hostname (up to 32 characters) of the WIFI Extension 2.0. The
         hostname will be displayed by access points as the hostname in the DHCP clients
@@ -2430,15 +2433,17 @@ class BrickMaster(DeviceWithMCU):
             pass    # already a bytestring
 
         # Test if the hostname is valid
+        # Check for hostnames as per RFC 1123. This allows labels that start with
+        # a digit or hyphen, which was not allowed in RFC 952 originally
+        # The bricks only allow 32 characters as opposed to 63 as per RFC.
         hostname = hostname.lower()
-        # Allow 0 characters to reset the hostname (this is TF specific)
-        allowed = re.compile(rb'(?!-)[a-z0-9-]{0,32}(?<!-)$')
+        allowed = re.compile(rb'^(?!-)[a-z0-9-]{2,32}(?<!-)$')
         if not bool(allowed.match(hostname)):
             raise ValueError('Invalid hostname')
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.SET_SET_WIFI2_CLIENT_HOSTNAME,
+            function_id=FunctionID.SET_WIFI2_CLIENT_HOSTNAME,
             data=pack_payload((hostname, ), '32s'),
             response_expected=response_expected
         )
@@ -2446,7 +2451,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_client_hostname(self):
         """
         Returns the client hostname as set by :func:`Set Wifi2 Client Hostname`.
@@ -2460,7 +2464,6 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '32s')
 
-    # TODO: Needs testing
     async def set_wifi2_client_password(self, password, response_expected=False):
         """
         Sets the client password (up to 63 chars) for WPA/WPA2 encryption.
@@ -2489,7 +2492,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_client_password(self):
         """
         Returns the client password as set by :func:`Set Wifi2 Client Password`.
@@ -2508,7 +2510,7 @@ class BrickMaster(DeviceWithMCU):
         return unpack_payload(payload, '64s')
 
     # TODO: Needs testing
-    async def set_wifi2_ap_configuration(self, enable=True, ssid='tinkerforge', ip=(0,0,0,0,0), subnet_mask=(0,0,0,0,0), gateway=(0,0,0,0,0), encryption=WifiApEncryption.WPA2_PSK, hidden=False, channel=1, mac_address=(0,0,0,0,0,0), response_expected=False):
+    async def set_wifi2_ap_configuration(self, enable=True, ssid='tinkerforge', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), encryption=WifiApEncryption.WPA2_PSK, hidden=False, channel=1, mac_address=(0,0,0,0,0,0), response_expected=False):
         """
         Sets the access point specific configuration of the WIFI Extension 2.0.
 
@@ -2545,9 +2547,9 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list) and len(subnet_mask) == 4
-        assert isinstance(gateway, tuple) or isinstance(gateway, list) and len(gateway) == 4
-        assert isinstance(mac_address, tuple) or isinstance(mac_address, list) and len(mac_address) == 6
+        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
+        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
+        assert (isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6
         assert type(encryption) is WifiApEncryption
         assert isinstance(channel, int) and (1 <= channel <= 13)
         try:
@@ -2672,7 +2674,6 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, 'B')
 
-    # TODO: Needs testing
     async def get_wifi2_firmware_version(self):
         """
         Returns the current version of the WIFI Extension 2.0 firmware (major, minor, revision).
@@ -2702,7 +2703,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def disable_wifi2_status_led(self, response_expected=False):
         """
         Turns the green status LED of the WIFI Extension 2.0 off.
@@ -2718,7 +2718,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def is_wifi2_status_led_enabled(self):
         """
         Returns *true* if the green status LED of the WIFI Extension 2.0 is turned on.
@@ -2733,7 +2732,7 @@ class BrickMaster(DeviceWithMCU):
         return unpack_payload(payload, '!')
 
     # TODO: Needs testing
-    async def set_wifi2_mesh_configuration(self, enable=False, root_ip=(0,0,0,0,0), root_subnet_mask=(0,0,0,0,0), root_gateway=(0,0,0,0,0), router_bssid=(0,0,0,0,0,0), group_id=None, group_ssid_prefix='TF_MESH', gateway_ip=None, gateway_port=4240, response_expected=False):
+    async def set_wifi2_mesh_configuration(self, enable=False, root_ip=(0,0,0,0), root_subnet_mask=(0,0,0,0), root_gateway=(0,0,0,0), router_bssid=(0,0,0,0,0,0), group_id=None, group_ssid_prefix='TF_MESH', gateway_ip=None, gateway_port=4240, response_expected=False):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
 
@@ -2769,13 +2768,13 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.2$nbsp;(Firmware)
         """
-        assert isinstance(root_ip, tuple) or isinstance(root_ip, list) and len(root_ip) == 4
-        assert isinstance(root_subnet_mask, tuple) or isinstance(root_subnet_mask, list) and len(root_subnet_mask) == 4
-        assert isinstance(root_gateway, tuple) or isinstance(root_gateway, list) and len(root_gateway) == 4
-        assert isinstance(gateway_ip, tuple) or isinstance(gateway_ip, list) and len(gateway_ip) == 4
-        assert isinstance(root_gateway, tuple) or isinstance(root_gateway, list) and len(root_gateway) == 4
-        assert isinstance(router_bssid, tuple) or isinstance(router_bssid, list) and len(router_bssid) == 6
-        assert isinstance(group_id, tuple) or isinstance(group_id, list) and len(group_id) == 6
+        assert (isinstance(root_ip, tuple) or isinstance(root_ip, list)) and len(root_ip) == 4
+        assert (isinstance(root_subnet_mask, tuple) or isinstance(root_subnet_mask, list)) and len(root_subnet_mask) == 4
+        assert (isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4
+        assert (isinstance(gateway_ip, tuple) or isinstance(gateway_ip, list)) and len(gateway_ip) == 4
+        assert (isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4
+        assert (isinstance(router_bssid, tuple) or isinstance(router_bssid, list)) and len(router_bssid) == 6
+        assert (isinstance(group_id, tuple) or isinstance(group_id, list)) and len(group_id) == 6
         assert isinstance(gateway_port, int) and (1 <= gateway_port <= 65535)
         try:
             group_ssid_prefix = group_ssid_prefix.encode('utf-8')

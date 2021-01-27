@@ -46,6 +46,9 @@ def parse_header(data):
            }
 
 class IPConnectionAsync(object):
+    # TODO: Remove
+    # TODO: Implement authentication
+    # TODO: Implement disconnect_probe
     FUNCTION_ENUMERATE = 254
     FUNCTION_ADC_CALIBRATE = 251
     FUNCTION_GET_ADC_CALIBRATION = 250
