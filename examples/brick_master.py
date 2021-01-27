@@ -175,7 +175,38 @@ async def run_example(packet):
         print('Ethernet authentication secret: "{secret}"'.format(secret=await master.get_ethernet_authentication_secret()))
 
     if await master.is_wifi2_present():
-        pass
+        print('WIFI 2.0 firmware version:', await master.get_wifi2_firmware_version())
+        led_status = await master.is_wifi2_status_led_enabled()
+        print('WIFI 2.0 status led enabled?', led_status)
+        print('Flashing WIFI 2.0 status led')
+        await master.set_wifi2_status_led(not led_status)
+        await asyncio.sleep(1)
+        await master.set_wifi2_status_led(led_status)
+        print('WIFI 2.0 status led enabled?', await master.is_wifi2_status_led_enabled())
+
+        config = await master.get_wifi2_configuration()
+        print('WIFI 2.0 config:', config)
+        new_config = config._asdict()
+        #new_config["website"] = True
+        await master.set_wifi2_configuration(**new_config)
+        print('New WIFI 2.0 config:', await master.get_wifi2_configuration())
+
+        print('WIFI 2.0 status:', await master.get_wifi2_status())
+        client_config = await master.get_wifi2_client_configuration()
+        print('WIFI 2.0 client configuration:', client_config)
+        new_config = client_config._asdict()
+        #new_config["ip"] = (0,0,0,0)    # Set to DHCP
+        await master.set_wifi2_client_configuration(**new_config)
+        print('New WIFI 2.0 client configuration:', await master.get_wifi2_client_configuration())
+
+        client_hostname = await master.get_wifi2_client_hostname()
+        print('WIFI 2.0 client hostname:', client_hostname)
+        #await master.set_wifi2_client_hostname()    # Reset hostname
+
+        #await master.set_wifi2_client_password('foo')
+        print('WIFI 2.0 password:', await master.get_wifi2_client_password())
+
+        #await master.save_wifi2_configuration()
 
     # Terminate the loop
     asyncio.create_task(stop_loop())
