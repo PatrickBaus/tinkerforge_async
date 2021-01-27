@@ -2687,6 +2687,12 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '3B')
 
+    async def set_wifi2_status_led(self, enabled, response_expected=False):
+        if enabled:
+            return await self.enable_wifi2_status_led(response_expected)
+        else:
+            return await self.disable_wifi2_status_led(response_expected)
+
     # TODO: Needs testing
     async def enable_wifi2_status_led(self, response_expected=False):
         """

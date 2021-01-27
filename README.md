@@ -6,7 +6,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 # Supported Bricks/Bricklets
 |Brick|Supported|Tested|Comments|
 |--|--|--|--|
-|[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:heavy_check_mark:|  :x:| WIP |
+|[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:heavy_check_mark:| :x:| WIP |
 
 |Bricklet|Supported|Tested|
 |--|--|--|
@@ -107,4 +107,5 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
 - #### [Master Brick](https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html)
    - `BrickMaster.set_wifi_configuration()`/`BrickMaster.get_wifi_configuration()` will take/return all ips in natural order
    - `BrickMaster.set_ethernet_configuration()`/`BrickMaster.get_ethernet_configuration()` will take/return all ips in natural order
-     `BrickMaster.write_wifi2_serial_port()` will only accept a `bytestring` and no length argument any more. The length will be automatically determined from the string.
+   - `BrickMaster.write_wifi2_serial_port()` will only accept a `bytestring` and no length argument any more. The length will be automatically determined from the string.
+   - `BrickMaster.set_wifi2_status_led(enabled)` added. This allows setting the status led by value instead of calling `enable_wifi2_status_led`/`disable_wifi2_status_led`
