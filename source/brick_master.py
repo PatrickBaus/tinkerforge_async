@@ -4,6 +4,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 import re
+import warnings
 
 from .devices import DeviceIdentifier, DeviceWithMCU, BrickletPort, ThresholdOption
 from .ip_connection import IPConnectionAsync, Flags
@@ -35,6 +36,9 @@ GetSPITFPBaudrateConfig = namedtuple('SPITFPBaudrateConfig', ['enable_dynamic_ba
 GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
 GetProtocol1BrickletName = namedtuple('Protocol1BrickletName', ['protocol_version', 'firmware_version', 'name'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
+
+class Wifi2BootloaderError(Exception):
+    pass
 
 @unique
 class CallbackID(Enum):
@@ -126,8 +130,8 @@ class FunctionID(Enum):
     GET_WIFI2_MESH_ROUTER_SSID = 105
     SET_WIFI2_MESH_ROUTER_PASSWORD = 106
     GET_WIFI2_MESH_ROUTER_PASSWORD = 107
-    GET_WIFI2_METH_COMMON_STATUS = 108
-    GET_WIFI2_METH_CLIENT_STATUS = 109
+    GET_WIFI2_MESH_COMMON_STATUS = 108
+    GET_WIFI2_MESH_CLIENT_STATUS = 109
     GET_WIFI2_MESH_AP_STATUS = 110
     # Ethernet
     IS_ETHERNET_PRESENT = 65
@@ -427,8 +431,11 @@ class BrickMaster(DeviceWithMCU):
         The extension type is already set when bought and it can be set with the
         Brick Viewer, it is unlikely that you need this function.
         """
-        assert type(extension) is ExtensionPosition
-        assert type(exttype) is ExtensionType
+        if not type(extension) is ExtensionPosition:
+            extension = ExtensionPosition(extension)
+        if not type(exttype) is ExtensionType:
+            exttype = ExtensionType(exttype)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_EXTENSION_TYPE,
@@ -629,7 +636,9 @@ class BrickMaster(DeviceWithMCU):
         saved in the EEPROM of the Chibi Extension, it does not
         have to be set on every startup.
         """
-        assert type(frequency) is ChibiFrequency
+        if not type(frequency) is ChibiFrequency:
+            frequency = ChibiFrequency(frequency)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CHIBI_FREQUENCY,
@@ -834,7 +843,8 @@ class BrickMaster(DeviceWithMCU):
         The values are stored in the EEPROM and only applied on startup. That means
         you have to restart the Master Brick after configuration.
         """
-        assert type(parity) is Rs485Parity
+        if not type(parity) is Rs485Parity:
+            parity = Rs485Parity(parity)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -901,7 +911,8 @@ class BrickMaster(DeviceWithMCU):
 
         It is recommended to use the Brick Viewer to set the WIFI configuration.
         """
-        assert type(connection) is WifiConnection
+        if not type(connection) is WifiConnection:
+            connection = WifiConnection(connection)
         assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
         assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
         assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
@@ -1001,8 +1012,10 @@ class BrickMaster(DeviceWithMCU):
         """
         if eap_options is None:
             eap_options = EapOptions(0)
-        assert type(encryption) is WifiEncryptionMode
-        assert eap_options is None or type(eap_options) is EapOptions
+        if not type(encryption) is WifiEncryptionMode:
+            encryption = WifiEncryptionMode(encryption)
+        if not type(eap_options) is EapOptions:
+            EapOptions(eap_options)
         assert (key_index is None or (isinstance(key_index, int)) and (1 <= key_index <= 4))
 
         result = await self.ipcon.send_request(
@@ -1213,7 +1226,8 @@ class BrickMaster(DeviceWithMCU):
 
         The default value is 0 (Full Speed).
         """
-        assert type(mode) is WifiPowerMode
+        if not type(mode) is WifiPowerMode:
+            mode = WifiPowerMode(mode)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1279,7 +1293,8 @@ class BrickMaster(DeviceWithMCU):
 
         The default value is 1 (ETSI).
         """
-        assert type(domain) is WifiDomain
+        if not type(domain) is WifiDomain:
+            domain = WifiDomain(domain)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1793,7 +1808,8 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.1.0$nbsp;(Firmware)
         """
-        assert type(connection) is EthernetConnection
+        if not type(connection) is EthernetConnection:
+            connection = EthernetConnection(connection)
         assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
         assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
         assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
@@ -2074,7 +2090,6 @@ class BrickMaster(DeviceWithMCU):
 
         return ConnectionType(unpack_payload(payload, 'B'))
 
-    # TODO: Needs testing
     async def is_wifi2_present(self):
         """
         Returns *true* if a WIFI Extension 2.0 is available to be used by the Master
@@ -2090,7 +2105,6 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, '!')
 
-    # TODO: Needs testing
     async def start_wifi2_bootloader(self):
         """
         Starts the bootloader of the WIFI Extension 2.0. Returns 0 on success.
@@ -2108,17 +2122,17 @@ class BrickMaster(DeviceWithMCU):
         """
         connection_type = await self.get_connection_type()
         if not connection_type is ConnectionType.USB:
-            # TODO: Raise a meaningful error
-            raise RuntimeError()
+            raise RuntimeError('This function can only be called when connected via USB.')
 
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.START_WIFI2_BOOTLOADER,
             response_expected=True
         )
-        return unpack_payload(payload, 'b')
+        result = unpack_payload(payload, 'b')
+        if result != 0:
+            raise Wifi2BootloaderError("Failed to start the WIFI 2.0 bootloader.")
 
-    # TODO: Needs testing
     async def write_wifi2_serial_port(self, data):
         """
         Writes up to 60 bytes (number of bytes to be written specified by ``length``)
@@ -2137,19 +2151,24 @@ class BrickMaster(DeviceWithMCU):
             data = data.encode('utf-8')
         except AttributeError:
             pass    # already a bytestring
+
+        data = bytearray(data)
         assert len(data) <= 60
 
         length = len(data)
 
+        data.extend([0] * (60 - length))    # always send 60 bytes
+
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.START_WRITE_WIFI2_SERIAL_PORT,
+            function_id=FunctionID.WRITE_WIFI2_SERIAL_PORT,
             data=pack_payload((data, length), '60B B'),
             response_expected=True
         )
-        return unpack_payload(payload, 'b')
+        result = unpack_payload(payload, 'b')
+        if result != 0:
+            raise Wifi2BootloaderError(f"Failed to write {length} bytes to the serial port.")
 
-    # TODO: Needs testing
     async def read_wifi2_serial_port(self, length):
         """
         Reads up to 60 bytes (number of bytes to be read specified by ``length``)
@@ -2165,7 +2184,6 @@ class BrickMaster(DeviceWithMCU):
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
         assert isinstance(length, int) and (0 <= length <= 60)
-        length = int(length)
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -2175,7 +2193,6 @@ class BrickMaster(DeviceWithMCU):
         )
         return ReadWifi2SerialPort(*unpack_payload(payload, '60B B'))
 
-    # TODO: Needs testing
     async def set_wifi2_authentication_secret(self, secret, response_expected=False):
         """
         Sets the WIFI authentication secret. The secret can be a string of up to 64
@@ -2210,7 +2227,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_authentication_secret(self):
         """
         Returns the WIFI authentication secret as set by
@@ -2263,7 +2279,7 @@ class BrickMaster(DeviceWithMCU):
         assert isinstance(port, int) and (1 <= port <= 65535)
         assert isinstance(websocket_port, int) and (1 <= websocket_port <= 65535)
         assert isinstance(website_port, int) and (1 <= website_port <= 65535)
-        if not isinstance(phy_mode, PhyMode):
+        if not type(phy_mode) is PhyMode:
             phy_mode = PhyMode(PhyMode)
 
         result = await self.ipcon.send_request(
@@ -2502,6 +2518,10 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
+        warnings.warn(
+            "get_wifi2_client_password is deprecated. It will only return the password in FW version <= 2.1.2.",
+            DeprecationWarning
+        )
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_WIFI2_CLIENT_PASSWORD,
@@ -2509,8 +2529,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '64s')
 
-    # TODO: Needs testing
-    async def set_wifi2_ap_configuration(self, enable=True, ssid='tinkerforge', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), encryption=WifiApEncryption.WPA2_PSK, hidden=False, channel=1, mac_address=(0,0,0,0,0,0), response_expected=False):
+    async def set_wifi2_ap_configuration(self, enable=True, ssid='WIFI Extension 2.0 Access Point', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), encryption=WifiApEncryption.WPA2_PSK, hidden=False, channel=1, mac_address=(0,0,0,0,0,0), response_expected=False):
         """
         Sets the access point specific configuration of the WIFI Extension 2.0.
 
@@ -2550,7 +2569,8 @@ class BrickMaster(DeviceWithMCU):
         assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
         assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
         assert (isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6
-        assert type(encryption) is WifiApEncryption
+        if not type(encryption) is WifiApEncryption:
+            encryption = WifiApEncryption(encryption)
         assert isinstance(channel, int) and (1 <= channel <= 13)
         try:
             ssid = ssid.encode('utf-8')
@@ -2565,13 +2585,13 @@ class BrickMaster(DeviceWithMCU):
                 (
                     bool(enable),
                     ssid,
-                    list(map(int, reversed(ip))),
-                    list(map(int, reversed(subnet_mask))),
-                    list(map(int, reversed(gateway))),
-                    encryption,
+                    list(map(int, ip)),
+                    list(map(int, subnet_mask)),
+                    list(map(int, gateway)),
+                    encryption.value,
                     hidden,
                     channel,
-                    list(map(int, reversed(mac_address))),
+                    list(map(int, mac_address)),
                 ), '! 32s 4B 4B 4B B ! B 6B'),
             response_expected=response_expected
         )
@@ -2579,7 +2599,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_ap_configuration(self):
         """
         Returns the access point configuration as set by :func:`Set Wifi2 AP Configuration`.
@@ -2588,26 +2607,24 @@ class BrickMaster(DeviceWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.GET_WIFI2_CLIENT_CONFIGURATION,
+            function_id=FunctionID.GET_WIFI2_AP_CONFIGURATION,
             response_expected=True
         )
 
         enable, ssid, ip, subnet_mask, gateway, encryption, hidden, channel, mac_address = unpack_payload(payload, '! 32s 4B 4B 4B B ! B 6B')
 
-        # Note mac, ip, subnet_mask and gateway need to be reversed
         return GetWifi2APConfiguration(
             enable,
             ssid,
-            ip[::-1],
-            subnet_mask[::-1],
-            gateway[::-1],
-            encryption,
+            ip,
+            subnet_mask,
+            gateway,
+            WifiApEncryption(encryption),
             hidden,
             channel,
-            mac_address[::-1],
+            mac_address,
         )
 
-    # TODO: Needs testing
     async def set_wifi2_ap_password(self, password, response_expected=False):
         """
         Sets the access point password (up to 63 chars) for the configured encryption
@@ -2637,7 +2654,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_ap_password(self):
         """
         Returns the access point password as set by :func:`Set Wifi2 AP Password`.
@@ -2648,6 +2664,10 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
+        warnings.warn(
+            "get_wifi2_ap_password is deprecated. It will only return the password in FW version <= 2.1.2.",
+            DeprecationWarning
+        )
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_WIFI2_AP_PASSWORD,
@@ -2655,7 +2675,6 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '64s')
 
-    # TODO: Needs testing
     async def save_wifi2_configuration(self):
         """
         All configuration functions for the WIFI Extension 2.0 do not change the
@@ -2737,8 +2756,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    # TODO: Needs testing
-    async def set_wifi2_mesh_configuration(self, enable=False, root_ip=(0,0,0,0), root_subnet_mask=(0,0,0,0), root_gateway=(0,0,0,0), router_bssid=(0,0,0,0,0,0), group_id=None, group_ssid_prefix='TF_MESH', gateway_ip=None, gateway_port=4240, response_expected=False):
+    async def set_wifi2_mesh_configuration(self, enable=False, root_ip=(0,0,0,0), root_subnet_mask=(0,0,0,0), root_gateway=(0,0,0,0), router_bssid=(0,0,0,0,0,0), group_id=(0x1A,0xFE,0x34,0,0,0), group_ssid_prefix='TF_MESH', gateway_ip=(0,0,0,0), gateway_port=4240, response_expected=False):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
 
@@ -2788,24 +2806,19 @@ class BrickMaster(DeviceWithMCU):
             pass    # salready a bytestring
         assert len(group_ssid_prefix) <= 16
 
-        if group_id is None:
-            raise ValueError('Invalid group_id.')
-        if gateway_ip is None:
-            raise ValueError('Invalid gateway_ip.')
-
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_WIFI2_MESH_CONFIGURATION,
             data=pack_payload(
                 (
                     bool(enable),
-                    list(map(int, reversed(root_ip))),
-                    list(map(int, reversed(root_subnet_mask))),
-                    list(map(int, reversed(root_gateway))),
-                    list(map(int, reversed(router_bssid))),
-                    list(map(int, reversed(group_id))),
+                    list(map(int, root_ip)),
+                    list(map(int, root_subnet_mask)),
+                    list(map(int, root_gateway)),
+                    list(map(int, router_bssid)),
+                    list(map(int, group_id)),
                     group_ssid_prefix,
-                    list(map(int, reversed(gateway_ip))),
+                    list(map(int, gateway_ip)),
                     gateway_port
                 ), '! 4B 4B 4B 6B 6B 16s 4B H'),
             response_expected=response_expected
@@ -2814,7 +2827,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_mesh_configuration(self):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
@@ -2833,17 +2845,16 @@ class BrickMaster(DeviceWithMCU):
         # Note ips and macs need to be reversed
         return GetWifi2MeshConfiguration(
             enable,
-            root_ip[::-1],
-            root_subnet_mask[::-1],
-            root_gateway[::-1],
-            router_bssid[::-1],
-            group_id[::-1],
+            root_ip,
+            root_subnet_mask,
+            root_gateway,
+            router_bssid,
+            group_id,
             group_ssid_prefix,
-            gateway_ip[::-1],
+            gateway_ip,
             gateway_port
         )
 
-    # TODO: Needs testing
     async def set_wifi2_mesh_router_ssid(self, ssid, response_expected=False):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
@@ -2879,7 +2890,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_mesh_router_ssid(self):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
@@ -2895,8 +2905,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '32s')
 
-    # TODO: Needs testing
-    async def set_wifi2_mesh_router_password(self, password):
+    async def set_wifi2_mesh_router_password(self, password, response_expected=False):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
 
@@ -2927,7 +2936,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_wifi2_mesh_router_password(self):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
@@ -2936,6 +2944,10 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.2$nbsp;(Firmware)
         """
+        warnings.warn(
+            "get_wifi2_mesh_router_password is deprecated. It will only return the password in FW version <= 2.1.2.",
+            DeprecationWarning
+        )
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_WIFI2_MESH_ROUTER_PASSWORD,
@@ -2943,7 +2955,6 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '64s')
 
-    # TODO: Needs testing
     async def get_wifi2_mesh_common_status(self):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
@@ -2962,7 +2973,6 @@ class BrickMaster(DeviceWithMCU):
 
         return GetWifi2MeshCommonStatus(status, is_root_node, is_root_candidate, connected_nodes, rx_count, tx_count)
 
-    # TODO: Needs testing
     async def get_wifi2_mesh_client_status(self):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
@@ -2980,13 +2990,12 @@ class BrickMaster(DeviceWithMCU):
         # Note ips and macs need to be reversed
         return GetWifi2MeshClientStatus(
             hostname,
-            ip[::-1],
-            subnet_mask[::-1],
-            gateway[::-1],
-            mac_address[::-1],
+            ip,
+            subnet_mask,
+            gateway,
+            mac_address,
         )
 
-    # TODO: Needs testing
     async def get_wifi2_mesh_ap_status(self):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
@@ -3003,11 +3012,11 @@ class BrickMaster(DeviceWithMCU):
         hostname, ip, subnet_mask, gateway, mac_address = unpack_payload(payload, '32s 4B 4B 4B 6B')
         # Note ips and macs need to be reversed
         return GetWifi2MeshAPStatus(
-            ssid,
-            ip[::-1],
-            subnet_mask[::-1],
-            gateway[::-1],
-            mac_address[::-1],
+            hostname,
+            ip,
+            subnet_mask,
+            gateway,
+            mac_address,
         )
 
     async def set_spitfp_baudrate_config(self, enable_dynamic_baudrate=True, minimum_dynamic_baudrate=400000, response_expected=False):
@@ -3072,7 +3081,9 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.3$nbsp;(Firmware)
         """
-        assert type(communication_method) is ConnectionType
+        if not type(communication_method) is ConnectionType:
+            communication_method = ConnectionType(communication_method)
+
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_SEND_TIMEOUT_COUNT,

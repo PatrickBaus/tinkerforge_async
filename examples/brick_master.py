@@ -192,9 +192,9 @@ async def run_example(packet):
         print('New WIFI 2.0 config:', await master.get_wifi2_configuration())
 
         print('WIFI 2.0 status:', await master.get_wifi2_status())
-        client_config = await master.get_wifi2_client_configuration()
-        print('WIFI 2.0 client configuration:', client_config)
-        new_config = client_config._asdict()
+        config = await master.get_wifi2_client_configuration()
+        print('WIFI 2.0 client configuration:', config)
+        new_config = config._asdict()
         #new_config["ip"] = (0,0,0,0)    # Set to DHCP
         await master.set_wifi2_client_configuration(**new_config)
         print('New WIFI 2.0 client configuration:', await master.get_wifi2_client_configuration())
@@ -204,7 +204,35 @@ async def run_example(packet):
         #await master.set_wifi2_client_hostname()    # Reset hostname
 
         #await master.set_wifi2_client_password('foo')
-        print('WIFI 2.0 password:', await master.get_wifi2_client_password())
+        print('WIFI 2.0 client password:', await master.get_wifi2_client_password())
+
+        config = await master.get_wifi2_ap_configuration()
+        print('WIFI 2.0 AP configuration:', config)
+        new_config = config._asdict()
+        #new_config["enable"] = False
+        await master.set_wifi2_ap_configuration(**new_config)
+
+        #await master.set_wifi2_ap_password('foobar')
+        print('WIFI 2.0 AP password:', await master.get_wifi2_ap_password())
+
+        config = await master.get_wifi2_mesh_configuration()
+        print('WIFI 2.0 Mesh configuration:', config)
+        new_config = config._asdict()
+        #new_config['group_id'] = (26, 254, 52, 0, 0, 0)
+        await master.set_wifi2_mesh_configuration(**new_config)
+
+        print('WIFI 2.0 Mesh SSID:', await master.get_wifi2_mesh_router_ssid())
+        #await master.set_wifi2_mesh_router_ssid('Your Access Point')
+
+        print('WIFI 2.0 mesh router password:', await master.get_wifi2_mesh_router_password())
+        #await master.set_wifi2_mesh_router_password('foo')
+
+        print('WIFI 2.0 mesh common status:', await master.get_wifi2_mesh_common_status())
+        print('WIFI 2.0 mesh client status:', await master.get_wifi2_mesh_client_status())
+        print('WIFI 2.0 mesh AP status:', await master.get_wifi2_mesh_ap_status())
+
+        #await master.set_wifi2_authentication_secret('')    # disable authentication
+        print('WIFI 2.0 authentication secret:', await master.get_wifi2_authentication_secret())
 
         #await master.save_wifi2_configuration()
 
