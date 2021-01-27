@@ -714,7 +714,6 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    # TODO: Needs testing
     async def set_rs485_address(self, address, response_expected=False):
         """
         Sets the address (0-255) belonging to the RS485 Extension.
@@ -738,7 +737,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_rs485_address(self):
         """
         Returns the address as set by :func:`Set RS485 Address`.
@@ -750,7 +748,6 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, 'B')
 
-    # TODO: Needs testing
     async def __set_rs485_slave_address(self, num, address, response_expected=False):
         """
         Sets up to 255 slave addresses. Valid addresses are in range 1-255. 0 has a
@@ -775,23 +772,24 @@ class BrickMaster(DeviceWithMCU):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_RS485_SLAVE_ADDRESS,
-            data=pack_payload((int(address), int(address)), 'B B'),
+            data=pack_payload((int(num), int(address)), 'B B'),
             response_expected=response_expected
         )
         if response_expected:
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def set_rs485_slave_addresses(self, addresses, response_expected=False):
-        tasks = []
-        for index, address in enumerate(addresses):
-            tasks.append(asyncio.ensure_future(self.__set_rs485_slave_address(index, address, response_expected)))
+        assert (isinstance(addresses, tuple) or isinstance(addresses, list))
 
-        tasks.append(asyncio.ensure_future(self.__set_rs485_slave_address(index+1, 0, response_expected)))
-        return asyncio.gather(*tasks)
+        if addresses[-1] != 0:
+            addresses += type(addresses)([0])    # add a trailing [0], because it is the delimiter
+        coros = [self.__set_rs485_slave_address(index, address, response_expected) for index, address in enumerate(addresses)]
+        result = await asyncio.gather(*coros)
 
-    # TODO: Needs testing
+        if response_expected:
+            return result
+
     async def __get_rs485_slave_address(self, num):
         """
         Returns the slave address for a given ``num`` as set by
@@ -806,15 +804,14 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, 'B')
 
-    # TODO: Needs testing
     async def get_rs485_slave_addresses(self):
-        adresses = [await self.__get_rs485_slave_address(0)]
+        addresses = [await self.__get_rs485_slave_address(0)]
         index = 1
-        while adresses[-1] != 0:
-            adresses.append(await self.__get_chibi_slave_address(index))
+        while addresses[-1] != 0:
+            addresses.append(await self.__get_rs485_slave_address(index))
             index += 1
+        return addresses[:-1]   # strip the trailing [0], because it is the delimiter
 
-    # TODO: Needs testing
     async def get_rs485_error_log(self):
         """
         Returns CRC error counts of the RS485 communication.
@@ -830,7 +827,6 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, 'H')
 
-    # TODO: Needs testing
     async def set_rs485_configuration(self, speed, parity, stopbits, response_expected=False):
         """
         Sets the configuration of the RS485 Extension. Speed is given in baud. The
@@ -859,7 +855,6 @@ class BrickMaster(DeviceWithMCU):
             header, _ = result
             return header['flags'] == Flags.OK
 
-    # TODO: Needs testing
     async def get_rs485_configuration(self):
         """
         Returns the configuration as set by :func:`Set RS485 Configuration`.
