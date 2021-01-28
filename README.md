@@ -6,7 +6,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 # Supported Bricks/Bricklets
 |Brick|Supported|Tested|Comments|
 |--|--|--|--|
-|[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:heavy_check_mark:| :x:| WIP |
+|[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:heavy_check_mark:| :heavy_check_mark:|  |
 
 |Bricklet|Supported|Tested|
 |--|--|--|
