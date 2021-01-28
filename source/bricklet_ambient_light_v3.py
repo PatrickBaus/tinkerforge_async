@@ -125,16 +125,18 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        assert type(option) is ThresholdOption
-        assert isinstance(period, int) and period >= 0
-        assert isinstance(minimum, int) and minimum >= 0
-        assert isinstance(maximum, int) and maximum >= 0
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+        assert period >= 0
+        assert minimum >= 0
+        assert maximum >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ILLUMINANCE_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
-                period,
+                int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
                 self.__SI_to_value(minimum),
@@ -186,8 +188,10 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
         The default values are 0-8000lux illuminance range and 150ms integration time.
         """
-        assert type(illuminance_range) is IlluminanceRange
-        assert type(integration_time) is IntegrationTime
+        if not type(illuminance_range) is IlluminanceRange:
+            illuminance_range = IlluminanceRange(illuminance_range)
+        if not type(integration_time) is IntegrationTime:
+            integration_time = IntegrationTime(integration_time)
 
         result = await self.ipcon.send_request(
             device=self,

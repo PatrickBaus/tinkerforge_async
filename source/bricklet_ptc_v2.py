@@ -126,16 +126,18 @@ class BrickletPtcV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        assert type(option) is ThresholdOption
-        assert type(period) is int and period >= 0
-        assert type(minimum) is int and minimum >= 0
-        assert type(maximum) is int and maximum >= 0
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+        assert period >= 0
+        assert minimum >= 0
+        assert maximum >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
-                period,
+                int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
                 self.__SI_to_value(minimum),
@@ -213,20 +215,22 @@ class BrickletPtcV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        assert type(option) is ThresholdOption
-        assert type(period) is int and period >= 0
-        assert type(minimum) is int and minimum >= 0
-        assert type(maximum) is int and maximum >= 0
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+        assert period >= 0
+        assert minimum >= 0
+        assert maximum >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_RESISTANCE_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
-                period,
+                int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
-                minimum,
-                maximum
+                int(minimum),
+                int(maximum),
               ), 'I ! c i i'),
             response_expected=response_expected
         )
@@ -257,7 +261,9 @@ class BrickletPtcV2(BrickletWithMCU):
 
         Default value is 0 = 50Hz.
         """
-        assert type(line_filter) is LineFilter
+        if not type(line_filter) is LineFilter:
+            line_filter = LineFilter(line_filter)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_NOISE_REJECTION_FILTER,
@@ -307,7 +313,9 @@ class BrickletPtcV2(BrickletWithMCU):
 
         The default value is 2 = 2-wire.
         """
-        assert type(mode) is WireMode
+        if not type(mode) is WireMode:
+            mode = WireMode(mode)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_WIRE_MODE,
@@ -346,13 +354,17 @@ class BrickletPtcV2(BrickletWithMCU):
         The default value is 1 for resistance and 40 for temperature. The default values match
         the non-changeable averaging settings of the old PTC Bricklet 1.0
         """
-        assert type(moving_average_length_humidity) is int and moving_average_length_humidity > 0
-        assert type(moving_average_length_temperature) is int and moving_average_length_temperature > 0
+        assert moving_average_length_humidity > 0
+        assert moving_average_length_temperature > 0
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_MOVING_AVERAGE_CONFIGURATION,
-            data=pack_payload((moving_average_length_resistance,moving_average_length_temperature), 'H H'),
+            data=pack_payload(
+              (
+                int(moving_average_length_resistance),
+                int(moving_average_length_temperature),
+              ), 'H H'),
             response_expected=response_expected
         )
         if response_expected:

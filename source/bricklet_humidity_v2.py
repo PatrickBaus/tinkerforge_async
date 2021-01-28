@@ -125,20 +125,21 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         The default value is (0, false, 'x', 0, 0).
         """
-        assert type(option) is ThresholdOption
-        assert type(period) is int and period >= 0
-        assert type(minimum) is int and minimum >= 0
-        assert type(maximum) is int and maximum >= 0
+        option = ThresholdOption(option)
+        assert period >= 0
+        assert minimum >= 0
+        assert maximum >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_HUMIDITY_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
-                period,
+                int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
                 self.__SI_to_humidity_sensor(minimum),
-                self.__SI_to_humidity_sensor(maximum)
+                self.__SI_to_humidity_sensor(maximum),
               ), 'I ! c H H'),
             response_expected=response_expected
         )
@@ -211,16 +212,17 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         The default value is (0, false, 'x', 0, 0).
         """
-        assert type(option) is ThresholdOption
-        assert type(period) is int and period >= 0
-        assert type(minimum) is int and minimum >= 0
-        assert type(maximum) is int and maximum >= 0
+        option = ThresholdOption(option)
+        assert period >= 0
+        assert minimum >= 0
+        assert maximum >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
-                period,
+                int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
                 self.__SI_to_temperature_sensor(minimum),
@@ -253,7 +255,8 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         By default the heater is disabled.
         """
-        assert type(heater_config) is HeaterConfig
+        if not type(heater_config) is HeaterConfig:
+            heater_config = HeaterConfig(heater_config)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -298,13 +301,17 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         The default value is 5.
         """
-        assert type(moving_average_length_humidity) is int and moving_average_length_humidity > 0
-        assert type(moving_average_length_temperature) is int and moving_average_length_temperature > 0
+        assert moving_average_length_humidity >= 1
+        assert moving_average_length_temperature >= 1
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_MOVING_AVERAGE_CONFIGURATION,
-            data=pack_payload((moving_average_length_humidity,moving_average_length_temperature), 'H H'),
+            data=pack_payload(
+              (
+                int(moving_average_length_humidity),
+                int(moving_average_length_temperature),
+              ), 'H H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -333,7 +340,8 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         Before version 2.0.3 the default was 20 samples per second. The new default is 1 sample per second.
         """
-        assert type(sps) is SamplesPerSecond
+        if not type(sps) is SamplesPerSecond:
+            sps = SamplesPerSecond(sps)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -381,17 +389,20 @@ class BrickletHumidityV2(BrickletWithMCU):
     def __SI_to_temperature_sensor(self, value):
         return int(value * 100)
 
-#    def _process_callback(self, header, payload):
-#        try:
-#            header['function_id'] = self.CallbackID(header['function_id'])
-#        except ValueError:
-#            # ValueError: raised if the callbackID is unknown
-#            raise UnknownFunctionError from None
-#        else:
-#            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-#            if header['function_id'] is CallbackID.HUMIDITY:
-#                payload = self.__humidity_sensor_to_SI(payload)
-#            elif header['function_id'] is CallbackID.TEMPERATURE:
-#                payload = self.__temperature_sensor_to_SI(payload)
-#            super()._process_callback(header, payload)
+    def _process_callback(self, header, payload):
+        """
+        Overloaded from parent object. Process the callback and convert all units to SI.
+        """
+        try:
+            header['function_id'] = self.CallbackID(header['function_id'])
+        except ValueError:
+            # ValueError: raised if the callbackID is unknown
+            raise UnknownFunctionError from None
+        else:
+            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+            if header['function_id'] is CallbackID.HUMIDITY:
+                payload = self.__humidity_sensor_to_SI(payload)
+            elif header['function_id'] is CallbackID.TEMPERATURE:
+                payload = self.__temperature_sensor_to_SI(payload)
+            super()._process_callback(header, payload)
 

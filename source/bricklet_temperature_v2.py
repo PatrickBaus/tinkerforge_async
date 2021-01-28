@@ -104,16 +104,18 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
         The default value is (0, false, 'x', 0, 0).
         """
-        assert type(option) is ThresholdOption
-        assert isinstance(period, int) and period >= 0
-        assert isinstance(minimum, int) and minimum >= 0
-        assert isinstance(maximum, int) and maximum >= 0
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+        assert period >= 0
+        assert minimum >= 0
+        assert maximum >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
-                period,
+                int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
                 self.__SI_to_value(minimum),
@@ -144,7 +146,8 @@ class BrickletTemperatureV2(BrickletWithMCU):
         """
         Enables/disables the heater. The heater can be used to test the sensor.
         """
-        assert type(heater_config) is HeaterConfig
+        if not type(heater_config) is HeaterConfig:
+            heater_config = HeaterConfig(int(heater_config))
 
         result = await self.ipcon.send_request(
             device=self,

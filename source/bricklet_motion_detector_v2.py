@@ -75,12 +75,12 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
 
         So you will have to find a good sensitivity for your application by trial and error.
         """
-        assert isinstance(sensitivity, int) and (0 <= sensitivity <= 100)
+        assert (0 <= sensitivity <= 100)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SENSITIVITY,
-            data=pack_payload((sensitivity,), 'B'),
+            data=pack_payload((int(sensitivity),), 'B'),
             response_expected=response_expected
         )
         if response_expected:
@@ -106,14 +106,19 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         (0-255). A value of 0 turns the LED off and a value of 255 turns the LED
         to full brightness.
         """
-        assert isinstance(top_left, int) and (0 <= top_left <= 255)
-        assert isinstance(top_right, int) and (0 <= top_right <= 255)
-        assert isinstance(bottom, int) and (0 <= bottom <= 255)
+        assert (0 <= top_left <= 255)
+        assert (0 <= top_right <= 255)
+        assert (0 <= bottom <= 255)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_INDICATOR,
-            data=pack_payload((top_left,top_right,bottom), 'B B B'),
+            data=pack_payload(
+              (
+                int(top_left),
+                int(top_right),
+                int(bottom),
+              ), 'B B B'),
             response_expected=response_expected
         )
         if response_expected:

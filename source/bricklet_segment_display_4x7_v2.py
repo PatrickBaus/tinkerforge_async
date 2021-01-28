@@ -104,12 +104,12 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         The default value is 7.
         """
-        assert isinstance(brightness, int) and (0 <= brightness <= 7)
+        assert (0 <= brightness <= 7)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SET_BRIGHTNESS,
-            data=pack_payload((heater_config.value,), 'B'),
+            data=pack_payload((int(brightness),), 'B'),
             response_expected=response_expected
         )
         if response_expected:
@@ -167,12 +167,12 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
            :alt: Indices of selected segments
            :align: center
         """
-        assert isinstance(segment, int) and (0 <= segment <= 31)
+        assert (0 <= segment <= 31)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SELECTED_SEGMENT,
-            data=pack_payload((segment, bool(value)), 'B !'),
+            data=pack_payload((int(segment), bool(value)), 'B !'),
             response_expected=response_expected
         )
         if response_expected:
@@ -183,12 +183,12 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         """
         Returns the value of a single segment.
         """
-        assert isinstance(segment, int) and (0 <= segment <= 31)
+        assert (0 <= segment <= 31)
 
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_SELECTED_SEGMENT,
-            data=pack_payload((segment,), 'B'),
+            data=pack_payload((int(segment),), 'B'),
             response_expected=True
         )
 
@@ -205,15 +205,20 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
            :alt: Indices of selected segments
            :align: center
         """
-        assert isinstance(value_from, int) and (-999 <= value_from <= 9999)
-        assert isinstance(value_to, int) and (-999 <= value_to <= 9999)
-        assert isinstance(increment, int) and (-999 <= increment <= 9999)
-        assert isinstance(length, int)
+        assert (-999 <= value_from <= 9999)
+        assert (-999 <= value_to <= 9999)
+        assert (-999 <= increment <= 9999)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.START_COUNTER,
-            data=pack_payload((value_from, value_to, increment, length), 'h h h I'),
+            data=pack_payload(
+              (
+                int(value_from),
+                int(value_to),
+                int(increment),
+                int(length),
+              ), 'h h h I'),
             response_expected=response_expected
         )
         if response_expected:

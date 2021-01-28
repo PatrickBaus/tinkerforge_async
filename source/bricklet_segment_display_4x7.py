@@ -62,14 +62,18 @@ class BrickletSegmentDisplay4x7(Device):
         The brightness can be set between 0 (dark) and 7 (bright). The colon
         parameter turns the colon of the display on or off.
         """
-        assert(all(isinstance(segment, int) and segment <= 127 and segment >= 0 for segment in segments))
-        assert(isinstance(brightness, int) and brightness <= 7 and brightness >= 0)
-        assert(isinstance(colon, bool))
+        assert (all(0 <= segment <= 127 for segment in segments))
+        assert (0 <= brightness <= 7)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SEGMENTS,
-            data=pack_payload((segments, brightness, colon), '4B B !'),
+            data=pack_payload(
+              (
+                list(map(int, segments)),
+                int(brightness),
+                bool(colon),
+              ), '4B B !'),
             response_expected=response_expected
         )
         if response_expected:
@@ -107,15 +111,21 @@ class BrickletSegmentDisplay4x7(Device):
 
         You can stop the counter at every time by calling :func:`Set Segments`.
         """
-        assert(isinstance(value_from, int) and value_from <= 9999 and value_from >= -999)
-        assert(isinstance(value_to, int) and value_to <= 9999 and value_to >= -999)
-        assert(isinstance(increment, int) and increment <= 9999 and increment >= -999)
-        assert(isinstance(length, int) and length <= 2**32-1 and length >= 0)
+        assert (-999 <= value_from <= 9999)
+        assert (-999 <= value_to <= 9999)
+        assert (-999 <= increment <= 9999)
+        assert (0 <= length <= 2**32-1)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.START_COUNTER,
-            data=pack_payload((value_from, value_to, increment, length, ), 'h h h I'),
+            data=pack_payload(
+              (
+                int(value_from),
+                int(value_to),
+                int(increment),
+                int(length),
+              ), 'h h h I'),
             response_expected=response_expected
         )
 

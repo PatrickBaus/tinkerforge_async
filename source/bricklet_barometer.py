@@ -108,11 +108,12 @@ class BrickletBarometer(Device):
         The :cb:`Air Pressure` callback is only triggered if the air pressure has
         changed since the last triggering.
         """
-        assert type(period) is int and period >= 0
+        assert period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_AIR_PRESSURE_CALLBACK_PERIOD,
-            data=pack_payload((period,), 'I'),
+            data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
         if response_expected:
@@ -139,11 +140,12 @@ class BrickletBarometer(Device):
         The :cb:`Altitude` callback is only triggered if the altitude has changed since
         the last triggering.
         """
-        assert type(period) is int and period >= 0
+        assert period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ALTITUDE_CALLBACK_PERIOD,
-            data=pack_payload((period,), 'I'),
+            data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
         if response_expected:
@@ -178,7 +180,9 @@ class BrickletBarometer(Device):
          "'<'",    "Callback is triggered when the air pressure is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the air pressure is greater than the min value (max is ignored)"
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_AIR_PRESSURE_CALLBACK_THRESHOLD,
@@ -219,7 +223,9 @@ class BrickletBarometer(Device):
          "'<'",    "Callback is triggered when the altitude is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the altitude is greater than the min value (max is ignored)"
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ALTITUDE_CALLBACK_THRESHOLD,
@@ -258,11 +264,12 @@ class BrickletBarometer(Device):
 
         keep being reached.
         """
-        assert type(debounce_period) is int and debounce_period >= 0
+        assert debounce_period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((debounce_period,), 'I'),
+            data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
         if response_expected:
@@ -307,7 +314,8 @@ class BrickletBarometer(Device):
         `QFE <https://en.wikipedia.org/wiki/Mean_sea_level_pressure#Mean_sea_level_pressure>`__
         used in aviation.
         """
-        assert air_pressure == 0 or (1 <= air_pressure <= 120)
+        assert (air_pressure == 0) or (1 <= air_pressure <= 120)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.FUNCTION_SET_REFERENCE_AIR_PRESSURE,
@@ -346,13 +354,19 @@ class BrickletBarometer(Device):
 
         .. versionadded:: 2.0.1$nbsp;(Plugin)
         """
-        assert type(moving_average_pressure) is int and 0 <= moving_average_pressure <= 25
-        assert type(average_pressure) is int and 0 <= average_pressure <= 10
-        assert type(average_temperature) is int and 0 <= moving_average_pressure <= 255
+        assert (0 <= moving_average_pressure <= 25)
+        assert (0 <= average_pressure <= 10)
+        assert (0 <= moving_average_pressure <= 255)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.FUNCTION_SET_AVERAGING,
-            data=pack_payload((moving_average_pressure, average_pressure, average_temperature), 'B B B'),
+            data=pack_payload(
+              (
+                int(moving_average_pressure),
+                int(average_pressure),
+                int(average_temperature)
+             ), 'B B B'),
             response_expected=response_expected
         )
         if response_expected:

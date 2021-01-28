@@ -81,11 +81,12 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         :cb:`Voltage` callback. You can set the callback configuration
         with :func:`Set Voltage Callback Configuration`.
         """
-        assert isinstance(channel, int) and (0 <= channel <= 1)
+        assert (channel == 0 or channel == 1)
+
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_VOLTAGE,
-            data=pack_payload((channel,), 'B'),
+            data=pack_payload((int(channel),), 'B'),
             response_expected=True
         )
         return unpack_payload(payload, 'i')
@@ -120,22 +121,24 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        assert isinstance(channel, int) and (0<= channel <= 1)
-        assert type(option) is ThresholdOption
-        assert isinstance(period, int) and period >= 0
-        assert isinstance(minimum, int) and minimum >= 0
-        assert isinstance(maximum, int) and maximum >= 0
+        assert (channel == 0 or channel == 1)
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+        assert period >= 0
+        assert minimum >= 0
+        assert maximum >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ILLUMINANCE_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
-                channel,
-                period,
+                int(channel),
+                int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
-                minimum,
-                maximum
+                int(minimum),
+                int(maximum),
               ), 'B I ! c i i'),
             response_expected=response_expected
         )
@@ -164,13 +167,19 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         and 976 samples per second. Decreasing the sample rate will also decrease the
         noise on the data.
         """
-        assert isinstance(rate, int) and (1<= rate <= 976)
-        _, payload = await self.ipcon.send_request(
+        assert (1 <= rate <= 976)
+
+        result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SAMPLE_RATE,
-            data=pack_payload((channel,), 'B'),
+            data=pack_payload((int(rate),), 'B'),
             response_expected=response_expected
         )
+
+        if response_expected:
+            header, _ = result
+            # TODO raise errors
+            return header['flags'] == Flags.OK
 
     async def get_sample_rate(self):
         """
@@ -192,14 +201,21 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         is already factory calibrated by Tinkerforge. It should not be necessary
         for you to use this function
         """
-        offset = list(map(int, offset))
-        gain = list(map(int, gain))
-        _, payload = await self.ipcon.send_request(
+        result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CALIBRATION,
-            data=pack_payload((offset, gain), '2i 2i'),
+            data=pack_payload(
+              (
+                list(map(int, offset)),
+                list(map(int, gain))
+              ), '2i 2i'),
             response_expected=response_expected
         )
+
+        if response_expected:
+            header, _ = result
+            # TODO raise errors
+            return header['flags'] == Flags.OK
 
     async def get_calibration(self):
         """
@@ -237,25 +253,37 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         By default all channel LEDs are configured as "Channel Status".
         """
-        assert isinstance(channel, int) and (0<= channel <= 1)
-        assert type(config) is ChannelLedConfig
-        _, payload = await self.ipcon.send_request(
+        assert (channel == 0 or channel == 1)
+        if not type(config) is ChannelLedConfig:
+            config = ChannelLedConfig(config)
+
+        result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CHANNEL_LED_CONFIG,
-            data=pack_payload((channel, config.value), 'B B'),
+            data=pack_payload(
+              (
+                int(channel),
+                config.value,
+              ), 'B B'),
             response_expected=response_expected
         )
+
+        if response_expected:
+            header, _ = result
+            # TODO raise errors
+            return header['flags'] == Flags.OK
 
     async def get_channel_led_config(self, channel):
         """
         Returns the ADC values as given by the MCP3911 IC. This function
         is needed for proper calibration, see :func:`Set Calibration`.
         """
-        assert isinstance(channel, int) and (0<= channel <= 1)
+        assert (channel == 0 or channel == 1)
+
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_CHANNEL_LED_CONFIG,
-            data=pack_payload((channel,), 'B'),
+            data=pack_payload((int(channel),), 'B'),
             response_expected=True
         )
 
@@ -284,31 +312,43 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         min value is greater than the max value, the LED brightness is scaled the other
         way around.
         """
-        assert isinstance(channel, int) and (0<= channel <= 1)
-        assert isinstance(minimum, int)
-        assert isinstance(maximum, int)
-        assert type(config) is ChannelLedStatusConfig
-        _, payload = await self.ipcon.send_request(
+        assert (channel == 0 or channel == 1)
+        if not type(config) is ChannelLedStatusConfig:
+            config = ChannelLedStatusConfig(config)
+
+        result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CHANNEL_LED_STATUS_CONFIG,
-            data=pack_payload((channel, minimum, maximum, config.value), 'B i i B'),
+            data=pack_payload(
+              (
+                int(channel),
+                int(minimum),
+                int(maximum),
+                config.value,
+              ), 'B i i B'),
             response_expected=response_expected
         )
+
+        if response_expected:
+            header, _ = result
+            # TODO raise errors
+            return header['flags'] == Flags.OK
 
     async def get_channel_led_status_config(self, channel):
         """
         Returns the channel LED status configuration as set by
         :func:`Set Channel LED Status Config`.
         """
-        assert isinstance(channel, int) and (0<= channel <= 1)
+        assert (channel == 0 or channel == 1)
+
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_CHANNEL_LED_STATUS_CONFIG,
-            data=pack_payload((channel,), 'B'),
+            data=pack_payload((int(channel),), 'B'),
             response_expected=True
         )
 
-        minimum, maximum, config = ChannelLedConfig(unpack_payload(payload, 'i i B'))
+        minimum, maximum, config = unpack_payload(payload, 'i i B')
         config = ChannelLedStatusConfig(config)
         return GetChannelLEDStatusConfig(minimum, maximum, config)
 

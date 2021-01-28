@@ -115,6 +115,7 @@ class BrickletHumidity(Device):
         The default value is 0.
         """
         assert period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_HUMIDITY_CALLBACK_PERIOD,
@@ -148,6 +149,7 @@ class BrickletHumidity(Device):
         The default value is 0.
         """
         assert period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_PERIOD,
@@ -187,7 +189,9 @@ class BrickletHumidity(Device):
 
         The default value is ('x', 0, 0).
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_HUMIDITY_CALLBACK_THRESHOLD,
@@ -230,7 +234,9 @@ class BrickletHumidity(Device):
 
         The default value is ('x', 0, 0).
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_THRESHOLD,
@@ -271,6 +277,7 @@ class BrickletHumidity(Device):
         The default value is 100.
         """
         assert debounce_period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,

@@ -79,11 +79,12 @@ class BrickletMoisture(Device):
         The :cb:`Moisture` callback is only triggered if the moisture value has changed
         since the last triggering.
         """
-        assert type(period) is int and period >= 0
+        assert period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_MOISTURE_CALLBACK_PERIOD,
-            data=pack_payload((period,), 'I'),
+            data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
         if response_expected:
@@ -118,13 +119,20 @@ class BrickletMoisture(Device):
          "'<'",    "Callback is triggered when the moisture value is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the moisture value is greater than the min value (max is ignored)"
         """
-        assert type(option) is ThresholdOption
-        assert type(minimum) is int and minimum >= 0
-        assert type(maximum) is int and minimum >= 0
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+        assert minimum >= 0
+        assert minimum >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_MOISTURE_CALLBACK_THRESHOLD,
-            data=pack_payload((option.value.encode('ascii'), minimum, maximum), 'c H H'),
+            data=pack_payload(
+              (
+                option.value.encode('ascii'),
+                int(minimum),
+                int(maximum),
+              ), 'c H H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -156,11 +164,12 @@ class BrickletMoisture(Device):
 
         keep being reached.
         """
-        assert type(debounce_period) is int and debounce_period >= 0
+        assert debounce_period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((debounce_period,), 'I'),
+            data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
         if response_expected:
@@ -186,11 +195,12 @@ class BrickletMoisture(Device):
         Setting the length to 0 will turn the averaging completely off. With less
         averaging, there is more noise on the data.
         """
-        assert type(average) is int and average >= 0
+        assert average >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_MOVING_AVERAGE,
-            data=pack_payload((average,), 'B'),
+            data=pack_payload((int(average),), 'B'),
             response_expected=response_expected
         )
         if response_expected:

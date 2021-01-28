@@ -137,7 +137,9 @@ class Device(object):
         Registers the given *function* with the given *callback_id*.
         """
         # CallbackID is defined by the brick/bricklet
-        assert type(event_id) is self.CallbackID
+        if not type(event_id) is CallbackID:
+            event_id = event_id(CallbackID)
+
         if queue is None:
             self.__registered_queues.pop(event_id, None)
         else:
@@ -248,7 +250,8 @@ class BrickletWithMCU(DeviceWithMCU):
         This function is used by Brick Viewer during flashing. It should not be
         necessary to call it in a normal user program.
         """
-        assert type(mode) is BootloaderMode
+        if not type(mode) is BootloaderMode:
+            mode = BootloaderMode(mode)
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -278,11 +281,12 @@ class BrickletWithMCU(DeviceWithMCU):
         This function is used by Brick Viewer during flashing. It should not be
         necessary to call it in a normal user program.
         """
-        assert type(pointer) is int and pointer >= 0
+        assert pointer >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_WRITE_FIRMWARE_POINTER,
-            data=pack_payload((pointer,), 'I'),
+            data=pack_payload((int(pointer),), 'I'),
             response_expected=response_expected
         )
         if response_expected:
@@ -318,7 +322,8 @@ class BrickletWithMCU(DeviceWithMCU):
 
         If the Bricklet is in bootloader mode, the LED is will show heartbeat by default.
         """
-        assert type(config) is LedConfig
+        if not type(config) is LedConfig:
+            config = LedConfig(config)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -349,11 +354,12 @@ class BrickletWithMCU(DeviceWithMCU):
 
         We recommend that you use Brick Viewer to change the UID.
         """
-        assert type(uid) is int and uid >= 0
+        assert uid >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.WRITE_BRICKLET_UID,
-            data=pack_payload((uid,), 'I'),
+            data=pack_payload((int(uid),), 'I'),
             response_expected=response_expected
         )
         if response_expected:

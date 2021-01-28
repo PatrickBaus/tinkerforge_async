@@ -132,11 +132,12 @@ class BrickletPtc(Device):
 
         The default value is 0.
         """
-        assert type(period) is int and period >= 0
+        assert period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_PERIOD,
-            data=pack_payload((period,), 'I'),
+            data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
         if response_expected:
@@ -163,11 +164,12 @@ class BrickletPtc(Device):
         The :cb:`Resistance` callback is only triggered if the resistance has changed
         since the last triggering.
         """
-        assert type(period) is int and period >= 0
+        assert period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_RESISTANCE_CALLBACK_PERIOD,
-            data=pack_payload((period,), 'I'),
+            data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
         if response_expected:
@@ -204,7 +206,9 @@ class BrickletPtc(Device):
 
         The default value is ('x', 0, 0).
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_THRESHOLD,
@@ -247,7 +251,9 @@ class BrickletPtc(Device):
 
         The default value is ('x', 0, 0).
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_RESISTANCE_CALLBACK_THRESHOLD,
@@ -285,11 +291,12 @@ class BrickletPtc(Device):
 
         The default value is 100.
         """
-        assert type(debounce_period) is int and debounce_period >= 0
+        assert debounce_period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((debounce_period,), 'I'),
+            data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
         if response_expected:
@@ -316,7 +323,9 @@ class BrickletPtc(Device):
 
         Default value is 0 = 50Hz.
         """
-        assert type(line_filter) is LineFilter
+        if not type(line_filter) is LineFilter:
+            line_filter = LineFilter(line_filter)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_NOISE_REJECTION_FILTER,
@@ -362,7 +371,9 @@ class BrickletPtc(Device):
 
         The default value is 2 = 2-wire.
         """
-        assert type(mode) is WireMode
+        if not type(mode) is WireMode:
+            mode = WireMode(mode)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_WIRE_MODE,

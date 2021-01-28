@@ -262,7 +262,8 @@ class EapOptions(object):
 
     @outer_auth.setter
     def outer_auth(self, value):
-        assert type(value) is WifiEapOuterAuth
+        if not type(value) is WifiEapOuterAuth:
+            value = WifiEapOuterAuth(value)
         self.__outer_auth = value
 
     @property
@@ -271,7 +272,8 @@ class EapOptions(object):
 
     @inner_auth.setter
     def inner_auth(self, value):
-        assert type(value) is WifiEapInnerAuth
+        if not type(value) is WifiEapInnerAuth:
+            value = WifiEapInnerAuth(value)
         self.__inner_auth = value
 
     @property
@@ -280,7 +282,8 @@ class EapOptions(object):
 
     @cert_type.setter
     def cert_type(self, value):
-        assert type(value) is WifiEapCertType
+        if not type(value) is WifiEapCertType:
+            value = WifiEapCertType(value)
         self.__cert_type = value
 
 @unique
@@ -477,7 +480,8 @@ class BrickMaster(DeviceWithMCU):
         saved in the EEPROM of the Chibi Extension, it does not
         have to be set on every startup.
         """
-        assert (1<= address <= 255)
+        assert (1 <= address <= 255)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CHIBI_ADDRESS,
@@ -508,7 +512,8 @@ class BrickMaster(DeviceWithMCU):
         saved in the EEPROM of the Chibi Extension, it does not
         have to be set on every startup.
         """
-        assert (1<= address <= 255)
+        assert (1 <= address <= 255)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CHIBI_MASTER_ADDRESS,
@@ -548,8 +553,8 @@ class BrickMaster(DeviceWithMCU):
         The slave addresses will be saved in the EEPROM of the Chibi Extension, they
         don't have to be set on every startup.
         """
-        assert (num >= 0 and num <= 255)
-        assert (address >= 0 and address <= 255)
+        assert (0 <= num <= 255)
+        assert (0 <= address <= 255)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -725,7 +730,7 @@ class BrickMaster(DeviceWithMCU):
         saved in the EEPROM of the RS485 Extension, it does not
         have to be set on every startup.
         """
-        assert (address >= 0 and address <= 255)
+        assert (0 <= address <= 255)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -766,8 +771,8 @@ class BrickMaster(DeviceWithMCU):
         The slave addresses will be saved in the EEPROM of the Chibi Extension, they
         don't have to be set on every startup.
         """
-        assert (num >= 0 and num <= 255)
-        assert (address >= 0 and address <= 255)
+        assert (0 <= num <= 255)
+        assert (0 <= address <= 255)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -911,10 +916,10 @@ class BrickMaster(DeviceWithMCU):
         """
         if not type(connection) is WifiConnection:
             connection = WifiConnection(connection)
-        assert ((isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4)
-        assert ((isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4)
-        assert ((isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4)
-        assert (isinstance(port, int) and (1 <= port <= 65535))
+        assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
+        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
+        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
+        assert (1 <= port <= 65535)
         try:
             ssid = ssid.encode('utf-8')
         except AttributeError:
@@ -934,7 +939,7 @@ class BrickMaster(DeviceWithMCU):
                     list(map(int, reversed(ip))),
                     list(map(int, reversed(subnet_mask))),
                     list(map(int, reversed(gateway))),
-                    port
+                    int(port)
                 ), '32s B 4B 4B 4B H'),
             response_expected=response_expected
         )
@@ -1014,7 +1019,7 @@ class BrickMaster(DeviceWithMCU):
             encryption = WifiEncryptionMode(encryption)
         if not type(eap_options) is EapOptions:
             EapOptions(eap_options)
-        assert (key_index is None or (isinstance(key_index, int) and (1 <= key_index <= 4)))
+        assert (1 <= key_index <= 4)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1124,6 +1129,7 @@ class BrickMaster(DeviceWithMCU):
         except AttributeError:
             pass    # already a bytestring
         assert len(username) <= 32
+
         data = [val for val in username] + [0] * (32 - len(username))   # pad with null bytes
 
         return await self.set_wifi_certificate(0xFFFF, data, len(data), response_expected)
@@ -1146,6 +1152,7 @@ class BrickMaster(DeviceWithMCU):
         except AttributeError:
             pass    # already a bytestring
         assert len(password) <= 32
+
         data = [val for val in password] + [0] * (32 - len(password))   # pad with null bytes
 
         return await self.set_wifi_certificate(0xFFFE, data, len(data), response_expected)
@@ -1568,7 +1575,8 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.0.5$nbsp;(Firmware)
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1624,7 +1632,8 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.0.5$nbsp;(Firmware)
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1680,7 +1689,8 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.0.5$nbsp;(Firmware)
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1808,10 +1818,10 @@ class BrickMaster(DeviceWithMCU):
         """
         if not type(connection) is EthernetConnection:
             connection = EthernetConnection(connection)
-        assert ((isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4)
-        assert ((isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4)
-        assert ((isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4)
-        assert (isinstance(port, int) and (1 <= port <= 65535))
+        assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
+        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
+        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
+        assert (1 <= port <= 65535)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1822,7 +1832,7 @@ class BrickMaster(DeviceWithMCU):
                     list(map(int, ip)),
                     list(map(int, subnet_mask)),
                     list(map(int, gateway)),
-                    port
+                    int(port)
                 ), 'B 4B 4B 4B H'),
             response_expected=response_expected
         )
@@ -1920,7 +1930,7 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.1.0$nbsp;(Firmware)
         """
-        assert (isinstance(mac_address, list) or isinstance(mac_address, tuple) and len(mac_address) == 6)
+        assert (isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6
 
         result = await self.ipcon.send_request(
             device=self,
@@ -1951,13 +1961,17 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.2.0$nbsp;(Firmware)
         """
-        assert ((isinstance(sockets, int) and (0 <= sockets <= 7)))
-        assert (isinstance(port, int) and (1 <= port <= 65535))
+        assert (0 <= sockets <= 7)
+        assert (1 <= port <= 65535)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ETHERNET_WEBSOCKET_CONFIGURATION,
-            data=pack_payload((sockets, port), 'B H'),
+            data=pack_payload(
+              (
+                int(sockets),
+                int(port),
+              ), 'B H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -2181,12 +2195,12 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert (isinstance(length, int) and (0 <= length <= 60))
+        assert (0 <= length <= 60)
 
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.READ_WIFI2_SERIAL_PORT,
-            data=pack_payload((length, ), 'B'),
+            data=pack_payload((int(length), ), 'B'),
             response_expected=True
         )
         return ReadWifi2SerialPort(*unpack_payload(payload, '60B B'))
@@ -2274,16 +2288,24 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert ((isinstance(port, int) and (1 <= port <= 65535)))
-        assert ((isinstance(websocket_port, int) and (1 <= websocket_port <= 65535)))
-        assert ((isinstance(website_port, int) and (1 <= website_port <= 65535)))
+        assert (1 <= port <= 65535)
+        assert (1 <= websocket_port <= 65535)
+        assert (1 <= website_port <= 65535)
         if not type(phy_mode) is PhyMode:
             phy_mode = PhyMode(PhyMode)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_WIFI2_CONFIGURATION,
-            data=pack_payload((port, websocket_port, website_port, phy_mode.value, int(sleep_mode), int(website)), 'H H H B B B'),
+            data=pack_payload(
+              (
+                int(port),
+                int(websocket_port),
+                int(website_port),
+                phy_mode.value,
+                int(sleep_mode),
+                int(website)
+              ), 'H H H B B B'),
             response_expected=response_expected
         )
         if response_expected:
@@ -2373,11 +2395,11 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert ((isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4)
-        assert ((isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4)
-        assert ((isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4)
-        assert ((isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6)
-        assert ((isinstance(bssid, tuple) or isinstance(bssid, list)) and len(bssid) == 6)
+        assert (isinstance(ip, tuple) or isinstance(ip, list)) and len(ip) == 4
+        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
+        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
+        assert (isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6
+        assert (isinstance(bssid, tuple) or isinstance(bssid, list)) and len(bssid) == 6
 
         try:
             ssid = ssid.encode('utf-8')
@@ -2564,12 +2586,12 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert ((isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4)
-        assert ((isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4)
-        assert ((isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6)
+        assert (isinstance(subnet_mask, tuple) or isinstance(subnet_mask, list)) and len(subnet_mask) == 4
+        assert (isinstance(gateway, tuple) or isinstance(gateway, list)) and len(gateway) == 4
+        assert (isinstance(mac_address, tuple) or isinstance(mac_address, list)) and len(mac_address) == 6
         if not type(encryption) is WifiApEncryption:
             encryption = WifiApEncryption(encryption)
-        assert (isinstance(channel, int) and (1 <= channel <= 13))
+        assert (1 <= channel <= 13)
         try:
             ssid = ssid.encode('utf-8')
         except AttributeError:
@@ -2588,7 +2610,7 @@ class BrickMaster(DeviceWithMCU):
                     list(map(int, gateway)),
                     encryption.value,
                     hidden,
-                    channel,
+                    int(channel),
                     list(map(int, mac_address)),
                 ), '! 32s 4B 4B 4B B ! B 6B'),
             response_expected=response_expected
@@ -2790,14 +2812,14 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.2$nbsp;(Firmware)
         """
-        assert ((isinstance(root_ip, tuple) or isinstance(root_ip, list)) and len(root_ip) == 4)
-        assert ((isinstance(root_subnet_mask, tuple) or isinstance(root_subnet_mask, list)) and len(root_subnet_mask) == 4)
-        assert ((isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4)
-        assert ((isinstance(gateway_ip, tuple) or isinstance(gateway_ip, list)) and len(gateway_ip) == 4)
-        assert ((isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4)
-        assert ((isinstance(router_bssid, tuple) or isinstance(router_bssid, list)) and len(router_bssid) == 6)
-        assert ((isinstance(group_id, tuple) or isinstance(group_id, list)) and len(group_id) == 6)
-        assert (isinstance(gateway_port, int) and (1 <= gateway_port <= 65535))
+        assert (isinstance(root_ip, tuple) or isinstance(root_ip, list)) and len(root_ip) == 4
+        assert (isinstance(root_subnet_mask, tuple) or isinstance(root_subnet_mask, list)) and len(root_subnet_mask) == 4
+        assert (isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4
+        assert (isinstance(gateway_ip, tuple) or isinstance(gateway_ip, list)) and len(gateway_ip) == 4
+        assert (isinstance(root_gateway, tuple) or isinstance(root_gateway, list)) and len(root_gateway) == 4
+        assert (isinstance(router_bssid, tuple) or isinstance(router_bssid, list)) and len(router_bssid) == 6
+        assert (isinstance(group_id, tuple) or isinstance(group_id, list)) and len(group_id) == 6
+        assert (1 <= gateway_port <= 65535)
         try:
             group_ssid_prefix = group_ssid_prefix.encode('utf-8')
         except AttributeError:
@@ -2817,7 +2839,7 @@ class BrickMaster(DeviceWithMCU):
                     list(map(int, group_id)),
                     group_ssid_prefix,
                     list(map(int, gateway_ip)),
-                    gateway_port
+                    int(gateway_port)
                 ), '! 4B 4B 4B 6B 6B 16s 4B H'),
             response_expected=response_expected
         )
@@ -3111,7 +3133,9 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.3$nbsp;(Firmware)
         """
-        assert type(bricklet_port) is BrickletPort
+        if not type(bricklet_port) is BrickletPort:
+            bricklet_port = BrickletPort(bricklet_port)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SPITFP_BAUDRATE,
@@ -3129,7 +3153,9 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.3$nbsp;(Firmware)
         """
-        assert type(bricklet_port) is BrickletPort
+        if not type(bricklet_port) is BrickletPort:
+            bricklet_port = BrickletPort(bricklet_port
+
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_SPITFP_BAUDRATE,
@@ -3155,7 +3181,9 @@ class BrickMaster(DeviceWithMCU):
         .. versionadded:: 2.4.3$nbsp;(Firmware)
         """
         # TODO: Are these values reset after some time? I see varying error rates
-        assert type(bricklet_port) is BrickletPort
+        if not type(bricklet_port) is BrickletPort:
+            bricklet_port = BrickletPort(bricklet_port
+
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_SPITFP_ERROR_COUNT,
@@ -3227,7 +3255,9 @@ class BrickMaster(DeviceWithMCU):
         This functions sole purpose is to allow automatic flashing of v1.x.y Bricklet
         plugins.
         """
-        assert type(bricklet_port) is BrickletPort
+        if not type(bricklet_port) is BrickletPort:
+            bricklet_port = BrickletPort(bricklet_port
+
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_PROTOCOL1_BRICKLET_NAME,

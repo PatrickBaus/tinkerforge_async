@@ -87,11 +87,12 @@ class BrickletTemperature(Device):
 
         The default value is 0.
         """
-        assert type(period) is int and period >= 0
+        assert period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_PERIOD,
-            data=pack_payload((period,), 'I'),
+            data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
         if response_expected:
@@ -128,7 +129,9 @@ class BrickletTemperature(Device):
 
         The default value is ('x', 0, 0).
         """
-        assert type(option) is ThresholdOption
+        if not type(option) is ThresholdOption:
+            option = ThresholdOption(option)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_THRESHOLD,
@@ -167,11 +170,12 @@ class BrickletTemperature(Device):
 
         The default value is 100.
         """
-        assert type(debounce_period) is int and debounce_period >= 0
+        assert debounce_period >= 0
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((debounce_period,), 'I'),
+            data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
         if response_expected:
@@ -205,7 +209,9 @@ class BrickletTemperature(Device):
 
         .. versionadded:: 2.0.1$nbsp;(Plugin)
         """
-        assert type(mode) is I2cOption
+        if not type(mode) is I2cOption:
+            mode = I2cOption(mode)
+
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_I2C_MODE,
