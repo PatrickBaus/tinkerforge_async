@@ -3154,7 +3154,7 @@ class BrickMaster(DeviceWithMCU):
         .. versionadded:: 2.4.3$nbsp;(Firmware)
         """
         if not type(bricklet_port) is BrickletPort:
-            bricklet_port = BrickletPort(bricklet_port
+            bricklet_port = BrickletPort(bricklet_port)
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -3182,7 +3182,7 @@ class BrickMaster(DeviceWithMCU):
         """
         # TODO: Are these values reset after some time? I see varying error rates
         if not type(bricklet_port) is BrickletPort:
-            bricklet_port = BrickletPort(bricklet_port
+            bricklet_port = BrickletPort(bricklet_port)
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -3256,7 +3256,7 @@ class BrickMaster(DeviceWithMCU):
         plugins.
         """
         if not type(bricklet_port) is BrickletPort:
-            bricklet_port = BrickletPort(bricklet_port
+            bricklet_port = BrickletPort(bricklet_port)
 
         _, payload = await self.ipcon.send_request(
             device=self,

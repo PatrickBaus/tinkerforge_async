@@ -137,7 +137,7 @@ class Device(object):
         Registers the given *function* with the given *callback_id*.
         """
         # CallbackID is defined by the brick/bricklet
-        if not type(event_id) is CallbackID:
+        if not type(event_id) is self.CallbackID:
             event_id = event_id(CallbackID)
 
         if queue is None:
