@@ -9,6 +9,9 @@ import traceback
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 from .devices import DeviceIdentifier, FunctionID, UnknownFunctionError
 
+class NotConnectedError(ConnectionError):
+    pass
+
 class EnumerationType(Enum):
     AVAILABLE = 0
     CONNECTED = 1
@@ -132,6 +135,9 @@ class IPConnectionAsync(object):
         )
 
     async def send_request(self, device, function_id, data=b'', response_expected=False):
+        if self.__writer is None:
+            raise NotConnectedError('Tinkerforge IP Connection not connected')
+
         header, sequence_number = await self.__create_packet_header(
             payload_size=len(data),
             function_id=function_id.value,
