@@ -7,7 +7,6 @@ sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
 
 from source.ip_connection import IPConnectionAsync
-from source.devices import DeviceIdentifier
 from source.device_factory import device_factory
 from source.bricklet_industrial_dual_analog_in_v2 import BrickletIndustrialDualAnalogInV2
 
@@ -44,9 +43,13 @@ async def process_enumerations():
         print('Enumeration queue canceled')
 
 async def run_example(packet):
-    print('Registering Industrial Dual Analog In bricklet 2.0')
+    print('Registering bricklet')
     bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
+    # Register the callback queue used by process_callbacks()
+    # We can register the same queue for multiple callbacks.
+    bricklet.register_event_queue(bricklet.CallbackID.VOLTAGE, callback_queue)
+    bricklet.register_event_queue(bricklet.CallbackID.ALL_VOLTAGES, callback_queue)
 
     uid = await bricklet.read_uid()
     print('Device uid:', uid)
@@ -61,11 +64,6 @@ async def run_example(packet):
     print('Current status:', await bricklet.get_status_led_config())
 
     print('Get chip temperature:', await bricklet.get_chip_temperature(), '°C')
-
-    # Register the callback queue used by process_callbacks()
-    # We can register the same queue for multiple callbacks.
-    bricklet.register_event_queue(bricklet.CallbackID.VOLTAGE, callback_queue)
-    bricklet.register_event_queue(bricklet.CallbackID.ALL_VOLTAGES, callback_queue)
 
     await bricklet.set_sample_rate(bricklet.SamplingRate.RATE_1_SPS)
     print('Sampling rate:', await bricklet.get_sample_rate())
@@ -138,14 +136,13 @@ async def stop_loop():
 
 def error_handler(task):
     try:
-      task.result()
+        task.result()
     except Exception:
-      asyncio.create_task(stop_loop())
+        asyncio.create_task(stop_loop())
 
 async def main():
     try: 
         await ipcon.connect(host='127.0.0.1', port=4223)
-        #await ipcon.connect(host='10.0.0.5', port=4223)
         running_tasks.append(asyncio.create_task(process_callbacks()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
         running_tasks.append(asyncio.create_task(process_enumerations()))

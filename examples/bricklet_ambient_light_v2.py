@@ -7,12 +7,10 @@ sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
 
 from source.ip_connection import IPConnectionAsync
-from source.devices import DeviceIdentifier
 from source.device_factory import device_factory
 from source.bricklet_ambient_light_v2 import BrickletAmbientLightV2
 
-loop = asyncio.get_event_loop()
-ipcon = IPConnectionAsync(loop=loop)
+ipcon = IPConnectionAsync()
 callback_queue = asyncio.Queue()
 
 running_tasks = []
@@ -39,7 +37,7 @@ async def process_enumerations():
     try:
         while 'queue not canceled':
             packet = await ipcon.enumeration_queue.get()
-            if packet['device_id'] is DeviceIdentifier.BrickletAmbientLightV2:
+            if packet['device_id'] is BrickletAmbientLightV2.DEVICE_IDENTIFIER:
                 await run_example(packet)
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
@@ -76,13 +74,13 @@ async def stop_loop():
     for task in running_tasks:
         task.cancel()
     await asyncio.gather(*running_tasks)
-    loop.stop()    
+    asyncio.get_running_loop().stop()
 
 def error_handler(task):
     try:
-      task.result()
+        task.result()
     except Exception:
-      asyncio.create_task(stop_loop())
+        asyncio.create_task(stop_loop())
 
 async def main():
     try: 
@@ -91,7 +89,7 @@ async def main():
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
         running_tasks.append(asyncio.create_task(process_enumerations()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        print("Enumerating brick and waiting for bricklets to reply")
+        print('Enumerating brick and waiting for bricklets to reply')
         await ipcon.enumerate()
     except ConnectionRefusedError:
         print('Could not connect to server. Connection refused. Is the brick daemon up?')
@@ -105,6 +103,7 @@ logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection.
 # Start the main loop, the run the async loop forever
 running_tasks.append(asyncio.ensure_future(main()))
 running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
+loop = asyncio.get_event_loop()
 loop.set_debug(enabled=True)    # Raise all execption and log all callbacks taking longer than 100 ms
 loop.run_forever()
 loop.close()

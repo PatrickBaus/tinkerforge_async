@@ -261,19 +261,18 @@ async def stop_loop():
 
 def error_handler(task):
     try:
-      task.result()
+        task.result()
     except Exception:
-      asyncio.create_task(stop_loop())
+        asyncio.create_task(stop_loop())
 
 async def main():
     try:
         await ipcon.connect(host='127.0.0.1', port=4223)
-        #await ipcon.connect(host='10.0.0.5', port=4223)
         running_tasks.append(asyncio.create_task(process_callbacks()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
         running_tasks.append(asyncio.create_task(process_enumerations()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        print("Enumerating brick and waiting for bricklets to reply")
+        print('Enumerating brick and waiting for bricklets to reply')
         await ipcon.enumerate()
     except ConnectionRefusedError:
         print('Could not connect to server. Connection refused. Is the brick daemon up?')

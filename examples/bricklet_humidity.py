@@ -7,11 +7,10 @@ sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
 
 from source.ip_connection import IPConnectionAsync
-from source.devices import DeviceIdentifier
+from source.device_factory import device_factory
 from source.bricklet_humidity import BrickletHumidity
 
-loop = asyncio.get_event_loop()
-ipcon = IPConnectionAsync(loop=loop)
+ipcon = IPConnectionAsync()
 callback_queue = asyncio.Queue()
 
 running_tasks = []
@@ -38,14 +37,14 @@ async def process_enumerations():
     try:
         while 'queue not canceled':
             packet = await ipcon.enumeration_queue.get()
-            if packet['device_id'] is DeviceIdentifier.BrickletHumidity:
+            if packet['device_id'] is BrickletHumidity.DEVICE_IDENTIFIER:
                 await run_example(packet)
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
 async def run_example(packet):
-    print('Registering humidity bricklet')
-    bricklet = BrickletHumidity(packet['uid'], ipcon) # Create device object
+    print('Registering bricklet')
+    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
     # Register the callback queue used by process_callbacks()
     # We can register the same queue for multiple callbacks.
@@ -81,7 +80,7 @@ async def run_example(packet):
     print('Analog value threshold:', await bricklet.get_analog_value_callback_threshold())
 
     # Terminate the loop
-    asyncio.ensure_future(stop_loop())
+    asyncio.create_task(stop_loop())
 
 async def stop_loop():
     # Clean up: Disconnect ip connection and stop the consumers
@@ -89,22 +88,22 @@ async def stop_loop():
     for task in running_tasks:
         task.cancel()
     await asyncio.gather(*running_tasks)
-    loop.stop()    
+    asyncio.get_running_loop().stop()
 
 def error_handler(task):
     try:
-      task.result()
+        task.result()
     except Exception:
-      asyncio.ensure_future(stop_loop())
+        asyncio.create_task(stop_loop())
 
 async def main():
     try: 
         await ipcon.connect(host='127.0.0.1', port=4223)
-        running_tasks.append(asyncio.ensure_future(process_callbacks()))
+        running_tasks.append(asyncio.create_task(process_callbacks()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        running_tasks.append(asyncio.ensure_future(process_enumerations()))
+        running_tasks.append(asyncio.create_task(process_enumerations()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        print("Enumerating brick and waiting for bricklets to reply")
+        print('Enumerating brick and waiting for bricklets to reply')
         await ipcon.enumerate()
     except ConnectionRefusedError:
         print('Could not connect to server. Connection refused. Is the brick daemon up?')
@@ -118,6 +117,7 @@ logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection.
 # Start the main loop, the run the async loop forever
 running_tasks.append(asyncio.ensure_future(main()))
 running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
+loop = asyncio.get_event_loop()
 loop.set_debug(enabled=True)    # Raise all execption and log all callbacks taking longer than 100 ms
 loop.run_forever()
 loop.close()

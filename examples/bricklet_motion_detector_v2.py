@@ -7,7 +7,7 @@ sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
 
 from source.ip_connection import IPConnectionAsync
-from source.devices import DeviceIdentifier, device_factory
+from source.device_factory import device_factory
 from source.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
 
 ipcon = IPConnectionAsync()
@@ -37,13 +37,13 @@ async def process_enumerations():
     try:
         while 'queue not canceled':
             packet = await ipcon.enumeration_queue.get()
-            if packet['device_id'] is DeviceIdentifier.BrickletMotionDetector_V2:
+            if packet['device_id'] is BrickletMotionDetectorV2.DEVICE_IDENTIFIER:
                 await run_example(packet)
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
 async def run_example(packet):
-    print('Registering motion detector bricklet 2.0')
+    print('Registering bricklet')
     bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
 
@@ -83,9 +83,9 @@ async def stop_loop():
 
 def error_handler(task):
     try:
-      task.result()
+        task.result()
     except Exception:
-      asyncio.create_task(stop_loop())
+        asyncio.create_task(stop_loop())
 
 async def main():
     try: 
@@ -94,7 +94,7 @@ async def main():
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
         running_tasks.append(asyncio.create_task(process_enumerations()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        print("Enumerating brick and waiting for bricklets to reply")
+        print('Enumerating brick and waiting for bricklets to reply')
         await ipcon.enumerate()
     except ConnectionRefusedError:
         print('Could not connect to server. Connection refused. Is the brick daemon up?')

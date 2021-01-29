@@ -7,7 +7,6 @@ sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
 
 from source.ip_connection import IPConnectionAsync
-from source.devices import DeviceIdentifier
 from source.device_factory import device_factory
 from source.bricklet_humidity_v2 import BrickletHumidityV2
 
@@ -38,13 +37,13 @@ async def process_enumerations():
     try:
         while 'queue not canceled':
             packet = await ipcon.enumeration_queue.get()
-            if packet['device_id'] is DeviceIdentifier.BrickletHumidity_V2:
+            if packet['device_id'] is BrickletHumidityV2.DEVICE_IDENTIFIER:
                 await run_example(packet)
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
 async def run_example(packet):
-    print('Registering humidity bricklet 2.0')
+    print('Registering bricklet')
     bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
 
@@ -132,19 +131,18 @@ async def stop_loop():
 
 def error_handler(task):
     try:
-      task.result()
+        task.result()
     except Exception:
-      asyncio.create_task(stop_loop())
+        asyncio.create_task(stop_loop())
 
 async def main():
     try: 
-        #await ipcon.connect(host='127.0.0.1', port=4223)
-        await ipcon.connect(host='10.0.0.5', port=4223)
+        await ipcon.connect(host='127.0.0.1', port=4223)
         running_tasks.append(asyncio.create_task(process_callbacks()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
         running_tasks.append(asyncio.create_task(process_enumerations()))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        print("Enumerating brick and waiting for bricklets to reply")
+        print('Enumerating brick and waiting for bricklets to reply')
         await ipcon.enumerate()
     except ConnectionRefusedError:
         print('Could not connect to server. Connection refused. Is the brick daemon up?')
