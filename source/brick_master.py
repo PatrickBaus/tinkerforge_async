@@ -2862,7 +2862,6 @@ class BrickMaster(DeviceWithMCU):
         )
         enable, root_ip, root_subnet_mask, root_gateway, router_bssid, group_id, group_ssid_prefix, gateway_ip, gateway_port = unpack_payload(payload, '! 4B 4B 4B 6B 6B 16s 4B H')
 
-        # Note ips and macs need to be reversed
         return GetWifi2MeshConfiguration(
             enable,
             root_ip,
@@ -3007,7 +3006,6 @@ class BrickMaster(DeviceWithMCU):
             response_expected=True
         )
         hostname, ip, subnet_mask, gateway, mac_address = unpack_payload(payload, '32s 4B 4B 4B 6B')
-        # Note ips and macs need to be reversed
         return GetWifi2MeshClientStatus(
             hostname,
             ip,
@@ -3030,7 +3028,6 @@ class BrickMaster(DeviceWithMCU):
             response_expected=True
         )
         hostname, ip, subnet_mask, gateway, mac_address = unpack_payload(payload, '32s 4B 4B 4B 6B')
-        # Note ips and macs need to be reversed
         return GetWifi2MeshAPStatus(
             hostname,
             ip,
