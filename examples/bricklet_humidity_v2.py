@@ -74,7 +74,7 @@ async def run_example(packet):
     await bricklet.set_humidity_callback_configuration()
     print('Humidity callback configuration:', await bricklet.get_humidity_callback_configuration())
     
-    # Use a temerature value callback
+    # Use a temperature value callback
     print('Get temperature:', await bricklet.get_temperature())
     print('Set callback period to', 1000, 'ms')
     print('Set threshold to >10 °C and wait for callbacks')

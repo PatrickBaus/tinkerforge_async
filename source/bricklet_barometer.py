@@ -7,8 +7,8 @@ from .devices import DeviceIdentifier, Device, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
-GetAirPressureCallbackThreshold = namedtuple('AirPressureCallbackThreshold', ['option', 'min', 'max'])
-GetAltitudeCallbackThreshold = namedtuple('AltitudeCallbackThreshold', ['option', 'min', 'max'])
+GetAirPressureCallbackThreshold = namedtuple('AirPressureCallbackThreshold', ['option', 'minimum', 'maximum'])
+GetAltitudeCallbackThreshold = namedtuple('AltitudeCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetAveraging = namedtuple('Averaging', ['moving_average_pressure', 'average_pressure', 'average_temperature'])
 
 @unique

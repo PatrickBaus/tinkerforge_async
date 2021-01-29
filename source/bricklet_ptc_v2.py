@@ -7,8 +7,8 @@ from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
-GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'min', 'max'])
-GetResistanceCallbackConfiguration = namedtuple('ResistanceCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'min', 'max'])
+GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
+GetResistanceCallbackConfiguration = namedtuple('ResistanceCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 GetMovingAverageConfiguration = namedtuple('MovingAverageConfiguration', ['moving_average_length_resistance', 'moving_average_length_temperature'])
 
 

@@ -7,7 +7,7 @@ from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
-GetIlluminanceCallbackConfiguration = namedtuple('IlluminanceCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'min', 'max'])
+GetIlluminanceCallbackConfiguration = namedtuple('IlluminanceCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 GetConfiguration = namedtuple('Configuration', ['illuminance_range', 'integration_time'])
 
 @unique
