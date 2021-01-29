@@ -15,7 +15,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 |[Barometer](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)|:heavy_check_mark:|:x:|
 |[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)|:heavy_check_mark:|:x:|
+|[Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Motion Detector 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Motion_Detector_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)|:heavy_check_mark:|:x:|

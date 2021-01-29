@@ -7,21 +7,23 @@ from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
 from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
-GetVoltageCallbackConfiguration = namedtuple('VoltageCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'min', 'max'])
+GetVoltageCallbackConfiguration = namedtuple('VoltageCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 GetCalibration = namedtuple('Calibration', ['offset', 'gain'])
-GetChannelLEDStatusConfig = namedtuple('ChannelLEDStatusConfig', ['min', 'max', 'config'])
+GetChannelLEDStatusConfig = namedtuple('ChannelLEDStatusConfig', ['minimum', 'maximum', 'config'])
+GetAllVoltagesCallbackConfiguration = namedtuple('AllVoltagesCallbackConfiguration', ['period', 'value_has_to_change'])
 
 @unique
 class CallbackID(Enum):
     VOLTAGE = 4
+    ALL_VOLTAGES = 17
 
 @unique
 class FunctionID(Enum):
-    GET_GET_VOLTAGE = 1
-    SET_SET_VOLTAGE_CALLBACK_CONFIGURATION = 2
-    GET_GET_VOLTAGE_CALLBACK_CONFIGURATION = 3
-    SET_SET_SAMPLE_RATE = 5
-    GET_GET_SAMPLE_RATE = 6
+    GET_VOLTAGE = 1
+    SET_VOLTAGE_CALLBACK_CONFIGURATION = 2
+    GET_VOLTAGE_CALLBACK_CONFIGURATION = 3
+    SET_SAMPLE_RATE = 5
+    GET_SAMPLE_RATE = 6
     SET_CALIBRATION = 7
     GET_CALIBRATION = 8
     GET_ADC_VALUES = 9
@@ -29,6 +31,9 @@ class FunctionID(Enum):
     GET_CHANNEL_LED_CONFIG = 11
     SET_CHANNEL_LED_STATUS_CONFIG = 12
     GET_CHANNEL_LED_STATUS_CONFIG = 13
+    GET_ALL_VOLTAGES = 14
+    SET_ALL_VOLTAGES_CALLBACK_CONFIGURATION = 15
+    GET_ALL_VOLTAGES_CALLBACK_CONFIGURATION = 16
 
 @unique
 class ChannelLedConfig(Enum):
@@ -41,6 +46,17 @@ class ChannelLedConfig(Enum):
 class ChannelLedStatusConfig(Enum):
     THRESHOLD = 0
     INTENSITY = 1
+
+@unique
+class SamplingRate(Enum):
+    RATE_976_SPS = 0
+    RATE_488_SPS = 1
+    RATE_244_SPS = 2
+    RATE_122_SPS = 3
+    RATE_61_SPS = 4
+    RATE_4_SPS = 5
+    RATE_2_SPS = 6
+    RATE_1_SPS = 7
 
 
 class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
@@ -58,9 +74,11 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
     ThresholdOption = ThresholdOption
     ChannelLedConfig = ChannelLedConfig
     ChannelLedStatusConfig = ChannelLedStatusConfig
+    SamplingRate = SamplingRate
 
     CALLBACK_FORMATS = {
         CallbackID.VOLTAGE: 'B i',
+        CallbackID.ALL_VOLTAGES: '2i',
     }
 
     def __init__(self, uid, ipcon):
@@ -68,7 +86,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        DeviceWithMCU.__init__(self, uid, ipcon)
+        super().__init__(uid, ipcon)
 
         self.api_version = (2, 0, 0)
 
@@ -130,7 +148,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.SET_ILLUMINANCE_CALLBACK_CONFIGURATION,
+            function_id=FunctionID.SET_VOLTAGE_CALLBACK_CONFIGURATION,
             data=pack_payload(
               (
                 int(channel),
@@ -153,7 +171,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION,
+            function_id=FunctionID.GET_VOLTAGE_CALLBACK_CONFIGURATION,
             data=pack_payload((channel,), 'B'),
             response_expected=True
         )
@@ -161,18 +179,80 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         option = ThresholdOption(option)
         return GetVoltageCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
+    async def get_all_voltages(self):
+        """
+        Returns the voltage for the given channel.
+
+
+        If you want to get the value periodically, it is recommended to use the
+        :cb:`Voltage` callback. You can set the callback configuration
+        with :func:`Set Voltage Callback Configuration`.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_ALL_VOLTAGES,
+            response_expected=True
+        )
+        return unpack_payload(payload, '2i')
+
+    async def set_all_voltages_callback_configuration(self, period=0, value_has_to_change=False, response_expected=True):
+        """
+        The period is the period with which the :cb:`All Voltages`
+        callback is triggered periodically. A value of 0 turns the callback off.
+
+        If the `value has to change`-parameter is set to true, the callback is only
+        triggered after at least one of the values has changed. If the values didn't
+        change within the period, the callback is triggered immediately on change.
+
+        If it is set to false, the callback is continuously triggered with the period,
+        independent of the value.
+
+        .. versionadded:: 2.0.6$nbsp;(Plugin)
+        """
+        assert period >= 0
+
+        result = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_ALL_VOLTAGES_CALLBACK_CONFIGURATION,
+            data=pack_payload(
+              (
+                int(period),
+                bool(value_has_to_change),
+              ), 'I !'),
+            response_expected=response_expected
+        )
+        if response_expected:
+            header, _ = result
+            # TODO raise errors
+            return header['flags'] == Flags.OK
+
+    async def get_all_voltages_callback_configuration(self):
+        """
+        Returns the callback configuration as set by
+        :func:`Set All Voltages Callback Configuration`.
+
+        .. versionadded:: 2.0.6$nbsp;(Plugin)
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_VOLTAGE_CALLBACK_CONFIGURATION,
+            response_expected=True
+        )
+        return GetAllVoltagesCallbackConfiguration(*unpack_payload(payload, 'I !'))
+
     async def set_sample_rate(self, rate, response_expected=False):
         """
         Sets the sample rate. The sample rate can be between 1 sample per second
         and 976 samples per second. Decreasing the sample rate will also decrease the
         noise on the data.
         """
-        assert (1 <= rate <= 976)
+        if type(rate) is not SamplingRate:
+            rate = SamplingRate(rate)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SAMPLE_RATE,
-            data=pack_payload((int(rate),), 'B'),
+            data=pack_payload((rate.value,), 'B'),
             response_expected=response_expected
         )
 
@@ -191,7 +271,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             response_expected=True
         )
 
-        return unpack_payload(payload, 'B')
+        return SamplingRate(unpack_payload(payload, 'B'))
 
     async def set_calibration(self, offset, gain, response_expected=False):
         """
@@ -289,7 +369,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         return ChannelLedConfig(unpack_payload(payload, 'B'))
 
-    async def set_channel_led_status_config(self, channel, minimum, maximum, response_expected=False):
+    async def set_channel_led_status_config(self, channel, minimum, maximum, config, response_expected=False):
         """
         Sets the channel LED status config. This config is used if the channel LED is
         configured as "Channel Status", see :func:`Set Channel LED Config`.
@@ -354,14 +434,4 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
     def __SI_to_value(self, value):
         return int(value * 100)
-
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            super()._process_callback(header, payload)
 
