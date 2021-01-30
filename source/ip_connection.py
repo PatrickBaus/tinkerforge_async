@@ -170,6 +170,7 @@ class IPConnectionAsync(object):
             self.__writer.write(request)
             if response_expected:
                 self.__logger.debug('Waiting for reply for request number %(sequence_number)s.', {'sequence_number': sequence_number})
+                # The future will be resolved by the main_loop() and __process_packet()
                 self.__pending_requests[sequence_number] = asyncio.Future()
                 header, payload  = await asyncio.wait_for(self.__pending_requests[sequence_number], self.__timeout)
                 #header, payload = await self.__get_response(sequence_number)
@@ -250,7 +251,6 @@ class IPConnectionAsync(object):
                     # raised if the functionID is unknown. This can happen if there was no device output queue
                     # registered with the callback.
                     pass
-
         elif header['response_expected']:
             try:
                 # Mark the future as done
