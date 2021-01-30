@@ -1351,7 +1351,7 @@ class BrickMaster(DeviceWithMCU):
         .. versionadded:: 2.0.2$nbsp;(Firmware)
         """
         try:
-            key = key.encode("utf-8")
+            key = key.encode('utf-8')
         except AttributeError:
             pass    # already a bytestring
         assert (8 <= len(key) <= 63)

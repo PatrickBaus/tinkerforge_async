@@ -41,7 +41,6 @@ class DeviceIdentifier(Enum):
 
 @unique
 class FunctionID(Enum):
-    ENUMERATE = 254
     ADC_CALIBRATE = 251
     GET_ADC_CALIBRATION = 250
     READ_BRICKLET_UID = 249
@@ -50,7 +49,6 @@ class FunctionID(Enum):
     WRITE_BRICKLET_PLUGIN = 246
     DISCONNECT_PROBE = 128
 
-    CALLBACK_ENUMERATE = 253
     # Available only on bricklets with MCUs (aka the new 7p bricklets)
     GET_SPITFP_ERROR_COUNT = 234
     SET_BOOTLOADER_MODE = 235

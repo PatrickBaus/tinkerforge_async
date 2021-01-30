@@ -103,6 +103,7 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    - `IPConnection.authenticate(secret)`: removed. This can now be done through connect()
    - `IPConnection.set_timeout/IPConnection.get_timeout`: Replaced by a property
    - `IPConnection.register_callback(callback_id, function)`: Replaced by `register_event_queue()`
+   - `IPConnection.connect(host, port=4223, authentication_secret='')`: If `authentication_secret` is not empty, try to authenticate.
 
 - #### [Master Brick](https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html)
    - `BrickMaster.set_wifi_configuration()`/`BrickMaster.get_wifi_configuration()` will take/return all ips in natural order

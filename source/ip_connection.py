@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import async_timeout
-from enum import Enum, Flag
+from enum import Enum, Flag, unique
+import hmac
+import hashlib
 import logging
+import os
 import struct
-import traceback
 
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 from .devices import DeviceIdentifier, FunctionID, UnknownFunctionError
@@ -12,6 +14,14 @@ from .devices import DeviceIdentifier, FunctionID, UnknownFunctionError
 class NotConnectedError(ConnectionError):
     pass
 
+@unique
+class FunctionID(Enum):
+    GET_AUTHENTICATION_NONCE = 1
+    AUTHENTICATE = 2
+    CALLBACK_ENUMERATE = 253
+    ENUMERATE = 254
+
+@unique
 class EnumerationType(Enum):
     AVAILABLE = 0
     CONNECTED = 1
@@ -71,6 +81,10 @@ class IPConnectionAsync(object):
     HEADER_FORMAT = '<IBBBB'  # little endian (<), uid (I, uint32), size (B, uint8), function id, squence number, flags
 
     @property
+    def uid(self):
+        return 1
+
+    @property
     def enumeration_queue(self):
         """
         Sets the timeout for async operations in seconds
@@ -101,6 +115,9 @@ class IPConnectionAsync(object):
         self.__sequence_number_queue = asyncio.Queue(maxsize=15)
         for i in range(1,16):
             self.__sequence_number_queue.put_nowait(i)
+
+        self.__lock = asyncio.Lock()
+        self.__next_nonce = 0
 
         self.__enumeration_queue = asyncio.Queue(maxsize=20)
 
@@ -135,7 +152,7 @@ class IPConnectionAsync(object):
         )
 
     async def send_request(self, device, function_id, data=b'', response_expected=False):
-        if self.__writer is None:
+        if not self.is_connected:
             raise NotConnectedError('Tinkerforge IP Connection not connected')
 
         header, sequence_number = await self.__create_packet_header(
@@ -159,7 +176,7 @@ class IPConnectionAsync(object):
                 self.__logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
                 return header, payload
         finally:
-            # Return the sequency number
+            # Return the sequence number
             self.__sequence_number_queue.put_nowait(sequence_number)
 
     def __parse_enumerate_payload(self, payload):
@@ -257,9 +274,58 @@ class IPConnectionAsync(object):
             if self.is_connected:
                 await self.__close_transport()
 
-    async def connect(self, host, port=4223):
-        self.__reader, self.__writer = await asyncio.open_connection(host, port)
-        self.__main_task = asyncio.create_task(self.main_loop())
+    async def __get_client_nonce(self):
+        if self.__next_nonce == 0:
+            # os.urandom can block after boot, so we will put it into the executor
+            nonce = await asyncio.get_running_loop().run_in_executor(None, os.urandom, 4)
+            self.__next_nonce = int.from_bytes(nonce, byteorder='little')
+
+        # Take the next nonce and prepare a new one
+        nonce = self.__next_nonce
+        self.__next_nonce = (self.__next_nonce + 1) % (1 << 32)
+
+        return nonce.to_bytes(4, byteorder='little')    # return as bytes
+
+    async def __get_server_nonce(self):
+        # get the server nonce
+        _, payload =  await self.send_request(
+            device=self,
+            function_id=FunctionID.GET_AUTHENTICATION_NONCE,
+            response_expected=True
+        )
+        return payload
+
+    async def __authenticate(self, authentication_secret):
+        client_nonce, server_nonce = await asyncio.gather(self.__get_client_nonce(), self.__get_server_nonce())
+
+        h = hmac.new(authentication_secret, digestmod=hashlib.sha1)
+        h.update(server_nonce)
+        h.update(client_nonce)
+
+        digest = h.digest()
+        del h
+
+        await self.send_request(
+            device=self,
+            function_id=FunctionID.AUTHENTICATE,
+            data=pack_payload((client_nonce, digest), '4B 20B'),
+            response_expected = False,
+        )
+
+    async def connect(self, host, port=4223, authentication_secret=''):
+        async with self.__lock:
+            if not self.is_connected:
+                self.__reader, self.__writer = await asyncio.open_connection(host, port)
+                self.__main_task = asyncio.create_task(self.main_loop())
+
+                if authentication_secret:
+                    try:
+                        authentication_secret = authentication_secret.encode('ascii')
+                    except AttributeError:
+                        pass    # already a bytestring
+
+                    await self.__authenticate(authentication_secret)
+
 
     async def disconnect(self):
        if self.__main_task is not None and not self.__main_task.done():
