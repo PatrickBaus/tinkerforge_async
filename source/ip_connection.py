@@ -107,23 +107,21 @@ class IPConnectionAsync(object):
         return self.__writer is not None and not self.__writer.is_closing()
 
     def __init__(self):
-        self.__main_task = None
-        self.__reader, self.__writer = None, None
         self.__sequence_number = 0
         self.__timeout = DEFAULT_WAIT_TIMEOUT
         self.__pending_requests = {}
-        self.__sequence_number_queue = asyncio.Queue(maxsize=15)
-        for i in range(1,16):
-            self.__sequence_number_queue.put_nowait(i)
-
-        self.__lock = asyncio.Lock()
         self.__next_nonce = 0
-
-        self.__enumeration_queue = asyncio.Queue(maxsize=20)
 
         self.__devices = {}
 
         self.__logger = logging.getLogger(__name__)
+
+        # These will be assigned during connect()
+        self.__reader, self.__writer = None, None
+        self.__main_task = None
+        self.__lock = None
+        self.__sequence_number_queue = None
+        self.__enumeration_queue = None
 
     async def __create_packet_header(self, payload_size, function_id, uid=None, response_expected=False):
         uid = IPConnectionAsync.BROADCAST_UID if uid is None else uid
@@ -153,7 +151,7 @@ class IPConnectionAsync(object):
 
     async def send_request(self, device, function_id, data=b'', response_expected=False):
         if not self.is_connected:
-            raise NotConnectedError('Tinkerforge IP Connection not connected')
+            raise NotConnectedError('Tinkerforge IP Connection not connected.')
 
         header, sequence_number = await self.__create_packet_header(
             payload_size=len(data),
@@ -210,6 +208,8 @@ class IPConnectionAsync(object):
         }
 
     async def __read_packet(self):
+        if not self.is_connected:
+            raise NotConnectedError('Tinkerforge IP Connection not connected.')
         try:
             with async_timeout.timeout(self.__timeout):
                 data = await self.__reader.read(struct.calcsize(IPConnectionAsync.HEADER_FORMAT))
@@ -263,12 +263,14 @@ class IPConnectionAsync(object):
 
     async def main_loop(self):
         try:
-            self.__logger.info('Tinkerforge IP connection connected')
             while 'loop not canceled':
                 # Read packets from the socket and process them.
                 header, payload = await self.__read_packet()
                 if header is not None:
                     await self.__process_packet(header, payload)
+        except asyncio.CancelledError:
+            # No cleanup required
+            pass
         finally:
             self.__main_task = None
             if self.is_connected:
@@ -318,11 +320,17 @@ class IPConnectionAsync(object):
         )
 
     async def connect(self, host, port=4223, authentication_secret=''):
+        if self.__lock is None:
+            self.__lock = asyncio.Lock()
         async with self.__lock:
             if not self.is_connected:
+                self.__enumeration_queue = asyncio.Queue(maxsize=20)
+                self.__sequence_number_queue = asyncio.Queue(maxsize=15)
+                for i in range(1,16):
+                    self.__sequence_number_queue.put_nowait(i)
+
                 self.__reader, self.__writer = await asyncio.open_connection(host, port)
                 self.__main_task = asyncio.create_task(self.main_loop())
-
                 if authentication_secret:
                     try:
                         authentication_secret = authentication_secret.encode('ascii')
@@ -331,14 +339,18 @@ class IPConnectionAsync(object):
 
                     await self.__authenticate(authentication_secret)
 
+                self.__logger.info('Tinkerforge IP connection connected')
 
     async def disconnect(self):
-       if self.__main_task is not None and not self.__main_task.done():
-            self.__main_task.cancel()
+        if self.__lock is None:
+            self.__lock = asyncio.Lock()
+        async with self.__lock:
             try:
-                await self.__main_task
-            except asyncio.CancelledError:
-                pass
+                if self.__main_task is not None and not self.__main_task.done():
+                    self.__main_task.cancel()
+                    await self.__main_task
+            finally:
+                self.__lock = None
 
     async def __close_transport(self):
         # Flush data
@@ -354,4 +366,4 @@ class IPConnectionAsync(object):
                 raise
         finally:
             self.__writer, self.__reader = None, None
-            self.__logger.info('Tinkerforge IP connection closed')
+            self.__logger.info('Tinkerforge IP connection closed.')
