@@ -239,7 +239,7 @@ class BrickletPtcV2(BrickletWithMCU):
             # TODO raise errors
             return header['flags'] == Flags.OK
 
-    async def get_temperature_callback_configuration(self):
+    async def get_resistance_callback_configuration(self):
         """
         Returns the callback configuration as set by :func:`Set Resistance Callback Configuration`.
         """
@@ -250,7 +250,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c i i')
         option = ThresholdOption(option)
-        return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return GetResistanceCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def set_noise_rejection_filter(self, line_filter=LineFilter.FREQUENCY_50HZ, response_expected=False):
         """
@@ -354,7 +354,7 @@ class BrickletPtcV2(BrickletWithMCU):
         The default value is 1 for resistance and 40 for temperature. The default values match
         the non-changeable averaging settings of the old PTC Bricklet 1.0
         """
-        assert moving_average_length_humidity > 0
+        assert moving_average_length_resistance > 0
         assert moving_average_length_temperature > 0
 
         result = await self.ipcon.send_request(
@@ -383,7 +383,7 @@ class BrickletPtcV2(BrickletWithMCU):
 
         return GetMovingAverageConfiguration(*unpack_payload(payload, 'H H'))
 
-    async def set_sensor_connected_callback_configuration(self, enabled):
+    async def set_sensor_connected_callback_configuration(self, enabled=False, response_expected=False):
         """
         If you enable this callback, the :cb:`Sensor Connected` callback is triggered
         every time a Pt sensor is connected/disconnected.
@@ -423,16 +423,4 @@ class BrickletPtcV2(BrickletWithMCU):
 
     def __SI_to_value(self, value):
         return int(value * 100)
-
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = self.__value_to_SI(
-                unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            )
-            super()._process_callback(header, payload)
 
