@@ -48,7 +48,7 @@ class BrickletAmbientLightV2(Device):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        Device.__init__(self, uid, ipcon)
+        super().__init__(uid, ipcon)
 
         self.api_version = (2, 0, 1)
 
