@@ -275,6 +275,9 @@ class IPConnectionAsync(object):
                 await self.__close_transport()
 
     async def __get_client_nonce(self):
+        """
+        Returns a nonce as a bytestring  with length 4.
+        """
         if self.__next_nonce == 0:
             # os.urandom can block after boot, so we will put it into the executor
             nonce = await asyncio.get_running_loop().run_in_executor(None, os.urandom, 4)
@@ -287,13 +290,15 @@ class IPConnectionAsync(object):
         return nonce.to_bytes(4, byteorder='little')    # return as bytes
 
     async def __get_server_nonce(self):
-        # get the server nonce
+        """
+        Query the server for its nonce. Returns a bytestring  with length 4.
+        """
         _, payload =  await self.send_request(
             device=self,
             function_id=FunctionID.GET_AUTHENTICATION_NONCE,
             response_expected=True
         )
-        return payload
+        return payload    # As bytestring with length 4
 
     async def __authenticate(self, authentication_secret):
         client_nonce, server_nonce = await asyncio.gather(self.__get_client_nonce(), self.__get_server_nonce())
