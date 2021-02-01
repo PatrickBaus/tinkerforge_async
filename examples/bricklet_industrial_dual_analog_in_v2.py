@@ -74,7 +74,7 @@ async def run_example(packet):
     print('ADC raw values (with offset subtracted):', await bricklet.get_adc_values())
 
     # Query LEDs
-    print('Channel 0 led config:', await bricklet.get_channel_led_config(0))
+    print('Channel 0 led configuration:', await bricklet.get_channel_led_config(0))
     print('Channel 1 led config:', await bricklet.get_channel_led_config(1))
     led_status_config = await bricklet.get_channel_led_status_config(0)
     print('Channel 0 led status config', led_status_config)
@@ -97,24 +97,24 @@ async def run_example(packet):
     print('Set callback period to', 1000, 'ms and wait for callbacks')
     await bricklet.set_voltage_callback_configuration(channel=0, period=1000)
     await bricklet.set_voltage_callback_configuration(channel=1, period=500)
-    print('Voltage callback config, channel 0:', await bricklet.get_voltage_callback_configuration(0))
-    print('Voltage callback config, channel 1:', await bricklet.get_voltage_callback_configuration(1))
+    print('Voltage callback configuration, channel 0:', await bricklet.get_voltage_callback_configuration(0))
+    print('Voltage callback configuration, channel 1:', await bricklet.get_voltage_callback_configuration(1))
     await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
     print('Disable callbacks')
     await bricklet.set_voltage_callback_configuration(0)
     await bricklet.set_voltage_callback_configuration(1)
-    print('Voltage callback config, channel 0:', await bricklet.get_voltage_callback_configuration(0))
-    print('Voltage callback config, channel 1:', await bricklet.get_voltage_callback_configuration(1))
+    print('Voltage callback configuration, channel 0:', await bricklet.get_voltage_callback_configuration(0))
+    print('Voltage callback configuration, channel 1:', await bricklet.get_voltage_callback_configuration(1))
 
     # Use all voltages callback
     print('Get all voltages:', await bricklet.get_all_voltages())
 
     await bricklet.set_all_voltages_callback_configuration(period=1000)
-    print('All voltages callback config:', await bricklet.get_all_voltages_callback_configuration())
+    print('All voltages callback configuration:', await bricklet.get_all_voltages_callback_configuration())
     await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
     print('Disable callback')
     await bricklet.set_all_voltages_callback_configuration()
-    print('All voltages callback config:', await bricklet.get_all_voltages_callback_configuration())
+    print('All voltages callback configuration:', await bricklet.get_all_voltages_callback_configuration())
 
     print('Resetting channel leds to status')
     await bricklet.set_channel_led_config(0, bricklet.ChannelLedConfig.CHANNEL_STATUS)
