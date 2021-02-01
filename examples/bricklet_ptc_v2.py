@@ -96,10 +96,6 @@ async def run_example(packet):
     print('Temperature callback configuration:', await bricklet.get_temperature_callback_configuration())
     print('Resistance callback configuration:', await bricklet.get_resistance_callback_configuration())
 
-    # Terminate the loop
-    asyncio.create_task(stop_loop())
-    return
-
     print('Reset Bricklet')
     await bricklet.reset()
 
