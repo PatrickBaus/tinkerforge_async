@@ -159,7 +159,7 @@ class BrickletBarometer(Device):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.GET_GET_ALTITUDE_CALLBACK_PERIOD,
+            function_id=FunctionID.GET_ALTITUDE_CALLBACK_PERIOD,
             response_expected=True
         )
         return unpack_payload(payload, 'I')
@@ -302,7 +302,7 @@ class BrickletBarometer(Device):
         )
         return unpack_payload(payload, 'h')
 
-    async def set_reference_air_pressure(self, air_pressure=101.3250, response_expected=False):
+    async def set_reference_air_pressure(self, air_pressure=101325, response_expected=False):
         """
         Sets the reference air pressure for the altitude calculation.
         Setting the reference to the current air pressure results in a calculated
@@ -314,11 +314,11 @@ class BrickletBarometer(Device):
         `QFE <https://en.wikipedia.org/wiki/Mean_sea_level_pressure#Mean_sea_level_pressure>`__
         used in aviation.
         """
-        assert (air_pressure == 0) or (1 <= air_pressure <= 120)
+        assert (air_pressure == 0) or (1000 <= air_pressure <= 120000)
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.FUNCTION_SET_REFERENCE_AIR_PRESSURE,
+            function_id=FunctionID.SET_REFERENCE_AIR_PRESSURE,
             data=pack_payload((self.__SI_pressure_to_value(air_pressure),), 'i'),
             response_expected=response_expected
         )
@@ -360,7 +360,7 @@ class BrickletBarometer(Device):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.FUNCTION_SET_AVERAGING,
+            function_id=FunctionID.SET_AVERAGING,
             data=pack_payload(
               (
                 int(moving_average_pressure),
@@ -384,7 +384,7 @@ class BrickletBarometer(Device):
             function_id=FunctionID.GET_AVERAGING,
             response_expected=True
         )
-        return GetAveraging(unpack_payload(payload, 'B B B'))
+        return GetAveraging(*unpack_payload(payload, 'B B B'))
 
     def __value_to_SI_altitude(self, value):
         """
@@ -399,20 +399,8 @@ class BrickletBarometer(Device):
         """
         Convert to the sensor value to SI units
         """
-        return Decimal(value) / 10000
+        return Decimal(value) / 10
 
     def __SI_pressure_to_value(self, value):
-        return int(value * 10000)
-
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = self.__value_to_SI_pressure(
-                unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            )
-            super()._process_callback(header, payload)
+        return int(value * 10)
 
