@@ -8,6 +8,7 @@ from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetIlluminanceCallbackThreshold = namedtuple('IlluminanceCallbackThreshold', ['option', 'minimum', 'maximum'])
+GetConfiguration = namedtuple('Configuration', ['illuminance_range', 'integration_time'])
 
 @unique
 class CallbackID(Enum):
@@ -23,6 +24,29 @@ class FunctionID(Enum):
     GET_ILLUMINANCE_CALLBACK_THRESHOLD = 5
     SET_DEBOUNCE_PERIOD = 6
     GET_DEBOUNCE_PERIOD = 7
+    SET_CONFIGURATION = 8
+    GET_CONFIGURATION = 9
+
+@unique
+class IlluminanceRange(Enum):
+    RANGE_UNLIMITED = 6
+    RANGE_64000LUX = 0
+    RANGE_32000LUX = 1
+    RANGE_16000LUX = 2
+    RANGE_8000LUX = 3
+    RANGE_1300LUX = 4
+    RANGE_600LUX = 5
+
+@unique
+class IntegrationTime(Enum):
+    TIME_50MS = 0
+    TIME_100MS = 1
+    TIME_150MS = 2
+    TIME_200MS = 3
+    TIME_250MS = 4
+    TIME_300MS = 5
+    TIME_350MS = 6
+    TIME_400MS = 7
 
 class BrickletAmbientLightV2(Device):
     """
@@ -36,6 +60,8 @@ class BrickletAmbientLightV2(Device):
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
     FunctionID = FunctionID
+    IlluminanceRange = IlluminanceRange
+    IntegrationTime = IntegrationTime
     ThresholdOption = ThresholdOption
 
     CALLBACK_FORMATS = {
@@ -182,4 +208,57 @@ class BrickletAmbientLightV2(Device):
             response_expected=True
         )
         return unpack_payload(payload, 'I')
+
+    async def set_configuration(self, illuminance_range, integration_time, response_expected=True):
+        """
+        Sets the configuration. It is possible to configure an illuminance range
+        between 0-600lux and 0-64000lux and an integration time between 50ms and 400ms.
+
+        .. versionadded:: 2.0.2$nbsp;(Plugin)
+          The unlimited illuminance range allows to measure up to about 100000lux, but
+          above 64000lux the precision starts to drop.
+
+        A smaller illuminance range increases the resolution of the data. A longer
+        integration time will result in less noise on the data.
+
+        .. versionchanged:: 2.0.2$nbsp;(Plugin)
+          If the actual measure illuminance is out-of-range then the current illuminance
+          range maximum +0.01lux is reported by :func:`Get Illuminance` and the
+          :cb:`Illuminance` callback. For example, 800001 for the 0-8000lux range.
+
+        .. versionchanged:: 2.0.2$nbsp;(Plugin)
+          With a long integration time the sensor might be saturated before the measured
+          value reaches the maximum of the selected illuminance range. In this case 0lux
+          is reported by :func:`Get Illuminance` and the :cb:`Illuminance` callback.
+
+        If the measurement is out-of-range or the sensor is saturated then you should
+        configure the next higher illuminance range. If the highest range is already
+        in use, then start to reduce the integration time.
+        """
+        if not type(illuminance_range) is IlluminanceRange:
+            illuminance_range = IlluminanceRange(illuminance_range)
+        if not type(integration_time) is IntegrationTime:
+            integration_time = IntegrationTime(integration_time)
+
+        result = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_CONFIGURATION,
+            data=pack_payload((illuminance_range.value, integration_time.value), 'B B'),
+            response_expected=response_expected
+        )
+        if response_expected:
+            header, _ = result
+            return header['flags'] == Flags.OK
+
+    async def get_configuration(self):
+        """
+        Returns the configuration as set by :func:`Set Configuration`.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_CONFIGURATION,
+            response_expected=True
+        )
+        illuminance_range, integration_time = unpack_payload(payload, 'B B')
+        return GetConfiguration(IlluminanceRange(illuminance_range), IntegrationTime(integration_time))
 
