@@ -7,7 +7,6 @@ sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
 
 from source.ip_connection import IPConnectionAsync
-from source.devices import DeviceIdentifier
 from source.device_factory import device_factory
 from source.bricklet_ptc_v2 import BrickletPtcV2
 

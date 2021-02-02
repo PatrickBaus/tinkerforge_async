@@ -45,6 +45,7 @@ async def run_example(packet, callback_queue):
     bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
     # Register the callback queue used by process_callbacks()
+    # We can register the same queue for multiple callbacks.
     bricklet.register_event_queue(bricklet.CallbackID.ILLUMINANCE, callback_queue)
     bricklet.register_event_queue(bricklet.CallbackID.ILLUMINANCE_REACHED, callback_queue)
 

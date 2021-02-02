@@ -11,11 +11,9 @@ from source.device_factory import device_factory
 from source.bricklet_industrial_dual_analog_in_v2 import BrickletIndustrialDualAnalogInV2
 
 ipcon = IPConnectionAsync()
-callback_queue = asyncio.Queue()
-
 running_tasks = []
 
-async def process_callbacks():
+async def process_callbacks(queue):
     """
     This infinite loop will print all callbacks.
     It waits for packets from the callback queue,
@@ -23,12 +21,12 @@ async def process_callbacks():
     """
     try:
         while 'queue not canceled':
-            packet = await callback_queue.get()
+            packet = await queue.get()
             print('Callback received', packet)
     except asyncio.CancelledError:
         print('Callback queue canceled')
 
-async def process_enumerations():
+async def process_enumerations(callback_queue):
     """
     This infinite loop pulls events from the internal enumeration queue
     of the ip connection and waits for an enumeration event with a
@@ -38,11 +36,11 @@ async def process_enumerations():
         while 'queue not canceled':
             packet = await ipcon.enumeration_queue.get()
             if packet['device_id'] is BrickletIndustrialDualAnalogInV2.DEVICE_IDENTIFIER:
-                await run_example(packet)
+                await run_example(packet, callback_queue)
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
-async def run_example(packet):
+async def run_example(packet, callback_queue):
     print('Registering bricklet')
     bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
@@ -124,31 +122,34 @@ async def run_example(packet):
     await bricklet.reset()
 
     # Terminate the loop
-    asyncio.create_task(stop_loop())
+    asyncio.create_task(shutdown())
 
-async def stop_loop():
+async def shutdown():
     # Clean up: Disconnect ip connection and stop the consumers
-    await ipcon.disconnect()
     for task in running_tasks:
         task.cancel()
     await asyncio.gather(*running_tasks)
-    asyncio.get_running_loop().stop()
+    await ipcon.disconnect()    # Disconnect the ip connection last to allow cleanup of the sensors
 
 def error_handler(task):
     try:
         task.result()
     except Exception:
-        asyncio.create_task(stop_loop())
+        # Normally we should log these
+        asyncio.create_task(shutdown())
 
 async def main():
     try: 
         await ipcon.connect(host='127.0.0.1', port=4223)
-        running_tasks.append(asyncio.create_task(process_callbacks()))
+        callback_queue = asyncio.Queue()
+        running_tasks.append(asyncio.create_task(process_callbacks(callback_queue)))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        running_tasks.append(asyncio.create_task(process_enumerations()))
+        running_tasks.append(asyncio.create_task(process_enumerations(callback_queue)))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
         print('Enumerating brick and waiting for bricklets to reply')
         await ipcon.enumerate()
+        # Wait for run_example() to finish
+        await asyncio.gather(*running_tasks)
     except ConnectionRefusedError:
         print('Could not connect to server. Connection refused. Is the brick daemon up?')
     except asyncio.CancelledError:
@@ -158,10 +159,5 @@ async def main():
 warnings.simplefilter('always', ResourceWarning)
 logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection. Set to debug for even more info
 
-# Start the main loop, the run the async loop forever
-running_tasks.append(asyncio.ensure_future(main()))
-running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-loop = asyncio.get_event_loop()
-loop.set_debug(enabled=True)    # Raise all execption and log all callbacks taking longer than 100 ms
-loop.run_forever()
-loop.close()
+# Start the main loop and run the async loop forever
+asyncio.run(main(),debug=True)
