@@ -389,20 +389,3 @@ class BrickletHumidityV2(BrickletWithMCU):
     def __SI_to_temperature_sensor(self, value):
         return int(value * 100)
 
-    def _process_callback(self, header, payload):
-        """
-        Overloaded from parent object. Process the callback and convert all units to SI.
-        """
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            if header['function_id'] is CallbackID.HUMIDITY:
-                payload = self.__humidity_sensor_to_SI(payload)
-            elif header['function_id'] is CallbackID.TEMPERATURE:
-                payload = self.__temperature_sensor_to_SI(payload)
-            super()._process_callback(header, payload)
-
