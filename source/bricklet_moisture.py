@@ -4,7 +4,7 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, ThresholdOption
-from .ip_connection import Flags, UnknownFunctionError
+from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetMoistureCallbackThreshold = namedtuple('MoistureCallbackThreshold', ['option', 'minimum', 'maximum'])

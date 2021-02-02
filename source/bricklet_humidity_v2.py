@@ -4,7 +4,7 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
-from .ip_connection import Flags, UnknownFunctionError
+from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetHumidityCallbackConfiguration = namedtuple('HumidityCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])

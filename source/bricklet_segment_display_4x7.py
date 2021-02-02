@@ -3,7 +3,7 @@ from collections import namedtuple
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device
-from .ip_connection import Flags, UnknownFunctionError
+from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetSegments = namedtuple('Segments', ['segments', 'brightness', 'colon'])
