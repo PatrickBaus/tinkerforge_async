@@ -6,16 +6,18 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 # Supported Bricks/Bricklets
 |Brick|Supported|Tested|Comments|
 |--|--|--|--|
-|[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:heavy_check_mark:| :heavy_check_mark:|  |
+|[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:heavy_check_mark:|:heavy_check_mark:|  |
 
 |Bricklet|Supported|Tested|
 |--|--|--|
 |[Ambient Light 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Ambient Light 3.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)|:heavy_check_mark:|:x:|
+|[Analog In](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)|:x:|:x:|
 |[Barometer](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
+|[IO-16](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)|:x:|:x:|
 |[Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Motion Detector 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Motion_Detector_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)|:heavy_check_mark:|:x:|
