@@ -26,6 +26,7 @@ class DeviceIdentifier(Enum):
     BrickletAmbientLight              = 21
     BrickletHumidity                  = 27
     BrickletTemperature               = 216
+    BrickletAnalogIn                  = 219
     BrickletBarometer                 = 221
     BrickletPtc                       = 226
     BrickletMoisture                  = 232
