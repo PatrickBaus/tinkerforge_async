@@ -64,7 +64,7 @@ async def run_example(packet, callback_queue):
     print('Set callback period to', 1000, 'ms')
     print('Set threshold to >10 %rH and wait for callbacks')
     # We use a low humidity value on purpose, so that the callback will be triggered
-    await bricklet.set_humidity_callback_configuration(1000, False, bricklet.ThresholdOption.GREATER_THAN, 10, 0)
+    await bricklet.set_humidity_callback_configuration(period=1000, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=10, maximum=0)
     print('Humidity callback configuration:', await bricklet.get_humidity_callback_configuration())
     await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
     print('Disable threshold callback')
