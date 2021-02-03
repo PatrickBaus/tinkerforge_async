@@ -2,6 +2,7 @@
 import asyncio
 import async_timeout
 from enum import Enum, Flag, unique
+import errno    # The error numbers can be found in /usr/include/asm-generic/errno.h
 import hmac
 import hashlib
 import logging
@@ -254,10 +255,13 @@ class IPConnectionAsync(object):
         elif header['response_expected']:
             try:
                 # Mark the future as done
-                self.__pending_requests.pop(header['sequence_number']).set_result((header, payload,))
+                future = self.__pending_requests.pop(header['sequence_number'])
+                future.set_result((header, payload))
             except KeyError:
                 # Drop the packet, because it is not our sequence number
                 pass
+            except asyncio.InvalidStateError:
+                self.__logger.exception('Invalid sequence number: %i', header['sequence_number'])
         else:
             self.__logger.info('Unknown packet: %(header)s - %(payload)s', {'header': header, 'payload': payload})
 
