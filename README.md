@@ -112,3 +112,7 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    - `BrickMaster.set_ethernet_configuration()`/`BrickMaster.get_ethernet_configuration()` will take/return all ips in natural order
    - `BrickMaster.write_wifi2_serial_port()` will only accept a `bytestring` and no length argument any more. The length will be automatically determined from the string.
    - `BrickMaster.set_wifi2_status_led(enabled)` added. This allows setting the status led by value instead of calling `enable_wifi2_status_led`/`disable_wifi2_status_led`
+
+- ### [PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)
+   - `BrickletPtc()` takes an additional parameter to define the type of sensor. The options are `BrickletPtc.SensorType.PT_100` and `BrickletPtc.SensorType.PT_1000`. This only determines the resistance returned by the bricklet. The default is `BrickletPtc.SensorType.PT_100`.
+   - `BrickletPtc.sensor_type` getter and setter to change the type of sensor used.
