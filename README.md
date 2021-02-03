@@ -11,7 +11,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 |Bricklet|Supported|Tested|
 |--|--|--|
 |[Ambient Light 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Ambient Light 3.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)|:heavy_check_mark:|:x:|
+|[Ambient Light 3.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Analog In](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Barometer](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|:heavy_check_mark:|

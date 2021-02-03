@@ -24,7 +24,7 @@ class FunctionID(Enum):
 
 @unique
 class IlluminanceRange(Enum):
-    UNLIMIETED = 6
+    UNLIMITED = 6
     LUX64000 = 0
     LUX32000 = 1
     LUX16000 = 2
@@ -93,6 +93,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
             function_id=FunctionID.GET_ILLUMINANCE,
             response_expected=True
         )
+        print(unpack_payload(payload, 'I'))
         return self.__value_to_SI(unpack_payload(payload, 'I'))
 
     async def set_illuminance_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
@@ -155,7 +156,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         """
         _, payload = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION,
+            function_id=FunctionID.GET_ILLUMINANCE_CALLBACK_CONFIGURATION,
             response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c I I')
@@ -163,7 +164,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
         return GetIlluminanceCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
-    async def set_configuration(self, illuminance_range=IlluminanceRange.LUX8000, integration_time=IntegrationTime.T150MS, response_expected=False):
+    async def set_configuration(self, illuminance_range=IlluminanceRange.LUX8000, integration_time=IntegrationTime.T150MS, response_expected=True):
         """
         Sets the configuration. It is possible to configure an illuminance range
         between 0-600lux and 0-64000lux and an integration time between 50ms and 400ms.
@@ -212,8 +213,9 @@ class BrickletAmbientLightV3(BrickletWithMCU):
             function_id=FunctionID.GET_CONFIGURATION,
             response_expected=True
         )
-
-        return GetConfiguration(*unpack_payload(payload, 'B B'))
+        illuminance_range, integration_time = unpack_payload(payload, 'B B')
+        illuminance_range, integration_time = IlluminanceRange(illuminance_range), IntegrationTime(integration_time)
+        return GetConfiguration(illuminance_range, integration_time)
 
     def __value_to_SI(self, value):
         """
@@ -223,16 +225,4 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
     def __SI_to_value(self, value):
         return int(value * 100)
-
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = self.__value_to_SI(
-                unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            )
-            super()._process_callback(header, payload)
 
