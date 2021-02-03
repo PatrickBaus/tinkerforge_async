@@ -254,7 +254,7 @@ class IPConnectionAsync(object):
         elif header['response_expected']:
             try:
                 # Mark the future as done
-                self.__pending_requests[header['sequence_number']].set_result((header, payload,))
+                self.__pending_requests.pop(header['sequence_number']).set_result((header, payload,))
             except KeyError:
                 # Drop the packet, because it is not our sequence number
                 pass
