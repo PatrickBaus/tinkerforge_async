@@ -44,6 +44,7 @@ async def run_example(packet, callback_queue):
     print('Registering bricklet')
     bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
     print('Identity:', await bricklet.get_identity())
+
     # Register the callback queue used by process_callbacks()
     # We can register the same queue for multiple callbacks.
     bricklet.register_event_queue(bricklet.CallbackID.TEMPERATURE, callback_queue)
@@ -57,6 +58,9 @@ async def run_example(packet, callback_queue):
     await bricklet.set_noise_rejection_filter(filter_settings)
 
     print('Is a sensor connected?', await bricklet.is_sensor_connected())
+
+    print('Sensor type:', bricklet.sensor_type)
+    bricklet.sensor_type = bricklet.SensorType.PT_100
 
     wire_mode = await bricklet.get_wire_mode()
     print('Wire mode:', wire_mode)
