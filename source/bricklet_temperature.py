@@ -244,15 +244,3 @@ class BrickletTemperature(Device):
     def __SI_to_value(self, value):
         return int(value * 100)
 
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = self.__value_to_SI(
-                unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            )
-            super()._process_callback(header, payload)
-

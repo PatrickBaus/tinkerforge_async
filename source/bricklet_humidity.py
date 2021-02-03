@@ -308,15 +308,3 @@ class BrickletHumidity(Device):
     def __SI_to_value(self, value):
         return int(value * 10)
 
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            if header['function_id'] in (CallbackID.HUMIDITY, CallbackID.HUMIDITY_REACHED):
-                payload = self.__value_to_SI(payload)
-            super()._process_callback(header, payload)
-

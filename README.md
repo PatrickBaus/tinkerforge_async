@@ -14,7 +14,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 |[Ambient Light 3.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)|:heavy_check_mark:|:x:|
 |[Analog In](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Barometer](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|:x:|
+|[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[IO-16](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)|:heavy_check_mark:|:heavy_check_mark:|
@@ -24,7 +24,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 |[PTC Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Segment Display 4x7 Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)|:heavy_check_mark:|:x:|
-|[Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)|:heavy_check_mark:|:x:|
+|[Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Temperature 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html)|:heavy_check_mark:|:x:|
 
 # Changes made to the API
