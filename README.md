@@ -20,7 +20,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 |[IO-16](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Motion Detector 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Motion_Detector_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)|:heavy_check_mark:|:x:|
+|[PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[PTC Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Segment Display 4x7 Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)|:heavy_check_mark:|:x:|

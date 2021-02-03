@@ -51,6 +51,11 @@ class WireMode(Enum):
     WIRE_3 = 3
     WIRE_4 = 4
 
+@unique
+class SensorType(Enum):
+    PT_100 = 0
+    PT_1000 = 1
+
 class BrickletPtc(Device):
     """
     Reads temperatures from Pt100 und Pt1000 sensors
@@ -66,17 +71,28 @@ class BrickletPtc(Device):
     ThresholdOption = ThresholdOption
     LineFilter = LineFilter
     WireMode = WireMode
+    SensorType = SensorType
 
     CALLBACK_FORMATS = {
         CallbackID.TEMPERATURE: 'i',
         CallbackID.TEMPERATURE_REACHED: 'i',
         CallbackID.RESISTANCE: 'i',
-        CallbackID.RESISTANCE: 'i',
         CallbackID.RESISTANCE_REACHED: 'i',
-        CallbackID.SENSOR_CONNECTED: 'i',
+        CallbackID.SENSOR_CONNECTED: '!',
     }
 
-    def __init__(self, uid, ipcon):
+    @property
+    def sensor_type(self):
+        return self.__sensor_type
+
+    @sensor_type.setter
+    def sensor_type(self, value):
+        if not type(value) is SensorType:
+            self.__sensor_type = SensorType(value)
+        else:
+            self.__sensor_type = value
+
+    def __init__(self, uid, ipcon, sensor_type=SensorType.PT_100):
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -84,6 +100,7 @@ class BrickletPtc(Device):
         super().__init__(uid, ipcon)
 
         self.api_version = (2, 0, 1)
+        self.sensor_type = sensor_type    # Use the setter to automatically convert to enum
 
     async def get_temperature(self):
         """
@@ -100,7 +117,7 @@ class BrickletPtc(Device):
             function_id=FunctionID.GET_TEMPERATURE,
             response_expected=True
         )
-        return self.__value_to_SI(unpack_payload(payload, 'i'))
+        return self.__value_to_SI_temperature(unpack_payload(payload, 'i'))
 
     async def get_resistance(self):
         """
@@ -120,7 +137,7 @@ class BrickletPtc(Device):
             function_id=FunctionID.GET_RESISTANCE,
             response_expected=True
         )
-        return unpack_payload(payload, 'i')
+        return self.__value_to_SI_resistance(unpack_payload(payload, 'i'))
 
     async def set_temperature_callback_period(self, period=0, response_expected=True):
         """
@@ -212,7 +229,12 @@ class BrickletPtc(Device):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_THRESHOLD,
-            data=pack_payload((option.value.encode('ascii'), self.__SI_to_value(minimum), self.__SI_to_value(maximum)), 'c i i'),
+            data=pack_payload(
+              (
+                option.value.encode('ascii'),
+                self.__SI_temperature_to_value(minimum),
+                self.__SI_temperature_to_value(maximum)
+              ), 'c i i'),
             response_expected=response_expected
         )
         if response_expected:
@@ -230,7 +252,7 @@ class BrickletPtc(Device):
         )
         option, minimum, maximum = unpack_payload(payload, 'c i i')
         option = ThresholdOption(option)
-        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
+        minimum, maximum = self.__value_to_SI_temperature(minimum), self.__value_to_SI_temperature(maximum)
         return GetTemperatureCallbackThreshold(option, minimum, maximum)
 
     async def set_resistance_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
@@ -257,7 +279,12 @@ class BrickletPtc(Device):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_RESISTANCE_CALLBACK_THRESHOLD,
-            data=pack_payload((option.value.encode('ascii'), minimum, maximum), 'c i i'),
+            data=pack_payload(
+              (
+                option.value.encode('ascii'),
+                self.__SI_resistance_to_value(minimum),
+                self.__SI_resistance_to_value(maximum)
+              ), 'c i i'),
             response_expected=response_expected
         )
         if response_expected:
@@ -275,6 +302,7 @@ class BrickletPtc(Device):
         )
         option, minimum, maximum = unpack_payload(payload, 'c i i')
         option = ThresholdOption(option)
+        minimum, maximum = self.__value_to_SI_resistance(minimum), self.__value_to_SI_resistance(maximum)
         return GetResistanceCallbackThreshold(option, minimum, maximum)
 
     async def set_debounce_period(self, debounce_period=100, response_expected=True):
@@ -395,7 +423,7 @@ class BrickletPtc(Device):
         )
         return WireMode(unpack_payload(payload, 'B'))
 
-    async def set_sensor_connected_callback_configuration(self, enabled):
+    async def set_sensor_connected_callback_configuration(self, enabled, response_expected=True):
         """
         If you enable this callback, the :cb:`Sensor Connected` callback is triggered
         every time a Pt sensor is connected/disconnected.
@@ -427,24 +455,28 @@ class BrickletPtc(Device):
         )
         return unpack_payload(payload, '!')
 
-    def __value_to_SI(self, value):
+    def __value_to_SI_temperature(self, value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 100
 
-    def __SI_to_value(self, value):
+    def __SI_temperature_to_value(self, value):
         return int(value * 100)
 
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = self.__value_to_SI(
-                unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            )
-            super()._process_callback(header, payload)
+    def __value_to_SI_resistance(self, value):
+        """
+        Convert to the sensor value to SI units
+        """
+        value = Decimal(value) * 390 / 32768
+        if self.__sensor_type is SensorType.PT_1000:
+            value *= 10
+        return value
+
+    def __SI_resistance_to_value(self, value):
+        if self.__sensor_type is SensorType.PT_1000:
+            value /= 10
+        
+        return int(value * 32768 / 390)
+
 

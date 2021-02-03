@@ -25,11 +25,11 @@ class DeviceFactory:
     def register(self, device):
         self.__available_devices[device.DEVICE_IDENTIFIER] = device
 
-    def get(self, device_id, uid, ipcon):
+    def get(self, device_id, uid, ipcon, *args, **kwargs):
         device = self.__available_devices.get(device_id)
         if device is None:
             raise ValueError(f"No device available for id {device_id}")
-        return device(uid, ipcon)
+        return device(uid, ipcon, *args, **kwargs)
 
 device_factory = DeviceFactory()
 
