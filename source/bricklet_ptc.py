@@ -476,7 +476,5 @@ class BrickletPtc(Device):
     def __SI_resistance_to_value(self, value):
         if self.__sensor_type is SensorType.PT_1000:
             value /= 10
-        
         return int(value * 32768 / 390)
-
 
