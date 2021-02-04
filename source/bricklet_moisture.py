@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
-from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, ThresholdOption
