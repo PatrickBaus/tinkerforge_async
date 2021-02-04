@@ -47,6 +47,11 @@ class WireMode(Enum):
     WIRE_3 = 3
     WIRE_4 = 4
 
+@unique
+class SensorType(Enum):
+    PT_100 = 0
+    PT_1000 = 1
+
 class BrickletPtcV2(BrickletWithMCU):
     """
     Measures ambient temperature with 0.2 K accuracy
@@ -62,6 +67,7 @@ class BrickletPtcV2(BrickletWithMCU):
     ThresholdOption = ThresholdOption
     LineFilter = LineFilter
     WireMode = WireMode
+    SensorType = SensorType
 
     CALLBACK_FORMATS = {
         CallbackID.TEMPERATURE: 'i',
@@ -69,7 +75,18 @@ class BrickletPtcV2(BrickletWithMCU):
         CallbackID.SENSOR_CONNECTED: '!',
     }
 
-    def __init__(self, uid, ipcon):
+    @property
+    def sensor_type(self):
+        return self.__sensor_type
+
+    @sensor_type.setter
+    def sensor_type(self, value):
+        if not type(value) is SensorType:
+            self.__sensor_type = SensorType(value)
+        else:
+            self.__sensor_type = value
+
+    def __init__(self, uid, ipcon, sensor_type=SensorType.PT_100):
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -77,6 +94,7 @@ class BrickletPtcV2(BrickletWithMCU):
         super().__init__(uid, ipcon)
 
         self.api_version = (2, 0, 0)
+        self.sensor_type = sensor_type    # Use the setter to automatically convert to enum
 
     async def get_temperature(self):
         """
@@ -94,7 +112,7 @@ class BrickletPtcV2(BrickletWithMCU):
             function_id=FunctionID.GET_TEMPERATURE,
             response_expected=True
         )
-        return self.__value_to_SI(unpack_payload(payload, 'i'))
+        return self.__value_to_SI_temperature(unpack_payload(payload, 'i'))
 
     async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
@@ -129,8 +147,6 @@ class BrickletPtcV2(BrickletWithMCU):
         if not type(option) is ThresholdOption:
             option = ThresholdOption(option)
         assert period >= 0
-        assert minimum >= 0
-        assert maximum >= 0
 
         result = await self.ipcon.send_request(
             device=self,
@@ -140,8 +156,8 @@ class BrickletPtcV2(BrickletWithMCU):
                 int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
-                self.__SI_to_value(minimum),
-                self.__SI_to_value(maximum)
+                self.__SI_temperature_to_value(minimum),
+                self.__SI_temperature_to_value(maximum)
               ), 'I ! c i i'),
             response_expected=response_expected
         )
@@ -161,7 +177,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c i i')
         option = ThresholdOption(option)
-        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
+        minimum, maximum = self.__value_to_SI_temperature(minimum), self.__value_to_SI_temperature(maximum)
         return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def get_resistance(self):
@@ -183,7 +199,7 @@ class BrickletPtcV2(BrickletWithMCU):
             function_id=FunctionID.GET_RESISTANCE,
             response_expected=True
         )
-        return unpack_payload(payload, 'i')
+        return self.__value_to_SI_resistance(unpack_payload(payload, 'i'))
 
     async def set_resistance_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
@@ -229,8 +245,8 @@ class BrickletPtcV2(BrickletWithMCU):
                 int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
-                int(minimum),
-                int(maximum),
+                self.__SI_resistance_to_value(minimum),
+                self.__SI_resistance_to_value(maximum)
               ), 'I ! c i i'),
             response_expected=response_expected
         )
@@ -250,6 +266,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c i i')
         option = ThresholdOption(option)
+        minimum, maximum = self.__value_to_SI_resistance(minimum), self.__value_to_SI_resistance(maximum)
         return GetResistanceCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def set_noise_rejection_filter(self, line_filter=LineFilter.FREQUENCY_50HZ, response_expected=False):
@@ -415,12 +432,26 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    def __value_to_SI(self, value):
+    def __value_to_SI_temperature(self, value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 100
 
-    def __SI_to_value(self, value):
+    def __SI_temperature_to_value(self, value):
         return int(value * 100)
+
+    def __value_to_SI_resistance(self, value):
+        """
+        Convert to the sensor value to SI units
+        """
+        value = Decimal(value) * 390 / 32768
+        if self.__sensor_type is SensorType.PT_1000:
+            value *= 10
+        return value
+
+    def __SI_resistance_to_value(self, value):
+        if self.__sensor_type is SensorType.PT_1000:
+            value /= 10
+        return int(value * 32768 / 390)
 
