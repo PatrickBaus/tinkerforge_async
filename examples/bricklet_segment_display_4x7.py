@@ -53,21 +53,21 @@ async def run_example(packet, callback_queue):
     bricklet.register_event_queue(bricklet.CallbackID.COUNTER_FINISHED, callback_queue)
 
     print('Setting segments to "00:00"')
-    await bricklet.set_segments(segments=[DIGITS[0],DIGITS[0],DIGITS[0],DIGITS[0]], brightness=3, colon=True)
+    await bricklet.set_segments(segments=(DIGITS[0],DIGITS[0],DIGITS[0],DIGITS[0]), brightness=3, colon=True)
     print('Get segments:', await bricklet.get_segments())
     print('Counting from 0 to 5 and back again')
     await bricklet.start_counter(value_from=0, value_to=5, increment=1, length=1000)
     for i in range(6):
-        print('Counter value: ', await bricklet.get_counter_value())
+        print('Counter value:', await bricklet.get_counter_value())
         await asyncio.sleep(1)    # Wait for 1 second
 
     await bricklet.start_counter(value_from=5, value_to=0, increment=-1, length=1000)
     for i in range(5):
         await asyncio.sleep(1)    # Wait for 1 second
-        print('Counter value: ', await bricklet.get_counter_value())
+        print('Counter value:', await bricklet.get_counter_value())
 
     print('Turning off segments')
-    await bricklet.set_segments(segments=[0,0,0,0], brightness=0, colon=True)
+    await bricklet.set_segments()
 
     # Terminate the loop
     asyncio.create_task(shutdown())

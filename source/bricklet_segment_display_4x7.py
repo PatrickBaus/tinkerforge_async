@@ -46,7 +46,7 @@ class BrickletSegmentDisplay4x7(Device):
 
         self.api_version = (2, 0, 0)
 
-    async def set_segments(self, segments, brightness=7, colon=False, response_expected=False):
+    async def set_segments(self, segments=(0,0,0,0), brightness=7, colon=False, response_expected=False):
         """
         The 7-segment display can be set with bitmaps. Every bit controls one
         segment:
