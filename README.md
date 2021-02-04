@@ -117,5 +117,9 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    - `BrickletPtc()` takes an additional parameter to define the type of sensor. The options are `BrickletPtc.SensorType.PT_100` and `BrickletPtc.SensorType.PT_1000`. This only determines the resistance returned by the bricklet. The default is `BrickletPtc.SensorType.PT_100`.
    - `BrickletPtc.sensor_type` getter and setter to change the type of sensor used.
 
+- #### [PTC Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)
+   - `BrickletPtcV2()` takes an additional parameter to define the type of sensor. The options are `BrickletPtc.SensorType.PT_100` and `BrickletPtc.SensorType.PT_1000`. This only determines the resistance returned by the bricklet. The default is `BrickletPtc.SensorType.PT_100`.
+   - `BrickletPtcV2.sensor_type` getter and setter to change the type of sensor used.
+
 - #### [Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)
    - `BrickletSegmentDisplay4x7V2.set_segments()` takes a `list`/`tuple` of 4 `int` instead of digit0, digit1, digit2, digit3. This is the same API as the older [Segment Display 4x7 Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html).
