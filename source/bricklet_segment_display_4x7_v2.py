@@ -6,7 +6,7 @@ from .devices import DeviceIdentifier, BrickletWithMCU
 from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
-GetSegments = namedtuple('Segments', ['digit0', 'digit1', 'digit2', 'digit3', 'colon', 'tick'])
+GetSegments = namedtuple('Segments', ['segments', 'colon', 'tick'])
 
 @unique
 class CallbackID(Enum):
@@ -50,7 +50,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         self.api_version = (2, 0, 0)
 
-    async def set_segments(self, digit0, digit1, digit2, digit3, colon, tick, response_expected=False):
+    async def set_segments(self, segments=(0,0,0,0), colon=(False,False), tick=False, response_expected=False):
         """
         Sets the segments of the Segment Display 4x7 Bricklet 2.0 segment-by-segment.
 
@@ -63,17 +63,19 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
            :alt: Indices of segments
            :align: center
         """
-        digit0 = list(map(bool, digit0))
-        digit1 = list(map(bool, digit1))
-        digit2 = list(map(bool, digit2))
-        digit3 = list(map(bool, digit3))
-        colon = list(map(bool, colon))
+        assert (len(segments) == 4 and all(0 <= segment <= 255 for segment in segments))
+        assert len(colon) == 2
         tick = bool(tick)
 
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SEGMENTS,
-            data=pack_payload((digit0, digit1, digit2, digit3, colon, tick), '8! 8! 8! 8! 2! !'),
+            data=pack_payload(
+              (
+                list(map(int, segments)),
+                list(map(bool, colon)),
+                tick
+              ), '4B 2! !'),
             response_expected=response_expected
         )
         if response_expected:
@@ -83,20 +85,14 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
     async def get_segments(self):
         """
-        Returns the temperature of the sensor. The value
-        has a range of -2500 to 8500 and is given in °C/100,
-        e.g. a value of 4223 means that a temperature of 42.23 °C is measured.
-
-        If you want to get the temperature periodically, it is recommended
-        to use the :cb:`Temperature` callback and set the period with
-        :func:`Set Temperature Callback Period`.
+        Returns the segment data as set by :func:`Set Segments`.
         """
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_SEGMENTS,
             response_expected=True
         )
-        return  GetSegments(*unpack_payload(payload, '8! 8! 8! 8! 2! !'))
+        return  GetSegments(*unpack_payload(payload, '4B 2! !'))
 
     async def set_brightness(self, brightness=7, response_expected=False):
         """
@@ -108,7 +104,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         result = await self.ipcon.send_request(
             device=self,
-            function_id=FunctionID.SET_SET_BRIGHTNESS,
+            function_id=FunctionID.SET_BRIGHTNESS,
             data=pack_payload((int(brightness),), 'B'),
             response_expected=response_expected
         )
@@ -149,7 +145,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_NUMERIC_VALUE,
-            data=pack_payload((heater_config.value,), '4b'),
+            data=pack_payload((value,), '4b'),
             response_expected=response_expected
         )
         if response_expected:
@@ -167,7 +163,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
            :alt: Indices of selected segments
            :align: center
         """
-        assert (0 <= segment <= 31)
+        assert (0 <= segment <= 34)
 
         result = await self.ipcon.send_request(
             device=self,
@@ -183,7 +179,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         """
         Returns the value of a single segment.
         """
-        assert (0 <= segment <= 31)
+        assert (0 <= segment <= 34)
 
         _, payload = await self.ipcon.send_request(
             device=self,

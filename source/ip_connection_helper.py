@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import math
 import struct
 
 # Taken from Tinkerforge ip_connection.py
