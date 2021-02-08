@@ -44,7 +44,7 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    New style:
    ```python
    bricklet = BrickletHumidity(UID, ipcon)
-   result = await bricklet.set_humidity_callback_period(1000, response_expected=True)    # True if successful
+   await bricklet.set_humidity_callback_period(1000, response_expected=True)    # Raises an exception if unsuccessful
    ```
  - Replaced all constants with Enums and enforced their use using assertions. This will allow beginners to spot their mistakes earlier and make the code more readable, including any debug output statements.
 
