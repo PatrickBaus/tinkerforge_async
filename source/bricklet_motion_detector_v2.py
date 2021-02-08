@@ -129,13 +129,3 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
 
         return GetIndicator(*unpack_payload(payload, 'B B B'))
 
-    def _process_callback(self, header, payload):
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the callbackID is unknown
-            raise UnknownFunctionError from None
-        else:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            super()._process_callback(header, payload)
-
