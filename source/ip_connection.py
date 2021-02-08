@@ -239,7 +239,14 @@ class IPConnectionAsync(object):
             try:
                 # Mark the future as done
                 future = self.__pending_requests.pop(header['sequence_number'])
-                future.set_result((header, payload))
+                if header['flags'] is Flags.OK:
+                    future.set_result((header, payload))
+                elif header['flags'] is Flags.FUNCTION_NOT_SUPPORTED:
+                    future.set_exception(AttributeError('Function not supported: {function_id}.'.format(function_id=header['function_id'])))
+                elif header['flags'] is Flags.INVALID_PARAMETER:
+                    future.set_exception(ValueError('Invalid parameter.'))
+                else:
+                    future.set_result((header, payload))
             except KeyError:
                 # Drop the packet, because it is not our sequence number
                 pass
