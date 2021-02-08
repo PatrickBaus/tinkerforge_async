@@ -78,6 +78,9 @@ class Device(object):
     RESPONSE_EXPECTED_TRUE = 2 # setter
     RESPONSE_EXPECTED_FALSE = 3 # setter, default
 
+    def __repr__(self):
+        return self.DEVICE_DISPLAY_NAME
+
     @property
     def ipcon(self):
         """
@@ -108,30 +111,41 @@ class Device(object):
 
     def _process_callback(self, header, payload):
         """
-        This function will only push the payload to the output queue. The payload still needs to be unpacked.
-        This is to be done by the bricklet and then the payload is to be handed down to this function via super().
+        This function will push the payload to the output queue. If the payload is None, no callback will be triggered.
         """
-        # CallbackID and CALLBACK_FORMATS is defined by the brick/bricklet
+        self.__process_callback_header(header)
+        payload, done = self._process_callback_payload(header, payload)
+
+        if done:
+            # Try to push it to the output queue. If the queue is full, drop the oldest packet and insert it again
+            try:
+                self.__registered_queues[header['function_id']].put_nowait({
+                    'timestamp'  : int(time.time()),
+                    'sender'     : self,
+                    'function_id': header['function_id'],
+                    'sid'        : header.get('sid', 0),
+                    'payload'    : payload,
+                })
+            except asyncio.QueueFull:
+                # TODO: log a warning, that we are dropping packets
+                self.__registered_queues[header['function_id']].get_nowait()
+                self.__registered_queues[header['function_id']].put_nowait(payload)
+
+    def __process_callback_header(self, header):
+        # CallbackID is defined by the brick/bricklet
         try:
             header['function_id'] = self.CallbackID(header['function_id'])
         except ValueError:
             # ValueError: raised if the function_id is unknown
             raise UnknownFunctionError from None
-        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
 
-        # Try to push it to the output queue. If the queue is full, drop the oldest packet and insert it again
-        try:
-            self.__registered_queues[header['function_id']].put_nowait({
-                'timestamp': int(time.time()),
-                'uid': self.uid,
-                'device_id': self.DEVICE_IDENTIFIER,
-                'function_id': header['function_id'],
-                'payload': payload,
-            })
-        except asyncio.QueueFull:
-            # TODO: log a warning, that we are dropping packets
-            self.__registered_queues[header['function_id']].get_nowait()
-            self.__registered_queues[header['function_id']].put_nowait(payload)
+    def _process_callback_payload(self, header, payload):
+        """
+        Process the callback using the bricklet callback format. This function shall be
+        overwritten, if processing of the payload is required.
+        """
+        return unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']]), True    # payload, done
+
 
     def register_event_queue(self, event_id, queue):
         """

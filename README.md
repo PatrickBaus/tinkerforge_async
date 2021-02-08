@@ -92,7 +92,13 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
 
    Example:
    ```python
-   {'timestamp': 1525308878, 'uid': 30842, 'device_id': <DeviceIdentifier.BrickletHumidity: 27>, 'function_id': <CallbackID.humidity_reached: 15>, 'payload': Decimal('43.6')}
+   {'timestamp': 1525308878, 'sender': Humidity Bricklet, 'device_id': <DeviceIdentifier.BrickletHumidity: 27>, 'function_id': <CallbackID.humidity_reached: 15>, 'sid': 0, 'payload': Decimal('43.6')}
+   ```
+
+ - Added the concept of secondary ids (`sid`). By default the secondary id is `0`. If there is more than one sensor on the bricklet, they will have a `sid` value of 1,2, etc. This is especially useful for sensors like the [Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html), which returns its two channels via the same callback.
+   Example:
+   ```python
+   {'timestamp': 1612785631, 'sender': Humidity Bricklet 2.0, 'function_id': <CallbackID.TEMPERATURE: 8>, 'sid': 1, 'payload': Decimal('30.64')}
    ```
 
  - New functions:
