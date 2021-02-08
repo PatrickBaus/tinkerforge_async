@@ -1,0 +1,432 @@
+# -*- coding: utf-8 -*-
+import asyncio
+from collections import namedtuple
+from enum import Enum, unique
+
+from .devices import DeviceIdentifier, BrickletWithMCU
+from .ip_connection import Flags
+from .ip_connection_helper import pack_payload, unpack_payload
+
+GetConfiguration = namedtuple('Configuration', ['baudrate', 'parity', 'stopbits', 'wordlength', 'flowcontrol'])
+GetBufferConfig = namedtuple('BufferConfig', ['send_buffer_size', 'receive_buffer_size'])
+GetBufferStatus = namedtuple('BufferStatus', ['send_buffer_used', 'receive_buffer_used'])
+GetErrorCount = namedtuple('ErrorCount', ['error_count_overrun', 'error_count_parity'])
+
+class Rs232IOError(Exception):
+    pass
+
+@unique
+class CallbackID(Enum):
+    READ = 12
+    ERROR_COUNT = 13
+    FRAME_READABLE = 16
+
+@unique
+class FunctionID(Enum):
+    WRITE_LOW_LEVEL = 1
+    READ_LOW_LEVEL = 2
+    ENABLE_READ_CALLBACK = 3
+    DISABLE_READ_CALLBACK = 4
+    IS_READ_CALLBACK_ENABLED = 5
+    SET_CONFIGURATION = 6
+    GET_CONFIGURATION = 7
+    SET_BUFFER_CONFIG = 8
+    GET_BUFFER_CONFIG = 9
+    GET_BUFFER_STATUS = 10
+    GET_ERROR_COUNT = 11
+    SET_FRAME_READABLE_CALLBACK_CONFIGURATION = 14
+    GET_FRAME_READABLE_CALLBACK_CONFIGURATION = 15
+
+@unique
+class Parity(Enum):
+    NONE = 0
+    ODD = 1
+    EVEN = 2
+
+@unique
+class StopBits(Enum):
+    ONE = 1
+    TWO = 2
+
+@unique
+class WordLength(Enum):
+    LENGTH_5 = 5
+    LENGTH_6 = 6
+    LENGTH_7 = 7
+    LENGTH_8 = 8
+
+@unique
+class FlowControl(Enum):
+    OFF = 0
+    SOFTWARE = 1
+    HARDWARE = 2
+
+class BrickletRS232V2(BrickletWithMCU):
+    """
+    Communicates with RS232 devices
+    """
+
+    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletRs232_V2
+    DEVICE_DISPLAY_NAME = 'RS232 Bricklet 2.0'
+    DEVICE_URL_PART = 'rs232_v2' # internal
+
+    # Convenience imports, so that the user does not need to additionally import them
+    CallbackID = CallbackID
+    FunctionID = FunctionID
+    Parity = Parity
+    StopBits = StopBits
+    WordLength = WordLength
+    FlowControl = FlowControl
+
+    CALLBACK_FORMATS = {
+        CallbackID.READ: 'H H 60B',
+        CallbackID.ERROR_COUNT: 'I I',
+        CallbackID.FRAME_READABLE: 'H',
+    }
+
+    def __init__(self, uid, ipcon):
+        """
+        Creates an object with the unique device ID *uid* and adds it to
+        the IP Connection *ipcon*.
+        """
+        super().__init__(uid, ipcon)
+
+        self.__lock = None    # We create the the lock(), when needed to ensure the loop is running
+        self.__callback_read_buffer = bytearray()
+
+        self.api_version = (2, 0, 1)
+
+    async def __read_low_level(self, length):
+        """
+        Returns up to *length* characters from receive buffer.
+
+        Instead of polling with this function, you can also use
+        callbacks. But note that this function will return available
+        data only when the read callback is disabled.
+        See :func:`Enable Read Callback` and :cb:`Read` callback.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.READ_LOW_LEVEL,
+            data=pack_payload((int(length),), 'H'),
+            response_expected=True
+        )
+        bytes_read, offset, data, = unpack_payload(payload, 'H H 60B')
+        data = bytes(data[:bytes_read-offset])   # Strip null bytes that are not part of the message
+        return offset, data
+
+    async def __write_low_level(self, message_length, offset, data):
+        """
+        Writes characters to the RS232 interface. The characters can be binary data,
+        ASCII or similar is not necessary.
+
+        The return value is the number of characters that were written.
+
+        See :func:`Set Configuration` for configuration possibilities
+        regarding baud rate, parity and so on.
+        """
+        assert len(data) <= 60
+        msg = bytearray(data)
+        length = len(msg)
+        msg.extend([0] * (60 - length))    # always send 60 bytes
+
+        
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.WRITE_LOW_LEVEL,
+            data=pack_payload(
+              (
+                message_length,
+                int(offset),
+                msg,
+              ), 'H H 60B'),
+            response_expected=True
+        )
+        bytes_written = unpack_payload(payload, 'B')
+        if bytes_written != length:
+            raise Rs232IOError(f'Error writing message {data}, offset: {offset}. {bytes_written} bytes written out of {length} bytes.')
+        return bytes_written
+
+    async def set_read_callback(self, enable=False, response_expected=True):
+        """
+        Enables/Disables the :cb:`Read` callback. When enabled, it will disable the :cb:`Frame Readable` callback.
+
+        By default the callback is disabled.
+        """
+        if enable:
+            result = await self.ipcon.send_request(
+                device=self,
+                function_id=FunctionID.ENABLE_READ_CALLBACK,
+                response_expected=response_expected
+            )
+        else:
+            result = await self.ipcon.send_request(
+                device=self,
+                function_id=FunctionID.DISABLE_READ_CALLBACK,
+                response_expected=response_expected
+            )
+
+        if response_expected:
+            header, _ = result
+            return header['flags'] == Flags.OK
+
+    async def is_read_callback_enabled(self):
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.IS_READ_CALLBACK_ENABLED,
+            response_expected=True
+        )
+
+        return unpack_payload(payload, '!')
+
+    async def set_configuration(self, baudrate=115200, parity=Parity.NONE, stopbits=StopBits.ONE, wordlength=WordLength.LENGTH_8, flowcontrol=FlowControl.OFF, response_expected=False):
+        """
+        Sets the configuration for the RS232 communication.
+        """
+        assert (100 <= baudrate <= 2000000)
+        if not type(parity) is Parity:
+            parity = Parity(parity)
+        if not type(stopbits) is StopBits:
+            stopbits = StopBits(stopbits)
+        if not type(wordlength) is WordLength:
+            wordlength = WordLength(wordlength)
+        if not type(flowcontrol) is FlowControl:
+            flowcontrol = FlowControl(flowcontrol)
+
+        result = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_CONFIGURATION,
+            data=pack_payload(
+              (
+                int(baudrate),
+                parity.value,
+                stopbits.value,
+                wordlength.value,
+                flowcontrol.value,
+              ), 'I B B B B'),
+            response_expected=response_expected
+        )
+        if response_expected:
+            header, _ = result
+            return header['flags'] == Flags.OK
+
+    async def get_configuration(self):
+        """
+        Returns the configuration as set by :func:`Set Configuration`.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_CONFIGURATION,
+            response_expected=True
+        )
+
+        baudrate, parity, stopbits, wordlength, flowcontrol = unpack_payload(payload, 'I B B B B')
+        parity, stopbits, wordlength, flowcontrol = Parity(parity), StopBits(stopbits), WordLength(wordlength), FlowControl(flowcontrol)
+        return GetConfiguration(baudrate, parity, stopbits, wordlength, flowcontrol)
+
+    async def set_buffer_config(self, send_buffer_size=5120, receive_buffer_size=5120, response_expected=False):
+        """
+        Sets the send and receive buffer size in byte. In total the buffers have to be
+        10240 byte (10KiB) in size, the minimum buffer size is 1024 byte (1KiB) for each.
+
+        The current buffer content is lost if this function is called.
+
+        The send buffer holds data that is given by :func:`Write` and
+        can not be written yet. The receive buffer holds data that is
+        received through RS232 but could not yet be send to the
+        user, either by :func:`Read` or through :cb:`Read` callback.
+        """
+        assert (1024 <= send_buffer_size <= 9216)
+        assert (1024 <= receive_buffer_size <= 9216)
+        assert (send_buffer_size+receive_buffer_size <= 10240)
+
+        result = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_BUFFER_CONFIG,
+            data=pack_payload(
+              (
+                int(send_buffer_size),
+                int(receive_buffer_size)
+              ), 'H H'),
+            response_expected=response_expected
+        )
+        if response_expected:
+            header, _ = result
+            return header['flags'] == Flags.OK
+
+    async def get_buffer_config(self):
+        """
+        Returns the buffer configuration as set by :func:`Set Buffer Config`.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_BUFFER_CONFIG,
+            response_expected=True
+        )
+
+        return GetBufferConfig(*unpack_payload(payload, 'H H'))
+
+    async def get_buffer_status(self):
+        """
+        Returns the currently used bytes for the send and received buffer.
+
+        See :func:`Set Buffer Config` for buffer size configuration.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_BUFFER_STATUS,
+            response_expected=True
+        )
+
+        return GetBufferStatus(*unpack_payload(payload, 'H H'))
+
+    async def get_error_count(self):
+        """
+        Returns the currently used bytes for the send and received buffer.
+
+        See :func:`Set Buffer Config` for buffer size configuration.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_ERROR_COUNT,
+            response_expected=True
+        )
+
+        return GetErrorCount(*unpack_payload(payload, 'I I'))
+
+    async def set_frame_readable_callback_configuration(self, frame_size=0, response_expected=True):
+        """
+        Configures the :cb:`Frame Readable` callback. The frame size is the number of bytes, that have to be readable to trigger the callback.
+        A frame size of 0 disables the callback. A frame size greater than 0 enables the callback and disables the :cb:`Read` callback.
+
+        By default the callback is disabled.
+
+        .. versionadded:: 2.0.3$nbsp;(Plugin)
+        """
+        assert (0 <= frame_size <= 9216)
+
+        result = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_FRAME_READABLE_CALLBACK_CONFIGURATION,
+            data=pack_payload((int(frame_size),), 'H'),
+            response_expected=response_expected
+        )
+        if response_expected:
+            header, _ = result
+            return header['flags'] == Flags.OK
+
+    async def get_frame_readable_callback_configuration(self):
+        """
+        Returns the callback configuration as set by :func:`Set Frame Readable Callback Configuration`.
+
+        .. versionadded:: 2.0.3$nbsp;(Plugin)
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_FRAME_READABLE_CALLBACK_CONFIGURATION,
+            response_expected=True
+        )
+
+        return unpack_payload(payload, 'H')
+
+    async def write(self, message):
+        """
+        Writes characters to the RS232 interface. The characters can be binary data,
+        ASCII or similar is not necessary.
+
+        The return value is the number of characters that were written.
+
+        See :func:`Set Configuration` for configuration possibilities
+        regarding baud rate, parity and so on.
+        """
+        try:
+            message = message.encode('utf-8')
+        except AttributeError:
+            pass    # already a bytestring
+        if len(message) > 65535:
+            raise RuntimeError('Message length must not exceed 65535 bytes.')
+
+        # Split the message in chunks of 60 bytes
+        try:
+            chunks = [message[i:i+60] for i in range(0, len(message), 60)]
+        except ValueError:
+            # Raised if the length is 0
+            chunks = ['',]
+
+        if self.__lock is None:
+            self.__lock = asyncio.Lock()
+
+        # lock the connection to ensure, that the message does not get chopped up
+        bytes_written = 0
+        async with self.__lock:
+            for count, chunk in enumerate(chunks):
+                bytes_written += await self.__write_low_level(message_length=len(message), offset=count*60, data=chunk)
+
+        return bytes_written
+
+    async def __find_first_block(self, length):
+        """
+        Read the RS232 interface until we find a chunk with id 0, the start of a new
+        transaction.
+        """
+        while 'buffer not cleared':
+            offset, data = await self.__read_low_level(length)
+            if offset == 0:
+                return offset, data
+
+    async def read(self, length):
+        """
+        Returns up to *length* characters from receive buffer.
+
+        Instead of polling with this function, you can also use
+        callbacks. But note that this function will return available
+        data only when the read callback is disabled.
+        See :func:`Enable Read Callback` and :cb:`Read` callback.
+        """
+        if length == 0:
+            return b''
+
+        if self.__lock is None:
+            self.__lock = asyncio.Lock()
+
+        async with self.__lock:
+            result = bytearray()
+            number_of_chunks = length // 60 + 1 * bool(length % 60)
+
+            # Get the first chunk and check if it is in sync
+            offset, data = await self.__read_low_level(length)
+            if offset != 0:
+                # Drop all chunks, until we find chunk 0
+                offset, data = await self.__find_first_block(length)
+            result.extend(data)
+
+            for i in range(1, number_of_chunks):
+                offset, data = await self.__read_low_level(length)
+                if len(data) == 0 and offset == 0:
+                    # The bricklet returns 0, if there is no more data
+                    break
+                if offset != i*60:
+                    # If someone else is reading our stream, they will snatch a block.
+                    # Abort the read and throw an error. A new call to read() will clean up the
+                    # mess and drop all remaining chunks.
+                    raise Rs232IOError(f'Read out of sync. Wanted chunk {i}, got chunk {offset//60}. Data: {data}.')
+                result.extend(data)
+            return bytes(result)
+
+    def _process_callback_payload(self, header, payload):
+        # The READ callback constist of multiple chunks. We need to buffer them.
+        if header['function_id'] is CallbackID.READ:
+            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+            final_size, offset, data = payload
+            if final_size > offset + 60:
+                self.__callback_read_buffer.extend(data)
+            else:
+                self.__callback_read_buffer.extend(data[:final_size-offset])
+            if len(self.__callback_read_buffer) == final_size:
+                result = bytes(self.__callback_read_buffer)
+                self.__callback_read_buffer = bytearray()
+                return result, True   # payload, done
+            else:
+                return None, False    # payload, done
+        else:
+            return super()._process_callback_payload(header, payload)

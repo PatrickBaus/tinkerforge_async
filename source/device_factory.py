@@ -13,6 +13,7 @@ from .bricklet_moisture import BrickletMoisture
 from .bricklet_motion_detector_v2 import BrickletMotionDetectorV2
 from .bricklet_ptc import BrickletPtc
 from .bricklet_ptc_v2 import BrickletPtcV2
+from .bricklet_rs232_v2 import BrickletRS232V2
 from .bricklet_temperature import BrickletTemperature
 from .bricklet_temperature_v2 import BrickletTemperatureV2
 from .bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
@@ -48,5 +49,6 @@ device_factory.register(BrickletPtc)
 device_factory.register(BrickletPtcV2)
 device_factory.register(BrickletSegmentDisplay4x7)
 device_factory.register(BrickletSegmentDisplay4x7V2)
+device_factory.register(BrickletRS232V2)
 device_factory.register(BrickletTemperature)
 device_factory.register(BrickletTemperatureV2)
