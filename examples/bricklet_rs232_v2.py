@@ -22,7 +22,7 @@ async def process_frame_readable_callback(queue):
             # We will receive one callback for each frame, so we only read one frame at a time
             print(await bricklet.read(3))   # Read 3 bytes as set by run_example()
     except asyncio.CancelledError:
-        print('Callback queue canceled')
+        print('Frame readable callback queue canceled')
 
 async def process_callbacks(queue):
     """

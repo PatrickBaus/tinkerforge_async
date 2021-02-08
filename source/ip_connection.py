@@ -30,8 +30,8 @@ class EnumerationType(Enum):
 
 class Flags(Flag):
     OK = 0
-    INVALID_PARAMETER = 1
-    FUNCTION_NOT_SUPPORTED = 2
+    INVALID_PARAMETER = 64
+    FUNCTION_NOT_SUPPORTED = 128
 
 DEFAULT_WAIT_TIMEOUT = 2.5 # in seconds
 
@@ -60,22 +60,6 @@ def parse_header(data):
            }
 
 class IPConnectionAsync(object):
-    # TODO: Remove
-    # TODO: Implement authentication
-    # TODO: Implement disconnect_probe
-    FUNCTION_ENUMERATE = 254
-    FUNCTION_ADC_CALIBRATE = 251
-    FUNCTION_GET_ADC_CALIBRATION = 250
-    FUNCTION_READ_BRICKLET_UID = 249
-    FUNCTION_WRITE_BRICKLET_UID = 248
-    FUNCTION_READ_BRICKLET_PLUGIN = 247
-    FUNCTION_WRITE_BRICKLET_PLUGIN = 246
-    FUNCTION_DISCONNECT_PROBE = 128
-
-    CALLBACK_ENUMERATE = 253
-    CALLBACK_CONNECTED = 0
-    CALLBACK_DISCONNECTED = 1
-
     BROADCAST_UID = 0
 
     # See https://www.tinkerforge.com/en/doc/Low_Level_Protocols/TCPIP.html for details
@@ -172,7 +156,6 @@ class IPConnectionAsync(object):
                 # The future will be resolved by the main_loop() and __process_packet()
                 self.__pending_requests[sequence_number] = asyncio.Future()
                 header, payload  = await asyncio.wait_for(self.__pending_requests[sequence_number], self.__timeout)
-                #header, payload = await self.__get_response(sequence_number)
                 self.__logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
                 return header, payload
         finally:
