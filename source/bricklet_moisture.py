@@ -3,7 +3,6 @@ from collections import namedtuple
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, ThresholdOption
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetMoistureCallbackThreshold = namedtuple('MoistureCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -86,10 +85,6 @@ class BrickletMoisture(Device):
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_moisture_callback_period(self):
         """
@@ -134,9 +129,6 @@ class BrickletMoisture(Device):
               ), 'c H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_moisture_callback_threshold(self):
         """
@@ -171,9 +163,6 @@ class BrickletMoisture(Device):
             data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -202,9 +191,6 @@ class BrickletMoisture(Device):
             data=pack_payload((int(average),), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_moving_average(self):
         """

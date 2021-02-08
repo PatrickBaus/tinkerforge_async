@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, ThresholdOption
-from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -95,10 +94,6 @@ class BrickletTemperature(Device):
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_period(self):
         """
@@ -138,9 +133,6 @@ class BrickletTemperature(Device):
             data=pack_payload((option.value.encode('ascii'), self.__SI_to_value(minimum), self.__SI_to_value(maximum)), 'c h h'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_threshold(self):
         """
@@ -178,9 +170,6 @@ class BrickletTemperature(Device):
             data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -193,7 +182,7 @@ class BrickletTemperature(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_i2c_mode(self, mode=I2cOption.FAST, response_expected=False):
+    async def set_i2c_mode(self, mode=I2cOption.FAST, response_expected=True):
         """
         Sets the I2C mode. Possible modes are:
 
@@ -218,9 +207,6 @@ class BrickletTemperature(Device):
             data=pack_payload((mode.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_i2c_mode(self):
         """

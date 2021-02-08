@@ -7,7 +7,6 @@ import re
 import warnings
 
 from .devices import DeviceIdentifier, DeviceWithMCU, BrickletPort, ThresholdOption
-from .ip_connection import IPConnectionAsync, Flags
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
 GetChibiErrorLog = namedtuple('ChibiErrorLog', ['underrun', 'crc_error', 'no_ack', 'overflow'])
@@ -413,7 +412,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return Decimal(unpack_payload(payload, 'H')) / 1000
 
-    async def set_extension_type(self, extension, exttype, response_expected=False):
+    async def set_extension_type(self, extension, exttype, response_expected=True):
         """
         Writes the extension type to the EEPROM of a specified extension.
         The extension is either 0 or 1 (0 is the on the bottom, 1 is the one on top,
@@ -445,9 +444,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((extension.value,exttype.value), 'B I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_extension_type(self, extension):
         """
@@ -472,7 +468,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    async def set_chibi_address(self, address, response_expected=False):
+    async def set_chibi_address(self, address, response_expected=True):
         """
         Sets the address (1-255) belonging to the Chibi Extension.
 
@@ -488,9 +484,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((int(address),), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_chibi_address(self):
         """
@@ -503,7 +496,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, 'B')
 
-    async def set_chibi_master_address(self, address, response_expected=False):
+    async def set_chibi_master_address(self, address, response_expected=True):
         """
         Sets the address (1-255) of the Chibi Master. This address is used if the
         Chibi Extension is used as slave (i.e. it does not have a USB connection).
@@ -520,9 +513,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((int(address),), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_chibi_master_address(self):
         """
@@ -535,7 +525,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, 'B')
 
-    async def __set_chibi_slave_address(self, num, address, response_expected=False):
+    async def __set_chibi_slave_address(self, num, address, response_expected=True):
         """
         Sets up to 254 slave addresses. Valid addresses are in range 1-255. 0 has a
         special meaning, it is used as list terminator and not allowed as normal slave
@@ -562,21 +552,15 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((int(num),int(address)), 'B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
-    async def set_chibi_slave_addresses(self, addresses, response_expected=False):
+    async def set_chibi_slave_addresses(self, addresses, response_expected=True):
         assert (isinstance(addresses, tuple) or isinstance(addresses, list))
 
         if addresses[-1] != 0:
             addresses += type(addresses)([0])    # add a trailing [0], because it is the delimiter
 
         coros = [self.__set_chibi_slave_address(index, address, response_expected) for index, address in enumerate(addresses)]
-        result = await asyncio.gather(*coros)
-
-        if response_expected:
-            return result
+        await asyncio.gather(*coros)
 
     async def __get_chibi_slave_address(self, num):
         """
@@ -627,7 +611,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return GetChibiErrorLog(*unpack_payload(payload, 'H H H H'))
 
-    async def set_chibi_frequency(self, frequency, response_expected=False):
+    async def set_chibi_frequency(self, frequency, response_expected=True):
         """
         Sets the Chibi frequency range for the Chibi Extension. Possible values are:
 
@@ -653,9 +637,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((frequency.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_chibi_frequency(self):
         """
@@ -668,7 +649,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return ChibiFrequency(unpack_payload(payload, 'B'))
 
-    async def set_chibi_channel(self, channel, response_expected=False):
+    async def set_chibi_channel(self, channel, response_expected=True):
         """
         Sets the channel used by the Chibi Extension. Possible channels are
         different for different frequencies:
@@ -693,9 +674,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((int(channel),), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_chibi_channel(self):
         """
@@ -719,7 +697,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    async def set_rs485_address(self, address, response_expected=False):
+    async def set_rs485_address(self, address, response_expected=True):
         """
         Sets the address (0-255) belonging to the RS485 Extension.
 
@@ -738,9 +716,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((int(address),), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_rs485_address(self):
         """
@@ -753,7 +728,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, 'B')
 
-    async def __set_rs485_slave_address(self, num, address, response_expected=False):
+    async def __set_rs485_slave_address(self, num, address, response_expected=True):
         """
         Sets up to 255 slave addresses. Valid addresses are in range 1-255. 0 has a
         special meaning, it is used as list terminator and not allowed as normal slave
@@ -780,20 +755,14 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((int(num), int(address)), 'B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
-    async def set_rs485_slave_addresses(self, addresses, response_expected=False):
+    async def set_rs485_slave_addresses(self, addresses, response_expected=True):
         assert (isinstance(addresses, tuple) or isinstance(addresses, list))
 
         if addresses[-1] != 0:
             addresses += type(addresses)([0])    # add a trailing [0], because it is the delimiter
         coros = [self.__set_rs485_slave_address(index, address, response_expected) for index, address in enumerate(addresses)]
-        result = await asyncio.gather(*coros)
-
-        if response_expected:
-            return result
+        await asyncio.gather(*coros)
 
     async def __get_rs485_slave_address(self, num):
         """
@@ -832,7 +801,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, 'H')
 
-    async def set_rs485_configuration(self, speed, parity, stopbits, response_expected=False):
+    async def set_rs485_configuration(self, speed, parity, stopbits, response_expected=True):
         """
         Sets the configuration of the RS485 Extension. Speed is given in baud. The
         Master Brick will try to match the given baud rate as exactly as possible.
@@ -856,9 +825,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((int(speed), parity.value, int(stopbits)), 'I c B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_rs485_configuration(self):
         """
@@ -884,7 +850,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    async def set_wifi_configuration(self, ssid, connection, ip=(0, 0, 0, 0), subnet_mask=(0, 0, 0, 0), gateway=(0, 0, 0, 0), port=4223, response_expected=False):
+    async def set_wifi_configuration(self, ssid, connection, ip=(0, 0, 0, 0), subnet_mask=(0, 0, 0, 0), gateway=(0, 0, 0, 0), port=4223, response_expected=True):
         """
         Sets the configuration of the WIFI Extension. The ``ssid`` can have a max length
         of 32 characters. Possible values for ``connection`` are:
@@ -943,9 +909,6 @@ class BrickMaster(DeviceWithMCU):
                 ), '32s B 4B 4B 4B H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi_configuration(self):
         """
@@ -967,7 +930,7 @@ class BrickMaster(DeviceWithMCU):
             port
         )
 
-    async def set_wifi_encryption(self, encryption, key_index=1, eap_options=None, ca_certificate_length=0, client_certificate_length=0, private_key_length=0, response_expected=False):
+    async def set_wifi_encryption(self, encryption, key_index=1, eap_options=None, ca_certificate_length=0, client_certificate_length=0, private_key_length=0, response_expected=True):
         """
         Sets the encryption of the WIFI Extension. The first parameter is the
         type of the encryption. Possible values are:
@@ -1036,9 +999,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'B 50s B B H H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi_encryption(self):
         """
@@ -1101,7 +1061,7 @@ class BrickMaster(DeviceWithMCU):
             WifiState(state)
         )
 
-    async def refresh_wifi_status(self, response_expected=False):
+    async def refresh_wifi_status(self, response_expected=True):
         """
         Refreshes the Wi-Fi status (see :func:`Get Wifi Status`). To read the status
         of the Wi-Fi module, the Master Brick has to change from data mode to
@@ -1115,11 +1075,8 @@ class BrickMaster(DeviceWithMCU):
             function_id=FunctionID.REFRESH_WIFI_STATUS,
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
-    async def set_wpa_enterprise_username(self, username, response_expected=False):
+    async def set_wpa_enterprise_username(self, username, response_expected=True):
         """
         This is a convenience method, that wraps set_wifi_certificate() to allow setting
         the WPA Enterprise username without worrying about the correct offsets.
@@ -1142,7 +1099,7 @@ class BrickMaster(DeviceWithMCU):
         data = await self.get_wifi_certificate(0xFFFF)
         return bytes(data.data[:data.data_length]).decode('utf-8')
 
-    async def set_wpa_enterprise_password(self, password, response_expected=False):
+    async def set_wpa_enterprise_password(self, password, response_expected=True):
         """
         This is a convenience method, that wraps set_wifi_certificate() to allow setting
         the WPA Enterprise password without worrying about the correct offsets.
@@ -1165,7 +1122,7 @@ class BrickMaster(DeviceWithMCU):
         data = await self.get_wifi_certificate(0xFFFE)
         return bytes(data.data[:data.data_length]).decode('utf-8')
 
-    async def set_wifi_certificate(self, index, data, data_length, response_expected=False):
+    async def set_wifi_certificate(self, index, data, data_length, response_expected=True):
         """
         This function is used to set the certificate as well as password and username
         for WPA Enterprise. To set the username use index 0xFFFF,
@@ -1197,9 +1154,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'H 32B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi_certificate(self, index):
         """
@@ -1218,7 +1172,7 @@ class BrickMaster(DeviceWithMCU):
 
         return GetWifiCertificate(*unpack_payload(payload, '32B B'))
 
-    async def set_wifi_power_mode(self, mode, response_expected=False):
+    async def set_wifi_power_mode(self, mode, response_expected=True):
         """
         Sets the power mode of the WIFI Extension. Possible modes are:
 
@@ -1243,9 +1197,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi_power_mode(self):
         """
@@ -1284,7 +1235,7 @@ class BrickMaster(DeviceWithMCU):
 
         return GetWifiBufferInfo(*unpack_payload(payload, 'I H H'))
 
-    async def set_wifi_regulatory_domain(self, domain, response_expected=False):
+    async def set_wifi_regulatory_domain(self, domain, response_expected=True):
         """
         Sets the regulatory domain of the WIFI Extension. Possible domains are:
 
@@ -1310,9 +1261,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi_regulatory_domain(self):
         """
@@ -1338,7 +1286,7 @@ class BrickMaster(DeviceWithMCU):
 
         return Decimal(unpack_payload(payload, 'H')) / 1000
 
-    async def set_long_wifi_key(self, key, response_expected=False):
+    async def set_long_wifi_key(self, key, response_expected=True):
         """
         Sets a long Wi-Fi key (up to 63 chars, at least 8 chars) for WPA encryption.
         This key will be used
@@ -1365,9 +1313,6 @@ class BrickMaster(DeviceWithMCU):
                 ), '64s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_long_wifi_key(self):
         """
@@ -1386,7 +1331,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, '64s')
 
-    async def set_wifi_hostname(self, hostname, response_expected=False):
+    async def set_wifi_hostname(self, hostname, response_expected=True):
         """
         Sets the hostname of the WIFI Extension. The hostname will be displayed
         by access points as the hostname in the DHCP clients table.
@@ -1417,9 +1362,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((hostname, ), '16s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi_hostname(self):
         """
@@ -1438,7 +1380,7 @@ class BrickMaster(DeviceWithMCU):
         return unpack_payload(payload, '16s')
 
 
-    async def set_stack_current_callback_period(self, period, response_expected=False):
+    async def set_stack_current_callback_period(self, period, response_expected=True):
         """
         Sets the period in ms with which the :cb:`Stack Current` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -1459,9 +1401,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_stack_current_callback_period(self):
         """
@@ -1477,7 +1416,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, 'I')
 
-    async def set_stack_voltage_callback_period(self, period, response_expected=False):
+    async def set_stack_voltage_callback_period(self, period, response_expected=True):
         """
         Sets the period in ms with which the :cb:`Stack Voltage` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -1498,9 +1437,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_stack_voltage_callback_period(self):
         """
@@ -1516,7 +1452,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, 'I')
 
-    async def set_usb_voltage_callback_period(self, period, response_expected=False):
+    async def set_usb_voltage_callback_period(self, period, response_expected=True):
         """
         Sets the period in ms with which the :cb:`USB Voltage` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -1537,9 +1473,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_usb_voltage_callback_period(self):
         """
@@ -1555,7 +1488,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, 'I')
 
-    async def set_stack_current_callback_threshold(self, option, minimum, maximum, response_expected=False):
+    async def set_stack_current_callback_threshold(self, option, minimum, maximum, response_expected=True):
         """
         Sets the thresholds for the :cb:`Stack Current Reached` callback.
 
@@ -1589,9 +1522,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'c H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_stack_current_callback_threshold(self):
         """
@@ -1612,7 +1542,7 @@ class BrickMaster(DeviceWithMCU):
             Decimal(maximum)/1000,
         )
 
-    async def set_stack_voltage_callback_threshold(self, option, minimum, maximum, response_expected=False):
+    async def set_stack_voltage_callback_threshold(self, option, minimum, maximum, response_expected=True):
         """
         Sets the thresholds for the :cb:`Stack Voltage Reached` callback.
 
@@ -1646,9 +1576,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'c H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_stack_voltage_callback_threshold(self):
         """
@@ -1669,7 +1596,7 @@ class BrickMaster(DeviceWithMCU):
             Decimal(maximum)/1000,
         )
 
-    async def set_usb_voltage_callback_threshold(self, option, minimum, maximum, response_expected=False):
+    async def set_usb_voltage_callback_threshold(self, option, minimum, maximum, response_expected=True):
         """
         Sets the thresholds for the :cb:`USB Voltage Reached` callback.
 
@@ -1703,9 +1630,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'c H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_usb_voltage_callback_threshold(self):
         """
@@ -1726,7 +1650,7 @@ class BrickMaster(DeviceWithMCU):
             Decimal(maximum)//1000,
         )
 
-    async def set_debounce_period(self, debounce=100, response_expected=False):
+    async def set_debounce_period(self, debounce=100, response_expected=True):
         """
         Sets the period in ms with which the threshold callbacks
 
@@ -1755,9 +1679,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -1788,7 +1709,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, '!')
 
-    async def set_ethernet_configuration(self, connection, ip=(0, 0, 0, 0), subnet_mask=(0, 0, 0, 0), gateway=(0, 0, 0, 0), port=4223, response_expected=False):
+    async def set_ethernet_configuration(self, connection, ip=(0, 0, 0, 0), subnet_mask=(0, 0, 0, 0), gateway=(0, 0, 0, 0), port=4223, response_expected=True):
         """
         Sets the configuration of the Ethernet Extension. Possible values for
         ``connection`` are:
@@ -1836,9 +1757,6 @@ class BrickMaster(DeviceWithMCU):
                 ), 'B 4B 4B 4B H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_ethernet_configuration(self):
         """
@@ -1883,7 +1801,7 @@ class BrickMaster(DeviceWithMCU):
 
         return GetEthernetStatus(*unpack_payload(payload, '6B 4B 4B 4B I I 32s'))
 
-    async def set_ethernet_hostname(self, hostname, response_expected=False):
+    async def set_ethernet_hostname(self, hostname, response_expected=True):
         """
         Sets the hostname of the Ethernet Extension. The hostname will be displayed
         by access points as the hostname in the DHCP clients table.
@@ -1916,11 +1834,8 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((hostname, ), '32s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
-    async def set_ethernet_mac_address(self, mac_address, response_expected=False):
+    async def set_ethernet_mac_address(self, mac_address, response_expected=True):
         """
         Sets the MAC address of the Ethernet Extension. The Ethernet Extension should
         come configured with a valid MAC address, that is also written on a
@@ -1938,11 +1853,8 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((list(map(int, mac_address)), ), '6B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
-    async def set_ethernet_websocket_configuration(self, sockets, port, response_expected=False):
+    async def set_ethernet_websocket_configuration(self, sockets, port, response_expected=True):
         """
         Sets the Ethernet WebSocket configuration. The first parameter sets the number of socket
         connections that are reserved for WebSockets. The range is 0-7. The connections
@@ -1974,9 +1886,6 @@ class BrickMaster(DeviceWithMCU):
               ), 'B H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_ethernet_websocket_configuration(self):
         """
@@ -1992,7 +1901,7 @@ class BrickMaster(DeviceWithMCU):
 
         return GetEthernetWebsocketConfiguration(*unpack_payload(payload, 'B H'))
 
-    async def set_ethernet_authentication_secret(self, secret, response_expected=False):
+    async def set_ethernet_authentication_secret(self, secret, response_expected=True):
         """
         Sets the Ethernet authentication secret. The secret can be a string of up to 64
         characters. An empty string disables the authentication.
@@ -2021,9 +1930,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((secret, ), '64s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_ethernet_authentication_secret(self):
         """
@@ -2040,7 +1946,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, '64s')
 
-    async def set_wifi_authentication_secret(self, secret, response_expected=False):
+    async def set_wifi_authentication_secret(self, secret, response_expected=True):
         """
         Sets the WIFI authentication secret. The secret can be a string of up to 64
         characters. An empty string disables the authentication.
@@ -2069,9 +1975,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((secret, ), '64s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi_authentication_secret(self):
         """
@@ -2205,7 +2108,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return ReadWifi2SerialPort(*unpack_payload(payload, '60B B'))
 
-    async def set_wifi2_authentication_secret(self, secret, response_expected=False):
+    async def set_wifi2_authentication_secret(self, secret, response_expected=True):
         """
         Sets the WIFI authentication secret. The secret can be a string of up to 64
         characters. An empty string disables the authentication. The default value is
@@ -2235,9 +2138,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((secret, ), '64s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_authentication_secret(self):
         """
@@ -2254,7 +2154,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, '64s')
 
-    async def set_wifi2_configuration(self, port=4223, websocket_port=4280, website_port=80, phy_mode=PhyMode.WIFI_G, sleep_mode=0, website=False, response_expected=False):
+    async def set_wifi2_configuration(self, port=4223, websocket_port=4280, website_port=80, phy_mode=PhyMode.WIFI_G, sleep_mode=0, website=False, response_expected=True):
         """
         Sets the general configuration of the WIFI Extension 2.0.
 
@@ -2308,9 +2208,6 @@ class BrickMaster(DeviceWithMCU):
               ), 'H H H B B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_configuration(self):
         """
@@ -2363,7 +2260,7 @@ class BrickMaster(DeviceWithMCU):
             ap_connected_count
         )
 
-    async def set_wifi2_client_configuration(self, enable=True, ssid='tinkerforge', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), mac_address=(0,0,0,0,0,0), bssid=(0,0,0,0,0,0), response_expected=False):
+    async def set_wifi2_client_configuration(self, enable=True, ssid='tinkerforge', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), mac_address=(0,0,0,0,0,0), bssid=(0,0,0,0,0,0), response_expected=True):
         """
         Sets the client specific configuration of the WIFI Extension 2.0.
 
@@ -2422,9 +2319,6 @@ class BrickMaster(DeviceWithMCU):
                 ), '! 32s 4B 4B 4B 6B 6B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_client_configuration(self):
         """
@@ -2449,7 +2343,7 @@ class BrickMaster(DeviceWithMCU):
             bssid
         )
 
-    async def set_wifi2_client_hostname(self, hostname='wifi-extension-v2', response_expected=False):
+    async def set_wifi2_client_hostname(self, hostname='wifi-extension-v2', response_expected=True):
         """
         Sets the client hostname (up to 32 characters) of the WIFI Extension 2.0. The
         hostname will be displayed by access points as the hostname in the DHCP clients
@@ -2483,9 +2377,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((hostname, ), '32s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_client_hostname(self):
         """
@@ -2500,7 +2391,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '32s')
 
-    async def set_wifi2_client_password(self, password, response_expected=False):
+    async def set_wifi2_client_password(self, password, response_expected=True):
         """
         Sets the client password (up to 63 chars) for WPA/WPA2 encryption.
 
@@ -2524,9 +2415,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((password, ), '64s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_client_password(self):
         """
@@ -2549,7 +2437,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '64s')
 
-    async def set_wifi2_ap_configuration(self, enable=True, ssid='WIFI Extension 2.0 Access Point', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), encryption=WifiApEncryption.WPA2_PSK, hidden=False, channel=1, mac_address=(0,0,0,0,0,0), response_expected=False):
+    async def set_wifi2_ap_configuration(self, enable=True, ssid='WIFI Extension 2.0 Access Point', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), encryption=WifiApEncryption.WPA2_PSK, hidden=False, channel=1, mac_address=(0,0,0,0,0,0), response_expected=True):
         """
         Sets the access point specific configuration of the WIFI Extension 2.0.
 
@@ -2615,9 +2503,6 @@ class BrickMaster(DeviceWithMCU):
                 ), '! 32s 4B 4B 4B B ! B 6B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_ap_configuration(self):
         """
@@ -2645,7 +2530,7 @@ class BrickMaster(DeviceWithMCU):
             mac_address,
         )
 
-    async def set_wifi2_ap_password(self, password, response_expected=False):
+    async def set_wifi2_ap_password(self, password, response_expected=True):
         """
         Sets the access point password (up to 63 chars) for the configured encryption
         mode, see :func:`Set Wifi2 AP Configuration`.
@@ -2670,9 +2555,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((password, ), '64s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_ap_password(self):
         """
@@ -2726,14 +2608,14 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '3B')
 
-    async def set_wifi2_status_led(self, enabled, response_expected=False):
+    async def set_wifi2_status_led(self, enabled, response_expected=True):
         if enabled:
             return await self.enable_wifi2_status_led(response_expected)
         else:
             return await self.disable_wifi2_status_led(response_expected)
 
     # TODO: Needs testing
-    async def enable_wifi2_status_led(self, response_expected=False):
+    async def enable_wifi2_status_led(self, response_expected=True):
         """
         Turns the green status LED of the WIFI Extension 2.0 on.
 
@@ -2744,11 +2626,8 @@ class BrickMaster(DeviceWithMCU):
             function_id=FunctionID.ENABLE_WIFI2_STATUS_LED,
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
-    async def disable_wifi2_status_led(self, response_expected=False):
+    async def disable_wifi2_status_led(self, response_expected=True):
         """
         Turns the green status LED of the WIFI Extension 2.0 off.
 
@@ -2759,9 +2638,6 @@ class BrickMaster(DeviceWithMCU):
             function_id=FunctionID.DISABLE_WIFI2_STATUS_LED,
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def is_wifi2_status_led_enabled(self):
         """
@@ -2776,7 +2652,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    async def set_wifi2_mesh_configuration(self, enable=False, root_ip=(0,0,0,0), root_subnet_mask=(0,0,0,0), root_gateway=(0,0,0,0), router_bssid=(0,0,0,0,0,0), group_id=(0x1A,0xFE,0x34,0,0,0), group_ssid_prefix='TF_MESH', gateway_ip=(0,0,0,0), gateway_port=4240, response_expected=False):
+    async def set_wifi2_mesh_configuration(self, enable=False, root_ip=(0,0,0,0), root_subnet_mask=(0,0,0,0), root_gateway=(0,0,0,0), router_bssid=(0,0,0,0,0,0), group_id=(0x1A,0xFE,0x34,0,0,0), group_ssid_prefix='TF_MESH', gateway_ip=(0,0,0,0), gateway_port=4240, response_expected=True):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
 
@@ -2843,9 +2719,6 @@ class BrickMaster(DeviceWithMCU):
                 ), '! 4B 4B 4B 6B 6B 16s 4B H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_mesh_configuration(self):
         """
@@ -2874,7 +2747,7 @@ class BrickMaster(DeviceWithMCU):
             gateway_port
         )
 
-    async def set_wifi2_mesh_router_ssid(self, ssid, response_expected=False):
+    async def set_wifi2_mesh_router_ssid(self, ssid, response_expected=True):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
 
@@ -2905,9 +2778,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((ssid, ), '32s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_mesh_router_ssid(self):
         """
@@ -2924,7 +2794,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '32s')
 
-    async def set_wifi2_mesh_router_password(self, password, response_expected=False):
+    async def set_wifi2_mesh_router_password(self, password, response_expected=True):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
 
@@ -2951,9 +2821,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((password, ), '64s'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wifi2_mesh_router_password(self):
         """
@@ -3036,7 +2903,7 @@ class BrickMaster(DeviceWithMCU):
             mac_address,
         )
 
-    async def set_spitfp_baudrate_config(self, enable_dynamic_baudrate=True, minimum_dynamic_baudrate=400000, response_expected=False):
+    async def set_spitfp_baudrate_config(self, enable_dynamic_baudrate=True, minimum_dynamic_baudrate=400000, response_expected=True):
         """
         The SPITF protocol can be used with a dynamic baudrate. If the dynamic baudrate is
         enabled, the Brick will try to adapt the baudrate for the communication
@@ -3069,10 +2936,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((bool(enable_dynamic_baudrate),int(minimum_dynamic_baudrate)), '! I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_spitfp_baudrate_config(self):
         """
@@ -3109,7 +2972,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_spitfp_baudrate(self, bricklet_port, baudrate=1400000, response_expected=False):
+    async def set_spitfp_baudrate(self, bricklet_port, baudrate=1400000, response_expected=True):
         """
         Sets the baudrate for a specific Bricklet port ('a' - 'd'). The
         baudrate can be in the range 400000 to 2000000.
@@ -3139,10 +3002,6 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload((bricklet_port.value.encode(), int(baudrate)), 'c I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_spitfp_baudrate(self, bricklet_port):
         """
@@ -3189,7 +3048,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return GetSPITFPErrorCount(*unpack_payload(payload, 'I I I I'))
 
-    async def enable_status_led(self, response_expected=False):
+    async def enable_status_led(self, response_expected=True):
         """
         Enables the status LED.
 
@@ -3205,12 +3064,8 @@ class BrickMaster(DeviceWithMCU):
             function_id=FunctionID.ENABLE_STATUS_LED,
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
-    async def disable_status_led(self, response_expected=False):
+    async def disable_status_led(self, response_expected=True):
         """
         Disables the status LED.
 
@@ -3226,10 +3081,6 @@ class BrickMaster(DeviceWithMCU):
             function_id=FunctionID.DISABLE_STATUS_LED,
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def is_status_led_enabled(self):
         """

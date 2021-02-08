@@ -3,7 +3,6 @@ from collections import namedtuple
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetSegments = namedtuple('Segments', ['segments', 'colon', 'tick'])
@@ -50,7 +49,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         self.api_version = (2, 0, 0)
 
-    async def set_segments(self, segments=(0,0,0,0), colon=(False,False), tick=False, response_expected=False):
+    async def set_segments(self, segments=(0,0,0,0), colon=(False,False), tick=False, response_expected=True):
         """
         Sets the segments of the Segment Display 4x7 Bricklet 2.0 segment-by-segment.
 
@@ -78,10 +77,6 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
               ), '4B 2! !'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_segments(self):
         """
@@ -94,7 +89,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         )
         return  GetSegments(*unpack_payload(payload, '4B 2! !'))
 
-    async def set_brightness(self, brightness=7, response_expected=False):
+    async def set_brightness(self, brightness=7, response_expected=True):
         """
         The brightness can be set between 0 (dark) and 7 (bright).
 
@@ -108,9 +103,6 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
             data=pack_payload((int(brightness),), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_brightness(self):
         """
@@ -123,7 +115,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         )
         return unpack_payload(payload, 'B')
 
-    async def set_numeric_value(self, value, response_expected=False):
+    async def set_numeric_value(self, value, response_expected=True):
         """
         Sets a numeric value for each of the digits. The values can be between
         -2 and 15. They represent:
@@ -148,11 +140,8 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
             data=pack_payload((value,), '4b'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
-    async def set_selected_segment(self, segment, value, response_expected=False):
+    async def set_selected_segment(self, segment, value, response_expected=True):
         """
         Turns one specified segment on or off.
 
@@ -171,9 +160,6 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
             data=pack_payload((int(segment), bool(value)), 'B !'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_selected_segment(self, segment):
         """
@@ -190,7 +176,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         return unpack_payload(payload, '!')
 
-    async def start_counter(self, value_from, value_to, increment, length, response_expected=False):
+    async def start_counter(self, value_from, value_to, increment, length, response_expected=True):
         """
         Turns one specified segment on or off.
 
@@ -217,9 +203,6 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
               ), 'h h h I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_counter_value(self):
         """

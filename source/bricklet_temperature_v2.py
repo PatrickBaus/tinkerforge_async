@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
-from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -123,10 +122,6 @@ class BrickletTemperatureV2(BrickletWithMCU):
               ), 'I ! c h h'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_configuration(self):
         """
@@ -142,7 +137,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
         minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
         return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
-    async def set_heater_configuration(self, heater_config=HeaterConfig.DISABLED, response_expected=False):
+    async def set_heater_configuration(self, heater_config=HeaterConfig.DISABLED, response_expected=True):
         """
         Enables/disables the heater. The heater can be used to test the sensor.
         """
@@ -155,9 +150,6 @@ class BrickletTemperatureV2(BrickletWithMCU):
             data=pack_payload((heater_config.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_heater_configuration(self):
         """

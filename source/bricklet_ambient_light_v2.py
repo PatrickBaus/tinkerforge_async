@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, ThresholdOption
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetIlluminanceCallbackThreshold = namedtuple('IlluminanceCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -114,10 +113,6 @@ class BrickletAmbientLightV2(Device):
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_illuminance_callback_period(self):
         """
@@ -162,9 +157,6 @@ class BrickletAmbientLightV2(Device):
               ), 'c I I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_illuminance_callback_threshold(self):
         """
@@ -200,9 +192,6 @@ class BrickletAmbientLightV2(Device):
             data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -252,9 +241,6 @@ class BrickletAmbientLightV2(Device):
             data=pack_payload((illuminance_range.value, integration_time.value), 'B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_configuration(self):
         """

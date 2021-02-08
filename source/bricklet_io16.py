@@ -3,7 +3,6 @@ from collections import namedtuple
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetPortConfiguration = namedtuple('PortConfiguration', ['direction_mask', 'value_mask'])
@@ -90,7 +89,7 @@ class BrickletIO16(Device):
 
         self.api_version = (2, 0, 1)
 
-    async def set_port(self, port, value_mask, response_expected=False):
+    async def set_port(self, port, value_mask, response_expected=True):
         """
         Sets the output value (high or low) for a port ("a" or "b") with a bitmask
         (8bit). A 1 in the bitmask means high and a 0 in the bitmask means low.
@@ -115,10 +114,6 @@ class BrickletIO16(Device):
             data=pack_payload((port.value.encode('ascii'),value_mask), 'c B'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_port(self, port):
         """
@@ -137,7 +132,7 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, 'B')
 
-    async def set_port_configuration(self, port, selection_mask, direction, value=False, response_expected=False):
+    async def set_port_configuration(self, port, selection_mask, direction, value=False, response_expected=True):
         """
         Configures the value and direction of a specified port. Possible directions
         are 'i' and 'o' for input and output.
@@ -180,10 +175,6 @@ class BrickletIO16(Device):
               ), 'c B c !'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_port_configuration(self, port):
         """
@@ -225,9 +216,6 @@ class BrickletIO16(Device):
             data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -240,7 +228,7 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_port_interrupt(self, port, interrupt_mask, response_expected=False):
+    async def set_port_interrupt(self, port, interrupt_mask, response_expected=True):
         """
         Sets the pins on which an interrupt is activated with a bitmask.
         Interrupts are triggered on changes of the voltage level of the pin,
@@ -261,9 +249,6 @@ class BrickletIO16(Device):
             data=pack_payload((port.value.encode('ascii'), interrupt_mask), 'c B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_port_interrupt(self, port):
         """
@@ -281,7 +266,7 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, 'B')
 
-    async def set_port_monoflop(self, port, selection_mask, value_mask, time, response_expected=False):
+    async def set_port_monoflop(self, port, selection_mask, value_mask, time, response_expected=True):
         """
         Configures a monoflop of the pins specified by the second parameter as 8 bit
         long bitmask. The specified pins must be configured for output. Non-output
@@ -321,9 +306,6 @@ class BrickletIO16(Device):
               ), 'c B B I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_port_monoflop(self, port, pin):
         """
@@ -342,7 +324,7 @@ class BrickletIO16(Device):
         )
         return GetPortMonoflop(*unpack_payload(payload, 'B I I'))
 
-    async def set_selected_values(self, port, selection_mask, value_mask, response_expected=False):
+    async def set_selected_values(self, port, selection_mask, value_mask, response_expected=True):
         """
         Sets the output value (high or low) for a port ("a" or "b" with a bitmask,
         according to the selection mask. The bitmask is 8 bit long and a 1 in the
@@ -374,9 +356,6 @@ class BrickletIO16(Device):
               ), 'c B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_edge_count(self, pin, reset_counter=False):
         """
@@ -398,7 +377,7 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_edge_count_config(self, pin, edge_type=EdgeType.RISING, debounce=100, response_expected=False):
+    async def set_edge_count_config(self, pin, edge_type=EdgeType.RISING, debounce=100, response_expected=True):
         """
         Configures the edge counter for the selected pin of port A. Pins 0 and 1
         are available for edge counting.
@@ -433,9 +412,6 @@ class BrickletIO16(Device):
               ), 'B B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_edge_count_config(self, pin):
         """

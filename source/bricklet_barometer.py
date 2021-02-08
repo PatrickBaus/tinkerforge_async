@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, ThresholdOption
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetAirPressureCallbackThreshold = namedtuple('AirPressureCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -116,10 +115,6 @@ class BrickletBarometer(Device):
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_air_pressure_callback_period(self):
         """
@@ -148,10 +143,6 @@ class BrickletBarometer(Device):
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_altitude_callback_period(self):
         """
@@ -189,9 +180,6 @@ class BrickletBarometer(Device):
             data=pack_payload((option.value.encode('ascii'), self.__SI_pressure_to_value(minimum), self.__SI_pressure_to_value(maximum)), 'c i i'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_air_pressure_callback_threshold(self):
         """
@@ -232,9 +220,6 @@ class BrickletBarometer(Device):
             data=pack_payload((option.value.encode('ascii'), self.__SI_altitude_to_value(minimum), self.__SI_altitude_to_value(maximum)), 'c i i'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_altitude_callback_threshold(self):
         """
@@ -272,9 +257,6 @@ class BrickletBarometer(Device):
             data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -302,7 +284,7 @@ class BrickletBarometer(Device):
         )
         return unpack_payload(payload, 'h')
 
-    async def set_reference_air_pressure(self, air_pressure=101325, response_expected=False):
+    async def set_reference_air_pressure(self, air_pressure=101325, response_expected=True):
         """
         Sets the reference air pressure for the altitude calculation.
         Setting the reference to the current air pressure results in a calculated
@@ -322,9 +304,6 @@ class BrickletBarometer(Device):
             data=pack_payload((self.__SI_pressure_to_value(air_pressure),), 'i'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_reference_air_pressure(self):
         """
@@ -337,7 +316,7 @@ class BrickletBarometer(Device):
         )
         return self.__value_to_SI_pressure(unpack_payload(payload, 'i'))
 
-    async def set_averaging(self, moving_average_pressure=25, average_pressure=10, average_temperature=10, response_expected=False):
+    async def set_averaging(self, moving_average_pressure=25, average_pressure=10, average_temperature=10, response_expected=True):
         """
         Sets the different averaging parameters. It is possible to set
         the length of a normal averaging for the temperature and pressure,
@@ -369,9 +348,6 @@ class BrickletBarometer(Device):
              ), 'B B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_averaging(self):
         """

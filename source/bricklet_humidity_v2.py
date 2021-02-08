@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetHumidityCallbackConfiguration = namedtuple('HumidityCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -143,9 +142,6 @@ class BrickletHumidityV2(BrickletWithMCU):
               ), 'I ! c H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_humidity_callback_configuration(self):
         """
@@ -230,9 +226,6 @@ class BrickletHumidityV2(BrickletWithMCU):
               ), 'I ! c H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_configuration(self):
         """
@@ -248,7 +241,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         minimum, maximum = self.__temperature_sensor_to_SI(minimum), self.__temperature_sensor_to_SI(maximum)
         return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
-    async def set_heater_configuration(self, heater_config=HeaterConfig.DISABLED, response_expected=False):
+    async def set_heater_configuration(self, heater_config=HeaterConfig.DISABLED, response_expected=True):
         """
         Enables/disables the heater. The heater can be used to dry the sensor in
         extremely wet conditions.
@@ -264,9 +257,6 @@ class BrickletHumidityV2(BrickletWithMCU):
             data=pack_payload((heater_config.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_heater_configuration(self):
         """
@@ -280,7 +270,7 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         return HeaterConfig(unpack_payload(payload, 'B'))
 
-    async def set_moving_average_configuration(self, moving_average_length_humidity=5, moving_average_length_temperature=5, response_expected=False):
+    async def set_moving_average_configuration(self, moving_average_length_humidity=5, moving_average_length_temperature=5, response_expected=True):
         """
         Sets the length of a `moving averaging <https://en.wikipedia.org/wiki/Moving_average>`__
         for the humidity and temperature.
@@ -314,9 +304,6 @@ class BrickletHumidityV2(BrickletWithMCU):
               ), 'H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_moving_average_configuration(self):
         """
@@ -330,7 +317,7 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         return GetMovingAverageConfiguration(*unpack_payload(payload, 'H H'))
 
-    async def set_samples_per_second(self, sps=SamplesPerSecond.SPS_1, response_expected=False):
+    async def set_samples_per_second(self, sps=SamplesPerSecond.SPS_1, response_expected=True):
         """
         Sets the samples per second that are gathered by the humidity/temperature sensor HDC1080.
         We added this function since we found out that a high measurement frequency can lead to
@@ -349,9 +336,6 @@ class BrickletHumidityV2(BrickletWithMCU):
             data=pack_payload((sps,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_samples_per_second(self):
         """

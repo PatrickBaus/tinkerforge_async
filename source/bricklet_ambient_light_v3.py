@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
-from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetIlluminanceCallbackConfiguration = namedtuple('IlluminanceCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -145,10 +144,6 @@ class BrickletAmbientLightV3(BrickletWithMCU):
               ), 'I ! c I I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_illuminance_callback_configuration(self):
         """
@@ -200,9 +195,6 @@ class BrickletAmbientLightV3(BrickletWithMCU):
             data=pack_payload((illuminance_range.value,integration_time.value), 'B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_configuration(self):
         """

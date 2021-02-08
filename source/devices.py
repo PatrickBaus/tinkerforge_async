@@ -304,9 +304,6 @@ class BrickletWithMCU(DeviceWithMCU):
             data=pack_payload((int(pointer),), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def write_firmware(self, data):
         """
@@ -346,9 +343,6 @@ class BrickletWithMCU(DeviceWithMCU):
             data=pack_payload((config.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_status_led_config(self):
         """
@@ -377,9 +371,6 @@ class BrickletWithMCU(DeviceWithMCU):
             data=pack_payload((int(uid),), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def read_uid(self):
         """

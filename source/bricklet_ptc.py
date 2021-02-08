@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, ThresholdOption
-from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -157,10 +156,6 @@ class BrickletPtc(Device):
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_period(self):
         """
@@ -189,10 +184,6 @@ class BrickletPtc(Device):
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_resistance_callback_period(self):
         """
@@ -237,9 +228,6 @@ class BrickletPtc(Device):
               ), 'c i i'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_threshold(self):
         """
@@ -287,9 +275,6 @@ class BrickletPtc(Device):
               ), 'c i i'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_resistance_callback_threshold(self):
         """
@@ -327,9 +312,6 @@ class BrickletPtc(Device):
             data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -342,7 +324,7 @@ class BrickletPtc(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_noise_rejection_filter(self, line_filter=LineFilter.FREQUENCY_50HZ, response_expected=False):
+    async def set_noise_rejection_filter(self, line_filter=LineFilter.FREQUENCY_50HZ, response_expected=True):
         """
         Sets the noise rejection filter to either 50Hz (0) or 60Hz (1).
         Noise from 50Hz or 60Hz power sources (including
@@ -360,9 +342,6 @@ class BrickletPtc(Device):
             data=pack_payload((line_filter.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_noise_rejection_filter(self):
         """
@@ -391,7 +370,7 @@ class BrickletPtc(Device):
         )
         return unpack_payload(payload, '!')
 
-    async def set_wire_mode(self, mode=WireMode.WIRE_2, response_expected=False):
+    async def set_wire_mode(self, mode=WireMode.WIRE_2, response_expected=True):
         """
         Sets the wire mode of the sensor. Possible values are 2, 3 and 4 which
         correspond to 2-, 3- and 4-wire sensors. The value has to match the jumper
@@ -408,9 +387,6 @@ class BrickletPtc(Device):
             data=pack_payload((mode.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wire_mode(self):
         """
@@ -438,9 +414,6 @@ class BrickletPtc(Device):
             data=pack_payload((bool(enabled),), '!'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_sensor_connected_callback_configuration(self):
         """

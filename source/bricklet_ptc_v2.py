@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -161,10 +160,6 @@ class BrickletPtcV2(BrickletWithMCU):
               ), 'I ! c i i'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_temperature_callback_configuration(self):
         """
@@ -250,10 +245,6 @@ class BrickletPtcV2(BrickletWithMCU):
               ), 'I ! c i i'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_resistance_callback_configuration(self):
         """
@@ -269,7 +260,7 @@ class BrickletPtcV2(BrickletWithMCU):
         minimum, maximum = self.__value_to_SI_resistance(minimum), self.__value_to_SI_resistance(maximum)
         return GetResistanceCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
-    async def set_noise_rejection_filter(self, line_filter=LineFilter.FREQUENCY_50HZ, response_expected=False):
+    async def set_noise_rejection_filter(self, line_filter=LineFilter.FREQUENCY_50HZ, response_expected=True):
         """
         Sets the noise rejection filter to either 50Hz (0) or 60Hz (1).
         Noise from 50Hz or 60Hz power sources (including
@@ -287,9 +278,6 @@ class BrickletPtcV2(BrickletWithMCU):
             data=pack_payload((line_filter.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_noise_rejection_filter(self):
         """
@@ -322,7 +310,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    async def set_wire_mode(self, mode=WireMode.WIRE_2, response_expected=False):
+    async def set_wire_mode(self, mode=WireMode.WIRE_2, response_expected=True):
         """
         Sets the wire mode of the sensor. Possible values are 2, 3 and 4 which
         correspond to 2-, 3- and 4-wire sensors. The value has to match the jumper
@@ -339,9 +327,6 @@ class BrickletPtcV2(BrickletWithMCU):
             data=pack_payload((mode.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_wire_mode(self):
         """
@@ -354,7 +339,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return WireMode(unpack_payload(payload, 'B'))
 
-    async def set_moving_average_configuration(self, moving_average_length_resistance=1, moving_average_length_temperature=40, response_expected=False):
+    async def set_moving_average_configuration(self, moving_average_length_resistance=1, moving_average_length_temperature=40, response_expected=True):
         """
         Sets the length of a `moving averaging <https://en.wikipedia.org/wiki/Moving_average>`__
         for the resistance and temperature.
@@ -384,9 +369,6 @@ class BrickletPtcV2(BrickletWithMCU):
               ), 'H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_moving_average_configuration(self):
         """
@@ -400,7 +382,7 @@ class BrickletPtcV2(BrickletWithMCU):
 
         return GetMovingAverageConfiguration(*unpack_payload(payload, 'H H'))
 
-    async def set_sensor_connected_callback_configuration(self, enabled=False, response_expected=False):
+    async def set_sensor_connected_callback_configuration(self, enabled=False, response_expected=True):
         """
         If you enable this callback, the :cb:`Sensor Connected` callback is triggered
         every time a Pt sensor is connected/disconnected.
@@ -415,9 +397,6 @@ class BrickletPtcV2(BrickletWithMCU):
             data=pack_payload((bool(enabled),), '!'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_sensor_connected_callback_configuration(self):
         """

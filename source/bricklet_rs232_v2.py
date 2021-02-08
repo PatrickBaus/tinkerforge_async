@@ -4,7 +4,6 @@ from collections import namedtuple
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetConfiguration = namedtuple('Configuration', ['baudrate', 'parity', 'stopbits', 'wordlength', 'flowcontrol'])
@@ -166,10 +165,6 @@ class BrickletRS232V2(BrickletWithMCU):
                 response_expected=response_expected
             )
 
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
-
     async def is_read_callback_enabled(self):
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -179,7 +174,7 @@ class BrickletRS232V2(BrickletWithMCU):
 
         return unpack_payload(payload, '!')
 
-    async def set_configuration(self, baudrate=115200, parity=Parity.NONE, stopbits=StopBits.ONE, wordlength=WordLength.LENGTH_8, flowcontrol=FlowControl.OFF, response_expected=False):
+    async def set_configuration(self, baudrate=115200, parity=Parity.NONE, stopbits=StopBits.ONE, wordlength=WordLength.LENGTH_8, flowcontrol=FlowControl.OFF, response_expected=True):
         """
         Sets the configuration for the RS232 communication.
         """
@@ -206,9 +201,6 @@ class BrickletRS232V2(BrickletWithMCU):
               ), 'I B B B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_configuration(self):
         """
@@ -224,7 +216,7 @@ class BrickletRS232V2(BrickletWithMCU):
         parity, stopbits, wordlength, flowcontrol = Parity(parity), StopBits(stopbits), WordLength(wordlength), FlowControl(flowcontrol)
         return GetConfiguration(baudrate, parity, stopbits, wordlength, flowcontrol)
 
-    async def set_buffer_config(self, send_buffer_size=5120, receive_buffer_size=5120, response_expected=False):
+    async def set_buffer_config(self, send_buffer_size=5120, receive_buffer_size=5120, response_expected=True):
         """
         Sets the send and receive buffer size in byte. In total the buffers have to be
         10240 byte (10KiB) in size, the minimum buffer size is 1024 byte (1KiB) for each.
@@ -250,9 +242,6 @@ class BrickletRS232V2(BrickletWithMCU):
               ), 'H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_buffer_config(self):
         """
@@ -311,9 +300,6 @@ class BrickletRS232V2(BrickletWithMCU):
             data=pack_payload((int(frame_size),), 'H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_frame_readable_callback_configuration(self):
         """

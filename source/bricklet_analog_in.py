@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, ThresholdOption
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetVoltageCallbackThreshold = namedtuple('VoltageCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -129,10 +128,6 @@ class BrickletAnalogIn(Device):
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_voltage_callback_period(self):
         """
@@ -161,10 +156,6 @@ class BrickletAnalogIn(Device):
             data=pack_payload((int(period),), 'I'),
             response_expected = response_expected,
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_analog_value_callback_period(self):
         """
@@ -207,9 +198,6 @@ class BrickletAnalogIn(Device):
               ), 'c H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_voltage_callback_threshold(self):
         """
@@ -250,9 +238,6 @@ class BrickletAnalogIn(Device):
             data=pack_payload((option.value.encode('ascii'), minimum, maximum), 'c H H'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_analog_value_callback_threshold(self):
         """
@@ -289,9 +274,6 @@ class BrickletAnalogIn(Device):
             data=pack_payload((int(debounce_period),), 'I'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_debounce_period(self):
         """
@@ -304,7 +286,7 @@ class BrickletAnalogIn(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_range(self, value=Range.AUTOMATIC, response_expected=False):
+    async def set_range(self, value=Range.AUTOMATIC, response_expected=True):
         """
         Sets the measurement range. Possible ranges:
 
@@ -326,9 +308,6 @@ class BrickletAnalogIn(Device):
             data=pack_payload((value.value,), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_range(self):
         """
@@ -343,7 +322,7 @@ class BrickletAnalogIn(Device):
         )
         return Range(unpack_payload(payload, 'B'))
 
-    async def set_averaging(self, average=50, response_expected=False):
+    async def set_averaging(self, average=50, response_expected=True):
         """
         Set the length of a averaging for the voltage value.
 
@@ -361,9 +340,6 @@ class BrickletAnalogIn(Device):
             data=pack_payload((int(average),), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_averaging(self):
         """

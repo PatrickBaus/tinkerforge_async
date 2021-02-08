@@ -3,7 +3,6 @@ from collections import namedtuple
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetSegments = namedtuple('Segments', ['segments', 'brightness', 'colon'])
@@ -46,7 +45,7 @@ class BrickletSegmentDisplay4x7(Device):
 
         self.api_version = (2, 0, 0)
 
-    async def set_segments(self, segments=(0,0,0,0), brightness=7, colon=False, response_expected=False):
+    async def set_segments(self, segments=(0,0,0,0), brightness=7, colon=False, response_expected=True):
         """
         The 7-segment display can be set with bitmaps. Every bit controls one
         segment:
@@ -76,9 +75,6 @@ class BrickletSegmentDisplay4x7(Device):
               ), '4B B !'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_segments(self):
         """
@@ -97,7 +93,7 @@ class BrickletSegmentDisplay4x7(Device):
         )
         return GetSegments(*unpack_payload(payload, '4B B !'))
 
-    async def start_counter(self, value_from, value_to, increment=1, length=1000, response_expected=False):
+    async def start_counter(self, value_from, value_to, increment=1, length=1000, response_expected=True):
         """
         Starts a counter with the *from* value that counts to the *to*
         value with the each step incremented by *increment*.
@@ -128,10 +124,6 @@ class BrickletSegmentDisplay4x7(Device):
               ), 'h h h I'),
             response_expected=response_expected
         )
-
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_counter_value(self):
         """

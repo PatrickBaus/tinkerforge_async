@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
-from .ip_connection import Flags
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetVoltageCallbackConfiguration = namedtuple('VoltageCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -158,10 +157,6 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
               ), 'B I ! c i i'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_voltage_callback_configuration(self, channel):
         """
@@ -221,10 +216,6 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
               ), 'I !'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_all_voltages_callback_configuration(self):
         """
@@ -240,7 +231,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         )
         return GetAllVoltagesCallbackConfiguration(*unpack_payload(payload, 'I !'))
 
-    async def set_sample_rate(self, rate, response_expected=False):
+    async def set_sample_rate(self, rate, response_expected=True):
         """
         Sets the sample rate. The sample rate can be between 1 sample per second
         and 976 samples per second. Decreasing the sample rate will also decrease the
@@ -256,11 +247,6 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             response_expected=response_expected
         )
 
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
-
     async def get_sample_rate(self):
         """
         Returns the sample rate as set by :func:`Set Sample Rate`.
@@ -273,7 +259,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         return SamplingRate(unpack_payload(payload, 'B'))
 
-    async def set_calibration(self, offset, gain, response_expected=False):
+    async def set_calibration(self, offset, gain, response_expected=True):
         """
         Sets offset and gain of MCP3911 internal calibration registers.
 
@@ -291,11 +277,6 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
               ), '2i 2i'),
             response_expected=response_expected
         )
-
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_calibration(self):
         """
@@ -322,7 +303,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         return unpack_payload(payload, '2i')
 
-    async def set_channel_led_config(self, channel, config, response_expected=False):
+    async def set_channel_led_config(self, channel, config, response_expected=True):
         """
         Each channel has a corresponding LED. You can turn the LED off, on or show a
         heartbeat. You can also set the LED to "Channel Status". In this mode the
@@ -348,11 +329,6 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             response_expected=response_expected
         )
 
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
-
     async def get_channel_led_config(self, channel):
         """
         Returns the ADC values as given by the MCP3911 IC. This function
@@ -369,7 +345,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         return ChannelLedConfig(unpack_payload(payload, 'B'))
 
-    async def set_channel_led_status_config(self, channel, minimum, maximum, config, response_expected=False):
+    async def set_channel_led_status_config(self, channel, minimum, maximum, config, response_expected=True):
         """
         Sets the channel LED status config. This config is used if the channel LED is
         configured as "Channel Status", see :func:`Set Channel LED Config`.
@@ -408,11 +384,6 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
               ), 'B i i B'),
             response_expected=response_expected
         )
-
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_channel_led_status_config(self, channel):
         """

@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU
-from .ip_connection import Flags, UnknownFunctionError
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetIndicator = namedtuple('Indicator', ['top_left', 'top_right', 'bottom'])
@@ -83,10 +82,6 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
             data=pack_payload((int(sensitivity),), 'B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            # TODO raise errors
-            return header['flags'] == Flags.OK
 
     async def get_sensitivity(self):
         """
@@ -99,7 +94,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         )
         return unpack_payload(payload, 'B')
 
-    async def set_indicator(self, top_left=0, top_right=0, bottom=0, response_expected=False):
+    async def set_indicator(self, top_left=0, top_right=0, bottom=0, response_expected=True):
         """
         Sets the blue backlight of the fresnel lens. The backlight consists of
         three LEDs. The brightness of each LED can be controlled with a 8-bit value
@@ -121,9 +116,6 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
               ), 'B B B'),
             response_expected=response_expected
         )
-        if response_expected:
-            header, _ = result
-            return header['flags'] == Flags.OK
 
     async def get_indicator(self):
         """
