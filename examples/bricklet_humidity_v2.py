@@ -131,8 +131,7 @@ def error_handler(task):
 
 async def main():
     try: 
-        #await ipcon.connect(host='127.0.0.1', port=4223)
-        await ipcon.connect(host='10.0.0.5', port=4223)
+        await ipcon.connect(host='127.0.0.1', port=4223)
         callback_queue = asyncio.Queue()
         running_tasks.append(asyncio.create_task(process_callbacks(callback_queue)))
         running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
