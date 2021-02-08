@@ -54,6 +54,7 @@ async def run_example(packet, callback_queue):
     bricklet.register_event_queue(bricklet.CallbackID.HUMIDITY, callback_queue)
     bricklet.register_event_queue(bricklet.CallbackID.TEMPERATURE, callback_queue)
 
+    print('Moving average configuration:', await bricklet.get_moving_average_configuration())
     print('Setting moving average to 20 samples -> 50 ms/sample * 20 samples = 1 s')
     await bricklet.set_moving_average_configuration(20, 20)
     print('Moving average configuration:', await bricklet.get_moving_average_configuration())
@@ -85,16 +86,12 @@ async def run_example(packet, callback_queue):
     print('Enable both callbacks at once')
     await bricklet.set_temperature_callback_configuration(1000, False)
     await bricklet.set_humidity_callback_configuration(1000, False)
-    await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
-    print('Disable both callbacks')
-    await bricklet.set_temperature_callback_configuration()
-    await bricklet.set_humidity_callback_configuration()
-
     print('Enabling heater')
     await bricklet.set_heater_configuration(bricklet.HeaterConfig.ENABLED)
     print('Heater config:', await bricklet.get_heater_configuration())
-    print('Disabling heater')
-    await bricklet.set_heater_configuration()
+    await asyncio.sleep(5)    # Wait for 2-3 callbacks
+    print('Disable both callbacks and heater')
+    await asyncio.gather(bricklet.set_temperature_callback_configuration(), bricklet.set_humidity_callback_configuration(), bricklet.set_heater_configuration())
     print('Heater config:', await bricklet.get_heater_configuration())
 
     print('SPI error count:', await bricklet.get_spitfp_error_count())
