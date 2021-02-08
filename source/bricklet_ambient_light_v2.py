@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
+from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, Device, ThresholdOption
@@ -95,7 +96,7 @@ class BrickletAmbientLightV2(Device):
             function_id=FunctionID.GET_ILLUMINANCE,
             response_expected=True
         )
-        return unpack_payload(payload, 'I')
+        return self.__value_to_SI(unpack_payload(payload, 'I'))
 
     async def set_illuminance_callback_period(self, period=0, response_expected=True):
         """
@@ -153,7 +154,12 @@ class BrickletAmbientLightV2(Device):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ILLUMINANCE_CALLBACK_THRESHOLD,
-            data=pack_payload((option.value.encode('ascii'), int(minimum), int(maximum)), 'c I I'),
+            data=pack_payload(
+              (
+                option.value.encode('ascii'),
+                self.__SI_to_value(minimum),
+                self.__SI_to_value(maximum)
+              ), 'c I I'),
             response_expected=response_expected
         )
         if response_expected:
@@ -171,6 +177,7 @@ class BrickletAmbientLightV2(Device):
         )
         option, minimum, maximum = unpack_payload(payload, 'c I I')
         option = ThresholdOption(option)
+        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
         return GetIlluminanceCallbackThreshold(option, minimum, maximum)
 
     async def set_debounce_period(self, debounce_period=100, response_expected=True):
@@ -260,4 +267,17 @@ class BrickletAmbientLightV2(Device):
         )
         illuminance_range, integration_time = unpack_payload(payload, 'B B')
         return GetConfiguration(IlluminanceRange(illuminance_range), IntegrationTime(integration_time))
+
+    def __value_to_SI(self, value):
+        """
+        Convert to the sensor value to SI units
+        """
+        return Decimal(value) / 100
+
+    def __SI_to_value(self, value):
+        return int(value * 100)
+
+    def _process_callback_payload(self, header, payload):
+        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+        return self.__value_to_SI(payload), True    # payload, done
 

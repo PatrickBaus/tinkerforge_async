@@ -455,3 +455,15 @@ class BrickletPtcV2(BrickletWithMCU):
             value /= 10
         return int(value * 32768 / 390)
 
+    def _process_callback_payload(self, header, payload):
+        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+        if header['function_id'] is CallbackID.TEMPERATURE:
+            header['sid'] = 0
+            return self.__value_to_SI_temperature(payload), True    # payload, done
+        elif header['function_id'] is CallbackID.RESISTANCE:
+            header['sid'] = 1
+            return self.__value_to_SI_resistance(payload), True    # payload, done
+        else:
+            header['sid'] = 2
+            return payload, True    # payload, done
+

@@ -107,7 +107,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             data=pack_payload((int(channel),), 'B'),
             response_expected=True
         )
-        return unpack_payload(payload, 'i')
+        return self.__value_to_SI(unpack_payload(payload, 'i'))
 
     async def set_voltage_callback_configuration(self, channel, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
@@ -143,8 +143,6 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         if not type(option) is ThresholdOption:
             option = ThresholdOption(option)
         assert period >= 0
-        assert minimum >= 0
-        assert maximum >= 0
 
         result = await self.ipcon.send_request(
             device=self,
@@ -155,8 +153,8 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
                 int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
-                int(minimum),
-                int(maximum),
+                self.__SI_to_value(minimum),
+                self.__SI_to_value(maximum),
               ), 'B I ! c i i'),
             response_expected=response_expected
         )
@@ -177,6 +175,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c i i')
         option = ThresholdOption(option)
+        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
         return GetVoltageCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def get_all_voltages(self):
@@ -193,7 +192,8 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             function_id=FunctionID.GET_ALL_VOLTAGES,
             response_expected=True
         )
-        return unpack_payload(payload, '2i')
+        value1, value2 = unpack_payload(payload, '2i')
+        return self.__value_to_SI(value1), self.__value_to_SI(value2)
 
     async def set_all_voltages_callback_configuration(self, period=0, value_has_to_change=False, response_expected=True):
         """
@@ -402,8 +402,8 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             data=pack_payload(
               (
                 int(channel),
-                int(minimum),
-                int(maximum),
+                self.__SI_to_value(minimum),
+                self.__SI_to_value(maximum),
                 config.value,
               ), 'B i i B'),
             response_expected=response_expected
@@ -430,8 +430,24 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         minimum, maximum, config = unpack_payload(payload, 'i i B')
         config = ChannelLedStatusConfig(config)
+        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
         return GetChannelLEDStatusConfig(minimum, maximum, config)
 
-    def __SI_to_value(self, value):
-        return int(value * 100)
+    def __value_to_SI(self, value):
+        """
+        Convert to the sensor value to SI units
+        """
+        return Decimal(value) / 1000
 
+    def __SI_to_value(self, value):
+        return int(value * 1000)
+
+    def _process_callback_payload(self, header, payload):
+        if header['function_id'] is CallbackID.VOLTAGE:
+            channel, value = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+            header['sid'] = channel
+            return self.__value_to_SI(value), True    # payload, done
+        else:
+            value1, value2 = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+            header['sid'] = 2
+            return (self.__value_to_SI(value1), self.__value_to_SI(value2)), True    # payload, done

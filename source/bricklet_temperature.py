@@ -244,3 +244,7 @@ class BrickletTemperature(Device):
     def __SI_to_value(self, value):
         return int(value * 100)
 
+    def _process_callback_payload(self, header, payload):
+        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+        return self.__value_to_SI(payload), True    # payload, done
+

@@ -199,7 +199,12 @@ class BrickletAnalogIn(Device):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_VOLTAGE_CALLBACK_THRESHOLD,
-            data=pack_payload((option.value.encode('ascii'), self.__SI_to_value(minimum), self.__SI_to_value(maximum)), 'c H H'),
+            data=pack_payload(
+              (
+                option.value.encode('ascii'),
+                self.__SI_to_value(minimum),
+                self.__SI_to_value(maximum)
+              ), 'c H H'),
             response_expected=response_expected
         )
         if response_expected:
@@ -381,4 +386,13 @@ class BrickletAnalogIn(Device):
 
     def __SI_to_value(self, value):
         return int(value * 1000)
+
+    def _process_callback_payload(self, header, payload):
+        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+        if header['function_id'] is CallbackID.VOLTAGE or header['function_id'] is CallbackID.VOLTAGE_REACHED:
+            header['sid'] = 0
+            return self.__value_to_SI(payload), True    # payload, done
+        else:
+            header['sid'] = 1
+            return payload, True    # payload, done
 

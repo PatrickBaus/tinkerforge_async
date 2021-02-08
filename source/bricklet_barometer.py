@@ -404,3 +404,12 @@ class BrickletBarometer(Device):
     def __SI_pressure_to_value(self, value):
         return int(value * 10)
 
+    def _process_callback_payload(self, header, payload):
+        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
+        if header['function_id'] is CallbackID.AIR_PRESSURE or header['function_id'] is CallbackID.AIR_PRESSURE_REACHED:
+            header['sid'] = 0
+            return self.__value_to_SI_pressure(payload), True    # payload, done
+        else:
+            header['sid'] = 0
+            return self.__value_to_SI_altitude(payload), True    # payload, done
+
