@@ -33,7 +33,7 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
 ### Design Changes
 - Only Python 3 is supported (3.7+)
  - Replaced threads with an async event loop
- - Completely rewritten how responses from bricks/bricklets work. All setters now have a `response_expected` parameter, which when set to true will make the function call either return `True` or raise an error. There are no `set_response_expected()` functions any more.
+ - Completely rewritten how responses from bricks/bricklets work. All setters now have a `response_expected` parameter, which is set to `True` by default. If there is an error when calling the function, it will then raise an exception - either an `AttributeError` if the function is unknown, or a `ValueError` if one or more parameters are invalid.
 
    Old style:
    ```python
