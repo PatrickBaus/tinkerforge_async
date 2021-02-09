@@ -51,7 +51,6 @@ class BrickletAnalogIn(Device):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletAnalogIn
     DEVICE_DISPLAY_NAME = 'Analog In Bricklet'
-    DEVICE_URL_PART = 'analog_in' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

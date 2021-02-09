@@ -65,7 +65,6 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletIndustrialDualAnalogIn_V2
     DEVICE_DISPLAY_NAME = 'Industrial Dual Analog In Bricklet 2.0'
-    DEVICE_URL_PART = 'industrial_dual_analog_in_v2' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

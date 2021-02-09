@@ -30,7 +30,6 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletSegmentDisplay4x7_V2
     DEVICE_DISPLAY_NAME = 'Segment Display 4x7 Bricklet 2.0'
-    DEVICE_URL_PART = 'segment_display_4x7_v2' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

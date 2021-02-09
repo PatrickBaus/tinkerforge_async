@@ -64,7 +64,6 @@ class BrickletIO16(Device):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletIO16
     DEVICE_DISPLAY_NAME = 'IO-16 Bricklet'
-    DEVICE_URL_PART = 'io16' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

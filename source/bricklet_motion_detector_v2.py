@@ -28,7 +28,6 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletMotionDetector_V2
     DEVICE_DISPLAY_NAME = 'Motion Detector Bricklet 2.0'
-    DEVICE_URL_PART = 'motion_detector_v2' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

@@ -26,7 +26,6 @@ class BrickletSegmentDisplay4x7(Device):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletSegmentDisplay4x7
     DEVICE_DISPLAY_NAME = 'Segment Display 4x7 Bricklet'
-    DEVICE_URL_PART = 'segment_display_4x7' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

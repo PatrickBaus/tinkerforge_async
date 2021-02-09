@@ -32,7 +32,6 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletTemperature_V2
     DEVICE_DISPLAY_NAME = 'Temperature Bricklet 2.0'
-    DEVICE_URL_PART = 'temperature_v2' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

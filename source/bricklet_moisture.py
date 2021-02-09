@@ -31,7 +31,6 @@ class BrickletMoisture(Device):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletMoisture
     DEVICE_DISPLAY_NAME = 'Moisture Bricklet'
-    DEVICE_URL_PART = 'moisture' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

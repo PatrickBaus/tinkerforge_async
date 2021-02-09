@@ -54,7 +54,6 @@ class BrickletAmbientLightV2(Device):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletAmbientLight_V2
     DEVICE_DISPLAY_NAME = 'Ambient Light Bricklet 2.0'
-    DEVICE_URL_PART = 'ambient_light_v2' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

@@ -50,7 +50,6 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletAmbientLight_V3
     DEVICE_DISPLAY_NAME = 'Ambient Light Bricklet 3.0'
-    DEVICE_URL_PART = 'ambient_light_v3' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

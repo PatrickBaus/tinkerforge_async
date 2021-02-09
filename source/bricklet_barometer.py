@@ -44,7 +44,6 @@ class BrickletBarometer(Device):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletBarometer
     DEVICE_DISPLAY_NAME = 'Barometer Bricklet'
-    DEVICE_URL_PART = 'barometer' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

@@ -62,7 +62,6 @@ class BrickletPtc(Device):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletPtc
     DEVICE_DISPLAY_NAME = 'PTC Bricklet'
-    DEVICE_URL_PART = 'ptc' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

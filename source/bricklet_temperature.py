@@ -37,7 +37,6 @@ class BrickletTemperature(Device):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickletTemperature
     DEVICE_DISPLAY_NAME = 'Temperature Bricklet'
-    DEVICE_URL_PART = 'temperature' # internal
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID

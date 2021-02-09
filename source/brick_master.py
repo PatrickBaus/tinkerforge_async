@@ -350,7 +350,6 @@ class BrickMaster(DeviceWithMCU):
 
     DEVICE_IDENTIFIER = DeviceIdentifier.BrickMaster
     DEVICE_DISPLAY_NAME = 'Master Brick'
-    DEVICE_URL_PART = 'master' # internal
 
     CallbackID = CallbackID
     FunctionID = FunctionID
