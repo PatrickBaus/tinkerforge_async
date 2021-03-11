@@ -91,7 +91,10 @@ class IPConnectionAsync(object):
     def is_connected(self):
         return self.__writer is not None and not self.__writer.is_closing()
 
-    def __init__(self):
+    def __init__(self, host=None, port=4223):
+        self.__host = host
+        self.__port = port
+
         self.__sequence_number = 0
         self.__timeout = DEFAULT_WAIT_TIMEOUT
         self.__pending_requests = {}
@@ -313,7 +316,14 @@ class IPConnectionAsync(object):
             response_expected = False,
         )
 
-    async def connect(self, host, port=4223, authentication_secret=''):
+    async def connect(self, host=None, port=None, authentication_secret=''):
+        if host is not None:
+            self.__host = host
+        if port is not None:
+            self.__port = port
+        if self.__host is None:
+            raise TypeError('Invalid hostname')
+
         if self.__lock is None:
             self.__lock = asyncio.Lock()
         async with self.__lock:
@@ -323,7 +333,7 @@ class IPConnectionAsync(object):
                 for i in range(1,16):
                     self.__sequence_number_queue.put_nowait(i)
 
-                self.__reader, self.__writer = await asyncio.open_connection(host, port)
+                self.__reader, self.__writer = await asyncio.open_connection(self.__host, self.__port)
                 self.__main_task = asyncio.create_task(self.main_loop())
                 if authentication_secret:
                     try:
