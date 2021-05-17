@@ -194,6 +194,9 @@ class Device(object):
     async def connect(self):
         await self.__ipcon.connect()
 
+    async def disconnect(self):
+        await self.__ipcon.disconnect()
+
 class DeviceWithMCU(Device):
     async def get_chip_temperature(self):
         """
