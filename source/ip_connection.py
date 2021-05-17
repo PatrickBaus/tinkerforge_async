@@ -372,7 +372,9 @@ class IPConnectionAsync(object):
                 raise
         finally:
             self.__writer, self.__reader = None, None
-            for future in self.__pending_requests:
-                future.set_exception(NotConnectedError('Tinkerforge IP Connection closed.'))
+            # Cancel all pending requests, that have not been resolved
+            for sequence_number, future in self.__pending_requests.items():
+                if not future.done():
+                    future.set_exception(NotConnectedError('Tinkerforge IP Connection closed.'))
             self.__pending_requests = {}
             self.__logger.info('Tinkerforge IP connection closed.')
