@@ -152,7 +152,7 @@ class IPConnectionAsync(object):
         request = header + data
 
         # If we are waiting for a response, send the request, then pass on the response as a future
-        self.__logger.debug('Sending request: %(header)s - %(payload)s.', {'header': header, 'payload': data})
+        self.__logger.debug('Sending request for device %(device)s and function %(function_id): %(header)s - %(payload)s.', {'device': device, 'function_id': function_id, 'header': header, 'payload': data})
         try:
             self.__writer.write(request)
             if response_expected:
