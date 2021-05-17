@@ -207,6 +207,9 @@ class IPConnectionAsync(object):
                 return header, payload
         except asyncio.TimeoutError:
             return None, None
+        except ConnectionResetError as e:
+            self.____close_transport()
+            raise NotConnectedError('Tinkerforge IP Connection not connected.') from e
 
     async def __process_packet(self, header, payload):
         # There are two types of packets:
