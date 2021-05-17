@@ -208,7 +208,6 @@ class IPConnectionAsync(object):
         except asyncio.TimeoutError:
             return None, None
         except ConnectionResetError as e:
-            self.____close_transport()
             raise NotConnectedError('Tinkerforge IP Connection not connected.') from e
 
     async def __process_packet(self, header, payload):
@@ -268,7 +267,7 @@ class IPConnectionAsync(object):
                 header, payload = await self.__read_packet()
                 if header is not None:
                     await self.__process_packet(header, payload)
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, NotConnectedError):
             # No cleanup required
             pass
         finally:
@@ -373,4 +372,7 @@ class IPConnectionAsync(object):
                 raise
         finally:
             self.__writer, self.__reader = None, None
+            for future in self.__pending_requests:
+                future.set_exception(NotConnectedError('Tinkerforge IP Connection closed.'))
+            self.__pending_requests = {}
             self.__logger.info('Tinkerforge IP connection closed.')
