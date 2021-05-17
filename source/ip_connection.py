@@ -91,9 +91,10 @@ class IPConnectionAsync(object):
     def is_connected(self):
         return self.__writer is not None and not self.__writer.is_closing()
 
-    def __init__(self, host=None, port=4223):
+    def __init__(self, host=None, port=4223, authentication_secret=None):
         self.__host = host
         self.__port = port
+        self.__authentication_secret = authentication_secret
 
         self.__sequence_number = 0
         self.__timeout = DEFAULT_WAIT_TIMEOUT
@@ -123,7 +124,7 @@ class IPConnectionAsync(object):
                 sequence_number)
 
     def add_device(self, device):
-        self.__logger.debug('Adding device: %(device)s', {'device': device})
+        self.__logger.debug('Adding device: %(device)s.', {'device': device})
         self.__devices[device.uid] = device
 
     async def enumerate(self):
@@ -131,7 +132,7 @@ class IPConnectionAsync(object):
         Broadcasts an enumerate request. All devices will respond with an enumerate callback.
         Returns: None, it does not support 'response_expected'
         """
-        self.__logger.debug('Enumerating Node')
+        self.__logger.debug('Enumerating Node.')
         await self.send_request(
             device=None,
             function_id=FunctionID.ENUMERATE
@@ -151,7 +152,7 @@ class IPConnectionAsync(object):
         request = header + data
 
         # If we are waiting for a response, send the request, then pass on the response as a future
-        self.__logger.debug('Sending request: %(header)s - %(payload)s', {'header': header, 'payload': data})
+        self.__logger.debug('Sending request: %(header)s - %(payload)s.', {'header': header, 'payload': data})
         try:
             self.__writer.write(request)
             if response_expected:
@@ -159,7 +160,7 @@ class IPConnectionAsync(object):
                 # The future will be resolved by the main_loop() and __process_packet()
                 self.__pending_requests[sequence_number] = asyncio.Future()
                 header, payload  = await asyncio.wait_for(self.__pending_requests[sequence_number], self.__timeout)
-                self.__logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
+                self.__logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s.', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
                 return header, payload
         finally:
             # Return the sequence number
@@ -256,9 +257,9 @@ class IPConnectionAsync(object):
                 # Drop the packet, because it is not our sequence number
                 pass
             except asyncio.InvalidStateError:
-                self.__logger.exception('Invalid sequence number: %i', header['sequence_number'])
+                self.__logger.exception('Invalid sequence number: %i.', header['sequence_number'])
         else:
-            self.__logger.info('Unknown packet: %(header)s - %(payload)s', {'header': header, 'payload': payload})
+            self.__logger.info('Unknown packet: %(header)s - %(payload)s.', {'header': header, 'payload': payload})
 
     async def main_loop(self):
         try:
@@ -302,6 +303,7 @@ class IPConnectionAsync(object):
         return payload    # As bytestring with length 4
 
     async def __authenticate(self, authentication_secret):
+        self.__logger.debug('Authenticating with secret %s.', authentication_secret)
         client_nonce, server_nonce = await asyncio.gather(self.__get_client_nonce(), self.__get_server_nonce())
 
         h = hmac.new(authentication_secret, digestmod=hashlib.sha1)
@@ -318,13 +320,15 @@ class IPConnectionAsync(object):
             response_expected = False,
         )
 
-    async def connect(self, host=None, port=None, authentication_secret=''):
+    async def connect(self, host=None, port=None, authentication_secret=None):
         if host is not None:
             self.__host = host
         if port is not None:
             self.__port = port
         if self.__host is None:
             raise TypeError('Invalid hostname')
+        if authentication_secret is None:
+            authentication_secret = self.__authentication_secret
 
         if self.__lock is None:
             self.__lock = asyncio.Lock()
@@ -337,7 +341,7 @@ class IPConnectionAsync(object):
 
                 self.__reader, self.__writer = await asyncio.open_connection(self.__host, self.__port)
                 self.__main_task = asyncio.create_task(self.main_loop())
-                if authentication_secret:
+                if authentication_secret is not None:
                     try:
                         authentication_secret = authentication_secret.encode('ascii')
                     except AttributeError:
