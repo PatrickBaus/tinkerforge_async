@@ -42,7 +42,6 @@ class IntegrationTime(Enum):
     T350MS = 6
     T400MS = 7
 
-
 class BrickletAmbientLightV3(BrickletWithMCU):
     """
     Measures ambient temperature with 0.2 K accuracy
