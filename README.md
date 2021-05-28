@@ -17,6 +17,7 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 |[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
+|[IO-4 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/IO4_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[IO-16](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Motion Detector 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Motion_Detector_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
@@ -113,6 +114,10 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    - `IPConnection.set_timeout/IPConnection.get_timeout`: Replaced by a property
    - `IPConnection.register_callback(callback_id, function)`: Replaced by `register_event_queue()`
    - `IPConnection.connect(host, port=4223, authentication_secret='')`: If `authentication_secret` is not empty, try to authenticate.
+
+- #### [IP Connection](https://www.tinkerforge.com/de/doc/Software/Bricklets/IO4V2_Bricklet_Python.html)
+   - `BrickletIO4V2.set_pwm_configuration()` will now take the frequency in units of Hz and the duty cycle is normalized to 1, so it will take a float from [0...1].
+   - `BrickletIO4V2.get_pwm_configuration()` will return the frequency in units of HZ and the duty cycle is normalized to 1.
 
 - #### [Master Brick](https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html)
    - `BrickMaster.set_wifi_configuration()`/`BrickMaster.get_wifi_configuration()` will take/return all ips in natural order

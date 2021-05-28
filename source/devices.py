@@ -37,6 +37,7 @@ class DeviceIdentifier(Enum):
     BrickletMotionDetector_V2         = 292
     BrickletPtc_V2                    = 2101
     BrickletRs232_V2                  = 2108
+    BrickletIO4V2                     = 2111
     BrickletTemperature_V2            = 2113
     BrickletIndustrialDualAnalogIn_V2 = 2121
     BrickletAmbientLight_V3           = 2131
