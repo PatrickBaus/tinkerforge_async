@@ -84,9 +84,9 @@ async def run_example(packet, callback_queue):
     print('Enabling input callbacks on channel 2')
     await asyncio.gather(*[bricklet.set_configuration(channel=channel, direction=bricklet.Direction.IN, value=False) for channel in range(4)])  # Set all pins to inputs with pull ups
     await bricklet.set_input_value_callback_configuration(channel=2, period=100, value_has_to_change=False)
-    print('Callback configuration:', await bricklet.get_input_value_callback_configuration(2))
+    print('Callback configuration for channel 2:', await bricklet.get_input_value_callback_configuration(2))
     await bricklet.set_all_input_value_callback_configuration(period=100, value_has_to_change=False)
-    print('Callback configuration:', await bricklet.get_all_input_value_callback_configuration())
+    print('Callback configuration for all inputs:', await bricklet.get_all_input_value_callback_configuration())
     await asyncio.sleep(0.5)
     await bricklet.set_input_value_callback_configuration(channel=2, period=100, value_has_to_change=True)
     await bricklet.set_all_input_value_callback_configuration(period=100, value_has_to_change=True)
@@ -105,6 +105,15 @@ async def run_example(packet, callback_queue):
     await bricklet.set_pwm_configuration(channel=3, frequency=10, duty_cycle=0.5)
     print('PWM configuration:', await bricklet.get_pwm_configuration(3))
     await asyncio.sleep(1)
+
+    print('SPI error count:', await bricklet.get_spitfp_error_count())
+
+    print('Current bootloader mode:', await bricklet.get_bootloader_mode())
+    bootloader_mode = bricklet.BootloaderMode.FIRMWARE
+    print('Setting bootloader mode to', bootloader_mode, ':', await bricklet.set_bootloader_mode(bootloader_mode))
+
+    print('Reset Bricklet')
+    #await bricklet.reset()
 
     # Terminate the loop
     asyncio.create_task(shutdown())
