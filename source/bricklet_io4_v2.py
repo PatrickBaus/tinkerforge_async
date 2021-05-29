@@ -13,11 +13,13 @@ GetMonoflop = namedtuple('Monoflop', ['value', 'time', 'time_remaining'])
 GetEdgeCountConfiguration = namedtuple('EdgeCountConfiguration', ['edge_type', 'debounce'])
 GetPWMConfiguration = namedtuple('PWMConfiguration', ['frequency', 'duty_cycle'])
 
+
 @unique
 class CallbackID(Enum):
     INPUT_VALUE = 17
     ALL_INPUT_VALUE = 18
     MONOFLOP_DONE = 19
+
 
 @unique
 class FunctionID(Enum):
@@ -38,16 +40,19 @@ class FunctionID(Enum):
     SET_PWM_CONFIGURATION = 15
     GET_PWM_CONFIGURATION = 16
 
+
 @unique
 class Direction(Enum):
     IN = 'i'
     OUT = 'o'
+
 
 @unique
 class EdgeType(Enum):
     RISING = 0
     FALLING = 1
     BOTH = 2
+
 
 class BrickletIO4V2(BrickletWithMCU):
     """
@@ -128,7 +133,7 @@ class BrickletIO4V2(BrickletWithMCU):
          This function does nothing for channels that are configured as input. Pull-up
          resistors can be switched on with :func:`Set Configuration`.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
 
         result = await self.ipcon.send_request(
             device=self,
@@ -162,7 +167,7 @@ class BrickletIO4V2(BrickletWithMCU):
         A running monoflop timer or PWM for the specific channel will be aborted if this
         function is called.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
         if not type(direction) is Direction:
             direction = Direction(direction)
 
@@ -182,7 +187,7 @@ class BrickletIO4V2(BrickletWithMCU):
         """
         Returns the channel configuration as set by :func:`Set Configuration`.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -208,7 +213,7 @@ class BrickletIO4V2(BrickletWithMCU):
         If it is set to false, the callback is continuously triggered with the period,
         independent of the value.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
 
         result = await self.ipcon.send_request(
             device=self,
@@ -227,7 +232,7 @@ class BrickletIO4V2(BrickletWithMCU):
         Returns the callback configuration for the given channel as set by
         :func:`Set Input Value Callback Configuration`.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -289,7 +294,7 @@ class BrickletIO4V2(BrickletWithMCU):
         of two seconds. The channel will be *high* all the time. If now the RS485
         connection is lost, the channel will turn *low* in at most two seconds.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
 
         result = await self.ipcon.send_request(
             device=self,
@@ -311,7 +316,7 @@ class BrickletIO4V2(BrickletWithMCU):
         If the timer is not running currently, the remaining time will be returned
         as 0.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -332,7 +337,7 @@ class BrickletIO4V2(BrickletWithMCU):
         .. note::
          Calling this function is only allowed for channels configured as input.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -365,7 +370,7 @@ class BrickletIO4V2(BrickletWithMCU):
         .. note::
          Calling this function is only allowed for channels configured as input.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
         if not type(edge_type) is EdgeType:
             edge_type = EdgeType(edge_type)
 
@@ -389,7 +394,7 @@ class BrickletIO4V2(BrickletWithMCU):
         .. note::
          Calling this function is only allowed for channels configured as input.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -415,10 +420,9 @@ class BrickletIO4V2(BrickletWithMCU):
         A running monoflop timer for the given channel will be aborted if this function
         is called.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
         frequency *= 10
         duty_cycle *= 10000
-
 
         result = await self.ipcon.send_request(
             device=self,
@@ -436,7 +440,7 @@ class BrickletIO4V2(BrickletWithMCU):
         """
         Returns the PWM configuration as set by :func:`Set PWM Configuration`.
         """
-        assert (channel in (0,1,2,3))
+        assert (channel in (0, 1, 2, 3))
 
         _, payload = await self.ipcon.send_request(
             device=self,

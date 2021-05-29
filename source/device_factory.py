@@ -20,9 +20,10 @@ from .bricklet_temperature_v2 import BrickletTemperatureV2
 from .bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
 from .bricklet_segment_display_4x7_v2 import BrickletSegmentDisplay4x7V2
 
+
 class DeviceFactory:
     def __init__(self):
-        self.__available_devices= {}
+        self.__available_devices = {}
 
     def register(self, device):
         self.__available_devices[device.DEVICE_IDENTIFIER] = device
@@ -32,6 +33,7 @@ class DeviceFactory:
             return self.__available_devices[device_id](uid, ipcon, *args, **kwargs)
         except KeyError:
             raise ValueError(f'No device available for id {device_id}') from None
+
 
 device_factory = DeviceFactory()
 

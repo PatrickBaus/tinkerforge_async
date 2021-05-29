@@ -9,12 +9,14 @@ from .ip_connection_helper import pack_payload, unpack_payload
 GetVoltageCallbackThreshold = namedtuple('VoltageCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetAnalogValueCallbackThreshold = namedtuple('AnalogValueCallbackThreshold', ['option', 'minimum', 'maximum'])
 
+
 @unique
 class CallbackID(Enum):
     VOLTAGE = 13
     ANALOG_VALUE = 14
     VOLTAGE_REACHED = 15
     ANALOG_VALUE_REACHED = 16
+
 
 @unique
 class FunctionID(Enum):
@@ -35,6 +37,7 @@ class FunctionID(Enum):
     SET_AVERAGING = 19
     GET_AVERAGING = 20
 
+
 @unique
 class Range(Enum):
     AUTOMATIC = 0
@@ -43,6 +46,7 @@ class Range(Enum):
     UP_TO_36V = 3
     UP_TO_45V = 4
     UP_TO_3V = 5
+
 
 class BrickletAnalogIn(Device):
     """
@@ -125,7 +129,7 @@ class BrickletAnalogIn(Device):
             device=self,
             function_id=FunctionID.SET_VOLTAGE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_voltage_callback_period(self):
@@ -153,7 +157,7 @@ class BrickletAnalogIn(Device):
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_analog_value_callback_period(self):
@@ -370,4 +374,3 @@ class BrickletAnalogIn(Device):
         else:
             header['sid'] = 1
             return payload, True    # payload, done
-

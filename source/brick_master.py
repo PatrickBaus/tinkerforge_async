@@ -36,8 +36,10 @@ GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum'
 GetProtocol1BrickletName = namedtuple('Protocol1BrickletName', ['protocol_version', 'firmware_version', 'name'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
+
 class Wifi2BootloaderError(Exception):
     pass
+
 
 @unique
 class CallbackID(Enum):
@@ -47,6 +49,7 @@ class CallbackID(Enum):
     STACK_CURRENT_REACHED = 62
     STACK_VOLTAGE_REACHED = 63
     USB_VOLTAGE_REACHED = 64
+
 
 @unique
 class FunctionID(Enum):
@@ -171,10 +174,12 @@ class FunctionID(Enum):
     IS_STATUS_LED_ENABLED = 240
     GET_PROTOCOL1_BRICKLET_NAME = 241
 
+
 @unique
 class ExtensionPosition(Enum):
     BOTTOM = 0
     TOP = 1
+
 
 @unique
 class ExtensionType(Enum):
@@ -183,6 +188,7 @@ class ExtensionType(Enum):
     WIFI = 3
     ETHERNET = 4
     WIFI2 = 5
+
 
 @unique
 class ConnectionType(Enum):
@@ -195,6 +201,7 @@ class ConnectionType(Enum):
     ETHERNET = 6
     WIFI_V2 = 7
 
+
 @unique
 class ChibiFrequency(Enum):
     OQPSK_868_MHZ = 0
@@ -202,11 +209,13 @@ class ChibiFrequency(Enum):
     OQPSK_750_MHZ = 2
     BPSK40_915_MHZ = 3
 
+
 @unique
 class Rs485Parity(Enum):
     NONE = 'n'
     EVEN = 'e'
     ODD = 'o'
+
 
 @unique
 class WifiConnection(Enum):
@@ -217,12 +226,14 @@ class WifiConnection(Enum):
     AD_HOC_DHCP = 4
     AD_HOC_STATIC_IP = 5
 
+
 @unique
 class WifiEncryptionMode(Enum):
     WPA_WPA2 = 0
     WPA_ENTERPRISE = 1
     WEP = 2
     NONE = 3
+
 
 @unique
 class WifiEapOuterAuth(Enum):
@@ -231,16 +242,19 @@ class WifiEapOuterAuth(Enum):
     EAP_TTLS = 2
     EAP_PEAP = 3
 
+
 @unique
 class WifiEapInnerAuth(Enum):
     EAP_MSCHAP = 0
     EAP_GTC = 1
+
 
 @unique
 class WifiEapCertType(Enum):
     CA_CERT = 0
     CLIENT_CERT = 1
     PRIVATE_KEY = 2
+
 
 class EapOptions(object):
     def __repr__(self):
@@ -285,6 +299,7 @@ class EapOptions(object):
             value = WifiEapCertType(value)
         self.__cert_type = value
 
+
 @unique
 class WifiState(Enum):
     DISASSOCIATED = 0
@@ -293,10 +308,12 @@ class WifiState(Enum):
     ERROR = 3
     NOT_INITIALIZED = 255
 
+
 @unique
 class WifiPowerMode(Enum):
     HIGH = 0
     LOW = 1
+
 
 @unique
 class WifiDomain(Enum):
@@ -304,15 +321,18 @@ class WifiDomain(Enum):
     ETSI = 1    # Europe, Middle East, Africa
     TELEC = 2   # Japan
 
+
 @unique
 class EthernetConnection(Enum):
     DHCP = 0
     STATIC_IP = 1
 
+
 class PhyMode(Enum):
     WIFI_B = 0
     WIFI_G = 1
     WIFI_N = 2
+
 
 @unique
 class WifiClientStatus(Enum):
@@ -324,6 +344,7 @@ class WifiClientStatus(Enum):
     GOT_IP = 5
     UNKNOWN = 255
 
+
 @unique
 class WifiApEncryption(Enum):
     OPEN = 0
@@ -331,6 +352,7 @@ class WifiApEncryption(Enum):
     WPA_PSK = 2
     WPA2_PSK = 3
     WPA_WPA2_PSK = 4
+
 
 @unique
 class WifiMeshStatus(Enum):
@@ -342,6 +364,7 @@ class WifiMeshStatus(Enum):
     AP_AVAILABLE = 5
     AP_SETUP = 6
     LEAF_AVAILABLE = 7
+
 
 class BrickMaster(DeviceWithMCU):
     """
@@ -440,7 +463,7 @@ class BrickMaster(DeviceWithMCU):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_EXTENSION_TYPE,
-            data=pack_payload((extension.value,exttype.value), 'B I'),
+            data=pack_payload((extension.value, exttype.value), 'B I'),
             response_expected=response_expected
         )
 
@@ -548,7 +571,7 @@ class BrickMaster(DeviceWithMCU):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CHIBI_SLAVE_ADDRESS,
-            data=pack_payload((int(num),int(address)), 'B B'),
+            data=pack_payload((int(num), int(address)), 'B B'),
             response_expected=response_expected
         )
 
@@ -1046,7 +1069,7 @@ class BrickMaster(DeviceWithMCU):
             function_id=FunctionID.GET_WIFI_STATUS,
             response_expected=True
         )
-        mac_address, bssid, channel, rssi, ip, subnet_mask , gateway, rx_count, tx_count, state = unpack_payload(payload, '6B 6B B h 4B 4B 4B I I B')
+        mac_address, bssid, channel, rssi, ip, subnet_mask, gateway, rx_count, tx_count, state = unpack_payload(payload, '6B 6B B h 4B 4B 4B I I B')
         return GetWifiStatus(
             mac_address[::-1],
             bssid[::-1],
@@ -1377,7 +1400,6 @@ class BrickMaster(DeviceWithMCU):
         )
 
         return unpack_payload(payload, '16s')
-
 
     async def set_stack_current_callback_period(self, period, response_expected=True):
         """
@@ -2035,7 +2057,7 @@ class BrickMaster(DeviceWithMCU):
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
         connection_type = await self.get_connection_type()
-        if not connection_type is ConnectionType.USB:
+        if connection_type is not ConnectionType.USB:
             raise RuntimeError('This function can only be called when connected via USB.')
 
         _, payload = await self.ipcon.send_request(
@@ -2129,7 +2151,6 @@ class BrickMaster(DeviceWithMCU):
         except AttributeError:
             pass    # already a bytestring
         assert len(secret) <= 64
-
 
         result = await self.ipcon.send_request(
             device=self,
@@ -2259,7 +2280,7 @@ class BrickMaster(DeviceWithMCU):
             ap_connected_count
         )
 
-    async def set_wifi2_client_configuration(self, enable=True, ssid='tinkerforge', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), mac_address=(0,0,0,0,0,0), bssid=(0,0,0,0,0,0), response_expected=True):
+    async def set_wifi2_client_configuration(self, enable=True, ssid='tinkerforge', ip=(0, 0, 0, 0), subnet_mask=(0, 0, 0, 0), gateway=(0, 0, 0, 0), mac_address=(0, 0, 0, 0, 0, 0), bssid=(0, 0, 0, 0, 0, 0), response_expected=True):
         """
         Sets the client specific configuration of the WIFI Extension 2.0.
 
@@ -2436,7 +2457,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '64s')
 
-    async def set_wifi2_ap_configuration(self, enable=True, ssid='WIFI Extension 2.0 Access Point', ip=(0,0,0,0), subnet_mask=(0,0,0,0), gateway=(0,0,0,0), encryption=WifiApEncryption.WPA2_PSK, hidden=False, channel=1, mac_address=(0,0,0,0,0,0), response_expected=True):
+    async def set_wifi2_ap_configuration(self, enable=True, ssid='WIFI Extension 2.0 Access Point', ip=(0, 0, 0, 0), subnet_mask=(0, 0, 0, 0), gateway=(0, 0, 0, 0), encryption=WifiApEncryption.WPA2_PSK, hidden=False, channel=1, mac_address=(0, 0, 0, 0, 0, 0), response_expected=True):
         """
         Sets the access point specific configuration of the WIFI Extension 2.0.
 
@@ -2651,7 +2672,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, '!')
 
-    async def set_wifi2_mesh_configuration(self, enable=False, root_ip=(0,0,0,0), root_subnet_mask=(0,0,0,0), root_gateway=(0,0,0,0), router_bssid=(0,0,0,0,0,0), group_id=(0x1A,0xFE,0x34,0,0,0), group_ssid_prefix='TF_MESH', gateway_ip=(0,0,0,0), gateway_port=4240, response_expected=True):
+    async def set_wifi2_mesh_configuration(self, enable=False, root_ip=(0, 0, 0, 0), root_subnet_mask=(0, 0, 0, 0), root_gateway=(0, 0, 0, 0), router_bssid=(0, 0, 0, 0, 0, 0), group_id=(0x1A, 0xFE, 0x34, 0, 0, 0), group_ssid_prefix='TF_MESH', gateway_ip=(0, 0, 0, 0), gateway_port=4240, response_expected=True):
         """
         Requires WIFI Extension 2.0 firmware 2.1.0.
 
@@ -2932,7 +2953,7 @@ class BrickMaster(DeviceWithMCU):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SPITFP_BAUDRATE_CONFIG,
-            data=pack_payload((bool(enable_dynamic_baudrate),int(minimum_dynamic_baudrate)), '! I'),
+            data=pack_payload((bool(enable_dynamic_baudrate), int(minimum_dynamic_baudrate)), '! I'),
             response_expected=response_expected
         )
 
@@ -3122,6 +3143,5 @@ class BrickMaster(DeviceWithMCU):
         accuracy of +-15%. Practically it is only useful as an indicator for
         temperature changes.
         """
-        
-        return Decimal(await super().get_chip_temperature()) / 10
 
+        return Decimal(await super().get_chip_temperature()) / 10

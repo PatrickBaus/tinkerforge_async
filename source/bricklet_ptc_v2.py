@@ -17,6 +17,7 @@ class CallbackID(Enum):
     RESISTANCE = 8
     SENSOR_CONNECTED = 18
 
+
 @unique
 class FunctionID(Enum):
     GET_TEMPERATURE = 1
@@ -35,10 +36,12 @@ class FunctionID(Enum):
     SET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION = 16
     GET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION = 17
 
+
 @unique
 class LineFilter(Enum):
     FREQUENCY_50HZ = 0
     FREQUENCY_60HZ = 1
+
 
 @unique
 class WireMode(Enum):
@@ -46,10 +49,12 @@ class WireMode(Enum):
     WIRE_3 = 3
     WIRE_4 = 4
 
+
 @unique
 class SensorType(Enum):
     PT_100 = 0
     PT_1000 = 1
+
 
 class BrickletPtcV2(BrickletWithMCU):
     """
@@ -444,4 +449,3 @@ class BrickletPtcV2(BrickletWithMCU):
         else:
             header['sid'] = 2
             return payload, True    # payload, done
-

@@ -12,8 +12,10 @@ import struct
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 from .devices import DeviceIdentifier, FunctionID, UnknownFunctionError
 
+
 class NotConnectedError(ConnectionError):
     pass
+
 
 @unique
 class FunctionID(Enum):
@@ -22,32 +24,36 @@ class FunctionID(Enum):
     CALLBACK_ENUMERATE = 253
     ENUMERATE = 254
 
+
 @unique
 class EnumerationType(Enum):
     AVAILABLE = 0
     CONNECTED = 1
     DISCONNECTED = 2
 
+
 class Flags(Flag):
     OK = 0
     INVALID_PARAMETER = 64
     FUNCTION_NOT_SUPPORTED = 128
 
-DEFAULT_WAIT_TIMEOUT = 2.5 # in seconds
+
+DEFAULT_WAIT_TIMEOUT = 2.5  # in seconds
+
 
 def parse_header(data):
     uid, payload_size, function_id, options, flags = struct.unpack_from(IPConnectionAsync.HEADER_FORMAT, data)
     try:
-      function_id = FunctionID(function_id)
-      if function_id in (FunctionID.GET_AUTHENTICATION_NONCE, FunctionID.AUTHENTICATE) and not uid == 1:
-          # Only the special uid 1 can reply with GET_AUTHENTICATION_NONCE or AUTHENTICATE
-          function_id = function_id.value
+        function_id = FunctionID(function_id)
+        if function_id in (FunctionID.GET_AUTHENTICATION_NONCE, FunctionID.AUTHENTICATE) and not uid == 1:
+            # Only the special uid 1 can reply with GET_AUTHENTICATION_NONCE or AUTHENTICATE
+            function_id = function_id.value
     except ValueError:
         # Do not assign an enum, leave the int
         pass
     sequence_number = None if (options >> 4) & 0b1111 == 0 else (options >> 4) & 0b1111   # There is no sequence number if it is a callback (sequence_number == 0)
     response_expected = bool(options >> 3 & 0b1)
-    #options = options & 0b111 # Options for future use
+#    options = options & 0b111 # Options for future use
     try:
         flags = Flags(flags)
     except ValueError:
@@ -55,12 +61,14 @@ def parse_header(data):
         pass
 
     return payload_size, \
-           {'uid': uid,
+        {
+            'uid': uid,
             'sequence_number': sequence_number,
             'response_expected': response_expected,
             'function_id': function_id,
-            'flags': flags
-           }
+            'flags': flags,
+        }
+
 
 class IPConnectionAsync(object):
     BROADCAST_UID = 0
@@ -162,7 +170,7 @@ class IPConnectionAsync(object):
                 self.__logger.debug('Waiting for reply for request number %(sequence_number)s.', {'sequence_number': sequence_number})
                 # The future will be resolved by the main_loop() and __process_packet()
                 self.__pending_requests[sequence_number] = asyncio.Future()
-                header, payload  = await asyncio.wait_for(self.__pending_requests[sequence_number], self.__timeout)
+                header, payload = await asyncio.wait_for(self.__pending_requests[sequence_number], self.__timeout)
                 self.__logger.debug('Got reply for request number %(sequence_number)s: %(header)s - %(payload)s.', {'sequence_number': sequence_number, 'header': header, 'payload': payload})
                 return header, payload
         finally:
@@ -196,7 +204,7 @@ class IPConnectionAsync(object):
                 'firmware_version': None if enumeration_type is EnumerationType.DISCONNECTED else firmware_version,
                 'device_id': None if enumeration_type is EnumerationType.DISCONNECTED else device_identifier,
                 'enumeration_type': enumeration_type,
-        }
+                }
 
     async def __read_packet(self):
         if not self.is_connected:
@@ -298,7 +306,7 @@ class IPConnectionAsync(object):
         """
         Query the server for its nonce. Returns a bytestring  with length 4.
         """
-        _, payload =  await self.send_request(
+        _, payload = await self.send_request(
             device=self,
             function_id=FunctionID.GET_AUTHENTICATION_NONCE,
             response_expected=True
@@ -320,7 +328,7 @@ class IPConnectionAsync(object):
             device=self,
             function_id=FunctionID.AUTHENTICATE,
             data=pack_payload((client_nonce, digest), '4B 20B'),
-            response_expected = False,
+            response_expected=False,
         )
 
     async def connect(self, host=None, port=None, authentication_secret=None):
@@ -339,7 +347,7 @@ class IPConnectionAsync(object):
             if not self.is_connected:
                 self.__enumeration_queue = asyncio.Queue(maxsize=20)
                 self.__sequence_number_queue = asyncio.Queue(maxsize=15)
-                for i in range(1,16):
+                for i in range(1, 16):
                     self.__sequence_number_queue.put_nowait(i)
 
                 self.__reader, self.__writer = await asyncio.open_connection(self.__host, self.__port)
@@ -374,7 +382,7 @@ class IPConnectionAsync(object):
             await self.__writer.wait_closed()
         except OSError as exc:
             if exc.errno == errno.ENOTCONN:
-                pass # Socket is no longer connected, so we can't send the EOF.
+                pass    # Socket is no longer connected, so we can't send the EOF.
             else:
                 raise
         finally:

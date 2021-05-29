@@ -10,12 +10,14 @@ GetAirPressureCallbackThreshold = namedtuple('AirPressureCallbackThreshold', ['o
 GetAltitudeCallbackThreshold = namedtuple('AltitudeCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetAveraging = namedtuple('Averaging', ['moving_average_pressure', 'average_pressure', 'average_temperature'])
 
+
 @unique
 class CallbackID(Enum):
     AIR_PRESSURE = 15
     ALTITUDE = 16
     AIR_PRESSURE_REACHED = 17
     ALTITUDE_REACHED = 18
+
 
 @unique
 class FunctionID(Enum):
@@ -36,6 +38,7 @@ class FunctionID(Enum):
     GET_REFERENCE_AIR_PRESSURE = 19
     SET_AVERAGING = 20
     GET_AVERAGING = 21
+
 
 class BrickletBarometer(Device):
     """
@@ -112,7 +115,7 @@ class BrickletBarometer(Device):
             device=self,
             function_id=FunctionID.SET_AIR_PRESSURE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_air_pressure_callback_period(self):
@@ -140,7 +143,7 @@ class BrickletBarometer(Device):
             device=self,
             function_id=FunctionID.SET_ALTITUDE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_altitude_callback_period(self):
@@ -343,8 +346,8 @@ class BrickletBarometer(Device):
               (
                 int(moving_average_pressure),
                 int(average_pressure),
-                int(average_temperature)
-             ), 'B B B'),
+                int(average_temperature),
+              ), 'B B B'),
             response_expected=response_expected
         )
 
@@ -387,4 +390,3 @@ class BrickletBarometer(Device):
         else:
             header['sid'] = 0
             return self.__value_to_SI_altitude(payload), True    # payload, done
-

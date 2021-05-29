@@ -9,6 +9,7 @@ from .ip_connection_helper import pack_payload, unpack_payload
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetResistanceCallbackThreshold = namedtuple('ResistanceCallbackThreshold', ['option', 'minimum', 'maximum'])
 
+
 @unique
 class CallbackID(Enum):
     TEMPERATURE = 13
@@ -17,10 +18,11 @@ class CallbackID(Enum):
     RESISTANCE_REACHED = 16
     SENSOR_CONNECTED = 24
 
+
 @unique
 class FunctionID(Enum):
     GET_TEMPERATURE = 1
-    GET_RESISTANCE  = 2
+    GET_RESISTANCE = 2
     SET_TEMPERATURE_CALLBACK_PERIOD = 3
     GET_TEMPERATURE_CALLBACK_PERIOD = 4
     SET_RESISTANCE_CALLBACK_PERIOD = 5
@@ -39,10 +41,12 @@ class FunctionID(Enum):
     SET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION = 22
     GET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION = 23
 
+
 @unique
 class LineFilter(Enum):
     FREQUENCY_50HZ = 0
     FREQUENCY_60HZ = 1
+
 
 @unique
 class WireMode(Enum):
@@ -50,10 +54,12 @@ class WireMode(Enum):
     WIRE_3 = 3
     WIRE_4 = 4
 
+
 @unique
 class SensorType(Enum):
     PT_100 = 0
     PT_1000 = 1
+
 
 class BrickletPtc(Device):
     """
@@ -153,7 +159,7 @@ class BrickletPtc(Device):
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_temperature_callback_period(self):
@@ -181,7 +187,7 @@ class BrickletPtc(Device):
             device=self,
             function_id=FunctionID.SET_RESISTANCE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_resistance_callback_period(self):
@@ -461,4 +467,3 @@ class BrickletPtc(Device):
         else:
             header['sid'] = 2
             return payload, True    # payload, done
-

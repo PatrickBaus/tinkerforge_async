@@ -8,9 +8,11 @@ from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 
+
 @unique
 class CallbackID(Enum):
     TEMPERATURE = 4
+
 
 @unique
 class FunctionID(Enum):
@@ -20,10 +22,12 @@ class FunctionID(Enum):
     SET_HEATER_CONFIGURATION = 5
     GET_HEATER_CONFIGURATION = 6
 
+
 @unique
 class HeaterConfig(Enum):
     DISABLED = 0
     ENABLED = 1
+
 
 class BrickletTemperatureV2(BrickletWithMCU):
     """
@@ -174,4 +178,3 @@ class BrickletTemperatureV2(BrickletWithMCU):
     def _process_callback_payload(self, header, payload):
         payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
         return self.__value_to_SI(payload), True    # payload, done
-

@@ -8,9 +8,11 @@ from .ip_connection_helper import pack_payload, unpack_payload
 GetSegments = namedtuple('Segments', ['segments', 'brightness', 'colon'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
+
 @unique
 class CallbackID(Enum):
     COUNTER_FINISHED = 5
+
 
 @unique
 class FunctionID(Enum):
@@ -18,6 +20,7 @@ class FunctionID(Enum):
     GET_SEGMENTS = 2
     START_COUNTER = 3
     GET_COUNTER_VALUE = 4
+
 
 class BrickletSegmentDisplay4x7(Device):
     """
@@ -44,7 +47,7 @@ class BrickletSegmentDisplay4x7(Device):
 
         self.api_version = (2, 0, 0)
 
-    async def set_segments(self, segments=(0,0,0,0), brightness=7, colon=False, response_expected=True):
+    async def set_segments(self, segments=(0, 0, 0, 0), brightness=7, colon=False, response_expected=True):
         """
         The 7-segment display can be set with bitmaps. Every bit controls one
         segment:
@@ -136,4 +139,3 @@ class BrickletSegmentDisplay4x7(Device):
             response_expected=True
         )
         return unpack_payload(payload, 'H')
-

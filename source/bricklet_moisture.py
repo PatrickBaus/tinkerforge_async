@@ -7,10 +7,12 @@ from .ip_connection_helper import pack_payload, unpack_payload
 
 GetMoistureCallbackThreshold = namedtuple('MoistureCallbackThreshold', ['option', 'minimum', 'maximum'])
 
+
 @unique
 class CallbackID(Enum):
     MOISTURE = 8
     MOISTURE_REACHED = 9
+
 
 @unique
 class FunctionID(Enum):
@@ -23,6 +25,7 @@ class FunctionID(Enum):
     GET_DEBOUNCE_PERIOD = 7
     SET_MOVING_AVERAGE = 10
     GET_MOVING_AVERAGE = 11
+
 
 class BrickletMoisture(Device):
     """
@@ -82,7 +85,7 @@ class BrickletMoisture(Device):
             device=self,
             function_id=FunctionID.SET_MOISTURE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_moisture_callback_period(self):
@@ -201,4 +204,3 @@ class BrickletMoisture(Device):
             response_expected=True
         )
         return unpack_payload(payload, 'B')
-

@@ -7,9 +7,11 @@ from .ip_connection_helper import pack_payload, unpack_payload
 
 GetSegments = namedtuple('Segments', ['segments', 'colon', 'tick'])
 
+
 @unique
 class CallbackID(Enum):
     COUNTER_FINISHED = 10
+
 
 @unique
 class FunctionID(Enum):
@@ -22,6 +24,7 @@ class FunctionID(Enum):
     GET_SELECTED_SEGMENT = 7
     START_COUNTER = 8
     GET_COUNTER_VALUE = 9
+
 
 class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
     """
@@ -48,7 +51,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         self.api_version = (2, 0, 0)
 
-    async def set_segments(self, segments=(0,0,0,0), colon=(False,False), tick=False, response_expected=True):
+    async def set_segments(self, segments=(0, 0, 0, 0), colon=(False, False), tick=False, response_expected=True):
         """
         Sets the segments of the Segment Display 4x7 Bricklet 2.0 segment-by-segment.
 
@@ -86,7 +89,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
             function_id=FunctionID.GET_SEGMENTS,
             response_expected=True
         )
-        return  GetSegments(*unpack_payload(payload, '4B 2! !'))
+        return GetSegments(*unpack_payload(payload, '4B 2! !'))
 
     async def set_brightness(self, brightness=7, response_expected=True):
         """
@@ -215,4 +218,3 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
             response_expected=True
         )
         return unpack_payload(payload, 'H')
-

@@ -8,10 +8,12 @@ from .ip_connection_helper import pack_payload, unpack_payload
 
 GetIndicator = namedtuple('Indicator', ['top_left', 'top_right', 'bottom'])
 
+
 @unique
 class CallbackID(Enum):
     MOTION_DETECTED = 6
     DETECTION_CYCLE_ENDED = 7
+
 
 @unique
 class FunctionID(Enum):
@@ -20,6 +22,7 @@ class FunctionID(Enum):
     GET_SENSITIVITY = 3
     SET_INDICATOR = 4
     GET_INDICATOR = 5
+
 
 class BrickletMotionDetectorV2(BrickletWithMCU):
     """
@@ -127,4 +130,3 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         )
 
         return GetIndicator(*unpack_payload(payload, 'B B B'))
-

@@ -8,10 +8,12 @@ from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'minimum', 'maximum'])
 
+
 @unique
 class CallbackID(Enum):
     TEMPERATURE = 8
     TEMPERATURE_REACHED = 9
+
 
 @unique
 class FunctionID(Enum):
@@ -25,10 +27,12 @@ class FunctionID(Enum):
     SET_I2C_MODE = 10
     GET_I2C_MODE = 11
 
+
 @unique
 class I2cOption(Enum):
-  FAST = 0
-  SLOW = 1
+    FAST = 0
+    SLOW = 1
+
 
 class BrickletTemperature(Device):
     """
@@ -91,7 +95,7 @@ class BrickletTemperature(Device):
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_temperature_callback_period(self):
@@ -232,4 +236,3 @@ class BrickletTemperature(Device):
     def _process_callback_payload(self, header, payload):
         payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
         return self.__value_to_SI(payload), True    # payload, done
-

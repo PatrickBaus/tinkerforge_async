@@ -10,10 +10,12 @@ GetHumidityCallbackConfiguration = namedtuple('HumidityCallbackConfiguration', [
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 GetMovingAverageConfiguration = namedtuple('MovingAverageConfiguration', ['moving_average_length_humidity', 'moving_average_length_temperature'])
 
+
 @unique
 class CallbackID(Enum):
     HUMIDITY = 4
     TEMPERATURE = 8
+
 
 @unique
 class FunctionID(Enum):
@@ -30,19 +32,22 @@ class FunctionID(Enum):
     SET_SAMPLES_PER_SECOND = 13
     GET_SAMPLES_PER_SECOND = 14
 
+
 @unique
 class HeaterConfig(Enum):
     DISABLED = 0
     ENABLED = 1
 
+
 @unique
 class SamplesPerSecond(Enum):
     SPS_20 = 0
     SPS_10 = 1
-    SPS_5  = 2
-    SPS_1  = 3
+    SPS_5 = 2
+    SPS_1 = 3
     SPS_02 = 4
     SPS_01 = 5
+
 
 class BrickletHumidityV2(BrickletWithMCU):
     """
@@ -381,4 +386,3 @@ class BrickletHumidityV2(BrickletWithMCU):
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             header['sid'] = 1
             return self.__temperature_sensor_to_SI(payload), True    # payload, done
-

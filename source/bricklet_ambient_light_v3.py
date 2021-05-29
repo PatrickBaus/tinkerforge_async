@@ -9,9 +9,11 @@ from .ip_connection_helper import pack_payload, unpack_payload
 GetIlluminanceCallbackConfiguration = namedtuple('IlluminanceCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 GetConfiguration = namedtuple('Configuration', ['illuminance_range', 'integration_time'])
 
+
 @unique
 class CallbackID(Enum):
     ILLUMINANCE = 4
+
 
 @unique
 class FunctionID(Enum):
@@ -20,6 +22,7 @@ class FunctionID(Enum):
     GET_ILLUMINANCE_CALLBACK_CONFIGURATION = 3
     SET_CONFIGURATION = 5
     GET_CONFIGURATION = 6
+
 
 @unique
 class IlluminanceRange(Enum):
@@ -31,6 +34,7 @@ class IlluminanceRange(Enum):
     LUX1300 = 4
     LUX600 = 5
 
+
 @unique
 class IntegrationTime(Enum):
     T50MS = 0
@@ -41,6 +45,7 @@ class IntegrationTime(Enum):
     T300MS = 5
     T350MS = 6
     T400MS = 7
+
 
 class BrickletAmbientLightV3(BrickletWithMCU):
     """
@@ -190,7 +195,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CONFIGURATION,
-            data=pack_payload((illuminance_range.value,integration_time.value), 'B B'),
+            data=pack_payload((illuminance_range.value, integration_time.value), 'B B'),
             response_expected=response_expected
         )
 
@@ -219,4 +224,3 @@ class BrickletAmbientLightV3(BrickletWithMCU):
     def _process_callback_payload(self, header, payload):
         payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
         return self.__value_to_SI(payload), True    # payload, done
-

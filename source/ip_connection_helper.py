@@ -6,6 +6,7 @@ import struct
 # Taken from Tinkerforge ip_connection.py
 BASE58 = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
 
+
 def base58encode(value):
     encoded = ''
 
@@ -15,6 +16,7 @@ def base58encode(value):
         value = div
 
     return BASE58[value] + encoded
+
 
 def base58decode(encoded):
     value = 0
@@ -26,6 +28,7 @@ def base58decode(encoded):
         column_multiplier *= 58
 
     return value
+
 
 def pack_payload(data, form):
     packed = b''
@@ -58,6 +61,7 @@ def pack_payload(data, form):
             packed += struct.pack('<' + f, d)
 
     return packed
+
 
 def unpack_payload(data, form):
     ret = []

@@ -9,12 +9,14 @@ from .ip_connection_helper import pack_payload, unpack_payload
 GetHumidityCallbackThreshold = namedtuple('HumidityCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetAnalogValueCallbackThreshold = namedtuple('AnalogValueCallbackThreshold', ['option', 'minimum', 'maximum'])
 
+
 @unique
 class CallbackID(Enum):
     HUMIDITY = 13
     ANALOG_VALUE = 14
     HUMIDITY_REACHED = 15
     ANALOG_VALUE_REACHED = 16
+
 
 @unique
 class FunctionID(Enum):
@@ -30,6 +32,7 @@ class FunctionID(Enum):
     GET_ANALOG_VALUE_CALLBACK_THRESHOLD = 10
     SET_DEBOUNCE_PERIOD = 11
     GET_DEBOUNCE_PERIOD = 12
+
 
 class BrickletHumidity(Device):
     """
@@ -118,7 +121,7 @@ class BrickletHumidity(Device):
             device=self,
             function_id=FunctionID.SET_HUMIDITY_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_humidity_callback_period(self):
@@ -148,7 +151,7 @@ class BrickletHumidity(Device):
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_analog_value_callback_period(self):
@@ -303,4 +306,3 @@ class BrickletHumidity(Device):
         else:
             header['sid'] = 1
             return payload, True    # payload, done
-

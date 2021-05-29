@@ -9,8 +9,10 @@ from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
+
 class UnknownFunctionError(Exception):
     pass
+
 
 @unique
 class ThresholdOption(Enum):
@@ -20,28 +22,30 @@ class ThresholdOption(Enum):
     LESS_THAN = '<'
     GREATER_THAN = '>'
 
+
 @unique
 class DeviceIdentifier(Enum):
-    BrickMaster                       = 13
-    BrickletAmbientLight              = 21
-    BrickletHumidity                  = 27
-    BrickletIO16                      = 28
-    BrickletTemperature               = 216
-    BrickletAnalogIn                  = 219
-    BrickletBarometer                 = 221
-    BrickletPtc                       = 226
-    BrickletMoisture                  = 232
-    BrickletSegmentDisplay4x7         = 237
-    BrickletAmbientLight_V2           = 259
-    BrickletHumidity_V2               = 283
-    BrickletMotionDetector_V2         = 292
-    BrickletPtc_V2                    = 2101
-    BrickletRs232_V2                  = 2108
-    BrickletIO4V2                     = 2111
-    BrickletTemperature_V2            = 2113
+    BrickMaster = 13
+    BrickletAmbientLight = 21
+    BrickletHumidity = 27
+    BrickletIO16 = 28
+    BrickletTemperature = 216
+    BrickletAnalogIn = 219
+    BrickletBarometer = 221
+    BrickletPtc = 226
+    BrickletMoisture = 232
+    BrickletSegmentDisplay4x7 = 237
+    BrickletAmbientLight_V2 = 259
+    BrickletHumidity_V2 = 283
+    BrickletMotionDetector_V2 = 292
+    BrickletPtc_V2 = 2101
+    BrickletRs232_V2 = 2108
+    BrickletIO4V2 = 2111
+    BrickletTemperature_V2 = 2113
     BrickletIndustrialDualAnalogIn_V2 = 2121
-    BrickletAmbientLight_V3           = 2131
-    BrickletSegmentDisplay4x7_V2      = 2137
+    BrickletAmbientLight_V3 = 2131
+    BrickletSegmentDisplay4x7_V2 = 2137
+
 
 @unique
 class FunctionID(Enum):
@@ -66,6 +70,7 @@ class FunctionID(Enum):
     # Available on all bricklets
     GET_IDENTITY = 255
 
+
 @unique
 class BrickletPort(Enum):
     A = 'a'
@@ -73,11 +78,12 @@ class BrickletPort(Enum):
     C = 'c'
     D = 'd'
 
+
 class Device(object):
     RESPONSE_EXPECTED_INVALID_FUNCTION_ID = 0
-    RESPONSE_EXPECTED_ALWAYS_TRUE = 1 # getter
-    RESPONSE_EXPECTED_TRUE = 2 # setter
-    RESPONSE_EXPECTED_FALSE = 3 # setter, default
+    RESPONSE_EXPECTED_ALWAYS_TRUE = 1   # getter
+    RESPONSE_EXPECTED_TRUE = 2          # setter
+    RESPONSE_EXPECTED_FALSE = 3         # setter, default
 
     def __repr__(self):
         return self.DEVICE_DISPLAY_NAME
@@ -121,11 +127,11 @@ class Device(object):
             # Try to push it to the output queue. If the queue is full, drop the oldest packet and insert it again
             try:
                 self.__registered_queues[header['function_id']].put_nowait({
-                    'timestamp'  : int(time.time()),
-                    'sender'     : self,
+                    'timestamp': int(time.time()),
+                    'sender': self,
                     'function_id': header['function_id'],
-                    'sid'        : header.get('sid', 0),
-                    'payload'    : payload,
+                    'sid': header.get('sid', 0),
+                    'payload': payload,
                 })
             except asyncio.QueueFull:
                 # TODO: log a warning, that we are dropping packets
@@ -146,7 +152,6 @@ class Device(object):
         overwritten, if processing of the payload is required.
         """
         return unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']]), True    # payload, done
-
 
     def register_event_queue(self, event_id, queue):
         """
@@ -198,6 +203,7 @@ class Device(object):
     async def disconnect(self):
         await self.__ipcon.disconnect()
 
+
 class DeviceWithMCU(Device):
     async def get_chip_temperature(self):
         """
@@ -230,6 +236,7 @@ class DeviceWithMCU(Device):
             response_expected=False
         )
 
+
 @unique
 class BootloaderMode(Enum):
     BOOTLOADER = 0
@@ -237,6 +244,7 @@ class BootloaderMode(Enum):
     BOOTLOADER_WAIT_FOR_REBOOT = 2
     FIRMWARE_WAIT_FOR_REBOOT = 3
     FIRMWARE_WAIT_FOR_ERASE_AND_REBOOT = 4
+
 
 @unique
 class BootloaderStatus(Enum):
@@ -247,12 +255,14 @@ class BootloaderStatus(Enum):
     DEVICE_IDENTIFIER_INCORRECT = 4
     CRC_MISMATCH = 5
 
+
 @unique
 class LedConfig(Enum):
     OFF = 0
     ON = 1
     SHOW_HEARTBEAT = 2
     SHOW_STATUS = 3
+
 
 class BrickletWithMCU(DeviceWithMCU):
     # Convenience imports, so that the user does not need to additionally import them
@@ -412,4 +422,3 @@ class BrickletWithMCU(DeviceWithMCU):
         )
 
         return GetSPITFPErrorCount(*unpack_payload(payload, 'I I I I'))
-

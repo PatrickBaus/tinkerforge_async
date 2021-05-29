@@ -9,10 +9,12 @@ GetPortConfiguration = namedtuple('PortConfiguration', ['direction_mask', 'value
 GetPortMonoflop = namedtuple('PortMonoflop', ['value', 'time', 'time_remaining'])
 GetEdgeCountConfig = namedtuple('EdgeCountConfig', ['edge_type', 'debounce'])
 
+
 @unique
 class CallbackID(Enum):
     INTERRUPT = 9
     MONOFLOP_DONE = 12
+
 
 @unique
 class FunctionID(Enum):
@@ -31,31 +33,37 @@ class FunctionID(Enum):
     SET_EDGE_COUNT_CONFIG = 15
     GET_EDGE_COUNT_CONFIG = 16
 
+
 @unique
 class Port(Enum):
     A = 'a'
     B = 'b'
+
 
 @unique
 class Direction(Enum):
     IN = 'i'
     OUT = 'o'
 
+
 @unique
 class InputConfiguration(Enum):
     PULL_UP = True
     FLOATING = False
+
 
 @unique
 class OutputConfiguration(Enum):
     HIGH = True
     LOW = False
 
+
 @unique
 class EdgeType(Enum):
     RISING = 0
     FALLING = 1
     BOTH = 2
+
 
 class BrickletIO16(Device):
     """
@@ -110,8 +118,8 @@ class BrickletIO16(Device):
         result = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_PORT,
-            data=pack_payload((port.value.encode('ascii'),value_mask), 'c B'),
-            response_expected = response_expected,
+            data=pack_payload((port.value.encode('ascii'), value_mask), 'c B'),
+            response_expected=response_expected,
         )
 
     async def get_port(self, port):
@@ -172,7 +180,7 @@ class BrickletIO16(Device):
                 direction.value.encode('ascii'),
                 bool(val)
               ), 'c B c !'),
-            response_expected = response_expected,
+            response_expected=response_expected,
         )
 
     async def get_port_configuration(self, port):
@@ -430,4 +438,3 @@ class BrickletIO16(Device):
         edge_type, debounce_time = unpack_payload(payload, 'B B')
         edge_type = EdgeType(edge_type)
         return GetEdgeCountConfig(edge_type, debounce_time)
-

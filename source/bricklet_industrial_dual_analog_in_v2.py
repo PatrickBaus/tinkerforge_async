@@ -11,10 +11,12 @@ GetCalibration = namedtuple('Calibration', ['offset', 'gain'])
 GetChannelLEDStatusConfig = namedtuple('ChannelLEDStatusConfig', ['minimum', 'maximum', 'config'])
 GetAllVoltagesCallbackConfiguration = namedtuple('AllVoltagesCallbackConfiguration', ['period', 'value_has_to_change'])
 
+
 @unique
 class CallbackID(Enum):
     VOLTAGE = 4
     ALL_VOLTAGES = 17
+
 
 @unique
 class FunctionID(Enum):
@@ -34,6 +36,7 @@ class FunctionID(Enum):
     SET_ALL_VOLTAGES_CALLBACK_CONFIGURATION = 15
     GET_ALL_VOLTAGES_CALLBACK_CONFIGURATION = 16
 
+
 @unique
 class ChannelLedConfig(Enum):
     OFF = 0
@@ -41,10 +44,12 @@ class ChannelLedConfig(Enum):
     HEARTBEAT = 2
     CHANNEL_STATUS = 3
 
+
 @unique
 class ChannelLedStatusConfig(Enum):
     THRESHOLD = 0
     INTENSITY = 1
+
 
 @unique
 class SamplingRate(Enum):

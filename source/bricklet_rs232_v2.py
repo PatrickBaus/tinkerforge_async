@@ -11,14 +11,17 @@ GetBufferConfig = namedtuple('BufferConfig', ['send_buffer_size', 'receive_buffe
 GetBufferStatus = namedtuple('BufferStatus', ['send_buffer_used', 'receive_buffer_used'])
 GetErrorCount = namedtuple('ErrorCount', ['error_count_overrun', 'error_count_parity'])
 
+
 class Rs232IOError(Exception):
     pass
+
 
 @unique
 class CallbackID(Enum):
     READ = 12
     ERROR_COUNT = 13
     FRAME_READABLE = 16
+
 
 @unique
 class FunctionID(Enum):
@@ -36,16 +39,19 @@ class FunctionID(Enum):
     SET_FRAME_READABLE_CALLBACK_CONFIGURATION = 14
     GET_FRAME_READABLE_CALLBACK_CONFIGURATION = 15
 
+
 @unique
 class Parity(Enum):
     NONE = 0
     ODD = 1
     EVEN = 2
 
+
 @unique
 class StopBits(Enum):
     ONE = 1
     TWO = 2
+
 
 @unique
 class WordLength(Enum):
@@ -54,11 +60,13 @@ class WordLength(Enum):
     LENGTH_7 = 7
     LENGTH_8 = 8
 
+
 @unique
 class FlowControl(Enum):
     OFF = 0
     SOFTWARE = 1
     HARDWARE = 2
+
 
 class BrickletRS232V2(BrickletWithMCU):
     """
@@ -128,7 +136,6 @@ class BrickletRS232V2(BrickletWithMCU):
         length = len(msg)
         msg.extend([0] * (60 - length))    # always send 60 bytes
 
-        
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.WRITE_LOW_LEVEL,
@@ -336,7 +343,7 @@ class BrickletRS232V2(BrickletWithMCU):
             chunks = [message[i:i+60] for i in range(0, len(message), 60)]
         except ValueError:
             # Raised if the length is 0
-            chunks = ['',]
+            chunks = ['', ]
 
         if self.__lock is None:
             self.__lock = asyncio.Lock()
