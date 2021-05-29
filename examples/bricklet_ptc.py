@@ -3,15 +3,17 @@
 import asyncio
 import logging
 import sys
-sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
 
 from source.ip_connection import IPConnectionAsync
 from source.device_factory import device_factory
 from source.bricklet_ptc import BrickletPtc
 
+sys.path.append("..")   # Adds higher directory to python modules path.
+
 ipcon = IPConnectionAsync()
 running_tasks = []
+
 
 async def process_callbacks(queue):
     """
@@ -25,6 +27,7 @@ async def process_callbacks(queue):
             print('Callback received', packet)
     except asyncio.CancelledError:
         print('Callback queue canceled')
+
 
 async def process_enumerations(callback_queue):
     """
@@ -40,9 +43,10 @@ async def process_enumerations(callback_queue):
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
+
 async def run_example(packet, callback_queue):
     print('Registering bricklet')
-    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
+    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon)    # Create device object
     print('Identity:', await bricklet.get_identity())
 
     # Register the callback queue used by process_callbacks()
@@ -82,13 +86,13 @@ async def run_example(packet, callback_queue):
     await bricklet.set_debounce_period(debounce_period)
     print('Get bricklet debounce period:', await bricklet.get_debounce_period())
 
-
     await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
     print('Disable callbacks')
     await asyncio.gather(bricklet.set_temperature_callback_period(), bricklet.set_resistance_callback_period(), bricklet.set_sensor_connected_callback_configuration(False), bricklet.set_temperature_callback_threshold(), bricklet.set_resistance_callback_threshold())
 
     # Terminate the loop
     asyncio.create_task(shutdown())
+
 
 async def shutdown():
     # Clean up: Disconnect ip connection and stop the consumers
@@ -97,14 +101,16 @@ async def shutdown():
     await asyncio.gather(*running_tasks)
     await ipcon.disconnect()    # Disconnect the ip connection last to allow cleanup of the sensors
 
+
 def error_handler(task):
     try:
         task.result()
     except Exception:
         asyncio.create_task(shutdown())
 
+
 async def main():
-    try: 
+    try:
         await ipcon.connect(host='127.0.0.1', port=4223)
         callback_queue = asyncio.Queue()
         running_tasks.append(asyncio.create_task(process_callbacks(callback_queue)))
@@ -126,4 +132,4 @@ warnings.simplefilter('always', ResourceWarning)
 logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection. Set to debug for even more info
 
 # Start the main loop and run the async loop forever
-asyncio.run(main(),debug=True)
+asyncio.run(main(), debug=True)

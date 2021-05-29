@@ -3,20 +3,22 @@
 import asyncio
 import logging
 import sys
-sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
 
 from source.ip_connection import IPConnectionAsync
 from source.device_factory import device_factory
 from source.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
 
+sys.path.append("..")   # Adds higher directory to python modules path.
+
 ipcon = IPConnectionAsync()
 running_tasks = []
 
-DIGITS = [0x3f,0x06,0x5b,0x4f,
-          0x66,0x6d,0x7d,0x07,
-          0x7f,0x6f,0x77,0x7c,
-          0x39,0x5e,0x79,0x71] # // 0~9,A,b,C,d,E,F
+DIGITS = [0x3f, 0x06, 0x5b, 0x4f,
+          0x66, 0x6d, 0x7d, 0x07,
+          0x7f, 0x6f, 0x77, 0x7c,
+          0x39, 0x5e, 0x79, 0x71]   # // 0~9,A,b,C,d,E,F
+
 
 async def process_callbacks(queue):
     """
@@ -30,6 +32,7 @@ async def process_callbacks(queue):
             print('Callback received', packet)
     except asyncio.CancelledError:
         print('Callback queue canceled')
+
 
 async def process_enumerations(callback_queue):
     """
@@ -45,15 +48,16 @@ async def process_enumerations(callback_queue):
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
+
 async def run_example(packet, callback_queue):
     print('Registering bricklet')
-    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon) # Create device object
+    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon)    # Create device object
     print('Identity:', await bricklet.get_identity())
     # Register the callback queue used by process_callbacks()
     bricklet.register_event_queue(bricklet.CallbackID.COUNTER_FINISHED, callback_queue)
 
     print('Setting segments to "00:00"')
-    await bricklet.set_segments(segments=(DIGITS[0],DIGITS[0],DIGITS[0],DIGITS[0]), brightness=3, colon=True)
+    await bricklet.set_segments(segments=(DIGITS[0], DIGITS[0], DIGITS[0], DIGITS[0]), brightness=3, colon=True)
     print('Get segments:', await bricklet.get_segments())
     print('Counting from 0 to 5 and back again')
     await bricklet.start_counter(value_from=0, value_to=5, increment=1, length=1000)
@@ -72,6 +76,7 @@ async def run_example(packet, callback_queue):
     # Terminate the loop
     asyncio.create_task(shutdown())
 
+
 async def shutdown():
     # Clean up: Disconnect ip connection and stop the consumers
     for task in running_tasks:
@@ -79,14 +84,16 @@ async def shutdown():
     await asyncio.gather(*running_tasks)
     await ipcon.disconnect()    # Disconnect the ip connection last to allow cleanup of the sensors
 
+
 def error_handler(task):
     try:
         task.result()
     except Exception:
         asyncio.create_task(shutdown())
 
+
 async def main():
-    try: 
+    try:
         await ipcon.connect(host='127.0.0.1', port=4223)
         callback_queue = asyncio.Queue()
         running_tasks.append(asyncio.create_task(process_callbacks(callback_queue)))
@@ -108,4 +115,4 @@ warnings.simplefilter('always', ResourceWarning)
 logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection. Set to debug for even more info
 
 # Start the main loop and run the async loop forever
-asyncio.run(main(),debug=True)
+asyncio.run(main(), debug=True)

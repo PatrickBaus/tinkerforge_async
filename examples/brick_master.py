@@ -3,15 +3,17 @@
 import asyncio
 import logging
 import sys
-sys.path.append("..") # Adds higher directory to python modules path.
 import warnings
 
 from source.ip_connection import IPConnectionAsync
 from source.device_factory import device_factory
 from source.brick_master import BrickMaster
 
+sys.path.append("..")   # Adds higher directory to python modules path.
+
 ipcon = IPConnectionAsync()
 running_tasks = []
+
 
 async def process_callbacks(queue):
     """
@@ -26,6 +28,7 @@ async def process_callbacks(queue):
     except asyncio.CancelledError:
         print('Callback queue canceled')
 
+
 async def process_enumerations(callback_queue):
     """
     This infinite loop pulls events from the internal enumeration queue
@@ -39,6 +42,7 @@ async def process_enumerations(callback_queue):
                 await run_example(packet, callback_queue)
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
+
 
 async def run_example(packet, callback_queue):
     print('Registering master brick')
@@ -248,6 +252,7 @@ async def run_example(packet, callback_queue):
     # Terminate the loop
     asyncio.create_task(shutdown())
 
+
 async def shutdown():
     # Clean up: Disconnect ip connection and stop the consumers
     for task in running_tasks:
@@ -255,12 +260,14 @@ async def shutdown():
     await asyncio.gather(*running_tasks)
     await ipcon.disconnect()    # Disconnect the ip connection last to allow cleanup of the sensors
 
+
 def error_handler(task):
     try:
         task.result()
     except Exception:
         # Normally we should log these
         asyncio.create_task(shutdown())
+
 
 async def main():
     try:
@@ -284,4 +291,4 @@ warnings.simplefilter('always', ResourceWarning)
 logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection. Set to debug for even more info
 
 # Start the main loop and run the async loop forever
-asyncio.run(main(),debug=True)
+asyncio.run(main(), debug=True)
