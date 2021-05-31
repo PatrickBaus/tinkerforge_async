@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge Humidity Bricklet 2.0
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
@@ -13,12 +19,18 @@ GetMovingAverageConfiguration = namedtuple('MovingAverageConfiguration', ['movin
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     HUMIDITY = 4
     TEMPERATURE = 8
 
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     GET_HUMIDITY = 1
     SET_HUMIDITY_CALLBACK_CONFIGURATION = 2
     GET_HUMIDITY_CALLBACK_CONFIGURATION = 3
@@ -35,12 +47,18 @@ class FunctionID(Enum):
 
 @unique
 class HeaterConfig(Enum):
+    """
+    The builtin heater can be used for testing purposes
+    """
     DISABLED = 0
     ENABLED = 1
 
 
 @unique
 class SamplesPerSecond(Enum):
+    """
+    The sampling rate of the humidity sensor
+    """
     SPS_20 = 0
     SPS_10 = 1
     SPS_5 = 2
@@ -53,8 +71,7 @@ class BrickletHumidityV2(BrickletWithMCU):
     """
     Measures relative humidity
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletHumidity_V2
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_HUMIDITY_V2
     DEVICE_DISPLAY_NAME = 'Humidity Bricklet 2.0'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -74,7 +91,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 2)
 
@@ -93,9 +110,9 @@ class BrickletHumidityV2(BrickletWithMCU):
             function_id=FunctionID.GET_HUMIDITY,
             response_expected=True
         )
-        return self.__humidity_sensor_to_SI(unpack_payload(payload, 'H'))
+        return self.__humidity_sensor_to_si(unpack_payload(payload, 'H'))
 
-    async def set_humidity_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_humidity_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
         """
         The period in ms is the period with which the :cb:`Humidity` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -133,7 +150,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         assert minimum >= 0
         assert maximum >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_HUMIDITY_CALLBACK_CONFIGURATION,
             data=pack_payload(
@@ -141,8 +158,8 @@ class BrickletHumidityV2(BrickletWithMCU):
                 int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
-                self.__SI_to_humidity_sensor(minimum),
-                self.__SI_to_humidity_sensor(maximum),
+                self.__si_to_humidity_sensor(minimum),
+                self.__si_to_humidity_sensor(maximum),
               ), 'I ! c H H'),
             response_expected=response_expected
         )
@@ -158,7 +175,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c H H')
         option = ThresholdOption(option)
-        minimum, maximum = self.__humidity_sensor_to_SI(minimum), self.__humidity_sensor_to_SI(maximum)
+        minimum, maximum = self.__humidity_sensor_to_si(minimum), self.__humidity_sensor_to_si(maximum)
         return GetHumidityCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def get_temperature(self):
@@ -177,9 +194,9 @@ class BrickletHumidityV2(BrickletWithMCU):
             function_id=FunctionID.GET_TEMPERATURE,
             response_expected=True
         )
-        return self.__temperature_sensor_to_SI(unpack_payload(payload, 'h'))
+        return self.__temperature_sensor_to_si(unpack_payload(payload, 'h'))
 
-    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
         """
         The period in ms is the period with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -214,10 +231,8 @@ class BrickletHumidityV2(BrickletWithMCU):
         """
         option = ThresholdOption(option)
         assert period >= 0
-        assert minimum >= 0
-        assert maximum >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
@@ -225,8 +240,8 @@ class BrickletHumidityV2(BrickletWithMCU):
                 int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
-                self.__SI_to_temperature_sensor(minimum),
-                self.__SI_to_temperature_sensor(maximum)
+                self.__si_to_temperature_sensor(minimum),
+                self.__si_to_temperature_sensor(maximum)
               ), 'I ! c H H'),
             response_expected=response_expected
         )
@@ -242,7 +257,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c H H')
         option = ThresholdOption(option)
-        minimum, maximum = self.__temperature_sensor_to_SI(minimum), self.__temperature_sensor_to_SI(maximum)
+        minimum, maximum = self.__temperature_sensor_to_si(minimum), self.__temperature_sensor_to_si(maximum)
         return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def set_heater_configuration(self, heater_config=HeaterConfig.DISABLED, response_expected=True):
@@ -252,10 +267,10 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         By default the heater is disabled.
         """
-        if not type(heater_config) is HeaterConfig:
+        if not isinstance(heater_config, HeaterConfig):
             heater_config = HeaterConfig(heater_config)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_HEATER_CONFIGURATION,
             data=pack_payload((heater_config.value,), 'B'),
@@ -298,7 +313,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         assert moving_average_length_humidity >= 1
         assert moving_average_length_temperature >= 1
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_MOVING_AVERAGE_CONFIGURATION,
             data=pack_payload(
@@ -331,10 +346,10 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         Before version 2.0.3 the default was 20 samples per second. The new default is 1 sample per second.
         """
-        if not type(sps) is SamplesPerSecond:
+        if not isinstance(sps, SamplesPerSecond):
             sps = SamplesPerSecond(sps)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SAMPLES_PER_SECOND,
             data=pack_payload((sps,), 'B'),
@@ -359,30 +374,35 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         return SamplesPerSecond(unpack_payload(payload, 'B'))
 
-    def __humidity_sensor_to_SI(self, value):
+    @staticmethod
+    def __humidity_sensor_to_si(value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 100
 
-    def __SI_to_humidity_sensor(self, value):
+    @staticmethod
+    def __si_to_humidity_sensor(value):
         return int(value * 100)
 
-    def __temperature_sensor_to_SI(self, value):
+    @staticmethod
+    def __temperature_sensor_to_si(value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 100
 
-    def __SI_to_temperature_sensor(self, value):
+    @staticmethod
+    def __si_to_temperature_sensor(value):
         return int(value * 100)
 
     def _process_callback_payload(self, header, payload):
         if header['function_id'] is CallbackID.HUMIDITY:
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             header['sid'] = 0
-            return self.__humidity_sensor_to_SI(payload), True    # payload, done
+            result = self.__humidity_sensor_to_si(payload), True    # payload, done
         else:
             payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             header['sid'] = 1
-            return self.__temperature_sensor_to_SI(payload), True    # payload, done
+            result = self.__temperature_sensor_to_si(payload), True    # payload, done
+        return result

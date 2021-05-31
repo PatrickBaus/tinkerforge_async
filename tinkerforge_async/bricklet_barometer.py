@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge Barometer Bricklet
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
@@ -13,6 +19,9 @@ GetAveraging = namedtuple('Averaging', ['moving_average_pressure', 'average_pres
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     AIR_PRESSURE = 15
     ALTITUDE = 16
     AIR_PRESSURE_REACHED = 17
@@ -21,6 +30,9 @@ class CallbackID(Enum):
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     GET_AIR_PRESSURE = 1
     GET_ALTITUDE = 2
     SET_AIR_PRESSURE_CALLBACK_PERIOD = 3
@@ -44,8 +56,7 @@ class BrickletBarometer(Device):
     """
     Measures air pressure and altitude changes
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletBarometer
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_BAROMETER
     DEVICE_DISPLAY_NAME = 'Barometer Bricklet'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -65,7 +76,7 @@ class BrickletBarometer(Device):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 1)
 
@@ -82,7 +93,7 @@ class BrickletBarometer(Device):
             function_id=FunctionID.GET_AIR_PRESSURE,
             response_expected=True
         )
-        return self.__value_to_SI_pressure(unpack_payload(payload, 'i'))
+        return self.__value_to_si_pressure(unpack_payload(payload, 'i'))
 
     async def get_altitude(self):
         """
@@ -99,7 +110,7 @@ class BrickletBarometer(Device):
             function_id=FunctionID.GET_ALTITUDE,
             response_expected=True
         )
-        return self.__value_to_SI_altitude(unpack_payload(payload, 'i'))
+        return self.__value_to_si_altitude(unpack_payload(payload, 'i'))
 
     async def set_air_pressure_callback_period(self, period=0, response_expected=True):
         """
@@ -111,7 +122,7 @@ class BrickletBarometer(Device):
         """
         assert period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_AIR_PRESSURE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
@@ -139,7 +150,7 @@ class BrickletBarometer(Device):
         """
         assert period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ALTITUDE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
@@ -173,13 +184,13 @@ class BrickletBarometer(Device):
          "'<'",    "Callback is triggered when the air pressure is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the air pressure is greater than the min value (max is ignored)"
         """
-        if not type(option) is ThresholdOption:
+        if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_AIR_PRESSURE_CALLBACK_THRESHOLD,
-            data=pack_payload((option.value.encode('ascii'), self.__SI_pressure_to_value(minimum), self.__SI_pressure_to_value(maximum)), 'c i i'),
+            data=pack_payload((option.value.encode('ascii'), self.__si_pressure_to_value(minimum), self.__si_pressure_to_value(maximum)), 'c i i'),
             response_expected=response_expected
         )
 
@@ -194,7 +205,7 @@ class BrickletBarometer(Device):
         )
         option, minimum, maximum = unpack_payload(payload, 'c i i')
         option = ThresholdOption(option)
-        minimum, maximum = self.__value_to_SI_pressure(minimum), self.__value_to_SI_pressure(maximum)
+        minimum, maximum = self.__value_to_si_pressure(minimum), self.__value_to_si_pressure(maximum)
         return GetAirPressureCallbackThreshold(option, minimum, maximum)
 
     async def set_altitude_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
@@ -213,13 +224,13 @@ class BrickletBarometer(Device):
          "'<'",    "Callback is triggered when the altitude is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the altitude is greater than the min value (max is ignored)"
         """
-        if not type(option) is ThresholdOption:
+        if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ALTITUDE_CALLBACK_THRESHOLD,
-            data=pack_payload((option.value.encode('ascii'), self.__SI_altitude_to_value(minimum), self.__SI_altitude_to_value(maximum)), 'c i i'),
+            data=pack_payload((option.value.encode('ascii'), self.__si_altitude_to_value(minimum), self.__si_altitude_to_value(maximum)), 'c i i'),
             response_expected=response_expected
         )
 
@@ -234,7 +245,7 @@ class BrickletBarometer(Device):
         )
         option, minimum, maximum = unpack_payload(payload, 'c i i')
         option = ThresholdOption(option)
-        minimum, maximum = self.__value_to_SI_altitude(minimum), self.__value_to_SI_altitude(maximum)
+        minimum, maximum = self.__value_to_si_altitude(minimum), self.__value_to_si_altitude(maximum)
         return GetAltitudeCallbackThreshold(option, minimum, maximum)
 
     async def set_debounce_period(self, debounce_period=100, response_expected=True):
@@ -253,7 +264,7 @@ class BrickletBarometer(Device):
         """
         assert debounce_period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
             data=pack_payload((int(debounce_period),), 'I'),
@@ -300,10 +311,10 @@ class BrickletBarometer(Device):
         """
         assert (air_pressure == 0) or (1000 <= air_pressure <= 120000)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_REFERENCE_AIR_PRESSURE,
-            data=pack_payload((self.__SI_pressure_to_value(air_pressure),), 'i'),
+            data=pack_payload((self.__si_pressure_to_value(air_pressure),), 'i'),
             response_expected=response_expected
         )
 
@@ -316,7 +327,7 @@ class BrickletBarometer(Device):
             function_id=FunctionID.GET_REFERENCE_AIR_PRESSURE,
             response_expected=True
         )
-        return self.__value_to_SI_pressure(unpack_payload(payload, 'i'))
+        return self.__value_to_si_pressure(unpack_payload(payload, 'i'))
 
     async def set_averaging(self, moving_average_pressure=25, average_pressure=10, average_temperature=10, response_expected=True):
         """
@@ -335,11 +346,11 @@ class BrickletBarometer(Device):
 
         .. versionadded:: 2.0.1$nbsp;(Plugin)
         """
-        assert (0 <= moving_average_pressure <= 25)
-        assert (0 <= average_pressure <= 10)
-        assert (0 <= moving_average_pressure <= 255)
+        assert 0 <= moving_average_pressure <= 25
+        assert 0 <= average_pressure <= 10
+        assert 0 <= moving_average_pressure <= 255
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_AVERAGING,
             data=pack_payload(
@@ -364,29 +375,34 @@ class BrickletBarometer(Device):
         )
         return GetAveraging(*unpack_payload(payload, 'B B B'))
 
-    def __value_to_SI_altitude(self, value):
+    @staticmethod
+    def __value_to_si_altitude(value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 100
 
-    def __SI_altitude_to_value(self, value):
+    @staticmethod
+    def __si_altitude_to_value(value):
         return int(value * 100)
 
-    def __value_to_SI_pressure(self, value):
+    @staticmethod
+    def __value_to_si_pressure(value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 10
 
-    def __SI_pressure_to_value(self, value):
+    @staticmethod
+    def __si_pressure_to_value(value):
         return int(value * 10)
 
     def _process_callback_payload(self, header, payload):
         payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
         if header['function_id'] is CallbackID.AIR_PRESSURE or header['function_id'] is CallbackID.AIR_PRESSURE_REACHED:
             header['sid'] = 0
-            return self.__value_to_SI_pressure(payload), True    # payload, done
+            result = self.__value_to_si_pressure(payload), True    # payload, done
         else:
             header['sid'] = 0
-            return self.__value_to_SI_altitude(payload), True    # payload, done
+            result = self.__value_to_si_altitude(payload), True    # payload, done
+        return result

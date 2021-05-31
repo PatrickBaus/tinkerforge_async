@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the RS232 Bricklet 2.0
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/RS232_V2.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 import asyncio
 from collections import namedtuple
 from enum import Enum, unique
@@ -13,11 +19,16 @@ GetErrorCount = namedtuple('ErrorCount', ['error_count_overrun', 'error_count_pa
 
 
 class Rs232IOError(Exception):
-    pass
+    """
+    An exception raised when there is a read or write error
+    """
 
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     READ = 12
     ERROR_COUNT = 13
     FRAME_READABLE = 16
@@ -25,6 +36,9 @@ class CallbackID(Enum):
 
 @unique
 class FunctionID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     WRITE_LOW_LEVEL = 1
     READ_LOW_LEVEL = 2
     ENABLE_READ_CALLBACK = 3
@@ -42,6 +56,9 @@ class FunctionID(Enum):
 
 @unique
 class Parity(Enum):
+    """
+    The parity bit used for error correction. NONE disables parity
+    """
     NONE = 0
     ODD = 1
     EVEN = 2
@@ -49,12 +66,19 @@ class Parity(Enum):
 
 @unique
 class StopBits(Enum):
+    """
+    The number of empty bits after each byte. Use 2 stop bits for very long
+    lines to have more settling time.
+    """
     ONE = 1
     TWO = 2
 
 
 @unique
 class WordLength(Enum):
+    """
+    The number of bits per data word
+    """
     LENGTH_5 = 5
     LENGTH_6 = 6
     LENGTH_7 = 7
@@ -63,6 +87,9 @@ class WordLength(Enum):
 
 @unique
 class FlowControl(Enum):
+    """
+    Sets out-of-band hardware flow control using the DTR/DSR and RTS/CTS signals
+    """
     OFF = 0
     SOFTWARE = 1
     HARDWARE = 2
@@ -72,8 +99,7 @@ class BrickletRS232V2(BrickletWithMCU):
     """
     Communicates with RS232 devices
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletRs232_V2
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_RS232_V2
     DEVICE_DISPLAY_NAME = 'RS232 Bricklet 2.0'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -95,7 +121,7 @@ class BrickletRS232V2(BrickletWithMCU):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.__lock = None    # We create the the lock(), when needed to ensure the loop is running
         self.__callback_read_buffer = bytearray()
@@ -159,19 +185,23 @@ class BrickletRS232V2(BrickletWithMCU):
         By default the callback is disabled.
         """
         if enable:
-            result = await self.ipcon.send_request(
+            await self.ipcon.send_request(
                 device=self,
                 function_id=FunctionID.ENABLE_READ_CALLBACK,
                 response_expected=response_expected
             )
         else:
-            result = await self.ipcon.send_request(
+            await self.ipcon.send_request(
                 device=self,
                 function_id=FunctionID.DISABLE_READ_CALLBACK,
                 response_expected=response_expected
             )
 
     async def is_read_callback_enabled(self):
+        """
+        Returns *true* if the :cb:`Read` callback is enabled,
+        *false* otherwise.
+        """
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.IS_READ_CALLBACK_ENABLED,
@@ -180,21 +210,21 @@ class BrickletRS232V2(BrickletWithMCU):
 
         return unpack_payload(payload, '!')
 
-    async def set_configuration(self, baudrate=115200, parity=Parity.NONE, stopbits=StopBits.ONE, wordlength=WordLength.LENGTH_8, flowcontrol=FlowControl.OFF, response_expected=True):
+    async def set_configuration(self, baudrate=115200, parity=Parity.NONE, stopbits=StopBits.ONE, wordlength=WordLength.LENGTH_8, flowcontrol=FlowControl.OFF, response_expected=True):  # pylint: disable=too-many-arguments
         """
         Sets the configuration for the RS232 communication.
         """
-        assert (100 <= baudrate <= 2000000)
-        if not type(parity) is Parity:
+        assert 100 <= baudrate <= 2000000
+        if not isinstance(parity, Parity):
             parity = Parity(parity)
-        if not type(stopbits) is StopBits:
+        if not isinstance(stopbits, StopBits):
             stopbits = StopBits(stopbits)
-        if not type(wordlength) is WordLength:
+        if not isinstance(wordlength, WordLength):
             wordlength = WordLength(wordlength)
-        if not type(flowcontrol) is FlowControl:
+        if not isinstance(flowcontrol, FlowControl):
             flowcontrol = FlowControl(flowcontrol)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CONFIGURATION,
             data=pack_payload(
@@ -234,11 +264,11 @@ class BrickletRS232V2(BrickletWithMCU):
         received through RS232 but could not yet be send to the
         user, either by :func:`Read` or through :cb:`Read` callback.
         """
-        assert (1024 <= send_buffer_size <= 9216)
-        assert (1024 <= receive_buffer_size <= 9216)
-        assert (send_buffer_size+receive_buffer_size <= 10240)
+        assert 1024 <= send_buffer_size <= 9216
+        assert 1024 <= receive_buffer_size <= 9216
+        assert send_buffer_size+receive_buffer_size <= 10240
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_BUFFER_CONFIG,
             data=pack_payload(
@@ -298,9 +328,9 @@ class BrickletRS232V2(BrickletWithMCU):
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
-        assert (0 <= frame_size <= 9216)
+        assert 0 <= frame_size <= 9216
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_FRAME_READABLE_CALLBACK_CONFIGURATION,
             data=pack_payload((int(frame_size),), 'H'),
@@ -415,10 +445,10 @@ class BrickletRS232V2(BrickletWithMCU):
             else:
                 self.__callback_read_buffer.extend(data[:final_size-offset])
             if len(self.__callback_read_buffer) == final_size:
-                result = bytes(self.__callback_read_buffer)
+                result = bytes(self.__callback_read_buffer), True   # payload, done
                 self.__callback_read_buffer = bytearray()
-                return result, True   # payload, done
             else:
-                return None, False    # payload, done
+                result = None, False    # payload, done
         else:
-            return super()._process_callback_payload(header, payload)
+            result = super()._process_callback_payload(header, payload)
+        return result

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge Moisture Bricklet
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from enum import Enum, unique
 
@@ -10,12 +16,18 @@ GetMoistureCallbackThreshold = namedtuple('MoistureCallbackThreshold', ['option'
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     MOISTURE = 8
     MOISTURE_REACHED = 9
 
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     GET_MOISTURE = 1
     SET_MOISTURE_CALLBACK_PERIOD = 2
     GET_MOISTURE_CALLBACK_PERIOD = 3
@@ -31,8 +43,7 @@ class BrickletMoisture(Device):
     """
     Measures ambient light up to 64000lux
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletMoisture
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_MOISTURE
     DEVICE_DISPLAY_NAME = 'Moisture Bricklet'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -50,7 +61,7 @@ class BrickletMoisture(Device):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
 
@@ -81,7 +92,7 @@ class BrickletMoisture(Device):
         """
         assert period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_MOISTURE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
@@ -115,12 +126,12 @@ class BrickletMoisture(Device):
          "'<'",    "Callback is triggered when the moisture value is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the moisture value is greater than the min value (max is ignored)"
         """
-        if not type(option) is ThresholdOption:
+        if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
         assert minimum >= 0
         assert minimum >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_MOISTURE_CALLBACK_THRESHOLD,
             data=pack_payload(
@@ -159,7 +170,7 @@ class BrickletMoisture(Device):
         """
         assert debounce_period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
             data=pack_payload((int(debounce_period),), 'I'),
@@ -187,7 +198,7 @@ class BrickletMoisture(Device):
         """
         assert average >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_MOVING_AVERAGE,
             data=pack_payload((int(average),), 'B'),

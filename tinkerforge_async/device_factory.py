@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
-
+"""
+The device factory which allows to create instances of Bricks and Bricklets from
+their device id
+"""
 from .brick_master import BrickMaster
 from .bricklet_ambient_light_v2 import BrickletAmbientLightV2
 from .bricklet_ambient_light_v3 import BrickletAmbientLightV3
 from .bricklet_analog_in import BrickletAnalogIn
 from .bricklet_barometer import BrickletBarometer
+from .bricklet_barometer_v2 import BrickletBarometerV2
 from .bricklet_humidity import BrickletHumidity
 from .bricklet_humidity_v2 import BrickletHumidityV2
 from .bricklet_industrial_dual_analog_in_v2 import BrickletIndustrialDualAnalogInV2
@@ -22,13 +26,23 @@ from .bricklet_segment_display_4x7_v2 import BrickletSegmentDisplay4x7V2
 
 
 class DeviceFactory:
+    """
+    The factory. Do not import this, as it is instantiated below to create a
+    class object.
+    """
     def __init__(self):
         self.__available_devices = {}
 
     def register(self, device):
+        """
+        Register a a new Brick or Bricklet with the factory
+        """
         self.__available_devices[device.DEVICE_IDENTIFIER] = device
 
     def get(self, device_id, uid, ipcon, *args, **kwargs):
+        """
+        Create a new instance of a Brick or Bricklet from its device id
+        """
         try:
             return self.__available_devices[device_id](uid, ipcon, *args, **kwargs)
         except KeyError:
@@ -42,6 +56,7 @@ device_factory.register(BrickletAmbientLightV2)
 device_factory.register(BrickletAmbientLightV3)
 device_factory.register(BrickletAnalogIn)
 device_factory.register(BrickletBarometer)
+device_factory.register(BrickletBarometerV2)
 device_factory.register(BrickletHumidity)
 device_factory.register(BrickletHumidityV2)
 device_factory.register(BrickletIndustrialDualAnalogInV2)

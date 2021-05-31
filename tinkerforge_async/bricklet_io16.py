@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge IO-16 Bricklet
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from enum import Enum, unique
 
@@ -12,12 +18,18 @@ GetEdgeCountConfig = namedtuple('EdgeCountConfig', ['edge_type', 'debounce'])
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     INTERRUPT = 9
     MONOFLOP_DONE = 12
 
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     SET_PORT = 1
     GET_PORT = 2
     SET_PORT_CONFIGURATION = 3
@@ -36,30 +48,45 @@ class FunctionID(Enum):
 
 @unique
 class Port(Enum):
+    """
+    There are two ports of 8 pins each
+    """
     A = 'a'
     B = 'b'
 
 
 @unique
 class Direction(Enum):
+    """
+    Configures a pin as input or output
+    """
     IN = 'i'
     OUT = 'o'
 
 
 @unique
 class InputConfiguration(Enum):
+    """
+    Enable a pull-up resitor or let the input floating
+    """
     PULL_UP = True
     FLOATING = False
 
 
 @unique
 class OutputConfiguration(Enum):
+    """
+    Set the output to low or high
+    """
     HIGH = True
     LOW = False
 
 
 @unique
 class EdgeType(Enum):
+    """
+    Trigger at a rising or falling edge or both
+    """
     RISING = 0
     FALLING = 1
     BOTH = 2
@@ -69,8 +96,7 @@ class BrickletIO16(Device):
     """
     16-channel digital input/output
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletIO16
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_IO_16
     DEVICE_DISPLAY_NAME = 'IO-16 Bricklet'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -92,7 +118,7 @@ class BrickletIO16(Device):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 1)
 
@@ -111,11 +137,11 @@ class BrickletIO16(Device):
          This function does nothing for pins that are configured as input.
          Pull-up resistors can be switched on with :func:`Set Port Configuration`.
         """
-        if not type(port) is Port:
+        if not isinstance(port, Port):
             port = Port(port.lower())
         assert (isinstance(value_mask, int) and (0 <= value_mask <= 255))
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_PORT,
             data=pack_payload((port.value.encode('ascii'), value_mask), 'c B'),
@@ -128,7 +154,7 @@ class BrickletIO16(Device):
         specified port. This function works if the pin is configured to input
         as well as if it is configured to output.
         """
-        if not type(port) is Port:
+        if not isinstance(port, Port):
             port = Port(port.lower())
 
         _, payload = await self.ipcon.send_request(
@@ -139,7 +165,7 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, 'B')
 
-    async def set_port_configuration(self, port, selection_mask, direction, value=False, response_expected=True):
+    async def set_port_configuration(self, port, selection_mask, direction, value=False, response_expected=True):  # pylint: disable=too-many-arguments
         """
         Configures the value and direction of a specified port. Possible directions
         are 'i' and 'o' for input and output.
@@ -160,17 +186,17 @@ class BrickletIO16(Device):
         Running monoflop timers for the selected pins will be aborted if this
         function is called.
         """
-        if not type(port) is Port:
+        if not isinstance(port, Port):
             port = Port(port.lower())
         assert (isinstance(selection_mask, int) and (0 <= selection_mask <= 255))
-        if not type(direction) is Direction:
+        if not isinstance(direction, Direction):
             direction = Direction(direction)
 
         val = value
-        if (type(val) is InputConfiguration or type(val) is OutputConfiguration):
+        if isinstance(val, (InputConfiguration, OutputConfiguration)):
             val = val.value
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_PORT_CONFIGURATION,
             data=pack_payload(
@@ -196,7 +222,7 @@ class BrickletIO16(Device):
         * pins 4 and 5 are configured as output high
         * and pins 6 and 7 are configured as output low.
         """
-        if not type(port) is Port:
+        if not isinstance(port, Port):
             port = Port(port.lower())
 
         _, payload = await self.ipcon.send_request(
@@ -217,7 +243,7 @@ class BrickletIO16(Device):
         """
         assert debounce_period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
             data=pack_payload((int(debounce_period),), 'I'),
@@ -246,11 +272,11 @@ class BrickletIO16(Device):
 
         The interrupt is delivered with the :cb:`Interrupt` callback.
         """
-        if not type(port) is Port:
+        if not isinstance(port, Port):
             port = Port(port.lower())
         assert (isinstance(interrupt_mask, int) and (0 <= interrupt_mask <= 255))
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_PORT_INTERRUPT,
             data=pack_payload((port.value.encode('ascii'), interrupt_mask), 'c B'),
@@ -262,7 +288,7 @@ class BrickletIO16(Device):
         Returns the interrupt bitmask for the specified port as set by
         :func:`Set Port Interrupt`.
         """
-        if not type(port) is Port:
+        if not isinstance(port, Port):
             port = Port(port.lower())
 
         _, payload = await self.ipcon.send_request(
@@ -273,7 +299,7 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, 'B')
 
-    async def set_port_monoflop(self, port, selection_mask, value_mask, time, response_expected=True):
+    async def set_port_monoflop(self, port, selection_mask, value_mask, time, response_expected=True):  # pylint: disable=too-many-arguments
         """
         Configures a monoflop of the pins specified by the second parameter as 8 bit
         long bitmask. The specified pins must be configured for output. Non-output
@@ -295,13 +321,13 @@ class BrickletIO16(Device):
         of two seconds and pin 0 set to high. Pin 0 will be high all the time. If now
         the RS485 connection is lost, then pin 0 will get low in at most two seconds.
         """
-        if not type(port) is Port:
+        if not isinstance(port, Port):
             port = Port(port.lower())
         assert (isinstance(selection_mask, int) and (0 <= selection_mask <= 255))
         assert (isinstance(value_mask, int) and (0 <= value_mask <= 255))
         assert time >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_PORT_MONOFLOP,
             data=pack_payload(
@@ -319,7 +345,7 @@ class BrickletIO16(Device):
         Returns the interrupt bitmask for the specified port as set by
         :func:`Set Port Interrupt`.
         """
-        if not type(port) is Port:
+        if not isinstance(port, Port):
             port = Port(port.lower())
         assert (isinstance(pin, int) and (0 <= pin <= 7))
 
@@ -347,12 +373,12 @@ class BrickletIO16(Device):
          This function does nothing for pins that are configured as input.
          Pull-up resistors can be switched on with :func:`Set Port Configuration`.
         """
-        if not type(port) is Port:
+        if not isinstance(port, Port):
             port = Port(port.lower())
         assert (isinstance(selection_mask, int) and (0 <= selection_mask <= 255))
         assert (isinstance(value_mask, int) and (0 <= value_mask <= 255))
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SELECTED_VALUES,
             data=pack_payload(
@@ -404,11 +430,11 @@ class BrickletIO16(Device):
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
         assert (isinstance(pin, int) and (0 <= pin <= 1))
-        if not type(edge_type) is EdgeType:
+        if not isinstance(edge_type, EdgeType):
             edge_type = EdgeType(edge_type)
-        assert (0 <= debounce <= 255)
+        assert 0 <= debounce <= 255
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_EDGE_COUNT_CONFIG,
             data=pack_payload(

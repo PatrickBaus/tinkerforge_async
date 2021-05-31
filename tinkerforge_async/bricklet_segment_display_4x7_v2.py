@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge Segment Display 4x7 Bricklet 2.0
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from enum import Enum, unique
 
@@ -10,11 +16,17 @@ GetSegments = namedtuple('Segments', ['segments', 'colon', 'tick'])
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     COUNTER_FINISHED = 10
 
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     SET_SEGMENTS = 1
     GET_SEGMENTS = 2
     SET_BRIGHTNESS = 3
@@ -30,8 +42,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
     """
     Four 7-segment displays with switchable dots
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletSegmentDisplay4x7_V2
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_SEGMENT_DISPLAY_4x7_V2
     DEVICE_DISPLAY_NAME = 'Segment Display 4x7 Bricklet 2.0'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -47,7 +58,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
 
@@ -68,7 +79,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         assert len(colon) == 2
         tick = bool(tick)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SEGMENTS,
             data=pack_payload(
@@ -97,9 +108,9 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         The default value is 7.
         """
-        assert (0 <= brightness <= 7)
+        assert 0 <= brightness <= 7
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_BRIGHTNESS,
             data=pack_payload((int(brightness),), 'B'),
@@ -136,7 +147,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         """
         value = list(map(int, value))
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_NUMERIC_VALUE,
             data=pack_payload((value,), '4b'),
@@ -154,9 +165,9 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
            :alt: Indices of selected segments
            :align: center
         """
-        assert (0 <= segment <= 34)
+        assert 0 <= segment <= 34
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SELECTED_SEGMENT,
             data=pack_payload((int(segment), bool(value)), 'B !'),
@@ -167,7 +178,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         """
         Returns the value of a single segment.
         """
-        assert (0 <= segment <= 34)
+        assert 0 <= segment <= 34
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -178,7 +189,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         return unpack_payload(payload, '!')
 
-    async def start_counter(self, value_from, value_to, increment, length, response_expected=True):
+    async def start_counter(self, value_from, value_to, increment, length, response_expected=True):  # pylint: disable=too-many-arguments
         """
         Turns one specified segment on or off.
 
@@ -189,11 +200,11 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
            :alt: Indices of selected segments
            :align: center
         """
-        assert (-999 <= value_from <= 9999)
-        assert (-999 <= value_to <= 9999)
-        assert (-999 <= increment <= 9999)
+        assert -999 <= value_from <= 9999
+        assert -999 <= value_to <= 9999
+        assert -999 <= increment <= 9999
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.START_COUNTER,
             data=pack_payload(

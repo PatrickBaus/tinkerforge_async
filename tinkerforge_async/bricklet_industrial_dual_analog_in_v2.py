@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge Industrial Dual Analog In Bricklet 2.0
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
+from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption, LedConfig
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetVoltageCallbackConfiguration = namedtuple('VoltageCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -14,12 +20,18 @@ GetAllVoltagesCallbackConfiguration = namedtuple('AllVoltagesCallbackConfigurati
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     VOLTAGE = 4
     ALL_VOLTAGES = 17
 
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     GET_VOLTAGE = 1
     SET_VOLTAGE_CALLBACK_CONFIGURATION = 2
     GET_VOLTAGE_CALLBACK_CONFIGURATION = 3
@@ -38,21 +50,19 @@ class FunctionID(Enum):
 
 
 @unique
-class ChannelLedConfig(Enum):
-    OFF = 0
-    ON = 1
-    HEARTBEAT = 2
-    CHANNEL_STATUS = 3
-
-
-@unique
 class ChannelLedStatusConfig(Enum):
+    """
+    Defines the LED brightness when LedConfig.SHOW_STATUS
+    """
     THRESHOLD = 0
     INTENSITY = 1
 
 
 @unique
 class SamplingRate(Enum):
+    """
+    Defines the sampling rate of the ADC
+    """
     RATE_976_SPS = 0
     RATE_488_SPS = 1
     RATE_244_SPS = 2
@@ -68,14 +78,14 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
     Measures two DC voltages between -35V and +35V with 24bit resolution each
     """
 
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletIndustrialDualAnalogIn_V2
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_INDUSTRIAL_DUAL_ANALOG_IN_V2
     DEVICE_DISPLAY_NAME = 'Industrial Dual Analog In Bricklet 2.0'
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
     FunctionID = FunctionID
     ThresholdOption = ThresholdOption
-    ChannelLedConfig = ChannelLedConfig
+    ChannelLedConfig = LedConfig
     ChannelLedStatusConfig = ChannelLedStatusConfig
     SamplingRate = SamplingRate
 
@@ -89,7 +99,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
 
@@ -102,7 +112,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         :cb:`Voltage` callback. You can set the callback configuration
         with :func:`Set Voltage Callback Configuration`.
         """
-        assert (channel == 0 or channel == 1)
+        assert channel in (0, 1)
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -110,9 +120,9 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             data=pack_payload((int(channel),), 'B'),
             response_expected=True
         )
-        return self.__value_to_SI(unpack_payload(payload, 'i'))
+        return self.__value_to_si(unpack_payload(payload, 'i'))
 
-    async def set_voltage_callback_configuration(self, channel, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_voltage_callback_configuration(self, channel, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
         """
         The period is the period with which the :cb:`Voltage` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -142,12 +152,12 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        assert (channel == 0 or channel == 1)
-        if not type(option) is ThresholdOption:
+        assert channel in (0, 1)
+        if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
         assert period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_VOLTAGE_CALLBACK_CONFIGURATION,
             data=pack_payload(
@@ -156,8 +166,8 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
                 int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
-                self.__SI_to_value(minimum),
-                self.__SI_to_value(maximum),
+                self.__si_to_value(minimum),
+                self.__si_to_value(maximum),
               ), 'B I ! c i i'),
             response_expected=response_expected
         )
@@ -174,7 +184,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c i i')
         option = ThresholdOption(option)
-        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
+        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
         return GetVoltageCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def get_all_voltages(self):
@@ -192,7 +202,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             response_expected=True
         )
         value1, value2 = unpack_payload(payload, '2i')
-        return self.__value_to_SI(value1), self.__value_to_SI(value2)
+        return self.__value_to_si(value1), self.__value_to_si(value2)
 
     async def set_all_voltages_callback_configuration(self, period=0, value_has_to_change=False, response_expected=True):
         """
@@ -210,7 +220,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         """
         assert period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ALL_VOLTAGES_CALLBACK_CONFIGURATION,
             data=pack_payload(
@@ -241,10 +251,10 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         and 976 samples per second. Decreasing the sample rate will also decrease the
         noise on the data.
         """
-        if type(rate) is not SamplingRate:
+        if isinstance(rate, SamplingRate):
             rate = SamplingRate(rate)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SAMPLE_RATE,
             data=pack_payload((rate.value,), 'B'),
@@ -271,7 +281,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         is already factory calibrated by Tinkerforge. It should not be necessary
         for you to use this function
         """
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CALIBRATION,
             data=pack_payload(
@@ -318,11 +328,11 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         By default all channel LEDs are configured as "Channel Status".
         """
-        assert (channel == 0 or channel == 1)
-        if not type(config) is ChannelLedConfig:
-            config = ChannelLedConfig(config)
+        assert channel in (0, 1)
+        if not isinstance(config, LedConfig):
+            config = LedConfig(config)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CHANNEL_LED_CONFIG,
             data=pack_payload(
@@ -338,7 +348,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         Returns the ADC values as given by the MCP3911 IC. This function
         is needed for proper calibration, see :func:`Set Calibration`.
         """
-        assert (channel == 0 or channel == 1)
+        assert channel in (0, 1)
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -347,9 +357,9 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             response_expected=True
         )
 
-        return ChannelLedConfig(unpack_payload(payload, 'B'))
+        return LedConfig(unpack_payload(payload, 'B'))
 
-    async def set_channel_led_status_config(self, channel, minimum, maximum, config, response_expected=True):
+    async def set_channel_led_status_config(self, channel, minimum, maximum, config, response_expected=True):  # pylint: disable=too-many-arguments
         """
         Sets the channel LED status config. This config is used if the channel LED is
         configured as "Channel Status", see :func:`Set Channel LED Config`.
@@ -372,18 +382,18 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         min value is greater than the max value, the LED brightness is scaled the other
         way around.
         """
-        assert (channel == 0 or channel == 1)
-        if not type(config) is ChannelLedStatusConfig:
+        assert channel in (0, 1)
+        if not isinstance(config, ChannelLedStatusConfig):
             config = ChannelLedStatusConfig(config)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CHANNEL_LED_STATUS_CONFIG,
             data=pack_payload(
               (
                 int(channel),
-                self.__SI_to_value(minimum),
-                self.__SI_to_value(maximum),
+                self.__si_to_value(minimum),
+                self.__si_to_value(maximum),
                 config.value,
               ), 'B i i B'),
             response_expected=response_expected
@@ -394,7 +404,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         Returns the channel LED status configuration as set by
         :func:`Set Channel LED Status Config`.
         """
-        assert (channel == 0 or channel == 1)
+        assert channel in (0, 1)
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -405,24 +415,27 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         minimum, maximum, config = unpack_payload(payload, 'i i B')
         config = ChannelLedStatusConfig(config)
-        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
+        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
         return GetChannelLEDStatusConfig(minimum, maximum, config)
 
-    def __value_to_SI(self, value):
+    @staticmethod
+    def __value_to_si(value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 1000
 
-    def __SI_to_value(self, value):
+    @staticmethod
+    def __si_to_value(value):
         return int(value * 1000)
 
     def _process_callback_payload(self, header, payload):
         if header['function_id'] is CallbackID.VOLTAGE:
             channel, value = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             header['sid'] = channel
-            return self.__value_to_SI(value), True    # payload, done
+            result = self.__value_to_si(value), True    # payload, done
         else:
             value1, value2 = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
             header['sid'] = 2
-            return (self.__value_to_SI(value1), self.__value_to_SI(value2)), True    # payload, done
+            result = (self.__value_to_si(value1), self.__value_to_si(value2)), True    # payload, done
+        return result

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge PTC Bricklet
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
@@ -12,6 +18,9 @@ GetResistanceCallbackThreshold = namedtuple('ResistanceCallbackThreshold', ['opt
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     TEMPERATURE = 13
     TEMPERATURE_REACHED = 14
     RESISTANCE = 15
@@ -21,6 +30,9 @@ class CallbackID(Enum):
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     GET_TEMPERATURE = 1
     GET_RESISTANCE = 2
     SET_TEMPERATURE_CALLBACK_PERIOD = 3
@@ -44,12 +56,20 @@ class FunctionID(Enum):
 
 @unique
 class LineFilter(Enum):
+    """
+    Selects the notch filter to filter out the mains frequency hum
+    """
     FREQUENCY_50HZ = 0
     FREQUENCY_60HZ = 1
 
 
 @unique
 class WireMode(Enum):
+    """
+    Select the measurement setup. Use 3 or wires to eliminate most/all of the
+    resistance of the wire. Use 3 or 4 wire setups when using PT100 and long
+    cables.
+    """
     WIRE_2 = 2
     WIRE_3 = 3
     WIRE_4 = 4
@@ -57,6 +77,9 @@ class WireMode(Enum):
 
 @unique
 class SensorType(Enum):
+    """
+    The type of sensor used
+    """
     PT_100 = 0
     PT_1000 = 1
 
@@ -65,8 +88,7 @@ class BrickletPtc(Device):
     """
     Reads temperatures from Pt100 und Pt1000 sensors
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletPtc
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_PTC
     DEVICE_DISPLAY_NAME = 'PTC Bricklet'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -87,11 +109,15 @@ class BrickletPtc(Device):
 
     @property
     def sensor_type(self):
+        """
+        Return the type of sensor. Either PT100 oder PT1000 as a SensorType
+        enum.
+        """
         return self.__sensor_type
 
     @sensor_type.setter
     def sensor_type(self, value):
-        if not type(value) is SensorType:
+        if not isinstance(value, SensorType):
             self.__sensor_type = SensorType(value)
         else:
             self.__sensor_type = value
@@ -101,7 +127,7 @@ class BrickletPtc(Device):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 1)
         self.sensor_type = sensor_type    # Use the setter to automatically convert to enum
@@ -121,7 +147,7 @@ class BrickletPtc(Device):
             function_id=FunctionID.GET_TEMPERATURE,
             response_expected=True
         )
-        return self.__value_to_SI_temperature(unpack_payload(payload, 'i'))
+        return self.__value_to_si_temperature(unpack_payload(payload, 'i'))
 
     async def get_resistance(self):
         """
@@ -141,7 +167,7 @@ class BrickletPtc(Device):
             function_id=FunctionID.GET_RESISTANCE,
             response_expected=True
         )
-        return self.__value_to_SI_resistance(unpack_payload(payload, 'i'))
+        return self.__value_to_si_resistance(unpack_payload(payload, 'i'))
 
     async def set_temperature_callback_period(self, period=0, response_expected=True):
         """
@@ -155,7 +181,7 @@ class BrickletPtc(Device):
         """
         assert period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
@@ -183,7 +209,7 @@ class BrickletPtc(Device):
         """
         assert period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_RESISTANCE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
@@ -219,17 +245,17 @@ class BrickletPtc(Device):
 
         The default value is ('x', 0, 0).
         """
-        if not type(option) is ThresholdOption:
+        if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_THRESHOLD,
             data=pack_payload(
               (
                 option.value.encode('ascii'),
-                self.__SI_temperature_to_value(minimum),
-                self.__SI_temperature_to_value(maximum)
+                self.__si_temperature_to_value(minimum),
+                self.__si_temperature_to_value(maximum)
               ), 'c i i'),
             response_expected=response_expected
         )
@@ -245,7 +271,7 @@ class BrickletPtc(Device):
         )
         option, minimum, maximum = unpack_payload(payload, 'c i i')
         option = ThresholdOption(option)
-        minimum, maximum = self.__value_to_SI_temperature(minimum), self.__value_to_SI_temperature(maximum)
+        minimum, maximum = self.__value_to_si_temperature(minimum), self.__value_to_si_temperature(maximum)
         return GetTemperatureCallbackThreshold(option, minimum, maximum)
 
     async def set_resistance_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
@@ -266,17 +292,17 @@ class BrickletPtc(Device):
 
         The default value is ('x', 0, 0).
         """
-        if not type(option) is ThresholdOption:
+        if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_RESISTANCE_CALLBACK_THRESHOLD,
             data=pack_payload(
               (
                 option.value.encode('ascii'),
-                self.__SI_resistance_to_value(minimum),
-                self.__SI_resistance_to_value(maximum)
+                self.__si_resistance_to_value(minimum),
+                self.__si_resistance_to_value(maximum)
               ), 'c i i'),
             response_expected=response_expected
         )
@@ -292,7 +318,7 @@ class BrickletPtc(Device):
         )
         option, minimum, maximum = unpack_payload(payload, 'c i i')
         option = ThresholdOption(option)
-        minimum, maximum = self.__value_to_SI_resistance(minimum), self.__value_to_SI_resistance(maximum)
+        minimum, maximum = self.__value_to_si_resistance(minimum), self.__value_to_si_resistance(maximum)
         return GetResistanceCallbackThreshold(option, minimum, maximum)
 
     async def set_debounce_period(self, debounce_period=100, response_expected=True):
@@ -311,7 +337,7 @@ class BrickletPtc(Device):
         """
         assert debounce_period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
             data=pack_payload((int(debounce_period),), 'I'),
@@ -338,10 +364,10 @@ class BrickletPtc(Device):
 
         Default value is 0 = 50Hz.
         """
-        if not type(line_filter) is LineFilter:
+        if not isinstance(line_filter, LineFilter):
             line_filter = LineFilter(line_filter)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_NOISE_REJECTION_FILTER,
             data=pack_payload((line_filter.value,), 'B'),
@@ -383,10 +409,10 @@ class BrickletPtc(Device):
 
         The default value is 2 = 2-wire.
         """
-        if not type(mode) is WireMode:
+        if not isinstance(mode, WireMode):
             mode = WireMode(mode)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_WIRE_MODE,
             data=pack_payload((mode.value,), 'B'),
@@ -413,7 +439,7 @@ class BrickletPtc(Device):
 
         .. versionadded:: 2.0.2$nbsp;(Plugin)
         """
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION,
             data=pack_payload((bool(enabled),), '!'),
@@ -433,16 +459,18 @@ class BrickletPtc(Device):
         )
         return unpack_payload(payload, '!')
 
-    def __value_to_SI_temperature(self, value):
+    @staticmethod
+    def __value_to_si_temperature(value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 100
 
-    def __SI_temperature_to_value(self, value):
+    @staticmethod
+    def __si_temperature_to_value(value):
         return int(value * 100)
 
-    def __value_to_SI_resistance(self, value):
+    def __value_to_si_resistance(self, value):
         """
         Convert to the sensor value to SI units
         """
@@ -451,7 +479,7 @@ class BrickletPtc(Device):
             value *= 10
         return value
 
-    def __SI_resistance_to_value(self, value):
+    def __si_resistance_to_value(self, value):
         if self.__sensor_type is SensorType.PT_1000:
             value /= 10
         return int(value * 32768 / 390)
@@ -460,10 +488,11 @@ class BrickletPtc(Device):
         payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
         if header['function_id'] is CallbackID.TEMPERATURE or header['function_id'] is CallbackID.TEMPERATURE_REACHED:
             header['sid'] = 0
-            return self.__value_to_SI_temperature(payload), True    # payload, done
+            result = self.__value_to_si_temperature(payload), True    # payload, done
         elif header['function_id'] is CallbackID.RESISTANCE or header['function_id'] is CallbackID.RESISTANCE_REACHED:
             header['sid'] = 1
-            return self.__value_to_SI_resistance(payload), True    # payload, done
+            result = self.__value_to_si_resistance(payload), True    # payload, done
         else:
             header['sid'] = 2
-            return payload, True    # payload, done
+            result = payload, True    # payload, done
+        return result

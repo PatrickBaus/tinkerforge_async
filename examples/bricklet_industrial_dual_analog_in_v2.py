@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+An example to demonstrate most of the capabilities of the Tinkerforge
+Industrial Dual Analog In Bricklet 2.0.
+"""
 import asyncio
 import logging
-import sys
 import warnings
 
-from source.ip_connection import IPConnectionAsync
-from source.device_factory import device_factory
-from source.bricklet_industrial_dual_analog_in_v2 import BrickletIndustrialDualAnalogInV2
-
-sys.path.append("..")   # Adds higher directory to python modules path.
+from TinkerforgeAsync.ip_connection import IPConnectionAsync
+from TinkerforgeAsync.device_factory import device_factory
+from TinkerforgeAsync.bricklet_industrial_dual_analog_in_v2 import BrickletIndustrialDualAnalogInV2
 
 ipcon = IPConnectionAsync()
 running_tasks = []
@@ -44,18 +45,20 @@ async def process_enumerations(callback_queue):
         print('Enumeration queue canceled')
 
 
-async def run_example(packet, callback_queue):
-    print('Registering bricklet')
-    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon)    # Create device object
-    print('Identity:', await bricklet.get_identity())
-    # Register the callback queue used by process_callbacks()
-    # We can register the same queue for multiple callbacks.
-    bricklet.register_event_queue(bricklet.CallbackID.VOLTAGE, callback_queue)
-    bricklet.register_event_queue(bricklet.CallbackID.ALL_VOLTAGES, callback_queue)
-
+async def run_example_generic(bricklet):
+    """
+    This is a demo of the generic features of the Tinkerforge bricklets with a
+    microcontroller.
+    """
     uid = await bricklet.read_uid()
     print('Device uid:', uid)
     await bricklet.write_uid(uid)
+
+    print('SPI error count:', await bricklet.get_spitfp_error_count())
+
+    print('Current bootloader mode:', await bricklet.get_bootloader_mode())
+    bootloader_mode = bricklet.BootloaderMode.FIRMWARE
+    print('Setting bootloader mode to', bootloader_mode, ':', await bricklet.set_bootloader_mode(bootloader_mode))
 
     print('Disable status LED')
     await bricklet.set_status_led_config(bricklet.LedConfig.OFF)
@@ -65,7 +68,24 @@ async def run_example(packet, callback_queue):
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print('Current status:', await bricklet.get_status_led_config())
 
-    print('Get chip temperature:', await bricklet.get_chip_temperature(), '°C')
+    print('Get Chip temperature:', await bricklet.get_chip_temperature(), '°C')
+
+    print('Reset Bricklet')
+    await bricklet.reset()
+
+
+async def run_example(packet, callback_queue):
+    """
+    This is a demo of the generic features of the Tinkerforge bricklets with a
+    microcontroller.
+    """
+    print('Registering bricklet')
+    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon)    # Create device object
+    print('Identity:', await bricklet.get_identity())
+    # Register the callback queue used by process_callbacks()
+    # We can register the same queue for multiple callbacks.
+    bricklet.register_event_queue(bricklet.CallbackID.VOLTAGE, callback_queue)
+    bricklet.register_event_queue(bricklet.CallbackID.ALL_VOLTAGES, callback_queue)
 
     await bricklet.set_sample_rate(bricklet.SamplingRate.RATE_1_SPS)
     print('Sampling rate:', await bricklet.get_sample_rate())
@@ -122,15 +142,18 @@ async def run_example(packet, callback_queue):
     await bricklet.set_channel_led_config(0, bricklet.ChannelLedConfig.CHANNEL_STATUS)
     await bricklet.set_channel_led_config(1, bricklet.ChannelLedConfig.CHANNEL_STATUS)
 
-    print('Reset Bricklet')
-    await bricklet.reset()
+    # Test the generic features of the bricklet. These are available with all
+    # new bricklets that have a microcontroller
+    await run_example_generic(bricklet)
 
     # Terminate the loop
     asyncio.create_task(shutdown())
 
 
 async def shutdown():
-    # Clean up: Disconnect ip connection and stop the consumers
+    """
+    Clean up: Disconnect ip connection and stop the consumers
+    """
     for task in running_tasks:
         task.cancel()
     await asyncio.gather(*running_tasks)
@@ -138,14 +161,22 @@ async def shutdown():
 
 
 def error_handler(task):
+    """
+    The main error handler. It will shutdown on any uncaught exception
+    """
     try:
         task.result()
-    except Exception:
-        # Normally we should log these
+    except Exception:  # pylint: disable=broad-except
+        # Normally we should log these errors
         asyncio.create_task(shutdown())
 
 
 async def main():
+    """
+    The main loop, that will spawn all callback handlers and wait until they are
+    done. There are two callback handlers, one waits for the bricklet to connect
+    and run the demo, the other handles messages sent by the bricklet.
+    """
     try:
         await ipcon.connect(host='127.0.0.1', port=4223)
         callback_queue = asyncio.Queue()

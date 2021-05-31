@@ -1,21 +1,30 @@
 # -*- coding: utf-8 -*-
+"""
+This file contains all base classes used by Bricks and bricklets
+"""
 import asyncio
 from collections import namedtuple
 from enum import Enum, unique
 import time
 
-from .ip_connection_helper import base58decode, pack_payload, unpack_payload
+from .ip_connection_helper import base58decode, pack_payload, unpack_payload, uid64_to_uid32
 
 GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
 
 class UnknownFunctionError(Exception):
-    pass
+    """
+    Raised when an unknown callback id was returned and the Brick/Bricklet does
+    not know which function it belongs to
+    """
 
 
 @unique
 class ThresholdOption(Enum):
+    """
+    These options can be used to configure thresholds for callbacks
+    """
     OFF = 'x'
     OUTSIDE = 'o'
     INSIDE = 'i'
@@ -25,30 +34,37 @@ class ThresholdOption(Enum):
 
 @unique
 class DeviceIdentifier(Enum):
-    BrickMaster = 13
-    BrickletAmbientLight = 21
-    BrickletHumidity = 27
-    BrickletIO16 = 28
-    BrickletTemperature = 216
-    BrickletAnalogIn = 219
-    BrickletBarometer = 221
-    BrickletPtc = 226
-    BrickletMoisture = 232
-    BrickletSegmentDisplay4x7 = 237
-    BrickletAmbientLight_V2 = 259
-    BrickletHumidity_V2 = 283
-    BrickletMotionDetector_V2 = 292
-    BrickletPtc_V2 = 2101
-    BrickletRs232_V2 = 2108
-    BrickletIO4V2 = 2111
-    BrickletTemperature_V2 = 2113
-    BrickletIndustrialDualAnalogIn_V2 = 2121
-    BrickletAmbientLight_V3 = 2131
-    BrickletSegmentDisplay4x7_V2 = 2137
+    """
+    The device ids used by the Bricks and bricklets to communicate
+    """
+    BRICK_MASTER = 13
+    BRICKLET_AMBIENT_LIGHT = 21
+    BRICKLET_HUMIDITY = 27
+    BRICKLET_IO_16 = 28
+    BRICKLET_TEMPERATURE = 216
+    BRICKLET_ANALOG_IN = 219
+    BRICKLET_BAROMETER = 221
+    BRICKLET_PTC = 226
+    BRICKLET_MOISTURE = 232
+    BRICKLET_SEGMENT_DISPLAY_4x7 = 237  # pylint: disable=invalid-name
+    BRICKLET_AMBIENT_LIGHT_V2 = 259
+    BRICKLET_HUMIDITY_V2 = 283
+    BRICKLET_MOTION_DETECTOR_V2 = 292
+    BRICKLET_PTC_V2 = 2101
+    BRICKLET_RS232_V2 = 2108
+    BRICKLET_IO_4_V2 = 2111
+    BRICKLET_TEMPTERATURE_V2 = 2113
+    BRICKLET_BAROMETER_V2 = 2117
+    BRICKLET_INDUSTRIAL_DUAL_ANALOG_IN_V2 = 2121
+    BRICKLET_AMBIENT_IGHT_V3 = 2131
+    BRICKLET_SEGMENT_DISPLAY_4x7_V2 = 2137  # pylint: disable=invalid-name
 
 
 @unique
 class FunctionID(Enum):
+    """
+    General purpose functions supported by most Bricks and Bricklets
+    """
     ADC_CALIBRATE = 251
     GET_ADC_CALIBRATION = 250
     READ_BRICKLET_UID = 249
@@ -73,20 +89,27 @@ class FunctionID(Enum):
 
 @unique
 class BrickletPort(Enum):
+    """
+    The port to which a Bricklet is connected on a Master Brick
+    """
     A = 'a'
     B = 'b'
     C = 'c'
     D = 'd'
 
 
-class Device(object):
+class Device:
+    """
+    The base class of the most basic Brick or Bricklet. These are typically the
+    older devices, that do not have a microcontroller on board.
+    """
     RESPONSE_EXPECTED_INVALID_FUNCTION_ID = 0
     RESPONSE_EXPECTED_ALWAYS_TRUE = 1   # getter
     RESPONSE_EXPECTED_TRUE = 2          # setter
     RESPONSE_EXPECTED_FALSE = 3         # setter, default
 
     def __repr__(self):
-        return self.DEVICE_DISPLAY_NAME
+        return self.__display_name
 
     @property
     def ipcon(self):
@@ -95,12 +118,13 @@ class Device(object):
         """
         return self.__ipcon
 
-    def __init__(self, uid, ipcon):
+    def __init__(self, display_name, uid, ipcon):
         """
         Creates the device object with the unique device ID *uid* and adds
         it to the IPConnection *ipcon*.
         """
 
+        self.__display_name = display_name
         self.uid = uid if uid <= 0xFFFFFFFF else uid64_to_uid32(uid)
         self.__ipcon = ipcon
         self.api_version = (0, 0, 0)
@@ -148,8 +172,8 @@ class Device(object):
 
     def _process_callback_payload(self, header, payload):
         """
-        Process the callback using the bricklet callback format. This function shall be
-        overwritten, if processing of the payload is required.
+        Process the callback using the bricklet callback format. This function
+        can be overwritten, if processing of the payload is required.
         """
         return unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']]), True    # payload, done
 
@@ -158,8 +182,8 @@ class Device(object):
         Registers the given *function* with the given *callback_id*.
         """
         # CallbackID is defined by the brick/bricklet
-        if not type(event_id) is self.CallbackID:
-            event_id = event_id(CallbackID)
+        if not isinstance(event_id, self.CallbackID):
+            event_id = event_id(event_id)
 
         if queue is None:
             self.__registered_queues.pop(event_id, None)
@@ -198,13 +222,24 @@ class Device(object):
         )
 
     async def connect(self):
+        """
+        Connect the ip connection if not already connected
+        """
         await self.__ipcon.connect()
 
     async def disconnect(self):
+        """
+        Disconnect the ip connection. This will also disconnect all other
+        Bricks and Bricklets.
+        """
         await self.__ipcon.disconnect()
 
 
 class DeviceWithMCU(Device):
+    """
+    The base class for a more advanced Brick or Bricklet with a microcontroller
+    on board.
+    """
     async def get_chip_temperature(self):
         """
         Returns the temperature in °C as measured inside the microcontroller. The
@@ -239,6 +274,10 @@ class DeviceWithMCU(Device):
 
 @unique
 class BootloaderMode(Enum):
+    """
+    Bricklets with a microcontroller have a bootloader that activated by setting
+    the bootloader mode to BOOTLOADER. The Bricklet can then be flashed.
+    """
     BOOTLOADER = 0
     FIRMWARE = 1
     BOOTLOADER_WAIT_FOR_REBOOT = 2
@@ -248,6 +287,10 @@ class BootloaderMode(Enum):
 
 @unique
 class BootloaderStatus(Enum):
+    """
+    If the bricklet has a microcontroller, this is the status reported by
+    the bootloader, when queried.
+    """
     OK = 0
     INVALID_MODE = 1
     NO_CHANGE = 2
@@ -258,6 +301,10 @@ class BootloaderStatus(Enum):
 
 @unique
 class LedConfig(Enum):
+    """
+    All Bricklets with a mcu on board also feature one or more LEDs to signal
+    their status. These are the config options.
+    """
     OFF = 0
     ON = 1
     SHOW_HEARTBEAT = 2
@@ -265,6 +312,10 @@ class LedConfig(Enum):
 
 
 class BrickletWithMCU(DeviceWithMCU):
+    """
+    The new Bricklets feature a microcontroller and this base class implements
+    the generic function supported by the microcontroller.
+    """
     # Convenience imports, so that the user does not need to additionally import them
     BootloaderStatus = BootloaderStatus
     LedConfig = LedConfig
@@ -282,7 +333,7 @@ class BrickletWithMCU(DeviceWithMCU):
         This function is used by Brick Viewer during flashing. It should not be
         necessary to call it in a normal user program.
         """
-        if not type(mode) is BootloaderMode:
+        if not isinstance(mode, BootloaderMode):
             mode = BootloaderMode(mode)
 
         _, payload = await self.ipcon.send_request(
@@ -315,7 +366,7 @@ class BrickletWithMCU(DeviceWithMCU):
         """
         assert pointer >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_WRITE_FIRMWARE_POINTER,
             data=pack_payload((int(pointer),), 'I'),
@@ -351,10 +402,10 @@ class BrickletWithMCU(DeviceWithMCU):
 
         If the Bricklet is in bootloader mode, the LED is will show heartbeat by default.
         """
-        if not type(config) is LedConfig:
+        if not isinstance(config, LedConfig):
             config = LedConfig(config)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_STATUS_LED_CONFIG,
             data=pack_payload((config.value,), 'B'),
@@ -382,7 +433,7 @@ class BrickletWithMCU(DeviceWithMCU):
         """
         assert uid >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.WRITE_BRICKLET_UID,
             data=pack_payload((int(uid),), 'I'),

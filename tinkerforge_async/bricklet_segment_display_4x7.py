@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Segment Display 4x7 Bricklet
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from enum import Enum, unique
 
@@ -11,11 +17,17 @@ GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardw
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     COUNTER_FINISHED = 5
 
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     SET_SEGMENTS = 1
     GET_SEGMENTS = 2
     START_COUNTER = 3
@@ -26,8 +38,7 @@ class BrickletSegmentDisplay4x7(Device):
     """
     Four 7-segment displays with switchable colon
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletSegmentDisplay4x7
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_SEGMENT_DISPLAY_4x7
     DEVICE_DISPLAY_NAME = 'Segment Display 4x7 Bricklet'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -43,7 +54,7 @@ class BrickletSegmentDisplay4x7(Device):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
 
@@ -63,10 +74,10 @@ class BrickletSegmentDisplay4x7(Device):
         The brightness can be set between 0 (dark) and 7 (bright). The colon
         parameter turns the colon of the display on or off.
         """
-        assert (all(0 <= segment <= 127 for segment in segments))
-        assert (0 <= brightness <= 7)
+        assert all(0 <= segment <= 127 for segment in segments)
+        assert 0 <= brightness <= 7
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SEGMENTS,
             data=pack_payload(
@@ -80,13 +91,8 @@ class BrickletSegmentDisplay4x7(Device):
 
     async def get_segments(self):
         """
-        Returns the humidity of the sensor. The value
-        has a range of 0 to 1000 and is given in %RH/10 (Relative Humidity),
-        i.e. a value of 421 means that a humidity of 42.1 %RH is measured.
-
-        If you want to get the humidity periodically, it is recommended to use the
-        :cb:`Humidity` callback and set the period with
-        :func:`Set Humidity Callback Period`.
+        Returns the segment, brightness and color data as set by
+        :func:`Set Segments`.
         """
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -95,7 +101,7 @@ class BrickletSegmentDisplay4x7(Device):
         )
         return GetSegments(*unpack_payload(payload, '4B B !'))
 
-    async def start_counter(self, value_from, value_to, increment=1, length=1000, response_expected=True):
+    async def start_counter(self, value_from, value_to, increment=1, length=1000, response_expected=True):  # pylint: disable=too-many-arguments
         """
         Starts a counter with the *from* value that counts to the *to*
         value with the each step incremented by *increment*.
@@ -109,12 +115,12 @@ class BrickletSegmentDisplay4x7(Device):
 
         You can stop the counter at every time by calling :func:`Set Segments`.
         """
-        assert (-999 <= value_from <= 9999)
-        assert (-999 <= value_to <= 9999)
-        assert (-999 <= increment <= 9999)
-        assert (0 <= length <= 2**32-1)
+        assert -999 <= value_from <= 9999
+        assert -999 <= value_to <= 9999
+        assert -999 <= increment <= 9999
+        assert 0 <= length <= 2**32-1
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.START_COUNTER,
             data=pack_payload(

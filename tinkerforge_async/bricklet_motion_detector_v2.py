@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge Barometer Bricklet 2.0
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
-from decimal import Decimal
 from enum import Enum, unique
 
 from .devices import DeviceIdentifier, BrickletWithMCU
@@ -11,12 +16,18 @@ GetIndicator = namedtuple('Indicator', ['top_left', 'top_right', 'bottom'])
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     MOTION_DETECTED = 6
     DETECTION_CYCLE_ENDED = 7
 
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     GET_MOTION_DETECTED = 1
     SET_SENSITIVITY = 2
     GET_SENSITIVITY = 3
@@ -28,8 +39,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
     """
     Passive infrared (PIR) motion sensor with 12m range and dimmable backlight
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletMotionDetector_V2
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_MOTION_DETECTOR_V2
     DEVICE_DISPLAY_NAME = 'Motion Detector Bricklet 2.0'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -46,7 +56,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
 
@@ -76,9 +86,9 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
 
         So you will have to find a good sensitivity for your application by trial and error.
         """
-        assert (0 <= sensitivity <= 100)
+        assert 0 <= sensitivity <= 100
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SENSITIVITY,
             data=pack_payload((int(sensitivity),), 'B'),
@@ -103,11 +113,11 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         (0-255). A value of 0 turns the LED off and a value of 255 turns the LED
         to full brightness.
         """
-        assert (0 <= top_left <= 255)
-        assert (0 <= top_right <= 255)
-        assert (0 <= bottom <= 255)
+        assert 0 <= top_left <= 255
+        assert 0 <= top_right <= 255
+        assert 0 <= bottom <= 255
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_INDICATOR,
             data=pack_payload(

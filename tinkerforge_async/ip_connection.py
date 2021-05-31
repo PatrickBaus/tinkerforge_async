@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+This module implements the underlying ip connection to the Bricks and Bricklets.
+See https://www.tinkerforge.com/de/doc/Low_Level_Protocols/TCPIP.html for
+details.
+"""
 import asyncio
-import async_timeout
 from enum import Enum, Flag, unique
 import errno    # The error numbers can be found in /usr/include/asm-generic/errno.h
 import hmac
@@ -9,16 +13,24 @@ import logging
 import os
 import struct
 
+import async_timeout
+
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
-from .devices import DeviceIdentifier, FunctionID, UnknownFunctionError
+from .devices import DeviceIdentifier, UnknownFunctionError
 
 
 class NotConnectedError(ConnectionError):
-    pass
+    """
+    Raised if there is no connection
+    """
 
 
 @unique
 class FunctionID(Enum):
+    """
+    Function calls needed to establish a connection and enumerate Bricks and
+    Bricklets
+    """
     GET_AUTHENTICATION_NONCE = 1
     AUTHENTICATE = 2
     CALLBACK_ENUMERATE = 253
@@ -27,12 +39,18 @@ class FunctionID(Enum):
 
 @unique
 class EnumerationType(Enum):
+    """
+    The type of event, that triggered the enumeration.
+    """
     AVAILABLE = 0
     CONNECTED = 1
     DISCONNECTED = 2
 
 
 class Flags(Flag):
+    """
+    Error codes used by the protocol
+    """
     OK = 0
     INVALID_PARAMETER = 64
     FUNCTION_NOT_SUPPORTED = 128
@@ -41,43 +59,22 @@ class Flags(Flag):
 DEFAULT_WAIT_TIMEOUT = 2.5  # in seconds
 
 
-def parse_header(data):
-    uid, payload_size, function_id, options, flags = struct.unpack_from(IPConnectionAsync.HEADER_FORMAT, data)
-    try:
-        function_id = FunctionID(function_id)
-        if function_id in (FunctionID.GET_AUTHENTICATION_NONCE, FunctionID.AUTHENTICATE) and not uid == 1:
-            # Only the special uid 1 can reply with GET_AUTHENTICATION_NONCE or AUTHENTICATE
-            function_id = function_id.value
-    except ValueError:
-        # Do not assign an enum, leave the int
-        pass
-    sequence_number = None if (options >> 4) & 0b1111 == 0 else (options >> 4) & 0b1111   # There is no sequence number if it is a callback (sequence_number == 0)
-    response_expected = bool(options >> 3 & 0b1)
-#    options = options & 0b111 # Options for future use
-    try:
-        flags = Flags(flags)
-    except ValueError:
-        # Do not assign an enum, leave the int
-        pass
+class IPConnectionAsync:
+    """
+    The implementation of the Tinkerforge TCP/IP protocol. See
+    See https://www.tinkerforge.com/en/doc/Low_Level_Protocols/TCPIP.html
+    for details.
+    """
+    BROADCAST_UID = 0  # The uid used to broadcast enumeration events
 
-    return payload_size, \
-        {
-            'uid': uid,
-            'sequence_number': sequence_number,
-            'response_expected': response_expected,
-            'function_id': function_id,
-            'flags': flags,
-        }
-
-
-class IPConnectionAsync(object):
-    BROADCAST_UID = 0
-
-    # See https://www.tinkerforge.com/en/doc/Low_Level_Protocols/TCPIP.html for details
     HEADER_FORMAT = '<IBBBB'  # little endian (<), uid (I, uint32), size (B, uint8), function id, squence number, flags
 
     @property
     def uid(self):
+        """
+        The uid used by the IP connection for authentication. It needs a uid
+        to talk to the user.
+        """
         return 1
 
     @property
@@ -96,10 +93,17 @@ class IPConnectionAsync(object):
 
     @timeout.setter
     def timeout(self, value):
+        """
+        The timeout used for reading and writing packets, if not set, the
+        DEFAULT_WAIT_TIMEOUT will be used.
+        """
         self.__timeout = abs(int(value))
 
     @property
     def is_connected(self):
+        """
+        Returns *True* if, the connection is established.
+        """
         return self.__writer is not None and not self.__writer.is_closing()
 
     def __init__(self, host=None, port=4223, authentication_secret=None):
@@ -123,6 +127,35 @@ class IPConnectionAsync(object):
         self.__sequence_number_queue = None
         self.__enumeration_queue = None
 
+    @staticmethod
+    def __parse_header(data):
+        uid, payload_size, function_id, options, flags = struct.unpack_from(IPConnectionAsync.HEADER_FORMAT, data)
+        try:
+            function_id = FunctionID(function_id)
+            if function_id in (FunctionID.GET_AUTHENTICATION_NONCE, FunctionID.AUTHENTICATE) and not uid == 1:
+                # Only the special uid 1 can reply with GET_AUTHENTICATION_NONCE or AUTHENTICATE
+                function_id = function_id.value
+        except ValueError:
+            # Do not assign an enum, leave the int
+            pass
+        sequence_number = None if (options >> 4) & 0b1111 == 0 else (options >> 4) & 0b1111   # There is no sequence number if it is a callback (sequence_number == 0)
+        response_expected = bool(options >> 3 & 0b1)
+    #    options = options & 0b111 # Options for future use
+        try:
+            flags = Flags(flags)
+        except ValueError:
+            # Do not assign an enum, leave the int
+            pass
+
+        return payload_size, \
+            {
+                'uid': uid,
+                'sequence_number': sequence_number,
+                'response_expected': response_expected,
+                'function_id': function_id,
+                'flags': flags,
+            }
+
     async def __create_packet_header(self, payload_size, function_id, uid=None, response_expected=False):
         uid = IPConnectionAsync.BROADCAST_UID if uid is None else uid
         packet_size = payload_size + struct.calcsize(IPConnectionAsync.HEADER_FORMAT)
@@ -131,16 +164,21 @@ class IPConnectionAsync(object):
 
         sequence_number_and_options = (sequence_number << 4) | response_expected << 3
 
-        return (struct.pack(IPConnectionAsync.HEADER_FORMAT, uid, packet_size, function_id, sequence_number_and_options, Flags.OK.value),
+        return (struct.pack(IPConnectionAsync.HEADER_FORMAT, uid, packet_size, function_id, sequence_number_and_options, Flags.OK.value),  # pylint: disable=no-member
                 sequence_number)
 
     def add_device(self, device):
+        """
+        Add a brick or bricklet to the ip connection. This is required for
+        callbacks.
+        """
         self.__logger.debug('Adding device: %(device)s.', {'device': device})
         self.__devices[device.uid] = device
 
     async def enumerate(self):
         """
-        Broadcasts an enumerate request. All devices will respond with an enumerate callback.
+        Broadcasts an enumerate request. All devices will respond with an
+        enumerate callback.
         Returns: None, it does not support 'response_expected'
         """
         self.__logger.debug('Enumerating Node.')
@@ -150,6 +188,12 @@ class IPConnectionAsync(object):
         )
 
     async def send_request(self, device, function_id, data=b'', response_expected=False):
+        """
+        Creates a request, by prepending a header to the data and sends it to
+        the Tinkerforge host.
+        Returns: None, if 'response_expected' is *False*, else it will return
+        a tuple (header, payload) returned by the host.
+        """
         if not self.is_connected:
             raise NotConnectedError('Tinkerforge IP Connection not connected.')
 
@@ -177,7 +221,8 @@ class IPConnectionAsync(object):
             # Return the sequence number
             self.__sequence_number_queue.put_nowait(sequence_number)
 
-    def __parse_enumerate_payload(self, payload):
+    @staticmethod
+    def __parse_enumerate_payload(payload):
         uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type \
             = unpack_payload(payload, '8s 8s c 3B 3B H B')
 
@@ -212,15 +257,15 @@ class IPConnectionAsync(object):
         try:
             with async_timeout.timeout(self.__timeout):
                 data = await self.__reader.read(struct.calcsize(IPConnectionAsync.HEADER_FORMAT))
-                packet_size, header = parse_header(data)
+                packet_size, header = self.__parse_header(data)
 
                 payload = await self.__reader.read(packet_size - struct.calcsize(IPConnectionAsync.HEADER_FORMAT))
 
                 return header, payload
         except asyncio.TimeoutError:
             return None, None
-        except ConnectionResetError as e:
-            raise NotConnectedError('Tinkerforge IP Connection not connected.') from e
+        except ConnectionResetError as exc:
+            raise NotConnectedError('Tinkerforge IP Connection not connected.') from exc
 
     async def __process_packet(self, header, payload):
         # There are two types of packets:
@@ -244,10 +289,13 @@ class IPConnectionAsync(object):
                     if header['function_id'] is FunctionID.CALLBACK_ENUMERATE:
                         payload = self.__parse_enumerate_payload(payload)
                         self.__logger.debug('Received enumeration: %(header)s - %(payload)s', {'header': header, 'payload': payload})
-                        if self.__enumeration_queue.full():
-                            # TODO: log a warning, that we are dropping packets
-                            self.__enumeration_queue.get_nowait()
-                        self.__enumeration_queue.put_nowait(payload)
+                        try:
+                            self.__enumeration_queue.put_nowait(payload)
+                        except asyncio.QueueFull:
+                            dropped_payload = self.__enumeration_queue.get_nowait()
+                            self.__logger.warning('Dropping packets. Too many callbacks. Dropped payload: %(payload)s', {'payload': dropped_payload})
+                            self.__enumeration_queue.put_nowait(payload)
+
                 except ValueError:
                     # raised if the functionID is unknown. This can happen if there was no device output queue
                     # registered with the callback.
@@ -273,6 +321,9 @@ class IPConnectionAsync(object):
             self.__logger.info('Unknown packet: %(header)s - %(payload)s.', {'header': header, 'payload': payload})
 
     async def main_loop(self):
+        """
+        The main loop, that is responsible for processing incoming packets.
+        """
         try:
             while 'loop not canceled':
                 # Read packets from the socket and process them.
@@ -317,12 +368,12 @@ class IPConnectionAsync(object):
         self.__logger.debug('Authenticating with secret %s.', authentication_secret)
         client_nonce, server_nonce = await asyncio.gather(self.__get_client_nonce(), self.__get_server_nonce())
 
-        h = hmac.new(authentication_secret, digestmod=hashlib.sha1)
-        h.update(server_nonce)
-        h.update(client_nonce)
+        mac = hmac.new(authentication_secret, digestmod=hashlib.sha1)
+        mac.update(server_nonce)
+        mac.update(client_nonce)
 
-        digest = h.digest()
-        del h
+        digest = mac.digest()
+        del mac     # remove it from memery
 
         await self.send_request(
             device=self,
@@ -332,6 +383,15 @@ class IPConnectionAsync(object):
         )
 
     async def connect(self, host=None, port=None, authentication_secret=None):
+        """
+        Connect to a Tinkerforge host/stack. The parameters host, port and
+        authentication_secret are optional and can already be set at object
+        creation time. If any of host, port, authentication_secret are set, they
+        will overwrite the ones set at creation time.
+        The connect() call does authentication in the background if
+        authentication_secret is set either at creation or runtime. There is no
+        further user intervention necessary.
+        """
         if host is not None:
             self.__host = host
         if port is not None:
@@ -363,6 +423,9 @@ class IPConnectionAsync(object):
                 self.__logger.info('Tinkerforge IP connection connected')
 
     async def disconnect(self):
+        """
+        Disconnect from a tinkerforge host and clean up.
+        """
         if self.__lock is None:
             self.__lock = asyncio.Lock()
         async with self.__lock:
@@ -388,7 +451,7 @@ class IPConnectionAsync(object):
         finally:
             self.__writer, self.__reader = None, None
             # Cancel all pending requests, that have not been resolved
-            for sequence_number, future in self.__pending_requests.items():
+            for _, future in self.__pending_requests.items():
                 if not future.done():
                     future.set_exception(NotConnectedError('Tinkerforge IP Connection closed.'))
             self.__pending_requests = {}

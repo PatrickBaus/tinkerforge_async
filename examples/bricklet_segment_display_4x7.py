@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+An example to demonstrate most of the capabilities of the Tinkerforge
+Segment Display 4x7 Bricklet.
+"""
 import asyncio
 import logging
-import sys
 import warnings
 
-from source.ip_connection import IPConnectionAsync
-from source.device_factory import device_factory
-from source.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
-
-sys.path.append("..")   # Adds higher directory to python modules path.
+from tinkerforge_async.ip_connection import IPConnectionAsync
+from tinkerforge_async.device_factory import device_factory
+from tinkerforge_async.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
 
 ipcon = IPConnectionAsync()
 running_tasks = []
@@ -50,6 +51,9 @@ async def process_enumerations(callback_queue):
 
 
 async def run_example(packet, callback_queue):
+    """
+    This is the actual demo. If the bricklet is found, this code will be run.
+    """
     print('Registering bricklet')
     bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon)    # Create device object
     print('Identity:', await bricklet.get_identity())
@@ -61,12 +65,12 @@ async def run_example(packet, callback_queue):
     print('Get segments:', await bricklet.get_segments())
     print('Counting from 0 to 5 and back again')
     await bricklet.start_counter(value_from=0, value_to=5, increment=1, length=1000)
-    for i in range(6):
+    for _ in range(6):
         print('Counter value:', await bricklet.get_counter_value())
         await asyncio.sleep(1)    # Wait for 1 second
 
     await bricklet.start_counter(value_from=5, value_to=0, increment=-1, length=1000)
-    for i in range(5):
+    for _ in range(5):
         await asyncio.sleep(1)    # Wait for 1 second
         print('Counter value:', await bricklet.get_counter_value())
 
@@ -78,7 +82,9 @@ async def run_example(packet, callback_queue):
 
 
 async def shutdown():
-    # Clean up: Disconnect ip connection and stop the consumers
+    """
+    Clean up: Disconnect ip connection and stop the consumers
+    """
     for task in running_tasks:
         task.cancel()
     await asyncio.gather(*running_tasks)
@@ -86,13 +92,22 @@ async def shutdown():
 
 
 def error_handler(task):
+    """
+    The main error handler. It will shutdown on any uncaught exception
+    """
     try:
         task.result()
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
+        # Normally we should log these errors
         asyncio.create_task(shutdown())
 
 
 async def main():
+    """
+    The main loop, that will spawn all callback handlers and wait until they are
+    done. There are two callback handlers, one waits for the bricklet to connect
+    and run the demo, the other handles messages sent by the bricklet.
+    """
     try:
         await ipcon.connect(host='127.0.0.1', port=4223)
         callback_queue = asyncio.Queue()

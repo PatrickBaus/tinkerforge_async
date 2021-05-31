@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge Analog In Bricklet
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
@@ -12,6 +18,9 @@ GetAnalogValueCallbackThreshold = namedtuple('AnalogValueCallbackThreshold', ['o
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     VOLTAGE = 13
     ANALOG_VALUE = 14
     VOLTAGE_REACHED = 15
@@ -20,6 +29,9 @@ class CallbackID(Enum):
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     GET_VOLTAGE = 1
     GET_ANALOG_VALUE = 2
     SET_VOLTAGE_CALLBACK_PERIOD = 3
@@ -40,6 +52,10 @@ class FunctionID(Enum):
 
 @unique
 class Range(Enum):
+    """
+    These ranges define the maximum voltage before the sensor goes out of
+    range.
+    """
     AUTOMATIC = 0
     UP_TO_6V = 1
     UP_TO_10V = 2
@@ -52,8 +68,7 @@ class BrickletAnalogIn(Device):
     """
     Measures DC voltage between 0V and 45V
     """
-
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletAnalogIn
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_ANALOG_IN
     DEVICE_DISPLAY_NAME = 'Analog In Bricklet'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -74,7 +89,7 @@ class BrickletAnalogIn(Device):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 3)
 
@@ -92,7 +107,7 @@ class BrickletAnalogIn(Device):
             function_id=FunctionID.GET_VOLTAGE,
             response_expected=True
         )
-        return self.__value_to_SI(unpack_payload(payload, 'H'))
+        return self.__value_to_si(unpack_payload(payload, 'H'))
 
     async def get_analog_value(self):
         """
@@ -125,7 +140,7 @@ class BrickletAnalogIn(Device):
         """
         assert period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_VOLTAGE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
@@ -153,7 +168,7 @@ class BrickletAnalogIn(Device):
         """
         assert period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_PERIOD,
             data=pack_payload((int(period),), 'I'),
@@ -187,17 +202,17 @@ class BrickletAnalogIn(Device):
          "'<'",    "Callback is triggered when the voltage is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the voltage is greater than the min value (max is ignored)"
         """
-        if not type(option) is ThresholdOption:
+        if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_VOLTAGE_CALLBACK_THRESHOLD,
             data=pack_payload(
               (
                 option.value.encode('ascii'),
-                self.__SI_to_value(minimum),
-                self.__SI_to_value(maximum)
+                self.__si_to_value(minimum),
+                self.__si_to_value(maximum)
               ), 'c H H'),
             response_expected=response_expected
         )
@@ -213,7 +228,7 @@ class BrickletAnalogIn(Device):
         )
         option, minimum, maximum = unpack_payload(payload, 'c H H')
         option = ThresholdOption(option)
-        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
+        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
         return GetVoltageCallbackThreshold(option, minimum, maximum)
 
     async def set_analog_value_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
@@ -232,10 +247,10 @@ class BrickletAnalogIn(Device):
          "'<'",    "Callback is triggered when the analog value is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the analog value is greater than the min value (max is ignored)"
         """
-        if not type(option) is ThresholdOption:
+        if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_THRESHOLD,
             data=pack_payload((option.value.encode('ascii'), minimum, maximum), 'c H H'),
@@ -271,7 +286,7 @@ class BrickletAnalogIn(Device):
         """
         assert debounce_period >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
             data=pack_payload((int(debounce_period),), 'I'),
@@ -302,10 +317,10 @@ class BrickletAnalogIn(Device):
 
         .. versionadded:: 2.0.1$nbsp;(Plugin)
         """
-        if not type(value) is Range:
+        if not isinstance(value, Range):
             value = Range(value)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_RANGE,
             data=pack_payload((value.value,), 'B'),
@@ -337,7 +352,7 @@ class BrickletAnalogIn(Device):
         """
         assert average >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_AVERAGING,
             data=pack_payload((int(average),), 'B'),
@@ -357,20 +372,24 @@ class BrickletAnalogIn(Device):
         )
         return unpack_payload(payload, 'B')
 
-    def __value_to_SI(self, value):
+    @staticmethod
+    def __value_to_si(value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 1000
 
-    def __SI_to_value(self, value):
+    @staticmethod
+    def __si_to_value(value):
         return int(value * 1000)
 
     def _process_callback_payload(self, header, payload):
         payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
         if header['function_id'] is CallbackID.VOLTAGE or header['function_id'] is CallbackID.VOLTAGE_REACHED:
             header['sid'] = 0
-            return self.__value_to_SI(payload), True    # payload, done
+            result = self.__value_to_si(payload), True    # payload, done
         else:
+            # If it is not a voltage callback there is no need for conversion
             header['sid'] = 1
-            return payload, True    # payload, done
+            result = payload, True    # payload, done
+        return result

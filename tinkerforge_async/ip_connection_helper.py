@@ -1,10 +1,23 @@
 # -*- coding: utf-8 -*-
-
+"""
+Some helper functions to encode and decode Tinkerforge protocol payloads.
+"""
 import math
 import struct
 
-# Taken from Tinkerforge ip_connection.py
+# The following code is taken from the original Tinkerforge ip_connection.py
 BASE58 = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
+
+
+def uid64_to_uid32(uid64):
+    value1 = uid64 & 0xFFFFFFFF
+    value2 = (uid64 >> 32) & 0xFFFFFFFF
+
+    uid32 = (value1 & 0x00000FFF)
+    uid32 |= (value1 & 0x0F000000) >> 12
+    uid32 |= (value2 & 0x0000003F) << 16
+    uid32 |= (value2 & 0x000F0000) << 6
+    uid32 |= (value2 & 0x3F000000) << 2
 
 
 def base58encode(value):
@@ -65,7 +78,7 @@ def pack_payload(data, form):
 
 def unpack_payload(data, form):
     ret = []
-    if not form or not len(data):
+    if not form or len(data) == 0:
         return None
 
     for f in form.split(' '):

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module for the Tinkerforge Ambient Light Bricklet 3.0
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)
+implemented using Python AsyncIO. It does the low-lvel communication with the
+Tinkerforge ip connection and also handles conversion of raw units to SI units.
+"""
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
@@ -12,11 +18,17 @@ GetConfiguration = namedtuple('Configuration', ['illuminance_range', 'integratio
 
 @unique
 class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
     ILLUMINANCE = 4
 
 
 @unique
 class FunctionID(Enum):
+    """
+    The function calls available to this bricklet
+    """
     GET_ILLUMINANCE = 1
     SET_ILLUMINANCE_CALLBACK_CONFIGURATION = 2
     GET_ILLUMINANCE_CALLBACK_CONFIGURATION = 3
@@ -26,6 +38,10 @@ class FunctionID(Enum):
 
 @unique
 class IlluminanceRange(Enum):
+    """
+    These ranges define the maximum illumanince before the sensor goes out of
+    range.
+    """
     UNLIMITED = 6
     LUX64000 = 0
     LUX32000 = 1
@@ -37,6 +53,10 @@ class IlluminanceRange(Enum):
 
 @unique
 class IntegrationTime(Enum):
+    """
+    The illuminance sensor integration time. A longer integration time decreases
+    noise while sacrificing speed.
+    """
     T50MS = 0
     T100MS = 1
     T150MS = 2
@@ -49,10 +69,10 @@ class IntegrationTime(Enum):
 
 class BrickletAmbientLightV3(BrickletWithMCU):
     """
-    Measures ambient temperature with 0.2 K accuracy
+    Measures ambient light up to 64000lux
     """
 
-    DEVICE_IDENTIFIER = DeviceIdentifier.BrickletAmbientLight_V3
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_AMBIENT_IGHT_V3
     DEVICE_DISPLAY_NAME = 'Ambient Light Bricklet 3.0'
 
     # Convenience imports, so that the user does not need to additionally import them
@@ -71,7 +91,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
-        super().__init__(uid, ipcon)
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
 
@@ -96,9 +116,9 @@ class BrickletAmbientLightV3(BrickletWithMCU):
             response_expected=True
         )
         print(unpack_payload(payload, 'I'))
-        return self.__value_to_SI(unpack_payload(payload, 'I'))
+        return self.__value_to_si(unpack_payload(payload, 'I'))
 
-    async def set_illuminance_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_illuminance_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
         """
         The period is the period with which the :cb:`Illuminance` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -128,13 +148,13 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        if not type(option) is ThresholdOption:
+        if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
         assert period >= 0
         assert minimum >= 0
         assert maximum >= 0
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ILLUMINANCE_CALLBACK_CONFIGURATION,
             data=pack_payload(
@@ -142,8 +162,8 @@ class BrickletAmbientLightV3(BrickletWithMCU):
                 int(period),
                 bool(value_has_to_change),
                 option.value.encode('ascii'),
-                self.__SI_to_value(minimum),
-                self.__SI_to_value(maximum)
+                self.__si_to_value(minimum),
+                self.__si_to_value(maximum)
               ), 'I ! c I I'),
             response_expected=response_expected
         )
@@ -159,7 +179,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c I I')
         option = ThresholdOption(option)
-        minimum, maximum = self.__value_to_SI(minimum), self.__value_to_SI(maximum)
+        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
         return GetIlluminanceCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def set_configuration(self, illuminance_range=IlluminanceRange.LUX8000, integration_time=IntegrationTime.T150MS, response_expected=True):
@@ -187,12 +207,12 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
         The default values are 0-8000lux illuminance range and 150ms integration time.
         """
-        if not type(illuminance_range) is IlluminanceRange:
+        if not isinstance(illuminance_range, IlluminanceRange):
             illuminance_range = IlluminanceRange(illuminance_range)
-        if not type(integration_time) is IntegrationTime:
+        if not isinstance(integration_time, IntegrationTime):
             integration_time = IntegrationTime(integration_time)
 
-        result = await self.ipcon.send_request(
+        await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CONFIGURATION,
             data=pack_payload((illuminance_range.value, integration_time.value), 'B B'),
@@ -212,15 +232,17 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         illuminance_range, integration_time = IlluminanceRange(illuminance_range), IntegrationTime(integration_time)
         return GetConfiguration(illuminance_range, integration_time)
 
-    def __value_to_SI(self, value):
+    @staticmethod
+    def __value_to_si(value):
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 100
 
-    def __SI_to_value(self, value):
+    @staticmethod
+    def __si_to_value(value):
         return int(value * 100)
 
     def _process_callback_payload(self, header, payload):
         payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-        return self.__value_to_SI(payload), True    # payload, done
+        return self.__value_to_si(payload), True    # payload, done
