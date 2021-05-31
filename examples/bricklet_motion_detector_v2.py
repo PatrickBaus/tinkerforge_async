@@ -8,9 +8,9 @@ import asyncio
 import logging
 import warnings
 
-from TinkerforgeAsync.ip_connection import IPConnectionAsync
-from TinkerforgeAsync.device_factory import device_factory
-from TinkerforgeAsync.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
+from tinkerforge_async.ip_connection import IPConnectionAsync
+from tinkerforge_async.device_factory import device_factory
+from tinkerforge_async.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
 
 ipcon = IPConnectionAsync()
 running_tasks = []
