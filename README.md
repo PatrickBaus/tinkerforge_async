@@ -136,3 +136,11 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
 
 - #### [Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)
    - `BrickletSegmentDisplay4x7V2.set_segments()` takes a `list`/`tuple` of 4 `int` instead of digit0, digit1, digit2, digit3. This is the same API as the older [Segment Display 4x7 Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html).
+
+# Setup
+There are currently no packages available at the pypi repository. To install the module, clone the repository and run:
+```bash
+python3 -m venv env  # virtual environment, optional
+source env/bin/activate  # only if the virtual environment is used
+python3 setup.py install
+```
