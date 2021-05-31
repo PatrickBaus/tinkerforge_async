@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setup(
    name='tinkerforge_async',
-   version='0.9.0',
+   version='1.1.0',
    author='Patrick Baus',
    author_email='patrick.baus@physik.tu-darmstadt.de',
    url='https://github.com/PatrickBaus/TinkerforgeAsync',
