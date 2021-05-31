@@ -1,0 +1,213 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+An example to demonstrate most of the capabilities of the Tinkerforge
+Barometer Bricklet 2.0.
+"""
+import asyncio
+import logging
+import warnings
+
+from tinkerforge_async.ip_connection import IPConnectionAsync
+from tinkerforge_async.device_factory import device_factory
+from tinkerforge_async.bricklet_barometer_v2 import BrickletBarometerV2
+
+ipcon = IPConnectionAsync()
+running_tasks = []
+
+
+async def process_callbacks(queue):
+    """
+    This infinite loop will print all callbacks.
+    It waits for packets from the callback queue,
+    which the ip connection will push.
+    """
+    try:
+        while 'queue not canceled':
+            packet = await queue.get()
+            print('Callback received', packet)
+    except asyncio.CancelledError:
+        print('Callback queue canceled')
+
+
+async def process_enumerations(callback_queue):
+    """
+    This infinite loop pulls events from the internal enumeration queue
+    of the ip connection and waits for an enumeration event with a
+    certain device id, then it will run the example code.
+    """
+    try:
+        while 'queue not canceled':
+            packet = await ipcon.enumeration_queue.get()
+            if packet['device_id'] is BrickletBarometerV2.DEVICE_IDENTIFIER:
+                await run_example(packet, callback_queue)
+    except asyncio.CancelledError:
+        print('Enumeration queue canceled')
+
+
+async def run_example_generic(bricklet):
+    """
+    This is a demo of the generic features of the Tinkerforge bricklets with a
+    microcontroller.
+    """
+    uid = await bricklet.read_uid()
+    print('Device uid:', uid)
+    await bricklet.write_uid(uid)
+
+    print('SPI error count:', await bricklet.get_spitfp_error_count())
+
+    print('Current bootloader mode:', await bricklet.get_bootloader_mode())
+    bootloader_mode = bricklet.BootloaderMode.FIRMWARE
+    print('Setting bootloader mode to', bootloader_mode, ':', await bricklet.set_bootloader_mode(bootloader_mode))
+
+    print('Disable status LED')
+    await bricklet.set_status_led_config(bricklet.LedConfig.OFF)
+    print('Current status:', await bricklet.get_status_led_config())
+    await asyncio.sleep(1)
+    print('Enable status LED')
+    await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
+    print('Current status:', await bricklet.get_status_led_config())
+
+    print('Get Chip temperature:', await bricklet.get_chip_temperature(), '°C')
+
+    print('Reset Bricklet')
+    await bricklet.reset()
+
+
+async def run_example(packet, callback_queue):
+    """
+    This is the actual demo. If the bricklet is found, this code will be run.
+    """
+    print('Registering bricklet')
+    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon)    # Create device object
+    print('Identity:', await bricklet.get_identity())
+
+    # Register the callback queue used by process_callbacks()
+    # We can register the same queue for multiple callbacks.
+    bricklet.register_event_queue(bricklet.CallbackID.AIR_PRESSURE, callback_queue)
+    bricklet.register_event_queue(bricklet.CallbackID.ALTITUDE, callback_queue)
+    bricklet.register_event_queue(bricklet.CallbackID.TEMPERATURE, callback_queue)
+
+    print('Moving average configuration:', await bricklet.get_moving_average_configuration())
+    await bricklet.set_moving_average_configuration(100, 100)
+    print('Moving average configuration:', await bricklet.get_moving_average_configuration())
+
+    # Query a value
+    print('Get air pressure:', await bricklet.get_air_pressure())
+    # Use an air pressure callback
+    print('Set callback period to', 1000, 'ms')
+    print('Set threshold to >500 hPa  and wait for callbacks')
+    # We use a low pressure value on purpose, so that the callback will be triggered
+    await bricklet.set_air_pressure_callback_configuration(period=1000, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=500, maximum=0)
+    print('Air pressure callback configuration:', await bricklet.get_air_pressure_callback_configuration())
+    await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
+    print('Disable threshold callback')
+    await bricklet.set_air_pressure_callback_configuration()
+    print('Air pressure callback configuration:', await bricklet.get_air_pressure_callback_configuration())
+
+    # Use a altitude value callback
+    print('Get altitude:', await bricklet.get_altitude())
+    # Use an altitude callback
+    print('Set callback period to', 1000, 'ms')
+    print('Set threshold to >-100 m and < 5000 m and wait for callbacks')
+    # We use a low altitude value on purpose, so that the callback will be triggered
+    await bricklet.set_altitude_callback_configuration(period=1000, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=-1000, maximum=5000)
+    print('Altitude callback configuration:', await bricklet.get_altitude_callback_configuration())
+    await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
+    print('Disable threshold callback')
+    await bricklet.set_altitude_callback_configuration()
+    print('Altitude callback configuration:', await bricklet.get_altitude_callback_configuration())
+
+    # Use a temperature value callback
+    print('Get temperature:', await bricklet.get_temperature())
+    print('Set callback period to', 1000, 'ms')
+    print('Set threshold to >10 °C and wait for callbacks')
+    await bricklet.set_temperature_callback_configuration(1000, False, bricklet.ThresholdOption.GREATER_THAN, 10, 0)
+    print('Temperature callback configuration:', await bricklet.get_temperature_callback_configuration())
+    await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
+    print('Disable threshold callback')
+    await bricklet.set_temperature_callback_configuration()
+    print('Temperature callback configuration:', await bricklet.get_temperature_callback_configuration())
+
+    print('Enable two callbacks at once')
+    await asyncio.gather(
+        bricklet.set_temperature_callback_configuration(1000, False),
+        bricklet.set_air_pressure_callback_configuration(1000, False)
+    )
+    await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
+    print('Disable all callbacks')
+    await asyncio.gather(
+        bricklet.set_temperature_callback_configuration(),
+        bricklet.set_air_pressure_callback_configuration()
+    )
+
+    pressure_ref = await bricklet.get_reference_air_pressure()
+    print('Reference air pressure:', pressure_ref, 'hPa')
+    await bricklet.set_reference_air_pressure(pressure_ref)
+    print('Calibration constants:', await bricklet.get_reference_air_pressure())
+
+    sensor_config = await bricklet.get_sensor_configuration()
+    print('Sensor configuration:', sensor_config)
+    await bricklet.set_sensor_configuration(
+        sensor_config.data_rate,
+        sensor_config.air_pressure_low_pass_filter
+    )
+
+    # Test the generic features of the bricklet. These are available with all
+    # new bricklets that have a microcontroller
+    await run_example_generic(bricklet)
+
+    # Terminate the loop
+    asyncio.create_task(shutdown())
+
+
+async def shutdown():
+    """
+    Clean up: Disconnect ip connection and stop the consumers
+    """
+    for task in running_tasks:
+        task.cancel()
+    await asyncio.gather(*running_tasks)
+    await ipcon.disconnect()    # Disconnect the ip connection last to allow cleanup of the sensors
+
+
+def error_handler(task):
+    """
+    The main error handler. It will shutdown on any uncaught exception
+    """
+    try:
+        task.result()
+    except Exception:  # pylint: disable=broad-except
+        # Normally we should log these errors
+        asyncio.create_task(shutdown())
+
+
+async def main():
+    """
+    The main loop, that will spawn all callback handlers and wait until they are
+    done. There are two callback handlers, one waits for the bricklet to connect
+    and run the demo, the other handles messages sent by the bricklet.
+    """
+    try:
+        await ipcon.connect(host='127.0.0.1', port=4223)
+        callback_queue = asyncio.Queue()
+        running_tasks.append(asyncio.create_task(process_callbacks(callback_queue)))
+        running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
+        running_tasks.append(asyncio.create_task(process_enumerations(callback_queue)))
+        running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
+        print('Enumerating brick and waiting for bricklets to reply')
+        await ipcon.enumerate()
+
+        # Wait for run_example() to finish
+        await asyncio.gather(*running_tasks)
+    except ConnectionRefusedError:
+        print('Could not connect to server. Connection refused. Is the brick daemon up?')
+    except asyncio.CancelledError:
+        print('Stopped the main loop')
+
+# Report all mistakes managing asynchronous resources.
+warnings.simplefilter('always', ResourceWarning)
+logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection. Set to debug for even more info
+
+# Start the main loop and run the async loop forever
+asyncio.run(main(), debug=True)
