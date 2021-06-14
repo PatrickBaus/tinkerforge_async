@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Module for the Tinkerforge Tinkerforge PTC Bricklet 2.0
+Module for the Tinkerforge PTC Bricklet 2.0
 (https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)
 implemented using Python AsyncIO. It does the low-lvel communication with the
 Tinkerforge ip connection and also handles conversion of raw units to SI units.
@@ -81,7 +81,7 @@ class SensorType(Enum):
 
 class BrickletPtcV2(BrickletWithMCU):
     """
-    Measures ambient temperature with 0.2 K accuracy
+    Reads temperatures from Pt100 und Pt1000 sensors
     """
     DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_PTC_V2
     DEVICE_DISPLAY_NAME = 'PTC Bricklet 2.0'

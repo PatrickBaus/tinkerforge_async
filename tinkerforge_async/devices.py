@@ -58,6 +58,7 @@ class DeviceIdentifier(Enum):
     BRICKLET_INDUSTRIAL_DUAL_ANALOG_IN_V2 = 2121
     BRICKLET_AMBIENT_IGHT_V3 = 2131
     BRICKLET_SEGMENT_DISPLAY_4x7_V2 = 2137  # pylint: disable=invalid-name
+    BRICKLET_INDUSTRIAL_PTC = 2164
 
 
 @unique
