@@ -80,14 +80,15 @@ class IPConnectionAsync:
     @property
     def enumeration_queue(self):
         """
-        Sets the timeout for async operations in seconds
+        Returns the enumeration queue, used to signal sensors joining or leaving
+        the network.
         """
         return self.__enumeration_queue
 
     @property
     def timeout(self):
         """
-        Returns the timeout for async operations in seconds
+        Returns the timeout for async operations in seconds.
         """
         return self.__timeout
 
