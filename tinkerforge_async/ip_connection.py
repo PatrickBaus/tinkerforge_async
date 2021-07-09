@@ -129,7 +129,7 @@ class IPConnectionAsync:
         self.__enumeration_queue = None
 
     def __repr__(self):
-        return f'tinkerforge_async.IPConnectionAsync(host={self.__host}, port={self.__port}, authentication_secret={self.__authentication_secret})'
+        return f'{self.__class__.__module__}.{self.__class__.__qualname__}(host={self.__host}, port={self.__port}, authentication_secret={self.__authentication_secret})'
 
     def __str__(self):
         return f'IPConnectionAsync({self.__host}:{self.__port})'

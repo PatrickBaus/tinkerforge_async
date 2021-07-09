@@ -109,8 +109,11 @@ class Device:
     RESPONSE_EXPECTED_TRUE = 2          # setter
     RESPONSE_EXPECTED_FALSE = 3         # setter, default
 
+    def __str__(self):
+        return f'{self.__display_name} with uid {self.uid} connected at {self.__ipcon}'
+
     def __repr__(self):
-        return self.__display_name
+        return f'{self.__class__.__module__}.{self.__class__.__qualname__}(uid={self.uid}, ipcon={self.ipcon!r})'
 
     @property
     def ipcon(self):

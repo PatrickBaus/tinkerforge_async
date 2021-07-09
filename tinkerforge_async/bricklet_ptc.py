@@ -132,6 +132,9 @@ class BrickletPtc(Device):
         self.api_version = (2, 0, 1)
         self.sensor_type = sensor_type    # Use the setter to automatically convert to enum
 
+    def __repr__(self):
+        return f'{self.__class__.__module__}.{self.__class__.__qualname__}(uid={self.uid}, ipcon={self.ipcon!r}, sensor_type={self.sensor_type})'
+
     async def get_temperature(self):
         """
         Returns the temperature of the sensor. The value
