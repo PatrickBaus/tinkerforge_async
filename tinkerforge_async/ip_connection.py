@@ -288,12 +288,12 @@ class IPConnectionAsync:
                     # This packet must be processed by the ip connection
                     if header['function_id'] is FunctionID.CALLBACK_ENUMERATE:
                         payload = self.__parse_enumerate_payload(payload)
-                        self.__logger.debug('Received enumeration: %(header)s - %(payload)s', {'header': header, 'payload': payload})
+                        self.__logger.debug('Received enumeration: %(header)s - %(payload)s.', {'header': header, 'payload': payload})
                         try:
                             self.__enumeration_queue.put_nowait(payload)
                         except asyncio.QueueFull:
                             dropped_payload = self.__enumeration_queue.get_nowait()
-                            self.__logger.warning('Dropping packets. Too many callbacks. Dropped payload: %(payload)s', {'payload': dropped_payload})
+                            self.__logger.warning('Dropping packets. Too many callbacks. Dropped payload: %(payload)s.', {'payload': dropped_payload})
                             self.__enumeration_queue.put_nowait(payload)
 
                 except ValueError:
@@ -420,7 +420,7 @@ class IPConnectionAsync:
 
                     await self.__authenticate(authentication_secret)
 
-                self.__logger.info('Tinkerforge IP connection connected')
+                self.__logger.info('Tinkerforge IP connection connected.')
 
     async def disconnect(self):
         """
