@@ -122,6 +122,7 @@ class IPConnectionAsync:
         self.__logger = logging.getLogger(__name__)
 
         # These will be assigned during connect()
+        self.__connection_task = None
         self.__reader, self.__writer = None, None
         self.__main_task = None
         self.__lock = None
@@ -270,7 +271,7 @@ class IPConnectionAsync:
 
                 return header, payload
         except asyncio.TimeoutError:
-            return None, None
+            return None, None   # No new packets. Nothing to do here.
         except ConnectionResetError as exc:
             raise NotConnectedError('Tinkerforge IP Connection not connected.') from exc
 
@@ -380,7 +381,7 @@ class IPConnectionAsync:
         mac.update(client_nonce)
 
         digest = mac.digest()
-        del mac     # remove it from memery
+        del mac     # remove it from memory
 
         await self.send_request(
             device=self,
@@ -389,45 +390,77 @@ class IPConnectionAsync:
             response_expected=False,
         )
 
+    async def __connect(self, host=None, port=None, authentication_secret=None):
+        """
+        The __connect() call should be wrapped in a task, so it can be canceled
+        by the disconnect() function call. It must be protected by
+        `self.__lock`.
+        """
+        try:
+            self.__reader, self.__writer = await asyncio.wait_for(
+                asyncio.open_connection(self.__host, self.__port),
+                self.__timeout
+            )
+        except asyncio.TimeoutError:
+            # Catch and reraise the timeout, because we want to get rid of
+            # the CancelledError raised by asyncio.wait_for() and also add
+            # our own message.
+            raise asyncio.TimeoutError(
+                'Timeout during connection attempt to %s:%i',
+                self.__host, self.__port
+            ) from None
+
+        # If we are connected, start the listening task
+        self.__main_task = asyncio.create_task(self.main_loop())
+        if authentication_secret is not None:
+            try:
+                authentication_secret = authentication_secret.encode('ascii')
+            except AttributeError:
+                pass    # already a bytestring
+
+            await self.__authenticate(authentication_secret)
+
+        self.__logger.info('Tinkerforge IP connection connected.')
+
     async def connect(self, host=None, port=None, authentication_secret=None):
         """
         Connect to a Tinkerforge host/stack. The parameters host, port and
         authentication_secret are optional and can already be set at object
         creation time. If any of host, port, authentication_secret are set, they
         will overwrite the ones set at creation time.
-        The connect() call does authentication in the background if
-        authentication_secret is set either at creation or runtime. There is no
+        The connect() call handles authentication transparently if
+        `authentication_secret` is set either at creation or runtime. There is no
         further user intervention necessary.
         """
-        if host is not None:
-            self.__host = host
-        if port is not None:
-            self.__port = port
-        if self.__host is None:
-            raise TypeError('Invalid hostname')
-        if authentication_secret is None:
-            authentication_secret = self.__authentication_secret
-
         if self.__lock is None:
             self.__lock = asyncio.Lock()
         async with self.__lock:
             if not self.is_connected:
-                self.__enumeration_queue = asyncio.Queue(maxsize=20)
-                self.__sequence_number_queue = asyncio.Queue(maxsize=15)
-                for i in range(1, 16):
-                    self.__sequence_number_queue.put_nowait(i)
+                try:
+                    # Update all connection parameters before connecting
+                    if host is not None:
+                        self.__host = host
+                    if port is not None:
+                        self.__port = port
+                    if self.__host is None or self.__port is None:
+                        raise TypeError('Invalid hostname')
+                    if authentication_secret is None:
+                        authentication_secret = self.__authentication_secret
 
-                self.__reader, self.__writer = await asyncio.open_connection(self.__host, self.__port)
-                self.__main_task = asyncio.create_task(self.main_loop())
-                if authentication_secret is not None:
-                    try:
-                        authentication_secret = authentication_secret.encode('ascii')
-                    except AttributeError:
-                        pass    # already a bytestring
-
-                    await self.__authenticate(authentication_secret)
-
-                self.__logger.info('Tinkerforge IP connection connected.')
+                    self.__enumeration_queue = asyncio.Queue(maxsize=20)
+                    self.__sequence_number_queue = asyncio.Queue(maxsize=15)
+                    for i in range(1, 16):
+                        self.__sequence_number_queue.put_nowait(i)
+                    # We need to wrap the connection attempt into a task,
+                    # because we want to be able to cancel it any time using the
+                    # disconnect() call
+                    self.__connection_task = asyncio.create_task(
+                        self.__connect(host, port, authentication_secret)
+                    )
+                    # Actually wait for the task to finish
+                    await self.__connection_task
+                finally:
+                    self.__connection_task = None
 
     async def disconnect(self):
         """
@@ -435,11 +468,21 @@ class IPConnectionAsync:
         """
         if self.__lock is None:
             self.__lock = asyncio.Lock()
+        if self.__connection_task is not None:
+            self.__connection_task.cancel()
+            try:
+                await self.__connection_task
+            except asyncio.CancelledError:
+                pass
+
         async with self.__lock:
             try:
                 if self.__main_task is not None and not self.__main_task.done():
                     self.__main_task.cancel()
-                    await self.__main_task
+                    try:
+                        await self.__main_task
+                    except asyncio.CancelledError:
+                        pass
             finally:
                 self.__lock = None
 
@@ -462,4 +505,4 @@ class IPConnectionAsync:
                 if not future.done():
                     future.set_exception(NotConnectedError('Tinkerforge IP Connection closed.'))
             self.__pending_requests = {}
-            self.__logger.info('Tinkerforge IP connection closed.')
+            self.__logger.info('Tinkerforge IP connection (%s:%s) closed.', self.__host, self.__port)
