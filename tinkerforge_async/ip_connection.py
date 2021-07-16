@@ -13,7 +13,7 @@ import logging
 import os
 import struct
 
-import async_timeout
+from async_timeout import timeout
 
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 from .devices import DeviceIdentifier, UnknownFunctionError
@@ -263,7 +263,7 @@ class IPConnectionAsync:
         if not self.is_connected:
             raise NotConnectedError('Tinkerforge IP Connection not connected.')
         try:
-            with async_timeout.timeout(self.__timeout):
+            async with timeout(self.__timeout):
                 data = await self.__reader.read(struct.calcsize(IPConnectionAsync.HEADER_FORMAT))
                 packet_size, header = self.__parse_header(data)
 
