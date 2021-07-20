@@ -130,10 +130,10 @@ class IPConnectionAsync:
         self.__enumeration_queue = None
 
     def __repr__(self):
-        return f'{self.__class__.__module__}.{self.__class__.__qualname__}(host={self.__host}, port={self.__port}, authentication_secret={self.__authentication_secret})'
+        return f"{self.__class__.__module__}.{self.__class__.__qualname__}(host={self.__host}, port={self.__port}, authentication_secret={self.__authentication_secret})"
 
     def __str__(self):
-        return f'IPConnectionAsync({self.__host}:{self.__port})'
+        return f"IPConnectionAsync({self.__host}:{self.__port})"
 
     @staticmethod
     def __parse_header(data):
@@ -180,7 +180,7 @@ class IPConnectionAsync:
         Add a brick or bricklet to the ip connection. This is required for
         callbacks.
         """
-        self.__logger.debug('Adding device: %(device)s.', {'device': device})
+        self.__logger.debug("Adding device: %s.", device)
         self.__devices[device.uid] = device
 
     async def enumerate(self):
@@ -189,7 +189,7 @@ class IPConnectionAsync:
         enumerate callback.
         Returns: None, it does not support 'response_expected'
         """
-        self.__logger.debug('Enumerating Node.')
+        self.__logger.debug("Enumerating Node.")
         await self.send_request(
             device=None,
             function_id=FunctionID.ENUMERATE
@@ -203,7 +203,7 @@ class IPConnectionAsync:
         a tuple (header, payload) returned by the host.
         """
         if not self.is_connected:
-            raise NotConnectedError('Tinkerforge IP Connection not connected.')
+            raise NotConnectedError("Tinkerforge IP Connection not connected.")
 
         header, sequence_number = await self.__create_packet_header(
             payload_size=len(data),
@@ -215,11 +215,11 @@ class IPConnectionAsync:
         request = header + data
 
         # If we are waiting for a response, send the request, then pass on the response as a future
-        self.__logger.debug('Sending request to device %(device)s (%(uid)s) and function %(function_id)s with sequence_number %(sequence_number)s: %(header)s - %(payload)s.', {'device': device, 'uid': device.uid if device is not None else None, 'function_id': function_id, 'sequence_number': sequence_number, 'header': header, 'payload': data})
+        self.__logger.debug("Sending request to device %(device)s (%(uid)s) and function %(function_id)s with sequence_number %(sequence_number)s: %(header)s - %(payload)s.", {'device': device if device is not None else "all", 'uid': device.uid if device is not None else "all", 'function_id': function_id, 'sequence_number': sequence_number, 'header': header, 'payload': data})
         try:
             self.__writer.write(request)
             if response_expected:
-                self.__logger.debug('Waiting for reply for request number %(sequence_number)s.', {'sequence_number': sequence_number})
+                self.__logger.debug("Waiting for reply for request number %i.", sequence_number)
                 # The future will be resolved by the main_loop() and __process_packet()
                 self.__pending_requests[sequence_number] = asyncio.Future()
                 header, payload = await asyncio.wait_for(self.__pending_requests[sequence_number], self.__timeout)
@@ -261,7 +261,7 @@ class IPConnectionAsync:
 
     async def __read_packet(self):
         if not self.is_connected:
-            raise NotConnectedError('Tinkerforge IP Connection not connected.')
+            raise NotConnectedError("Tinkerforge IP Connection not connected.")
         try:
             async with timeout(self.__timeout):
                 data = await self.__reader.read(struct.calcsize(IPConnectionAsync.HEADER_FORMAT))
@@ -273,7 +273,7 @@ class IPConnectionAsync:
         except asyncio.TimeoutError:
             return None, None   # No new packets. Nothing to do here.
         except ConnectionResetError as exc:
-            raise NotConnectedError('Tinkerforge IP Connection not connected.') from exc
+            raise NotConnectedError("Tinkerforge IP Connection not connected.") from exc
 
     async def __process_packet(self, header, payload):
         # There are two types of packets:
@@ -296,12 +296,12 @@ class IPConnectionAsync:
                     # This packet must be processed by the ip connection
                     if header['function_id'] is FunctionID.CALLBACK_ENUMERATE:
                         payload = self.__parse_enumerate_payload(payload)
-                        self.__logger.debug('Received enumeration: %(header)s - %(payload)s.', {'header': header, 'payload': payload})
+                        self.__logger.debug("Received enumeration: %(header)s - %(payload)s.", {'header': header, 'payload': payload})
                         try:
                             self.__enumeration_queue.put_nowait(payload)
                         except asyncio.QueueFull:
                             dropped_payload = self.__enumeration_queue.get_nowait()
-                            self.__logger.warning('Dropping packets. Too many callbacks. Dropped payload: %(payload)s.', {'payload': dropped_payload})
+                            self.__logger.warning("Dropping packets. Too many callbacks. Dropped payload: %s.", dropped_payload)
                             self.__enumeration_queue.put_nowait(payload)
 
                 except ValueError:
@@ -315,25 +315,25 @@ class IPConnectionAsync:
                 if header['flags'] is Flags.OK:
                     future.set_result((header, payload))
                 elif header['flags'] is Flags.FUNCTION_NOT_SUPPORTED:
-                    future.set_exception(AttributeError('Function not supported: {function_id}.'.format(function_id=header['function_id'])))
+                    future.set_exception(AttributeError(f"Function not supported: {header['function_id']}."))
                 elif header['flags'] is Flags.INVALID_PARAMETER:
-                    future.set_exception(ValueError('Invalid parameter.'))
+                    future.set_exception(ValueError("Invalid parameter."))
                 else:
                     future.set_result((header, payload))
             except KeyError:
                 # Drop the packet, because it is not our sequence number
                 pass
             except asyncio.InvalidStateError:
-                self.__logger.exception('Invalid sequence number: %i.', header['sequence_number'])
+                self.__logger.exception("Invalid sequence number: %i.", header['sequence_number'])
         else:
-            self.__logger.info('Unknown packet: %(header)s - %(payload)s.', {'header': header, 'payload': payload})
+            self.__logger.info("Unknown packet: %(header)s - %(payload)s.", {'header': header, 'payload': payload})
 
     async def main_loop(self):
         """
         The main loop, that is responsible for processing incoming packets.
         """
         try:
-            while 'loop not canceled':
+            while "loop not canceled":
                 # Read packets from the socket and process them.
                 header, payload = await self.__read_packet()
                 if header is not None:
@@ -373,7 +373,7 @@ class IPConnectionAsync:
         return payload    # As bytestring with length 4
 
     async def __authenticate(self, authentication_secret):
-        self.__logger.debug('Authenticating with secret %s.', authentication_secret)
+        self.__logger.debug("Authenticating with secret %s.", authentication_secret)
         client_nonce, server_nonce = await asyncio.gather(self.__get_client_nonce(), self.__get_server_nonce())
 
         mac = hmac.new(authentication_secret, digestmod=hashlib.sha1)
@@ -406,8 +406,7 @@ class IPConnectionAsync:
             # the CancelledError raised by asyncio.wait_for() and also add
             # our own message.
             raise asyncio.TimeoutError(
-                'Timeout during connection attempt to %s:%i',
-                self.__host, self.__port
+                f"Timeout during connection attempt to {self.__host}:{self.__port}"
             ) from None
 
         # If we are connected, start the listening task
@@ -420,7 +419,7 @@ class IPConnectionAsync:
 
             await self.__authenticate(authentication_secret)
 
-        self.__logger.info('Tinkerforge IP connection connected.')
+        self.__logger.info("Tinkerforge IP connection connected.")
 
     async def connect(self, host=None, port=None, authentication_secret=None):
         """
@@ -503,6 +502,6 @@ class IPConnectionAsync:
             # Cancel all pending requests, that have not been resolved
             for _, future in self.__pending_requests.items():
                 if not future.done():
-                    future.set_exception(NotConnectedError('Tinkerforge IP Connection closed.'))
+                    future.set_exception(NotConnectedError("Tinkerforge IP Connection closed."))
             self.__pending_requests = {}
-            self.__logger.info('Tinkerforge IP connection (%s:%s) closed.', self.__host, self.__port)
+            self.__logger.info("Tinkerforge IP connection (%s:%i) closed.", self.__host, self.__port)
