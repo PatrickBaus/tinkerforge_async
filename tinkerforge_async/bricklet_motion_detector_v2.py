@@ -60,6 +60,11 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
 
         self.api_version = (2, 0, 0)
 
+    async def get_value(self, sid):
+        assert sid == 0
+
+        return await self.get_motion_detected()
+
     async def get_motion_detected(self):
         """
         Returns True if a motion was detected. It returns True approx. for 1.8 seconds
@@ -140,3 +145,14 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         )
 
         return GetIndicator(*unpack_payload(payload, 'B B B'))
+
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in self._registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                yield self.build_event(0, function_id, value)

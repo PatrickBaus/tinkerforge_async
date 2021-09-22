@@ -9,7 +9,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
+from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -100,6 +100,12 @@ class BrickletPtcV2(BrickletWithMCU):
         CallbackID.SENSOR_CONNECTED: '!',
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.TEMPERATURE, ),
+        1: (CallbackID.RESISTANCE, ),
+        2: (CallbackID.SENSOR_CONNECTED, ),
+    }
+
     @property
     def sensor_type(self):
         """
@@ -127,6 +133,36 @@ class BrickletPtcV2(BrickletWithMCU):
 
     def __repr__(self):
         return f'{self.__class__.__module__}.{self.__class__.__qualname__}(uid={self.uid}, ipcon={self.ipcon!r}, sensor_type={self.sensor_type})'
+
+    async def get_value(self, sid):
+        assert sid in (0, 1, 2)
+
+        if sid == 0:
+            return await self.get_temperature()
+        elif sid == 1:
+            return await self.get_resistance()
+        else:
+            return await self.is_sensor_connected()
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid in (0, 1, 2)
+
+        if sid == 0:
+            await self.set_temperature_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
+        elif sid == 1:
+            await self.set_resistance_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
+        else:
+            raise AttributeError("Configuration of the 'connected callback' is not supported.")
+
+    async def get_callback_configuration(self, sid):
+        assert sid in (0, 1, 2)
+
+        if sid == 0:
+            return GetCallbackConfiguration(*(await self.get_temperature_callback_configuration()))
+        elif sid == 1:
+            return GetCallbackConfiguration(*(await self.get_resistance_callback_configuration()))
+        else:
+            raise AttributeError("Configuration of the 'connected callback' is not supported.")
 
     async def get_temperature(self):
         """
@@ -469,15 +505,18 @@ class BrickletPtcV2(BrickletWithMCU):
             value /= 10
         return int(value * 32768 / 390)
 
-    def _process_callback_payload(self, header, payload):
-        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-        if header['function_id'] is CallbackID.TEMPERATURE:
-            header['sid'] = 0
-            result = self.__value_to_si_temperature(payload), True    # payload, done
-        elif header['function_id'] is CallbackID.RESISTANCE:
-            header['sid'] = 1
-            result = self.__value_to_si_resistance(payload), True    # payload, done
-        else:
-            header['sid'] = 2
-            result = payload, True    # payload, done
-        return result
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in self._registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id is CallbackID.TEMPERATURE:
+                    yield self.build_event(0, function_id, self.__value_to_si_temperature(value))
+                elif function_id is CallbackID.RESISTANCE:
+                    yield self.build_event(1, function_id, self.__value_to_si_resistance(value))
+                else:
+                    yield self.build_event(2, function_id, value)

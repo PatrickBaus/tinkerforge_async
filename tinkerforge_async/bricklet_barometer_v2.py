@@ -9,7 +9,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
+from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetAirPressureCallbackConfiguration = namedtuple('AirPressureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'min', 'max'])
@@ -97,6 +97,12 @@ class BrickletBarometerV2(BrickletWithMCU):
         CallbackID.TEMPERATURE: 'i',
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.AIR_PRESSURE, ),
+        1: (CallbackID.ALTITUDE, ),
+        2: (CallbackID.TEMPERATURE, ),
+    }
+
     def __init__(self, uid, ipcon):
         """
         Creates an object with the unique device ID *uid* and adds it to
@@ -105,6 +111,36 @@ class BrickletBarometerV2(BrickletWithMCU):
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
+
+    async def get_value(self, sid):
+        assert sid in (0, 1, 2)
+
+        if sid == 0:
+            return await self.get_air_pressure()
+        elif sid == 1:
+            return await self.get_altitude()
+        else:
+            return await self.get_temperature()
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid in (0, 1, 2)
+
+        if sid == 0:
+            await self.set_air_pressure_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
+        elif sid == 1:
+            await self.set_altitude_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
+        else:
+            await self.set_temperature_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
+
+    async def get_callback_configuration(self, sid):
+        assert sid in (0, 1, 2)
+
+        if sid == 0:
+            return GetCallbackConfiguration(*(await self.get_air_pressure_callback_configuration()))
+        elif sid == 1:
+            return GetCallbackConfiguration(*(await self.get_altitude_callback_configuration()))
+        else:
+            return GetCallbackConfiguration(*(await self.get_temperature_callback_configuration()))
 
     async def get_air_pressure(self):
         """
@@ -547,17 +583,18 @@ class BrickletBarometerV2(BrickletWithMCU):
         """
         return int(value * 100)
 
-    def _process_callback_payload(self, header, payload):
-        if header['function_id'] is CallbackID.AIR_PRESSURE:  # pylint: disable=no-else-return
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            header['sid'] = 0
-            result = self.__air_pressure_sensor_to_si(payload), True    # payload, done
-        elif header['function_id'] is CallbackID.ALTITUDE:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            header['sid'] = 1
-            result = self.__altitude_sensor_to_si(payload), True    # payload, done
-        else:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            header['sid'] = 2
-            result = self.__temperature_sensor_to_si(payload), True    # payload, done
-        return result
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in self._registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id is CallbackID.AIR_PRESSURE:
+                    yield self.build_event(0, function_id, self.__air_pressure_sensor_to_si(value))
+                elif function_id is CallbackID.ALTITUDE:
+                    yield self.build_event(1, function_id, self.__altitude_sensor_to_si(value))
+                else:
+                    yield self.build_event(2, function_id, self.__temperature_sensor_to_si(value))

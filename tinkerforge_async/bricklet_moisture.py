@@ -5,10 +5,11 @@ Module for the Tinkerforge Moisture Bricklet
 implemented using Python AsyncIO. It does the low-lvel communication with the
 Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+import asyncio
 from collections import namedtuple
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, ThresholdOption
+from .devices import DeviceIdentifier, Device, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetMoistureCallbackThreshold = namedtuple('MoistureCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -56,6 +57,10 @@ class BrickletMoisture(Device):
         CallbackID.MOISTURE_REACHED: 'H',
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.MOISTURE, CallbackID.MOISTURE_REACHED),
+    }
+
     def __init__(self, uid, ipcon):
         """
         Creates an object with the unique device ID *uid* and adds it to
@@ -64,6 +69,28 @@ class BrickletMoisture(Device):
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
+
+    async def get_value(self, sid):
+        assert sid == 0
+
+        return await self.get_moisture_value()
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid == 0
+
+        await asyncio.gather(
+            self.set_moisture_callback_period(period, response_expected),
+            self.set_moisture_callback_threshold(option, minimum, maximum, response_expected)
+        )
+
+    async def get_callback_configuration(self, sid):
+        assert sid == 0
+
+        period, config = await asyncio.gather(
+            self.get_moisture_callback_period(),
+            self.get_moisture_callback_threshold()
+        )
+        return GetCallbackConfiguration(period, True, *config)
 
     async def get_moisture_value(self):
         """
@@ -215,3 +242,14 @@ class BrickletMoisture(Device):
             response_expected=True
         )
         return unpack_payload(payload, 'B')
+
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in self._registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                yield self.build_event(0, function_id, value)

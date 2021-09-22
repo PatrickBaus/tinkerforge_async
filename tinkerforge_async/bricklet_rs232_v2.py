@@ -435,20 +435,26 @@ class BrickletRS232V2(BrickletWithMCU):
                 result.extend(data)
             return bytes(result)
 
-    def _process_callback_payload(self, header, payload):
-        # The READ callback constist of multiple chunks. We need to buffer them.
-        if header['function_id'] is CallbackID.READ:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            final_size, offset, data = payload
-            if final_size > offset + 60:
-                self.__callback_read_buffer.extend(data)
-            else:
-                self.__callback_read_buffer.extend(data[:final_size-offset])
-            if len(self.__callback_read_buffer) == final_size:
-                result = bytes(self.__callback_read_buffer), True   # payload, done
-                self.__callback_read_buffer = bytearray()
-            else:
-                result = None, False    # payload, done
-        else:
-            result = super()._process_callback_payload(header, payload)
-        return result
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in self._registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id is CallbackID.READ:
+                    final_size, offset, data = value
+                    if final_size > offset + 60:
+                        self.__callback_read_buffer.extend(data)
+                    else:
+                        self.__callback_read_buffer.extend(data[:final_size-offset])
+                    if len(self.__callback_read_buffer) == final_size:
+                        result = bytes(self.__callback_read_buffer)
+                        self.__callback_read_buffer = bytearray()
+                        yield self.build_event(0, function_id, result)
+                    else:
+                        continue
+                else:
+                    yield self.build_event(1, function_id, value)

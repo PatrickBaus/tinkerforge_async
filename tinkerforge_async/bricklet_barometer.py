@@ -5,11 +5,12 @@ Module for the Tinkerforge Barometer Bricklet
 implemented using Python AsyncIO. It does the low-lvel communication with the
 Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+import asyncio
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, ThresholdOption
+from .devices import DeviceIdentifier, Device, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetAirPressureCallbackThreshold = namedtuple('AirPressureCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -71,6 +72,11 @@ class BrickletBarometer(Device):
         CallbackID.ALTITUDE_REACHED: 'i',
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.AIR_PRESSURE, CallbackID.AIR_PRESSURE_REACHED),
+        1: (CallbackID.ALTITUDE, CallbackID.ALTITUDE_REACHED)
+    }
+
     def __init__(self, uid, ipcon):
         """
         Creates an object with the unique device ID *uid* and adds it to
@@ -79,6 +85,43 @@ class BrickletBarometer(Device):
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 1)
+
+    async def get_value(self, sid):
+        assert sid in (0, 1)
+
+        if sid == 0:
+            return await self.get_air_pressure()
+        else:
+            return await self.get_altitude()
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid in (0, 1)
+
+        if sid == 0:
+            await asyncio.gather(
+                self.set_air_pressure_callback_period(period, response_expected),
+                self.set_air_pressure_callback_threshold(option, minimum, maximum, response_expected)
+            )
+        else:
+            await asyncio.gather(
+                self.set_altitude_callback_period(period, response_expected),
+                self.set_altitude_callback_threshold(option, minimum, maximum, response_expected)
+            )
+
+    async def get_callback_configuration(self, sid):
+        assert sid in (0, 1)
+
+        if sid == 0:
+            period, config = await asyncio.gather(
+                self.get_air_pressure_callback_period(),
+                self.get_air_pressure_callback_threshold()
+            )
+        else:
+            period, config = await asyncio.gather(
+                self.get_altitude_callback_period(),
+                self.get_altitude_callback_threshold()
+            )
+        return GetCallbackConfiguration(period, True, *config)
 
     async def get_air_pressure(self):
         """
@@ -397,12 +440,15 @@ class BrickletBarometer(Device):
     def __si_pressure_to_value(value):
         return int(value * 10)
 
-    def _process_callback_payload(self, header, payload):
-        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-        if header['function_id'] is CallbackID.AIR_PRESSURE or header['function_id'] is CallbackID.AIR_PRESSURE_REACHED:
-            header['sid'] = 0
-            result = self.__value_to_si_pressure(payload), True    # payload, done
-        else:
-            header['sid'] = 0
-            result = self.__value_to_si_altitude(payload), True    # payload, done
-        return result
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+            if function_id in (CallbackID.AIR_PRESSURE, CallbackID.AIR_PRESSURE_REACHED):
+                yield self.build_event(0, function_id, self.__value_to_si_pressure(value))
+            else:
+                yield self.build_event(1, function_id, self.__value_to_si_altitude(value))

@@ -8,8 +8,9 @@ Tinkerforge ip connection and also handles conversion of raw units to SI units.
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
+import time
 
-from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption, LedConfig
+from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption, LedConfig, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetVoltageCallbackConfiguration = namedtuple('VoltageCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -94,6 +95,12 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         CallbackID.ALL_VOLTAGES: '2i',
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.VOLTAGE, ),
+        1: (CallbackID.VOLTAGE, ),
+        2: (CallbackID.ALL_VOLTAGES, ),
+    }
+
     def __init__(self, uid, ipcon):
         """
         Creates an object with the unique device ID *uid* and adds it to
@@ -102,6 +109,29 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
+
+    async def get_value(self, sid):
+        assert sid in (0, 1, 2)
+
+        if sid in (0, 1):
+            return await self.get_voltage(sid)
+        else:
+            return await self.get_all_voltages()
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid in (0, 1, 2)
+
+        if sid in (0, 1):
+            await self.set_voltage_callback_configuration(sid, period, value_has_to_change, option, minimum, maximum, response_expected)
+        else:
+            await self.set_all_voltages_callback_configuration(period, value_has_to_change, response_expected)
+
+    async def get_callback_configuration(self, sid):
+        assert sid in (0, 1, 2)
+        if sid in (0, 1):
+            return GetCallbackConfiguration(*(await self.get_voltage_callback_configuration(sid)))
+        else:
+            return GetCallbackConfiguration(*(await self.get_all_voltages_callback_configuration()), ThresholdOption.OFF, 0, 0)
 
     async def get_voltage(self, channel):
         """
@@ -189,12 +219,14 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
     async def get_all_voltages(self):
         """
-        Returns the voltage for the given channel.
+        Returns the voltages for all channels.
 
 
         If you want to get the value periodically, it is recommended to use the
-        :cb:`Voltage` callback. You can set the callback configuration
-        with :func:`Set Voltage Callback Configuration`.
+        :cb:`All Voltages` callback. You can set the callback configuration
+        with :func:`Set All Voltages Callback Configuration`.
+
+        .. versionadded:: 2.0.6$nbsp;(Plugin)
         """
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -429,13 +461,30 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
     def __si_to_value(value):
         return int(value * 1000)
 
-    def _process_callback_payload(self, header, payload):
-        if header['function_id'] is CallbackID.VOLTAGE:
-            channel, value = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            header['sid'] = channel
-            result = self.__value_to_si(value), True    # payload, done
-        else:
-            value1, value2 = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            header['sid'] = 2
-            result = (self.__value_to_si(value1), self.__value_to_si(value2)), True    # payload, done
-        return result
+    async def read_events(self, events=None, sids=None):
+        registered_events = set()
+        if events:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+        if sids is not None:
+            for sid in sids:
+                for callback in self.SID_TO_CALLBACK.get(sid, []):
+                    registered_events.add(callback)
+
+        if not events and not sids:
+            for callback in self.SID_TO_CALLBACK.items():
+                registered_events.add(callback)
+
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in registered_events:
+                if function_id is CallbackID.VOLTAGE:
+                    channel, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                    yield self.build_event(channel, function_id, self.__value_to_si(value))
+                elif function_id is CallbackID.ALL_VOLTAGES:
+                    values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                    yield self.build_event(2, function_id, (self.__value_to_si(value) for value in values))

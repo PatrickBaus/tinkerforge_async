@@ -5,11 +5,12 @@ Module for the Tinkerforge Ambient Light Bricklet 2.0
 implemented using Python AsyncIO. It does the low-lvel communication with the
 Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+import asyncio
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, ThresholdOption
+from .devices import DeviceIdentifier, Device, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetIlluminanceCallbackThreshold = namedtuple('IlluminanceCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -92,6 +93,10 @@ class BrickletAmbientLightV2(Device):
         CallbackID.ILLUMINANCE_REACHED: 'I',
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.ILLUMINANCE, CallbackID.ILLUMINANCE_REACHED),
+    }
+
     def __init__(self, uid, ipcon):
         """
         Creates an object with the unique device ID *uid* and adds it to
@@ -100,6 +105,42 @@ class BrickletAmbientLightV2(Device):
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 1)
+
+    async def get_value(self, sid):
+        assert sid == 0
+
+        return await self.get_illuminance()
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid == 0
+
+        await asyncio.gather(
+            self.set_illuminance_callback_period(period, response_expected),
+            self.set_illuminance_callback_threshold(option, minimum, maximum, response_expected)
+        )
+
+    async def get_callback_configuration(self, sid):
+        assert sid == 0
+
+        period, config = await asyncio.gather(
+            self.get_illuminance_callback_period(),
+            self.get_illuminance_callback_threshold()
+        )
+        return GetCallbackConfiguration(period, True, *config)
+
+    def register_event(self, event=None, sid=None):
+        if event:
+            self._registered_events.add(self.CallbackID(event))
+        if sid == 1:
+            self._registered_events.add(CallbackID.ILLUMINANCE)
+            self._registered_events.add(CallbackID.ILLUMINANCE_REACHED)
+
+    def unregister_event(self, event=None, sid=None):
+        if event:
+            self._registered_events.discard(self.CallbackID(event))
+        if sid == 1:
+            self._registered_events.discard(CallbackID.ILLUMINANCE)
+            self._registered_events.discard(CallbackID.ILLUMINANCE_REACHED)
 
     async def get_illuminance(self):
         """
@@ -289,6 +330,12 @@ class BrickletAmbientLightV2(Device):
     def __si_to_value(value):
         return int(value * 100)
 
-    def _process_callback_payload(self, header, payload):
-        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-        return self.__value_to_si(payload), True    # payload, done
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+            yield self.build_event(0, function_id, self.__value_to_si(value))

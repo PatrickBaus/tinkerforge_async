@@ -9,7 +9,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption
+from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetHumidityCallbackConfiguration = namedtuple('HumidityCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -86,6 +86,11 @@ class BrickletHumidityV2(BrickletWithMCU):
         CallbackID.TEMPERATURE: 'h',
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.HUMIDITY, ),
+        1: (CallbackID.TEMPERATURE, ),
+    }
+
     def __init__(self, uid, ipcon):
         """
         Creates an object with the unique device ID *uid* and adds it to
@@ -94,6 +99,30 @@ class BrickletHumidityV2(BrickletWithMCU):
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 2)
+
+    async def get_value(self, sid):
+        assert sid in (0, 1)
+
+        if sid == 0:
+            return await self.get_humidity()
+        else:
+            return await self.get_temperature()
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid in (0, 1)
+
+        if sid == 0:
+            await self.set_humidity_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
+        else:
+            await self.set_temperature_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
+
+    async def get_callback_configuration(self, sid):
+        assert sid in (0, 1)
+
+        if sid == 0:
+            return GetCallbackConfiguration(*(await self.get_humidity_callback_configuration()))
+        else:
+            return GetCallbackConfiguration(*(await self.get_temperature_callback_configuration()))
 
     async def get_humidity(self):
         """
@@ -374,6 +403,18 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         return SamplesPerSecond(unpack_payload(payload, 'B'))
 
+    def register_event_queue(self, event_id=None, queue=None, sid=None):
+        if event_id is not None:
+            super().register_event_queue(event_id, queue)
+        elif sid is not None:
+            assert sid in (0, 1)
+            if sid == 0:
+                super().register_event_queue(CallbackID.HUMIDITY, queue)
+            else:
+                super().register_event_queue(CallbackID.TEMPERATURE, queue)
+        else:
+            raise TypeError('Error. Neither "event_id" nor "sid" defined.')
+
     @staticmethod
     def __humidity_sensor_to_si(value):
         """
@@ -396,13 +437,29 @@ class BrickletHumidityV2(BrickletWithMCU):
     def __si_to_temperature_sensor(value):
         return int(value * 100)
 
-    def _process_callback_payload(self, header, payload):
-        if header['function_id'] is CallbackID.HUMIDITY:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            header['sid'] = 0
-            result = self.__humidity_sensor_to_si(payload), True    # payload, done
-        else:
-            payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-            header['sid'] = 1
-            result = self.__temperature_sensor_to_si(payload), True    # payload, done
-        return result
+    async def read_events(self, events=None, sids=None):
+        registered_events = set()
+        if events:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+        if sids is not None:
+            for sid in sids:
+                for callback in self.SID_TO_CALLBACK.get(sid, []):
+                    registered_events.add(callback)
+
+        if not events and not sids:
+            for callback in self.SID_TO_CALLBACK.items():
+                registered_events.add(callback)
+
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id is CallbackID.HUMIDITY:
+                    yield self.build_event(0, function_id, self.__humidity_sensor_to_si(value))
+                else:
+                    yield self.build_event(1, function_id, self.__temperature_sensor_to_si(value))

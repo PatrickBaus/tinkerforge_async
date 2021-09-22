@@ -229,3 +229,14 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
             response_expected=True
         )
         return unpack_payload(payload, 'H')
+
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in self._registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                yield self.build_event(0, function_id, value)

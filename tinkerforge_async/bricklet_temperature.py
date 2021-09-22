@@ -5,11 +5,12 @@ Module for the Tinkerforge Temperature Bricklet
 implemented using Python AsyncIO. It does the low-lvel communication with the
 Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+import asyncio
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, ThresholdOption
+from .devices import DeviceIdentifier, Device, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -68,6 +69,10 @@ class BrickletTemperature(Device):
         CallbackID.TEMPERATURE_REACHED: 'h',
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.TEMPERATURE, CallbackID.TEMPERATURE_REACHED),
+    }
+
     def __init__(self, uid, ipcon):
         """
         Creates an object with the unique device ID *uid* and adds it to
@@ -76,6 +81,28 @@ class BrickletTemperature(Device):
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 1)
+
+    async def get_value(self, sid):
+        assert sid == 0
+
+        return await self.get_temperature()
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid == 0
+
+        await asyncio.gather(
+            self.set_temperature_callback_period(period, response_expected),
+            self.set_temperature_callback_threshold(option, minimum, maximum, response_expected)
+        )
+
+    async def get_callback_configuration(self, sid):
+        assert sid == 0
+
+        period, config = await asyncio.gather(
+            self.get_temperature_callback_period(),
+            self.get_temperature_callback_period()
+        )
+        return GetCallbackConfiguration(period, True, *config)
 
     async def get_temperature(self):
         """
@@ -250,6 +277,13 @@ class BrickletTemperature(Device):
     def __si_to_value(value):
         return int(value * 100)
 
-    def _process_callback_payload(self, header, payload):
-        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-        return self.__value_to_si(payload), True    # payload, done
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in self._registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                yield self.build_event(0, function_id, self.__value_to_si(value))

@@ -5,11 +5,12 @@ Module for the Tinkerforge PTC Bricklet
 implemented using Python AsyncIO. It does the low-lvel communication with the
 Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+import asyncio
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, Device, ThresholdOption
+from .devices import DeviceIdentifier, Device, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackThreshold = namedtuple('TemperatureCallbackThreshold', ['option', 'minimum', 'maximum'])
@@ -107,6 +108,12 @@ class BrickletPtc(Device):
         CallbackID.SENSOR_CONNECTED: '!',
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.TEMPERATURE, CallbackID.TEMPERATURE_REACHED),
+        1: (CallbackID.RESISTANCE, CallbackID.RESISTANCE_REACHED),
+        2: (CallbackID.SENSOR_CONNECTED, ),
+    }
+
     @property
     def sensor_type(self):
         """
@@ -134,6 +141,57 @@ class BrickletPtc(Device):
 
     def __repr__(self):
         return f'{self.__class__.__module__}.{self.__class__.__qualname__}(uid={self.uid}, ipcon={self.ipcon!r}, sensor_type={self.sensor_type})'
+
+    async def get_value(self, sid):
+        assert sid in (0, 1, 2)
+
+        if sid == 0:
+            return await self.get_temperature()
+        elif sid == 1:
+            return await self.get_resistance()
+        else:
+            return await self.is_sensor_connected()
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid in (0, 1, 2)
+
+        if sid == 0:
+            await asyncio.gather(
+                self.set_temperature_callback_period(period, response_expected),
+                self.set_temperature_callback_threshold(option, minimum, maximum, response_expected)
+            )
+        elif sid == 1:
+            await asyncio.gather(
+                self.set_resistance_callback_period(period, response_expected),
+                self.set_resistance_callback_threshold(option, minimum, maximum, response_expected)
+            )
+        else:
+            raise AttributeError("Configuration of the 'connected callback' is not supported.")
+
+    async def get_callback_configuration(self, sid):
+        assert sid in (0, 1, 2)
+
+        if sid == 0:
+            period, config = await asyncio.gather(
+                self.get_temperature_callback_period(),
+                self.get_temperature_callback_threshold()
+            )
+        elif sid == 1:
+            period, config = await asyncio.gather(
+                self.get_resistance_callback_period(),
+                self.get_resistance_callback_threshold()
+            )
+        else:
+            raise AttributeError("Configuration of the 'connected callback' is not supported.")
+        return GetCallbackConfiguration(period, True, *config)
+
+    async def set_callback_threshold(self, sid, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+        assert sid in (0, 1)
+
+        if sid == 0:
+            self.set_temperature_callback_threshold(option, minimum, maximum, response_expected)
+        else:
+            self.set_resistance_callback_threshold(option, minimum, maximum, response_expected)
 
     async def get_temperature(self):
         """
@@ -487,15 +545,18 @@ class BrickletPtc(Device):
             value /= 10
         return int(value * 32768 / 390)
 
-    def _process_callback_payload(self, header, payload):
-        payload = unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
-        if header['function_id'] is CallbackID.TEMPERATURE or header['function_id'] is CallbackID.TEMPERATURE_REACHED:
-            header['sid'] = 0
-            result = self.__value_to_si_temperature(payload), True    # payload, done
-        elif header['function_id'] is CallbackID.RESISTANCE or header['function_id'] is CallbackID.RESISTANCE_REACHED:
-            header['sid'] = 1
-            result = self.__value_to_si_resistance(payload), True    # payload, done
-        else:
-            header['sid'] = 2
-            result = payload, True    # payload, done
-        return result
+    async def read_events(self):
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in self._registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id in (CallbackID.TEMPERATURE, CallbackID.TEMPERATURE_REACHED):
+                    yield self.build_event(0, function_id, self.__value_to_si_temperature(value))
+                elif function_id in (CallbackID.RESISTANCE, CallbackID.RESISTANCE_REACHED):
+                    yield self.build_event(1, function_id, self.__value_to_si_resistance(value))
+                else:
+                    yield self.build_event(2, function_id, value)

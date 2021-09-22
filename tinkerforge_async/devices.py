@@ -9,6 +9,7 @@ import time
 
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload, uid64_to_uid32
 
+GetCallbackConfiguration = namedtuple('GetCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
 
@@ -132,10 +133,7 @@ class Device:
         self.uid = uid if uid <= 0xFFFFFFFF else uid64_to_uid32(uid)
         self.__ipcon = ipcon
         self.api_version = (0, 0, 0)
-        self.__registered_queues = {}
         self.high_level_callbacks = {}
-
-        self.ipcon.add_device(self)
 
     def get_api_version(self):
         """
@@ -144,55 +142,23 @@ class Device:
         """
         return self.api_version
 
-    def _process_callback(self, header, payload):
-        """
-        This function will push the payload to the output queue. If the payload is None, no callback will be triggered.
-        """
-        self.__process_callback_header(header)
-        payload, done = self._process_callback_payload(header, payload)
+    def __process_event(self, header, payload):
+        payload = self._process_callback_payload(header, payload)
 
-        if done:
-            # Try to push it to the output queue. If the queue is full, drop the oldest packet and insert it again
-            try:
-                self.__registered_queues[header['function_id']].put_nowait({
-                    'timestamp': int(time.time()),
+        return {
+                    'timestamp': time.time(),
                     'sender': self,
                     'function_id': header['function_id'],
                     'sid': header.get('sid', 0),
                     'payload': payload,
-                })
-            except asyncio.QueueFull:
-                # TODO: log a warning, that we are dropping packets
-                self.__registered_queues[header['function_id']].get_nowait()
-                self.__registered_queues[header['function_id']].put_nowait(payload)
-
-    def __process_callback_header(self, header):
-        # CallbackID is defined by the brick/bricklet
-        try:
-            header['function_id'] = self.CallbackID(header['function_id'])
-        except ValueError:
-            # ValueError: raised if the function_id is unknown
-            raise UnknownFunctionError from None
+                }
 
     def _process_callback_payload(self, header, payload):
         """
         Process the callback using the bricklet callback format. This function
         can be overwritten, if processing of the payload is required.
         """
-        return unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']]), True    # payload, done
-
-    def register_event_queue(self, event_id, queue):
-        """
-        Registers the given *function* with the given *callback_id*.
-        """
-        # CallbackID is defined by the brick/bricklet
-        if not isinstance(event_id, self.CallbackID):
-            event_id = event_id(event_id)
-
-        if queue is None:
-            self.__registered_queues.pop(event_id, None)
-        else:
-            self.__registered_queues[event_id] = queue
+        return unpack_payload(payload, self.CALLBACK_FORMATS[header['function_id']])
 
     async def get_identity(self):
         """
@@ -224,6 +190,19 @@ class Device:
             fw_version,
             DeviceIdentifier(device_id)
         )
+
+    def build_event(self, sid, function_id, payload):
+        return {
+            'timestamp': time.time(),
+            'sender': self,
+            'sid': sid,
+            'function_id': function_id,
+            'payload': payload,
+        }
+
+    async def read_events(self):
+        async for event in self.ipcon.read_events(self.uid):
+            yield event
 
     async def connect(self):
         """
