@@ -183,8 +183,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
         assert channel in (0, 1)
-        if not isinstance(option, ThresholdOption):
-            option = ThresholdOption(option)
+        option = ThresholdOption(option)
         assert period >= 0
 
         await self.ipcon.send_request(
@@ -283,8 +282,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         and 976 samples per second. Decreasing the sample rate will also decrease the
         noise on the data.
         """
-        if isinstance(rate, SamplingRate):
-            rate = SamplingRate(rate)
+        rate = SamplingRate(rate)
 
         await self.ipcon.send_request(
             device=self,
@@ -361,8 +359,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         By default all channel LEDs are configured as "Channel Status".
         """
         assert channel in (0, 1)
-        if not isinstance(config, LedConfig):
-            config = LedConfig(config)
+        config = LedConfig(config)
 
         await self.ipcon.send_request(
             device=self,
@@ -415,8 +412,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         way around.
         """
         assert channel in (0, 1)
-        if not isinstance(config, ChannelLedStatusConfig):
-            config = ChannelLedStatusConfig(config)
+        config = ChannelLedStatusConfig(config)
 
         await self.ipcon.send_request(
             device=self,

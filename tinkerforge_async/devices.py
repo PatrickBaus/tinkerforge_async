@@ -316,8 +316,7 @@ class BrickletWithMCU(DeviceWithMCU):
         This function is used by Brick Viewer during flashing. It should not be
         necessary to call it in a normal user program.
         """
-        if not isinstance(mode, BootloaderMode):
-            mode = BootloaderMode(mode)
+        mode = BootloaderMode(mode)
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -385,8 +384,7 @@ class BrickletWithMCU(DeviceWithMCU):
 
         If the Bricklet is in bootloader mode, the LED is will show heartbeat by default.
         """
-        if not isinstance(config, LedConfig):
-            config = LedConfig(config)
+        config = LedConfig(config)
 
         await self.ipcon.send_request(
             device=self,
