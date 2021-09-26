@@ -485,11 +485,11 @@ class BrickletPtcV2(BrickletWithMCU):
         """
         Convert to the sensor value to SI units
         """
-        return Decimal(value) / 100 - Decimal(273.15)
+        return Decimal(value) / 100
 
     @staticmethod
     def __si_temperature_to_value(value):
-        return int((value + Decimal(273.15)) * 100)
+        return int(value * 100)
 
     def __value_to_si_resistance(self, value):
         """
