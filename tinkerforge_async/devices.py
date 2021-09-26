@@ -4,6 +4,7 @@ This file contains all base classes used by Bricks and bricklets
 """
 import asyncio
 from collections import namedtuple
+from decimal import Decimal
 from enum import Enum, unique
 import time
 
@@ -237,7 +238,8 @@ class DeviceWithMCU(Device):
             function_id=FunctionID.GET_CHIP_TEMPERATURE,
             response_expected=True
         )
-        return unpack_payload(payload, 'h')
+        result = unpack_payload(payload, 'h')
+        return result + Decimal('273.15')
 
     async def reset(self):
         """
