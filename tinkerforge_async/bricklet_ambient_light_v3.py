@@ -108,7 +108,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
     async def get_callback_configuration(self, sid):
         assert sid == 0
 
-        return GetCallbackConfiguration(*(await self.get_temperature_callback_configuration()))
+        return GetCallbackConfiguration(*(await self.get_illuminance_callback_configuration()))
 
     async def get_illuminance(self):
         """

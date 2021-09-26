@@ -128,20 +128,6 @@ class BrickletAmbientLightV2(Device):
         )
         return GetCallbackConfiguration(period, True, *config)
 
-    def register_event(self, event=None, sid=None):
-        if event:
-            self._registered_events.add(self.CallbackID(event))
-        if sid == 1:
-            self._registered_events.add(CallbackID.ILLUMINANCE)
-            self._registered_events.add(CallbackID.ILLUMINANCE_REACHED)
-
-    def unregister_event(self, event=None, sid=None):
-        if event:
-            self._registered_events.discard(self.CallbackID(event))
-        if sid == 1:
-            self._registered_events.discard(CallbackID.ILLUMINANCE)
-            self._registered_events.discard(CallbackID.ILLUMINANCE_REACHED)
-
     async def get_illuminance(self):
         """
         Returns the illuminance of the ambient light sensor. The measurement range goes
