@@ -271,11 +271,11 @@ class BrickletTemperature(Device):
         """
         Convert to the sensor value to SI units
         """
-        return Decimal(value) / 100
+        return Decimal(value) / 100 - Decimal(273.15)
 
     @staticmethod
     def __si_to_value(value):
-        return int(value * 100)
+        return int((value + Decimal(273.15)) * 100)
 
     async def read_events(self, events=None, sids=None):
         registered_events = set()
