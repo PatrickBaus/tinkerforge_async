@@ -100,7 +100,7 @@ class BrickletTemperature(Device):
 
         period, config = await asyncio.gather(
             self.get_temperature_callback_period(),
-            self.get_temperature_callback_period()
+            self.get_temperature_callback_threshold()
         )
         return GetCallbackConfiguration(period, True, *config)
 
