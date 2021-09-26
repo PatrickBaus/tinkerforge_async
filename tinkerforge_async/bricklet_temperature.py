@@ -87,7 +87,10 @@ class BrickletTemperature(Device):
 
         return await self.get_temperature()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
+        minimum = Decimal('273.15') if minimum is None else minimum
+        maximum = Decimal('273.15') if maximum is None else maximum
+
         assert sid == 0
 
         await asyncio.gather(
@@ -151,7 +154,7 @@ class BrickletTemperature(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_temperature_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_temperature_callback_threshold(self, option=ThresholdOption.OFF, minimum=Decimal('273.15'), maximum=Decimal('273.15'), response_expected=True):
         """
         Sets the thresholds for the :cb:`Temperature Reached` callback.
 
@@ -271,11 +274,11 @@ class BrickletTemperature(Device):
         """
         Convert to the sensor value to SI units
         """
-        return Decimal(value) / 100
+        return Decimal(value + 27315) / 100
 
     @staticmethod
     def __si_to_value(value):
-        return int(value * 100)
+        return int(value * 100) - 27315
 
     async def read_events(self, events=None, sids=None):
         registered_events = set()

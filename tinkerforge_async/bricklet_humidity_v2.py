@@ -108,12 +108,16 @@ class BrickletHumidityV2(BrickletWithMCU):
         else:
             return await self.get_temperature()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
         assert sid in (0, 1)
 
         if sid == 0:
+            minimum = 0 if minimum is None else minimum
+            maximum = 0 if maximum is None else maximum
             await self.set_humidity_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
         else:
+            minimum = Decimal('273.15') if minimum is None else minimum
+            maximum = Decimal('273.15') if maximum is None else maximum
             await self.set_temperature_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
 
     async def get_callback_configuration(self, sid):
@@ -175,6 +179,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         The default value is (0, false, 'x', 0, 0).
         """
         option = ThresholdOption(option)
+
         assert period >= 0
         assert minimum >= 0
         assert maximum >= 0
@@ -225,7 +230,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
         return self.__temperature_sensor_to_si(unpack_payload(payload, 'h'))
 
-    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=Decimal('273.15'), maximum=Decimal('273.15'), response_expected=True):  # pylint: disable=too-many-arguments
         """
         The period in ms is the period with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -431,11 +436,11 @@ class BrickletHumidityV2(BrickletWithMCU):
         """
         Convert to the sensor value to SI units
         """
-        return Decimal(value) / 100
+        return Decimal(value + 27315) / 100
 
     @staticmethod
     def __si_to_temperature_sensor(value):
-        return int(value * 100)
+        return int(value * 100) - 27315
 
     async def read_events(self, events=None, sids=None):
         registered_events = set()

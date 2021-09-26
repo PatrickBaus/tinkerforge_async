@@ -144,12 +144,16 @@ class BrickletPtcV2(BrickletWithMCU):
         else:
             return await self.is_sensor_connected()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
         assert sid in (0, 1, 2)
 
         if sid == 0:
+            minimum = Decimal('273.15') if minimum is None else minimum
+            maximum = Decimal('273.15') if maximum is None else maximum
             await self.set_temperature_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
         elif sid == 1:
+            minimum = 0 if minimum is None else minimum
+            maximum = 0 if maximum is None else maximum
             await self.set_resistance_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
         else:
             raise AttributeError("Configuration of the 'connected callback' is not supported.")
@@ -182,7 +186,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return self.__value_to_si_temperature(unpack_payload(payload, 'i'))
 
-    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=Decimal('275.15'), maximum=Decimal('275.15'), response_expected=True):  # pylint: disable=too-many-arguments
         """
         The period is the period with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -485,11 +489,11 @@ class BrickletPtcV2(BrickletWithMCU):
         """
         Convert to the sensor value to SI units
         """
-        return Decimal(value) / 100
+        return Decimal(value + 27315) / 100
 
     @staticmethod
     def __si_temperature_to_value(value):
-        return int(value * 100)
+        return int(value * 100) - 273.15
 
     def __value_to_si_resistance(self, value):
         """

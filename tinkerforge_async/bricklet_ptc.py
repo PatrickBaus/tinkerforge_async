@@ -152,15 +152,19 @@ class BrickletPtc(Device):
         else:
             return await self.is_sensor_connected()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
         assert sid in (0, 1, 2)
 
         if sid == 0:
+            minimum = Decimal('273.15') if minimum is None else minimum
+            maximum = Decimal('273.15') if maximum is None else maximum
             await asyncio.gather(
                 self.set_temperature_callback_period(period, response_expected),
                 self.set_temperature_callback_threshold(option, minimum, maximum, response_expected)
             )
         elif sid == 1:
+            minimum = 0 if minimum is None else minimum
+            maximum = 0 if maximum is None else maximum
             await asyncio.gather(
                 self.set_resistance_callback_period(period, response_expected),
                 self.set_resistance_callback_threshold(option, minimum, maximum, response_expected)
@@ -183,15 +187,8 @@ class BrickletPtc(Device):
             )
         else:
             raise AttributeError("Configuration of the 'connected callback' is not supported.")
+
         return GetCallbackConfiguration(period, True, *config)
-
-    async def set_callback_threshold(self, sid, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
-        assert sid in (0, 1)
-
-        if sid == 0:
-            self.set_temperature_callback_threshold(option, minimum, maximum, response_expected)
-        else:
-            self.set_resistance_callback_threshold(option, minimum, maximum, response_expected)
 
     async def get_temperature(self):
         """
@@ -288,7 +285,7 @@ class BrickletPtc(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_temperature_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_temperature_callback_threshold(self, option=ThresholdOption.OFF, minimum=Decimal('273.15'), maximum=Decimal('273.15'), response_expected=True):
         """
         Sets the thresholds for the :cb:`Temperature Reached` callback.
 
@@ -510,7 +507,7 @@ class BrickletPtc(Device):
     async def get_sensor_connected_callback_configuration(self):
         """
         Returns the configuration as set by :func:`Set Sensor Connected Callback Configuration`.
-
+set_sensor_connected_callback_configuration
         .. versionadded:: 2.0.2$nbsp;(Plugin)
         """
         _, payload = await self.ipcon.send_request(
@@ -525,11 +522,11 @@ class BrickletPtc(Device):
         """
         Convert to the sensor value to SI units
         """
-        return Decimal(value) / 100
+        return Decimal(value + 27315) / 100
 
     @staticmethod
     def __si_temperature_to_value(value):
-        return int(value * 100)
+        return int(value * 100) - 27315
 
     def __value_to_si_resistance(self, value):
         """
