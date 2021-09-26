@@ -208,7 +208,20 @@ class BrickletTemperatureV2(BrickletWithMCU):
     def __si_to_value(value):
         return int(value * 100)
 
-    async def read_events(self):
+    async def read_events(self, events=None, sids=None):
+        registered_events = set()
+        if events:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+        if sids is not None:
+            for sid in sids:
+                for callback in self.SID_TO_CALLBACK.get(sid, []):
+                    registered_events.add(callback)
+
+        if not events and not sids:
+            for callback in self.SID_TO_CALLBACK.items():
+                registered_events.add(callback)
+
         async for header, payload in super().read_events():
             try:
                 function_id = CallbackID(header['function_id'])
