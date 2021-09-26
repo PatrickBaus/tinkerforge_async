@@ -185,7 +185,7 @@ class BrickletPtc(Device):
             raise AttributeError("Configuration of the 'connected callback' is not supported.")
         return GetCallbackConfiguration(period, True, *config)
 
-    async def set_callback_threshold(self, sid, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):
+    async def set_callback_threshold(self, sid, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         assert sid in (0, 1)
 
         if sid == 0:
@@ -288,7 +288,7 @@ class BrickletPtc(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_temperature_callback_threshold(self, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):
+    async def set_temperature_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
         Sets the thresholds for the :cb:`Temperature Reached` callback.
 
@@ -308,9 +308,6 @@ class BrickletPtc(Device):
         """
         if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
-
-        minimum = 0 if minimum is None else minimum
-        maximum = 0 if maximum is None else maximum
 
         await self.ipcon.send_request(
             device=self,
@@ -338,7 +335,7 @@ class BrickletPtc(Device):
         minimum, maximum = self.__value_to_si_temperature(minimum), self.__value_to_si_temperature(maximum)
         return GetTemperatureCallbackThreshold(option, minimum, maximum)
 
-    async def set_resistance_callback_threshold(self, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):
+    async def set_resistance_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
         """
         Sets the thresholds for the :cb:`Temperature Reached` callback.
 
@@ -358,9 +355,6 @@ class BrickletPtc(Device):
         """
         if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
-
-        minimum = 0 if minimum is None else minimum
-        maximum = 0 if maximum is None else maximum
 
         await self.ipcon.send_request(
             device=self,
