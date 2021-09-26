@@ -228,6 +228,6 @@ class BrickletTemperatureV2(BrickletWithMCU):
             except ValueError:
                 # Invalid header. Drop the packet.
                 continue
-            if function_id in self._registered_events:
+            if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 yield self.build_event(0, function_id, self.__value_to_si(value))
