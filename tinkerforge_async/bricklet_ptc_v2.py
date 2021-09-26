@@ -493,7 +493,7 @@ class BrickletPtcV2(BrickletWithMCU):
 
     @staticmethod
     def __si_temperature_to_value(value):
-        return int(value * 100) - 273.15
+        return int(value * 100) - 27315
 
     def __value_to_si_resistance(self, value):
         """
