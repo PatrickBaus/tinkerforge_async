@@ -144,7 +144,7 @@ class BrickletPtcV2(BrickletWithMCU):
         else:
             return await self.is_sensor_connected()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
         assert sid in (0, 1, 2)
 
         if sid == 0:
@@ -182,7 +182,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return self.__value_to_si_temperature(unpack_payload(payload, 'i'))
 
-    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
         """
         The period is the period with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -214,6 +214,9 @@ class BrickletPtcV2(BrickletWithMCU):
         """
         if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
+        minimum = 0 if minimum is None else minimum
+        maximum = 0 if maximum is None else maximum
+
         assert period >= 0
 
         await self.ipcon.send_request(
@@ -265,7 +268,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return self.__value_to_si_resistance(unpack_payload(payload, 'i'))
 
-    async def set_resistance_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_resistance_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
         """
         The period is the period with which the :cb:`Resistance` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -297,6 +300,9 @@ class BrickletPtcV2(BrickletWithMCU):
         """
         if not isinstance(option, ThresholdOption):
             option = ThresholdOption(option)
+        minimum = 0 if minimum is None else minimum
+        maximum = 0 if maximum is None else maximum
+
         assert period >= 0
         assert minimum >= 0
         assert maximum >= 0
