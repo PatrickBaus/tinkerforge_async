@@ -553,8 +553,7 @@ set_sensor_connected_callback_configuration
                     registered_events.add(callback)
 
         if not events and not sids:
-            for callback in self.SID_TO_CALLBACK.items():
-                registered_events.add(callback)
+            registered_events = set(self.CALLBACK_FORMATS.keys())
 
         async for header, payload in super().read_events():
             try:
