@@ -111,7 +111,10 @@ class BrickletAmbientLightV2(Device):
 
         return await self.get_illuminance()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
+        minimum = 0 if minimum is None else minimum
+        maximum = 0 if maximum is None else maximum
+
         assert sid == 0
 
         await asyncio.gather(
