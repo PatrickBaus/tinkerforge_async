@@ -118,7 +118,10 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         else:
             return await self.get_all_voltages()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
+        minimum = 0 if minimum is None else minimum
+        maximum = 0 if maximum is None else maximum
+
         assert sid in (0, 1, 2)
 
         if sid in (0, 1):
