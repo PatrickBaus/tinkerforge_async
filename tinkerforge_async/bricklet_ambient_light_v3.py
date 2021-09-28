@@ -82,6 +82,10 @@ class BrickletAmbientLightV3(BrickletWithMCU):
     IlluminanceRange = IlluminanceRange
     IntegrationTime = IntegrationTime
 
+    CALLBACK_FORMATS = {
+        CallbackID.ILLUMINANCE: 'I',
+    }
+
     SID_TO_CALLBACK = {
         0: (CallbackID.ILLUMINANCE, ),
     }
