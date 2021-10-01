@@ -482,7 +482,13 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             if function_id in registered_events:
                 if function_id is CallbackID.VOLTAGE:
                     channel, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                    if sids is not None and channel not in sids:
+                        # We got a reply from the wrong channel, maybe there is
+                        # another callback running on that other channel, so we
+                        # ignore the value
+                        continue
                     yield self.build_event(channel, function_id, self.__value_to_si(value))
+
                 elif function_id is CallbackID.ALL_VOLTAGES:
                     values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                     yield self.build_event(2, function_id, (self.__value_to_si(value) for value in values))
