@@ -463,7 +463,7 @@ class IPConnectionAsync:
             # Catch and reraise the timeout, because we want to get rid of
             # the CancelledError raised by asyncio.wait_for() and also add
             # our own message.
-            raise asyncio.TimeoutError(f"Timeout during connection attempt to ''{self.__host}:{self.__port}'") from None
+            raise asyncio.TimeoutError(f"Timeout during connection attempt to '{self.__host}:{self.__port}'") from None
 
         # If we are connected, start the listening task
         self.__running_tasks.append(asyncio.create_task(self.__main_loop()))
@@ -517,9 +517,9 @@ class IPConnectionAsync:
                         self.__running_tasks.remove(task)
         except OSError as e:
             if e.errno == 111:
-                raise ConnectionRefusedError(f"Connection refused by host {self.__host}:{self.__port}") from None
+                raise ConnectionRefusedError(f"Connection refused by host '{self.__host}:{self.__port}'") from None
             elif e.errno == 101:
-                raise NetworkUnreachableError(f"The network for host {self.__host}:{self.__port} is unreachable") from None
+                raise NetworkUnreachableError(f"The network for host '{self.__host}:{self.__port}' is unreachable") from None
             raise
 
     async def disconnect(self):
