@@ -116,7 +116,7 @@ class IPConnectionAsync:
         The timeout used for reading and writing packets, if not set, the
         DEFAULT_WAIT_TIMEOUT will be used.
         """
-        self.__timeout = abs(int(value))
+        self.__timeout = abs(float(value))
 
     @property
     def is_connected(self):
@@ -307,7 +307,7 @@ class IPConnectionAsync:
                 self.__pending_requests[sequence_number] = asyncio.Future()
                 try:
                     header, payload = await asyncio.wait_for(self.__pending_requests[sequence_number], self.__timeout)
-                except asyncio.TimeoutError as exc:
+                except asyncio.TimeoutError:
                     asyncio.create_task(self.disconnect())
                     raise
                 finally:
