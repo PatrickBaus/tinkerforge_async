@@ -35,5 +35,5 @@ setup(
    license='GPL',
    license_files=('LICENSE',),
    packages=['tinkerforge_async'],  # same as name
-   install_requires=['async-timeout', ],  # external packages as dependencies
+   install_requires=[],  # external packages as dependencies
 )
