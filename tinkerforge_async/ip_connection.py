@@ -116,7 +116,7 @@ class IPConnectionAsync:
         The timeout used for reading and writing packets, if not set, the
         DEFAULT_WAIT_TIMEOUT will be used.
         """
-       self.__timeout = None if value is None else abs(float(value))
+        self.__timeout = None if value is None else abs(float(value))
 
     @property
     def is_connected(self):
