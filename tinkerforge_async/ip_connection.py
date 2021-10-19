@@ -314,7 +314,7 @@ class IPConnectionAsync:
                     # Cleanup. Note: The sequence number, might not be in the dict anymore, because
                     # if the remote endpoint shuts down the connection, __close_transport() is called,
                     # which clears all pending requests.
-                    self.__pending_requests.pop(request_id, None)
+                    self.__pending_requests.pop(sequence_number, None)
                 self.__logger.debug("Got reply for request number %(sequence_number)i: %(header)s - %(payload)s.", {'sequence_number': sequence_number, 'header': header, 'payload': payload})
                 return header, payload
         finally:

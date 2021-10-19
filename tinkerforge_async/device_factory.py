@@ -40,12 +40,12 @@ class DeviceFactory:
         """
         self.__available_devices[device.DEVICE_IDENTIFIER] = device
 
-    def get(self, device_id, uid, ipcon, *args, **kwargs):
+    def get(self, ipcon, device_id, uid, *args, **kwargs):
         """
         Create a new instance of a Brick or Bricklet from its device id
         """
         try:
-            return self.__available_devices[device_id](uid, ipcon, *args, **kwargs)
+            return self.__available_devices[device_id](uid, ipcon)
         except KeyError:
             raise ValueError(f'No device available for id {device_id}') from None
 
