@@ -9,7 +9,7 @@ from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
 
-from .devices import DeviceIdentifier, BrickletWithMCU
+from .devices import DeviceIdentifier, BrickletWithMCU, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetConfiguration = namedtuple('Configuration', ['direction', 'value'])
@@ -89,6 +89,13 @@ class BrickletIO4V2(BrickletWithMCU):
         CallbackID.INPUT_VALUE: 'B ! !',
         CallbackID.ALL_INPUT_VALUE: '4! 4!',
         CallbackID.MONOFLOP_DONE: 'B !',
+    }
+
+    SID_TO_CALLBACK = {
+        0: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
+        1: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
+        2: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
+        3: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
     }
 
     def __init__(self, uid, ipcon):
@@ -215,6 +222,32 @@ class BrickletIO4V2(BrickletWithMCU):
         direction, value = unpack_payload(payload, 'c !')
         direction = Direction(direction)
         return GetConfiguration(direction, value)
+
+    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=None, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
+        assert sid in range(5)
+
+        if sid in range(4):
+            await self.set_input_value_callback_configuration(sid, period, value_has_to_change, response_expected)
+        else:
+            await self.set_all_input_value_callback_configuration(period, value_has_to_change, response_expected)
+
+    async def get_callback_configuration(self, sid):
+        assert sid in range(5)
+
+        if sid in range(4):
+            return GetCallbackConfiguration(
+                *(await self.get_input_value_callback_configuration(sid)),
+                option=None,
+                minimum=None,
+                maximum=None
+            )
+        else:
+            return GetCallbackConfiguration(
+                *(await self.get_all_input_value_callback_configuration()),
+                option=None,
+                minimum=None,
+                maximum=None
+            )
 
     async def set_input_value_callback_configuration(self, channel, period=0, value_has_to_change=False, response_expected=True):
         """
@@ -470,3 +503,46 @@ class BrickletIO4V2(BrickletWithMCU):
         )
         frequency, duty_cycle = unpack_payload(payload, 'I H')
         return GetPWMConfiguration(Decimal(frequency)/10, Decimal(duty_cycle)/10000)
+
+    async def read_events(self, events=None, sids=None):
+        assert events is None or sids is None
+
+        registered_events = set()
+        sids = set() if sids is None else sids
+        if events:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+
+        if not events and not sids:
+            registered_events = set(self.CALLBACK_FORMATS.keys())
+
+        async for header, payload in super().read_events():
+            try:
+                function_id = CallbackID(header['function_id'])
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+
+            if function_id is CallbackID.INPUT_VALUE:
+                sid, value_has_changed, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id in registered_events or sid in sids:
+                    result = self.build_event(sid, function_id, value)
+                    result['value_has_changed'] = value_has_changed
+                    yield result
+                    continue
+            elif function_id is CallbackID.MONOFLOP_DONE:
+                sid, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id in registered_events or sid in sids:
+                    yield self.build_event(sid, function_id, value)
+                    continue
+            else:
+                changed_sids, values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id in registered_events:
+                    result = self.build_event(4, function_id, values)   # Use a special sid for the CallbackID.ALL_INPUT_VALUE, because it returns a tuple
+                    result['value_has_changed'] = changed_sids
+                    yield result
+                else:
+                    for sid in sids:
+                        result = self.build_event(sid, function_id, values[sid])
+                        result['value_has_changed'] = changed_sids[sid]
+                        yield result
