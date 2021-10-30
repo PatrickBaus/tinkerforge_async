@@ -138,6 +138,7 @@ class IPConnectionAsync:
         self.__running_tasks = []
 
         self.__logger = logging.getLogger(__name__)
+        self.__logger.setLevel(logging.WARNING)     # Only log really important messages
 
         # These will be assigned during connect()
         self.__reader, self.__writer = None, None
