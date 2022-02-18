@@ -549,14 +549,14 @@ class BrickletBarometerV2(BrickletWithMCU):
         """
         Convert the sensor value to SI units
         """
-        return Decimal(value) / 1000
+        return Decimal(value) / 10
 
     @staticmethod
     def __si_to_air_pressure_sensor(value):
         """
         Convert SI units to raw values
         """
-        return int(value * 1000)
+        return int(value * 10)
 
     @staticmethod
     def __altitude_sensor_to_si(value):
