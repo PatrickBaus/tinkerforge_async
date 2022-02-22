@@ -25,7 +25,7 @@ the room temperature.
 
 import argparse
 
-from tinkerforge_async.ip_connection_helper import base58decode
+from tinkerforge_async.ip_connection_helper import base58decode, base58encode
 
 
 def init_argparse() -> argparse.ArgumentParser:
@@ -44,6 +44,8 @@ def main() -> None:
     parser = init_argparse()
     args = parser.parse_args()
     for uid in args.uids:
-        print(base58decode(uid))
-
+        try:
+            print(base58encode(int(uid)))
+        except ValueError:
+            print(base58decode(uid))
 main()
