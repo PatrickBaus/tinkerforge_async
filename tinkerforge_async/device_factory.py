@@ -36,11 +36,11 @@ class DeviceFactory:
 
     def register(self, device):
         """
-        Register a a new Brick or Bricklet with the factory
+        Register a new Brick or Bricklet with the factory
         """
         self.__available_devices[device.DEVICE_IDENTIFIER] = device
 
-    def get(self, ipcon, device_id, uid, *args, **kwargs):
+    def get(self, ipcon, device_id, uid, *_args, **_kwargs):
         """
         Create a new instance of a Brick or Bricklet from its device id
         """
