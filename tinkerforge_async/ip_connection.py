@@ -38,7 +38,7 @@ class InvalidDataError(ValueError):
     """
 
 
-class NetworkUnreachableError(ConnectionError):
+class NetworkError(ConnectionError):
     """
     Raised if the network is unreachable. Error number 101.
     """
@@ -305,7 +305,7 @@ class IPConnectionAsync:
 
     async def enumerate(self) -> None:
         """
-        Broadcasts an enumerate request. All devices will respond with an enumerate() callback.
+        Broadcasts an enumerate request. All devices will respond with their id
         Returns: None, it does not support 'response_expected'
         """
         self.__logger.debug("Enumerating Node.")
@@ -607,7 +607,7 @@ class IPConnectionAsync:
         except OSError as exc:
             if exc.errno == errno.ECONNREFUSED:
                 raise ConnectionRefusedError(f"Connection refused by host '{self.__host}:{self.__port}'") from None
-            elif exc.errno == errno.ENETUNREACH:
+            elif exc.errno in (errno.ENETUNREACH, errno.EHOSTUNREACH):
                 raise NetworkUnreachableError(
                     f"The network for host '{self.__host}:{self.__port}' is unreachable"
                 ) from None
