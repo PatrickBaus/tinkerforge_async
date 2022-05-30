@@ -605,9 +605,9 @@ class IPConnectionAsync:
                     finally:
                         self.__running_tasks.remove(task)
         except OSError as exc:
-            if exc.errno == 111:
+            if exc.errno == errno.ECONNREFUSED:
                 raise ConnectionRefusedError(f"Connection refused by host '{self.__host}:{self.__port}'") from None
-            elif exc.errno == 101:
+            elif exc.errno == errno.ENETUNREACH:
                 raise NetworkUnreachableError(
                     f"The network for host '{self.__host}:{self.__port}' is unreachable"
                 ) from None
