@@ -8,6 +8,7 @@ import struct
 from typing import Any
 
 # The following code is taken from the original Tinkerforge ip_connection.py
+# noinspection SpellCheckingInspection
 BASE58 = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
 
 
