@@ -5,11 +5,13 @@ Some helper functions to encode and decode Tinkerforge protocol payloads.
 import math
 import struct
 
+from typing import Any
+
 # The following code is taken from the original Tinkerforge ip_connection.py
 BASE58 = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
 
 
-def uid64_to_uid32(uid64):
+def uid64_to_uid32(uid64: int) -> int:
     value1 = uid64 & 0xFFFFFFFF
     value2 = (uid64 >> 32) & 0xFFFFFFFF
 
@@ -19,8 +21,10 @@ def uid64_to_uid32(uid64):
     uid32 |= (value2 & 0x000F0000) << 6
     uid32 |= (value2 & 0x3F000000) << 2
 
+    return uid32
 
-def base58encode(value):
+
+def base58encode(value: int) -> str:
     encoded = ''
 
     while value >= 58:
@@ -31,7 +35,7 @@ def base58encode(value):
     return BASE58[value] + encoded
 
 
-def base58decode(encoded):
+def base58decode(encoded: str) -> int:
     value = 0
     column_multiplier = 1
 
@@ -43,7 +47,7 @@ def base58decode(encoded):
     return value
 
 
-def pack_payload(data, form):
+def pack_payload(data: tuple[bytes, bytes], form: str) -> bytes:
     packed = b''
 
     for f, d in zip(form.split(' '), data):
@@ -76,7 +80,7 @@ def pack_payload(data, form):
     return packed
 
 
-def unpack_payload(data, form):
+def unpack_payload(data: bytes, form: str) -> Any:
     ret = []
     if not form or len(data) == 0:
         return None

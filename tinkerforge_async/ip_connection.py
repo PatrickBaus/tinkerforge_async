@@ -4,7 +4,10 @@ This module implements the underlying ip connection to the Bricks and Bricklets.
 See https://www.tinkerforge.com/de/doc/Low_Level_Protocols/TCPIP.html for
 details.
 """
+from __future__ import annotations
+
 import asyncio
+from asyncio import StreamReader, StreamWriter
 from enum import Enum, Flag, unique
 import errno    # The error numbers can be found in /usr/include/asm-generic/errno.h
 import hmac
@@ -12,6 +15,11 @@ import hashlib
 import logging
 import os
 import struct
+from typing import AsyncGenerator
+try:
+    from typing import Self  # Python >=3.11
+except ImportError:
+    from typing_extensions import Self
 
 from .devices import DeviceIdentifier
 from .event_bus import EventBus
@@ -82,35 +90,35 @@ class IPConnectionAsync:
     HEADER_FORMAT = '<IBBBB'  # little endian (<), uid (I, uint32), size (B, uint8), function id, sequence number, flags
 
     @property
-    def uid(self):
+    def uid(self) -> int:
         """
         The uid used by the IP connection for authentication. It needs a unique id (uid) to talk to the user.
         """
         return 1
 
     @property
-    def hostname(self):
+    def hostname(self) -> str:
         """
         The hostname of the connection.
         """
         return self.__host
 
     @property
-    def port(self):
+    def port(self) -> int:
         """
         The remote port of the connection.
         """
         return self.__port
 
     @property
-    def timeout(self):
+    def timeout(self) -> float:
         """
         Returns the timeout for async operations in seconds.
         """
         return self.__timeout
 
     @timeout.setter
-    def timeout(self, value):
+    def timeout(self, value: float) -> None:
         """
         The timeout used for reading and writing packets, if not set, the
         DEFAULT_WAIT_TIMEOUT will be used.
@@ -118,20 +126,27 @@ class IPConnectionAsync:
         self.__timeout = None if value is None else abs(float(value))
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """
         Returns *True* if, the connection is established.
         """
         return self.__writer is not None and not self.__writer.is_closing()
 
-    def __init__(self, host=None, port=4223, authentication_secret=None):
+    def __init__(
+            self,
+            host: str | None = None,
+            port: int = 4223,
+            authentication_secret: str | bytes | None = None
+    ) -> None:
         self.__host = host
         self.__port = port
         self.__authentication_secret = authentication_secret
 
         self.__sequence_number = 0
         self.timeout = DEFAULT_WAIT_TIMEOUT
-        self.__pending_requests = {}
+        self.__pending_requests: dict[
+            int, asyncio.Future[tuple[dict[str, None | int | Flags | FunctionID | bool], bytes]]
+        ] = {}
         self.__next_nonce = 0
 
         self.__running_tasks = []
@@ -140,39 +155,44 @@ class IPConnectionAsync:
         self.__logger.setLevel(logging.WARNING)     # Only log really important messages
 
         # These will be assigned during connect()
-        self.__reader, self.__writer = None, None
-        self.__lock = None  # Used by connect()
+        self.__reader: StreamReader | None = None
+        self.__writer: StreamWriter | None = None
+        self.__lock: asyncio.Lock | None = None  # Used by connect()
 
-        self.__sequence_number_queue = asyncio.Queue(maxsize=15)
+        self.__sequence_number_queue: asyncio.Queue[int] = asyncio.Queue(maxsize=15)
         for i in range(1, 16):
             self.__sequence_number_queue.put_nowait(i)
-            # This queue is not supposed to be joined but could
-            # be joined any time, because it has no open tasks
+            # This queue is not supposed to be joined but could be joined any time, because it has no open tasks
             self.__sequence_number_queue.task_done()
 
         self.__event_bus = EventBus()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__module__}.{self.__class__.__qualname__}(host={self.__host}, port={self.__port}, authentication_secret={None if self.__authentication_secret is None else '*****'})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"IPConnectionAsync({self.__host}:{self.__port})"
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         await self.connect()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb):
+    async def __aexit__(self, exc_type, exc, tb) -> None:
         await self.disconnect()
 
     @staticmethod
-    def __parse_header(data):
+    def __parse_header(data: bytes) -> tuple[int, dict[str, None | int | Flags | FunctionID | bool]]:
         """
         Raises
         ----------
         struct.error
             if the header is invalid, may be raised by struct.unpack_from
         """
+        uid: int
+        payload_size: int
+        function_id: int | FunctionID
+        options: int
+        flags: int | Flags
         uid, payload_size, function_id, options, flags = struct.unpack_from(IPConnectionAsync.HEADER_FORMAT, data)
 
         try:
@@ -186,7 +206,7 @@ class IPConnectionAsync:
         # There is no sequence number if it is a callback (sequence_number == 0)
         sequence_number = None if (options >> 4) & 0b1111 == 0 else (options >> 4) & 0b1111
         response_expected = bool(options >> 3 & 0b1)
-    #    options = options & 0b111 # Options for future use
+        # options = options & 0b111 # Options for future use
         try:
             flags = Flags(flags)
         except ValueError:
@@ -203,7 +223,13 @@ class IPConnectionAsync:
             }
 
     @staticmethod
-    def __create_packet_header(sequence_number, payload_size, function_id, uid=None, response_expected=False):
+    def __create_packet_header(
+            sequence_number: int,
+            payload_size: int,
+            function_id: int,
+            uid=None,
+            response_expected=False
+    ) -> bytes:
         uid = IPConnectionAsync.BROADCAST_UID if uid is None else uid
         packet_size = payload_size + struct.calcsize(IPConnectionAsync.HEADER_FORMAT)
         response_expected = bool(response_expected)
@@ -220,7 +246,17 @@ class IPConnectionAsync:
         )
 
     @staticmethod
-    def __parse_enumerate_payload(payload):
+    def __parse_enumerate_payload(payload) -> dict[
+        str,
+        int | None | DeviceIdentifier | EnumerationType | str | tuple[int, int, int]
+    ]:
+        uid: str
+        connected_uid: str
+        position: str | int
+        hardware_version: tuple[int, int, int]
+        firmware_version: tuple[int, int, int]
+        device_identifier: int | DeviceIdentifier
+        enumeration_type: int | EnumerationType
         uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type \
             = unpack_payload(payload, '8s 8s c 3B 3B H B')
 
@@ -251,17 +287,25 @@ class IPConnectionAsync:
                 'enumeration_type': enumeration_type,
                 }
 
-    async def read_events(self, uid):
+    async def read_events(self, uid) -> AsyncGenerator[
+        tuple[dict[str, None | int | Flags | FunctionID | bool], bytes],
+        None
+    ]:
+        data: tuple[dict[str, None | int | Flags | FunctionID | bool], bytes]
         async for data in self.__event_bus.register(f"/events/{uid}"):
             yield data
 
-    async def read_enumeration(self):
+    async def read_enumeration(self) -> AsyncGenerator[
+        dict[str, int | None | DeviceIdentifier | EnumerationType | str | tuple[int, int, int]],
+        None
+    ]:
+        data: bytes
         async for data in self.__event_bus.register("/enumerations"):
             yield data
 
-    async def enumerate(self):
+    async def enumerate(self) -> None:
         """
-        Broadcasts an enumerate request. All devices will respond with an enumerate callback.
+        Broadcasts an enumerate request. All devices will respond with an enumerate() callback.
         Returns: None, it does not support 'response_expected'
         """
         self.__logger.debug("Enumerating Node.")
@@ -270,14 +314,20 @@ class IPConnectionAsync:
             function_id=FunctionID.ENUMERATE
         )
 
-    async def ping(self):
+    async def ping(self) -> None:
         self.__logger.debug("Sending ping to host %s:%i", self.__host, self.__port)
         await self.send_request(
             device=None,
             function_id=FunctionID.DISCONNECT_PROBE
         )
 
-    async def send_request(self, device, function_id, data=b'', response_expected=False):
+    async def send_request(
+            self,
+            device,
+            function_id: FunctionID,
+            data: bytes = b'',
+            response_expected: bool = False
+    ) -> tuple[dict[str, None | int | Flags | FunctionID | bool], bytes] | None:
         """
         Creates a request, by prepending a header to the data and sending it to
         the Tinkerforge host.
@@ -342,7 +392,7 @@ class IPConnectionAsync:
             self.__sequence_number_queue.put_nowait(sequence_number)
             self.__sequence_number_queue.task_done()
 
-    async def __process_packet(self, header, payload):
+    async def __process_packet(self, header: dict[str, None | int | Flags | FunctionID | bool], payload: bytes) -> None:
         # There are two types of packets:
         # - Broadcasts/Callbacks
         # - Replies
@@ -390,11 +440,14 @@ class IPConnectionAsync:
         else:
             self.__logger.info("Unknown packet: %(header)s - %(payload)s.", {'header': header, 'payload': payload})
 
-    async def __read_packets(self):
+    async def __read_packets(self) -> AsyncGenerator[
+        tuple[dict[str, None | int | Flags | FunctionID | bool], bytes],
+        None
+    ]:
         while "loop not canceled":
             if not self.is_connected:
                 raise NotConnectedError("Tinkerforge IP Connection not connected.")
-            data = None
+            data: bytes | None = None
             try:
                 data = await self.__reader.readexactly(struct.calcsize(IPConnectionAsync.HEADER_FORMAT))
                 packet_size, header = self.__parse_header(data)
@@ -412,7 +465,7 @@ class IPConnectionAsync:
                 # is typically severed unexpectedly
                 raise NotConnectedError("Tinkerforge IP Connection not connected.") from exc
 
-    async def __main_loop(self):
+    async def __main_loop(self) -> None:
         """
         The main loop, that is responsible for processing incoming packets.
         """
@@ -433,7 +486,7 @@ class IPConnectionAsync:
             self.__logger.exception("Error reading packet from host %s:%i", self.__host, self.__port)
             asyncio.create_task(self.disconnect())
 
-    async def __get_client_nonce(self):
+    async def __get_client_nonce(self) -> bytes:
         """
         Returns a nonce as a bytestring with length 4.
         """
@@ -448,7 +501,7 @@ class IPConnectionAsync:
 
         return nonce.to_bytes(4, byteorder='little')    # return as bytes
 
-    async def __get_server_nonce(self):
+    async def __get_server_nonce(self) -> bytes:
         """
         Query the server for its nonce. Returns a bytestring  with length 4.
         """
@@ -459,8 +512,10 @@ class IPConnectionAsync:
         )
         return payload    # As bytestring with length 4
 
-    async def __authenticate(self, authentication_secret):
+    async def __authenticate(self, authentication_secret: bytes) -> None:
         self.__logger.debug("Authenticating with secret %s.", authentication_secret)
+        client_nonce: bytes
+        server_nonce: bytes
         client_nonce, server_nonce = await asyncio.gather(self.__get_client_nonce(), self.__get_server_nonce())
 
         mac = hmac.new(authentication_secret, digestmod=hashlib.sha1)
@@ -477,7 +532,7 @@ class IPConnectionAsync:
             response_expected=False,
         )
 
-    async def __connect(self, host=None, port=None, authentication_secret=None):
+    async def __connect(self, authentication_secret: str | bytes | None = None) -> None:
         """
         The __connect() call should be wrapped in a task, so it can be canceled
         by the disconnect() function call. It must be protected by
@@ -506,7 +561,12 @@ class IPConnectionAsync:
 
         self.__logger.info("Tinkerforge IP connection (%s:%i) connected.", self.__host, self.__port)
 
-    async def connect(self, host=None, port=None, authentication_secret=None):
+    async def connect(
+            self,
+            host: str | None = None,
+            port: int | None = None,
+            authentication_secret: str | bytes | None = None
+    ) -> None:
         """
         Connect to a Tinkerforge host/stack. The parameters host, port and
         authentication_secret are optional and can already be set at object
@@ -535,7 +595,7 @@ class IPConnectionAsync:
                     # because we want to be able to cancel it any time using the
                     # disconnect() call
                     task = asyncio.create_task(
-                        self.__connect(host, port, authentication_secret)
+                        self.__connect(authentication_secret)
                     )
                     self.__running_tasks.append(task)
                     try:
@@ -544,16 +604,16 @@ class IPConnectionAsync:
                         await task
                     finally:
                         self.__running_tasks.remove(task)
-        except OSError as e:
-            if e.errno == 111:
+        except OSError as exc:
+            if exc.errno == 111:
                 raise ConnectionRefusedError(f"Connection refused by host '{self.__host}:{self.__port}'") from None
-            elif e.errno == 101:
+            elif exc.errno == 101:
                 raise NetworkUnreachableError(
                     f"The network for host '{self.__host}:{self.__port}' is unreachable"
                 ) from None
             raise
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """
         Cancel all running tasks. The cleanup will be done by the __main_loop.
         Note: Always schedule this as a task, because if the caller is a
@@ -576,7 +636,7 @@ class IPConnectionAsync:
                 await self.__close_transport()
                 self.__logger.info("Tinkerforge IP connection (%s:%i) closed.", self.__host, self.__port)
 
-    async def __close_transport(self):
+    async def __close_transport(self) -> None:
         # Flush data
         try:
             self.__writer.write_eof()
