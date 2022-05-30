@@ -13,7 +13,7 @@ import logging
 import os
 import struct
 
-from .devices import DeviceIdentifier, UnknownFunctionError
+from .devices import DeviceIdentifier
 from .event_bus import EventBus
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
@@ -79,13 +79,12 @@ class IPConnectionAsync:
     """
     BROADCAST_UID = 0  # The uid used to broadcast enumeration events
 
-    HEADER_FORMAT = '<IBBBB'  # little endian (<), uid (I, uint32), size (B, uint8), function id, squence number, flags
+    HEADER_FORMAT = '<IBBBB'  # little endian (<), uid (I, uint32), size (B, uint8), function id, sequence number, flags
 
     @property
     def uid(self):
         """
-        The uid used by the IP connection for authentication. It needs a uid
-        to talk to the user.
+        The uid used by the IP connection for authentication. It needs a unique id (uid) to talk to the user.
         """
         return 1
 
@@ -184,7 +183,8 @@ class IPConnectionAsync:
         except ValueError:
             # Do not assign an enum, leave the int
             pass
-        sequence_number = None if (options >> 4) & 0b1111 == 0 else (options >> 4) & 0b1111   # There is no sequence number if it is a callback (sequence_number == 0)
+        # There is no sequence number if it is a callback (sequence_number == 0)
+        sequence_number = None if (options >> 4) & 0b1111 == 0 else (options >> 4) & 0b1111
         response_expected = bool(options >> 3 & 0b1)
     #    options = options & 0b111 # Options for future use
         try:
@@ -235,13 +235,15 @@ class IPConnectionAsync:
         try:
             position = int(position)
         except ValueError:
-            # It is probably a bricklet, which does have an alphabetic position desciptor
+            # It is probably a bricklet, which does have an alphabetic position descriptor
             pass
 
         # See https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#callbacks for details on the payload
         # We will return None for all 'invalid' fields instead of garbage like the Tinkerforge API
         return {'uid': base58decode(uid),   # Stop the base58 encoded nonsense and use the uint32_t id
-                'connected_uid': None if (enumeration_type is EnumerationType.DISCONNECTED or connected_uid == '0') else base58decode(connected_uid),
+                'connected_uid':
+                    None if (enumeration_type is EnumerationType.DISCONNECTED or connected_uid == '0')
+                    else base58decode(connected_uid),
                 'position':  None if enumeration_type is EnumerationType.DISCONNECTED else position,
                 'hardware_version': None if enumeration_type is EnumerationType.DISCONNECTED else hardware_version,
                 'firmware_version': None if enumeration_type is EnumerationType.DISCONNECTED else firmware_version,
@@ -259,8 +261,7 @@ class IPConnectionAsync:
 
     async def enumerate(self):
         """
-        Broadcasts an enumerate request. All devices will respond with an
-        enumerate callback.
+        Broadcasts an enumerate request. All devices will respond with an enumerate callback.
         Returns: None, it does not support 'response_expected'
         """
         self.__logger.debug("Enumerating Node.")
@@ -299,7 +300,17 @@ class IPConnectionAsync:
             request = header + data
 
             # If we are waiting for a response, send the request, then pass on the response as a future
-            self.__logger.debug("Sending request to device %(device)s (%(uid)s) and function %(function_id)s with sequence_number %(sequence_number)s: %(header)s - %(payload)s.", {'device': device if device is not None else "all", 'uid': device.uid if device is not None else "all", 'function_id': function_id, 'sequence_number': sequence_number, 'header': header, 'payload': data})
+            self.__logger.debug(
+                "Sending request to device %(device)s (%(uid)s) and function %(function_id)s with sequence_number %(sequence_number)s: %(header)s - %(payload)s.",
+                {
+                    'device': device if device is not None else "all",
+                    'uid': device.uid if device is not None else "all",
+                    'function_id': function_id,
+                    'sequence_number': sequence_number,
+                    'header': header,
+                    'payload': data
+                }
+            )
 
             self.__writer.write(request)
             if response_expected:
@@ -316,7 +327,14 @@ class IPConnectionAsync:
                     # if the remote endpoint shuts down the connection, __close_transport() is called,
                     # which clears all pending requests.
                     self.__pending_requests.pop(sequence_number, None)
-                self.__logger.debug("Got reply for request number %(sequence_number)i: %(header)s - %(payload)s.", {'sequence_number': sequence_number, 'header': header, 'payload': payload})
+                self.__logger.debug(
+                    "Got reply for request number %(sequence_number)i: %(header)s - %(payload)s.",
+                    {
+                        'sequence_number': sequence_number,
+                        'header': header,
+                        'payload': payload
+                    }
+                )
                 return header, payload
         finally:
             # Return the sequence number. We misuse the queue a little, so we
@@ -343,7 +361,13 @@ class IPConnectionAsync:
             else:
                 if header['function_id'] is FunctionID.CALLBACK_ENUMERATE:
                     payload = self.__parse_enumerate_payload(payload)
-                    self.__logger.debug("Received enumeration: %(header)s - %(payload)s.", {'header': header, 'payload': payload})
+                    self.__logger.debug(
+                        "Received enumeration: %(header)s - %(payload)s.",
+                        {
+                            'header': header,
+                            'payload': payload
+                        }
+                    )
                     self.__event_bus.emit("/enumerations", payload)
         elif header['response_expected']:
             try:
@@ -370,20 +394,21 @@ class IPConnectionAsync:
         while "loop not canceled":
             if not self.is_connected:
                 raise NotConnectedError("Tinkerforge IP Connection not connected.")
+            data = None
             try:
                 data = await self.__reader.readexactly(struct.calcsize(IPConnectionAsync.HEADER_FORMAT))
                 packet_size, header = self.__parse_header(data)
 
                 payload = await self.__reader.readexactly(packet_size - struct.calcsize(IPConnectionAsync.HEADER_FORMAT))
 
-                yield (header, payload)
+                yield header, payload
             except (struct.error, ValueError):
-                # ValueError may be raised by readexactly if the argument is <0
+                # ValueError may be raised by readexactly() if the argument is <0
                 self.__logger.debug("Invalid data received. data: %s", data)
             except (asyncio.IncompleteReadError, ConnectionResetError) as exc:
                 # We got an EOF
                 # Only the Brickd does shutdown gracefully, sending an EOF
-                # If an Ethernet or WIFI extension goes offline, the connection
+                # If an Ethernet or Wi-Fi extension goes offline, the connection
                 # is typically severed unexpectedly
                 raise NotConnectedError("Tinkerforge IP Connection not connected.") from exc
 
@@ -523,7 +548,9 @@ class IPConnectionAsync:
             if e.errno == 111:
                 raise ConnectionRefusedError(f"Connection refused by host '{self.__host}:{self.__port}'") from None
             elif e.errno == 101:
-                raise NetworkUnreachableError(f"The network for host '{self.__host}:{self.__port}' is unreachable") from None
+                raise NetworkUnreachableError(
+                    f"The network for host '{self.__host}:{self.__port}' is unreachable"
+                ) from None
             raise
 
     async def disconnect(self):
