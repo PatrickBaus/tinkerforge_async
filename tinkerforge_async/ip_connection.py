@@ -38,9 +38,9 @@ class InvalidDataError(ValueError):
     """
 
 
-class NetworkError(ConnectionError):
+class NetworkUnreachableError(ConnectionError):
     """
-    Raised if the network is unreachable. Error number 101.
+    Raised if the network is unreachable. Error number errno.ENETUNREACH (101) or errno.EHOSTUNREACH (113).
     """
 
 
