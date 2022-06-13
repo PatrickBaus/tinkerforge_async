@@ -136,14 +136,15 @@ class IPConnectionAsync:
             self,
             host: str | None = None,
             port: int = 4223,
-            authentication_secret: str | bytes | None = None
+            authentication_secret: str | bytes | None = None,
+            timeout: float | None = None
     ) -> None:
         self.__host = host
         self.__port = port
         self.__authentication_secret = authentication_secret
 
         self.__sequence_number = 0
-        self.timeout = DEFAULT_WAIT_TIMEOUT
+        self.timeout = DEFAULT_WAIT_TIMEOUT if timeout is None else timeout
         self.__pending_requests: dict[
             int, asyncio.Future[tuple[dict[str, None | int | Flags | FunctionID | bool], bytes]]
         ] = {}

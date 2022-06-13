@@ -103,8 +103,8 @@ class BrickletPort(Enum):
 
 class Device:
     """
-    The base class of the most basic Brick or Bricklet. These are typically the
-    older devices, that do not have a microcontroller on board.
+    The base class of all Bricks and Bricklets. Newer Bricks or Bricklets inherit from this class and add their
+    features.
     """
     RESPONSE_EXPECTED_INVALID_FUNCTION_ID = 0
     RESPONSE_EXPECTED_ALWAYS_TRUE = 1   # getter
@@ -124,6 +124,13 @@ class Device:
         """
         return self.__ipcon
 
+    @property
+    def uid(self) -> int:
+        """
+        Get the ip connection associated with the device
+        """
+        return self.__uid
+
     def __init__(self, display_name, uid, ipcon):
         """
         Creates the device object with the unique device ID *uid* and adds
@@ -131,7 +138,7 @@ class Device:
         """
 
         self.__display_name = display_name
-        self.uid = uid if uid <= 0xFFFFFFFF else uid64_to_uid32(uid)
+        self.__uid = uid if uid <= 0xFFFFFFFF else uid64_to_uid32(uid)
         self.__ipcon = ipcon
         self.api_version = (0, 0, 0)
         self.high_level_callbacks = {}
