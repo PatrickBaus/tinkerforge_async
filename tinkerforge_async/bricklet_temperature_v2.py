@@ -5,11 +5,14 @@ Module for the Tinkerforge Temperature Bricklet 2.0
 implemented using Python AsyncIO. It does the low-lvel communication with the
 Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+from __future__ import annotations
+
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
+from typing import AsyncGenerator, Iterable
 
-from .devices import DeviceIdentifier, BrickletWithMCU, ThresholdOption, GetCallbackConfiguration
+from .devices import Device, DeviceIdentifier, BrickletWithMCU, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
 
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
@@ -74,12 +77,21 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
         self.api_version = (2, 0, 0)
 
-    async def get_value(self, sid):
+    async def get_value(self, sid: int):
         assert sid == 0
 
         return await self.get_temperature()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(
+            self,
+            sid: int,
+            period: int = 0,
+            value_has_to_change: bool = False,
+            option: ThresholdOption | int = ThresholdOption.OFF,
+            minimum: Decimal | int | float | None = None,
+            maximum: Decimal | int | float | None = None,
+            response_expected: bool = True
+    ) -> None:  # pylint: disable=too-many-arguments
         minimum = Decimal('273.15') if minimum is None else minimum
         maximum = Decimal('273.15') if maximum is None else maximum
 
@@ -87,12 +99,12 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
         await self.set_temperature_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
 
-    async def get_callback_configuration(self, sid):
+    async def get_callback_configuration(self, sid: int) -> GetCallbackConfiguration:
         assert sid == 0
 
         return GetCallbackConfiguration(*(await self.get_temperature_callback_configuration()))
 
-    async def get_temperature(self):
+    async def get_temperature(self) -> Decimal:
         """
         Returns the temperature of the sensor. The value
         has a range of -2500 to 8500 and is given in °C/100,
@@ -109,7 +121,15 @@ class BrickletTemperatureV2(BrickletWithMCU):
         )
         return self.__value_to_si(unpack_payload(payload, 'h'))
 
-    async def set_temperature_callback_configuration(self, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=Decimal('273.15'), maximum=Decimal('273.15'), response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_temperature_callback_configuration(
+            self,
+            period: int = 0,
+            value_has_to_change: bool = False,
+            option: ThresholdOption | int = ThresholdOption.OFF,
+            minimum: Decimal | int | float = Decimal('273.15'),
+            maximum: Decimal | int | float = Decimal('273.15'),
+            response_expected=True
+    ) -> None:  # pylint: disable=too-many-arguments
         """
         The period in ms is the period with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -160,7 +180,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
             response_expected=response_expected
         )
 
-    async def get_temperature_callback_configuration(self):
+    async def get_temperature_callback_configuration(self) -> GetTemperatureCallbackConfiguration:
         """
         Returns the callback configuration as set by :func:`Set Temperature Callback Configuration`.
         """
@@ -174,7 +194,11 @@ class BrickletTemperatureV2(BrickletWithMCU):
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
         return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
-    async def set_heater_configuration(self, heater_config=HeaterConfig.DISABLED, response_expected=True):
+    async def set_heater_configuration(
+            self,
+            heater_config: HeaterConfig | int = HeaterConfig.DISABLED,
+            response_expected: bool = True
+    ) -> None:
         """
         Enables/disables the heater. The heater can be used to test the sensor.
         """
@@ -188,7 +212,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
             response_expected=response_expected
         )
 
-    async def get_heater_configuration(self):
+    async def get_heater_configuration(self) -> HeaterConfig:
         """
         Returns the heater configuration as set by :func:`Set Heater Configuration`.
         """
@@ -201,17 +225,21 @@ class BrickletTemperatureV2(BrickletWithMCU):
         return HeaterConfig(unpack_payload(payload, 'B'))
 
     @staticmethod
-    def __value_to_si(value):
+    def __value_to_si(value: int) -> Decimal:
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value + 27315) / 100
 
     @staticmethod
-    def __si_to_value(value):
+    def __si_to_value(value: Decimal) -> int:
         return int(value * 100) - 27315
 
-    async def read_events(self, events=None, sids=None):
+    async def read_events(
+            self,
+            events: Iterable[CallbackID] | None = None,
+            sids: Iterable[int] | None = None
+    ) -> AsyncGenerator[dict[str, Device | float, int], None]:
         registered_events = set()
         if events:
             for event in events:

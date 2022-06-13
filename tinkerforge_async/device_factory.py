@@ -3,6 +3,10 @@
 The device factory which allows to create instances of Bricks and Bricklets from
 their device id
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from .brick_master import BrickMaster
 from .bricklet_ambient_light_v2 import BrickletAmbientLightV2
 from .bricklet_ambient_light_v3 import BrickletAmbientLightV3
@@ -25,6 +29,10 @@ from .bricklet_temperature_v2 import BrickletTemperatureV2
 from .bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
 from .bricklet_segment_display_4x7_v2 import BrickletSegmentDisplay4x7V2
 
+if TYPE_CHECKING:
+    from . import IPConnectionAsync
+    from .devices import Device, DeviceIdentifier
+
 
 class DeviceFactory:
     """
@@ -40,7 +48,7 @@ class DeviceFactory:
         """
         self.__available_devices[device.DEVICE_IDENTIFIER] = device
 
-    def get(self, ipcon, device_id, uid, *_args, **_kwargs):
+    def get(self, ipcon: IPConnectionAsync, device_id: DeviceIdentifier, uid: int, *_args, **_kwargs) -> Device:
         """
         Create a new instance of a Brick or Bricklet from its device id
         """

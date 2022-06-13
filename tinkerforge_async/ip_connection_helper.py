@@ -48,7 +48,7 @@ def base58decode(encoded: str) -> int:
     return value
 
 
-def pack_payload(data: tuple[bytes, bytes], form: str) -> bytes:
+def pack_payload(data: tuple[Any, ...], form: str) -> bytes:
     packed = b''
 
     for f, d in zip(form.split(' '), data):
