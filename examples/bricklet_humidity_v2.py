@@ -9,7 +9,6 @@ import logging
 import warnings
 
 from tinkerforge_async.ip_connection import IPConnectionAsync
-from tinkerforge_async.device_factory import device_factory
 from tinkerforge_async.bricklet_humidity_v2 import BrickletHumidityV2
 
 running_tasks = []
@@ -37,9 +36,9 @@ async def process_enumerations(ipcon):
     try:
         print('Enumerating brick and waiting for bricklets to reply')
         await ipcon.enumerate()
-        async for packet in ipcon.read_enumeration():
-            if packet['device_id'] is BrickletHumidityV2.DEVICE_IDENTIFIER:
-                await run_example(packet, ipcon)
+        async for enumeration_type, bricklet in ipcon.read_enumeration():
+            if type(bricklet) is BrickletHumidityV2:
+                await run_example(bricklet)
     except asyncio.CancelledError:
         print('Enumeration queue canceled')
 
@@ -73,16 +72,16 @@ async def run_example_generic(bricklet):
     await bricklet.reset()
 
 
-async def run_example(packet, ipcon):
+async def run_example(bricklet):
     """
     This is the actual demo. If the bricklet is found, this code will be run.
     """
-    print('Registering bricklet')
-    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon)    # Create device object
     print('Identity:', await bricklet.get_identity())
 
     # Start reading callbacks
-    running_tasks.append(asyncio.create_task(process_callbacks(bricklet, [bricklet.CallbackID.HUMIDITY, bricklet.CallbackID.TEMPERATURE])))
+    running_tasks.append(asyncio.create_task(
+        process_callbacks(bricklet, [bricklet.CallbackID.HUMIDITY, bricklet.CallbackID.TEMPERATURE]))
+    )
     running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
 
     print('Moving average configuration:', await bricklet.get_moving_average_configuration())
@@ -96,7 +95,9 @@ async def run_example(packet, ipcon):
     print('Set callback period to', 1000, 'ms')
     print('Set threshold to >10 %rH and wait for callbacks')
     # We use a low humidity value on purpose, so that the callback will be triggered
-    await bricklet.set_humidity_callback_configuration(period=1000, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=10, maximum=0)
+    await bricklet.set_humidity_callback_configuration(
+        period=1000, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=10, maximum=0
+    )
     print('Humidity callback configuration:', await bricklet.get_humidity_callback_configuration())
     await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
     print('Disable threshold callback')
@@ -107,7 +108,7 @@ async def run_example(packet, ipcon):
     print('Get temperature:', await bricklet.get_temperature(), 'K')
     print('Set callback period to', 1000, 'ms')
     print('Set threshold to >10 °C and wait for callbacks')
-    await bricklet.set_temperature_callback_configuration(1000, False, bricklet.ThresholdOption.GREATER_THAN, 10+273.15)
+    #await bricklet.set_temperature_callback_configuration(1000, False, bricklet.ThresholdOption.GREATER_THAN, 10+273.15)
     print('Temperature callback configuration:', await bricklet.get_temperature_callback_configuration())
     await asyncio.sleep(2.1)    # Wait for 2-3 callbacks
     print('Disable threshold callback')
@@ -122,7 +123,11 @@ async def run_example(packet, ipcon):
     print('Heater config:', await bricklet.get_heater_configuration())
     await asyncio.sleep(5)    # Wait for 2-3 callbacks
     print('Disable both callbacks and heater')
-    await asyncio.gather(bricklet.set_temperature_callback_configuration(), bricklet.set_humidity_callback_configuration(), bricklet.set_heater_configuration())
+    await asyncio.gather(
+        bricklet.set_temperature_callback_configuration(),
+        bricklet.set_humidity_callback_configuration(),
+        bricklet.set_heater_configuration()
+    )
     print('Heater config:', await bricklet.get_heater_configuration())
 
     # Test the generic features of the bricklet. These are available with all
@@ -144,9 +149,10 @@ async def shutdown():
     except asyncio.CancelledError:
         pass
 
+
 def error_handler(task):
     """
-    The main error handler. It will shutdown on any uncaught exception
+    The main error handler. It will shut down on any uncaught exception
     """
     try:
         task.result()
