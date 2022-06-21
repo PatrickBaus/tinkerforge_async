@@ -16,12 +16,15 @@ import logging
 import os
 import struct
 from typing import AsyncGenerator
+
+from .device_factory import device_factory
+
 try:
     from typing import Self  # Python >=3.11
 except ImportError:
     from typing_extensions import Self
 
-from .devices import DeviceIdentifier
+from .devices import Device, DeviceIdentifier
 from .event_bus import EventBus
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
@@ -288,7 +291,7 @@ class IPConnectionAsync:
                 'enumeration_type': enumeration_type,
                 }
 
-    async def read_events(self, uid) -> AsyncGenerator[
+    async def read_events(self, uid: int) -> AsyncGenerator[
         tuple[dict[str, None | int | Flags | FunctionID | bool], bytes],
         None
     ]:
@@ -296,13 +299,14 @@ class IPConnectionAsync:
         async for data in self.__event_bus.register(f"/events/{uid}"):
             yield data
 
-    async def read_enumeration(self) -> AsyncGenerator[
-        dict[str, int | None | DeviceIdentifier | EnumerationType | str | tuple[int, int, int]],
-        None
-    ]:
-        data: bytes
+    async def read_enumeration(self, uid: int = None) -> AsyncGenerator[Device, None]:
+        data: dict[str, int | None | DeviceIdentifier | EnumerationType | str | tuple[int, int, int]]
         async for data in self.__event_bus.register("/enumerations"):
-            yield data
+            if uid is None or uid == data['uid']:
+                try:
+                    yield data['enumeration_type'], device_factory.get(self, data['device_id'], data['uid'])
+                except ValueError:
+                    self.__logger.warning("No driver for device id '%i' found.", data['device_id'])
 
     async def enumerate(self) -> None:
         """
