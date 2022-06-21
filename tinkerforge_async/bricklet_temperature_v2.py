@@ -10,10 +10,13 @@ from __future__ import annotations
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
-from typing import AsyncGenerator, Iterable
+from typing import AsyncGenerator, Iterable, TYPE_CHECKING
 
 from .devices import Device, DeviceIdentifier, BrickletWithMCU, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 
@@ -68,7 +71,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
         0: (CallbackID.TEMPERATURE, ),
     }
 
-    def __init__(self, uid, ipcon):
+    def __init__(self, uid, ipcon: IPConnectionAsync):
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -170,13 +173,15 @@ class BrickletTemperatureV2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
-              (
-                int(period),
-                bool(value_has_to_change),
-                option.value.encode('ascii'),
-                self.__si_to_value(minimum),
-                self.__si_to_value(maximum)
-              ), 'I ! c h h'),
+                (
+                    int(period),
+                    bool(value_has_to_change),
+                    option.value.encode('ascii'),
+                    self.__si_to_value(minimum),
+                    self.__si_to_value(maximum)
+                ),
+                'I ! c h h'
+            ),
             response_expected=response_expected
         )
 
@@ -249,7 +254,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
                 for callback in self.SID_TO_CALLBACK.get(sid, []):
                     registered_events.add(callback)
 
-        if not events and not sids:
+        if events is None and sids is None:
             registered_events = set(self.CALLBACK_FORMATS.keys())
 
         async for header, payload in super().read_events():

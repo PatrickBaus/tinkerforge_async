@@ -5,13 +5,19 @@ Module for the Tinkerforge Ambient Light Bricklet 2.0
 implemented using Python AsyncIO. It does the low-lvel communication with the
 Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+from __future__ import annotations
+
 import asyncio
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
+from typing import AsyncGenerator, Iterable, TYPE_CHECKING
 
 from .devices import DeviceIdentifier, Device, ThresholdOption, GetCallbackConfiguration
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 GetIlluminanceCallbackThreshold = namedtuple('IlluminanceCallbackThreshold', ['option', 'minimum', 'maximum'])
 GetConfiguration = namedtuple('Configuration', ['illuminance_range', 'integration_time'])
@@ -97,7 +103,7 @@ class BrickletAmbientLightV2(Device):
         0: (CallbackID.ILLUMINANCE, CallbackID.ILLUMINANCE_REACHED),
     }
 
-    def __init__(self, uid, ipcon):
+    def __init__(self, uid: int, ipcon: IPConnectionAsync):
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -106,12 +112,21 @@ class BrickletAmbientLightV2(Device):
 
         self.api_version = (2, 0, 1)
 
-    async def get_value(self, sid):
+    async def get_value(self, sid: int) -> Decimal:
         assert sid == 0
 
         return await self.get_illuminance()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(
+            self,
+            sid: int,
+            period: int = 0,
+            value_has_to_change: bool = False,
+            option: ThresholdOption = ThresholdOption.OFF,
+            minimum: int = None,
+            maximum: int = None,
+            response_expected: bool = True
+    ) -> None:  # pylint: disable=too-many-arguments
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
@@ -131,7 +146,7 @@ class BrickletAmbientLightV2(Device):
         )
         return GetCallbackConfiguration(period, True, *config)
 
-    async def get_illuminance(self):
+    async def get_illuminance(self) -> Decimal:
         """
         Returns the illuminance of the ambient light sensor. The measurement range goes
         up to about 100000lux, but above 64000lux the precision starts to drop.
@@ -151,7 +166,11 @@ class BrickletAmbientLightV2(Device):
         )
         return self.__value_to_si(unpack_payload(payload, 'I'))
 
-    async def set_illuminance_callback_period(self, period=0, response_expected=True):
+    async def set_illuminance_callback_period(
+            self,
+            period: int = 0,
+            response_expected=True
+    ) -> None:
         """
         Sets the period with which the :cb:`Illuminance` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -168,7 +187,7 @@ class BrickletAmbientLightV2(Device):
             response_expected=response_expected,
         )
 
-    async def get_illuminance_callback_period(self):
+    async def get_illuminance_callback_period(self) -> int:
         """
         Returns the period as set by :func:`Set Illuminance Callback Period`.
         """
@@ -179,7 +198,13 @@ class BrickletAmbientLightV2(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_illuminance_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_illuminance_callback_threshold(
+            self,
+            option: ThresholdOption = ThresholdOption.OFF,
+            minimum: int = 0,
+            maximum: int = 0,
+            response_expected: bool = True
+    ) -> None:
         """
         Sets the thresholds for the :cb:`Illuminance Reached` callback.
 
@@ -212,7 +237,7 @@ class BrickletAmbientLightV2(Device):
             response_expected=response_expected
         )
 
-    async def get_illuminance_callback_threshold(self):
+    async def get_illuminance_callback_threshold(self) -> GetIlluminanceCallbackThreshold:
         """
         Returns the threshold as set by :func:`Set Illuminance Callback Threshold`.
         """
@@ -226,7 +251,7 @@ class BrickletAmbientLightV2(Device):
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
         return GetIlluminanceCallbackThreshold(option, minimum, maximum)
 
-    async def set_debounce_period(self, debounce_period=100, response_expected=True):
+    async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
         """
         Sets the period with which the threshold callbacks
 
@@ -247,7 +272,7 @@ class BrickletAmbientLightV2(Device):
             response_expected=response_expected
         )
 
-    async def get_debounce_period(self):
+    async def get_debounce_period(self) -> int:
         """
         Returns the debounce period as set by :func:`Set Debounce Period`.
         """
@@ -258,7 +283,12 @@ class BrickletAmbientLightV2(Device):
         )
         return unpack_payload(payload, 'I')
 
-    async def set_configuration(self, illuminance_range, integration_time, response_expected=True):
+    async def set_configuration(
+            self,
+            illuminance_range: IlluminanceRange,
+            integration_time: IntegrationTime,
+            response_expected: bool = True
+    ) -> None:
         """
         Sets the configuration. It is possible to configure an illuminance range
         between 0-600lux and 0-64000lux and an integration time between 50ms and 400ms.
@@ -296,7 +326,7 @@ class BrickletAmbientLightV2(Device):
             response_expected=response_expected
         )
 
-    async def get_configuration(self):
+    async def get_configuration(self) -> GetConfiguration:
         """
         Returns the configuration as set by :func:`Set Configuration`.
         """
@@ -309,17 +339,20 @@ class BrickletAmbientLightV2(Device):
         return GetConfiguration(IlluminanceRange(illuminance_range), IntegrationTime(integration_time))
 
     @staticmethod
-    def __value_to_si(value):
+    def __value_to_si(value) -> Decimal:
         """
         Convert to the sensor value to SI units
         """
         return Decimal(value) / 100
 
     @staticmethod
-    def __si_to_value(value):
+    def __si_to_value(value) -> int:
         return int(value * 100)
 
-    async def read_events(self, events=None, sids=None):
+    async def read_events(
+            self, events: Iterable[CallbackID] | None = None,
+            sids: Iterable[int] | None = None
+    ) -> AsyncGenerator[dict[str, Device | float, int], None]:
         registered_events = set()
         if events:
             for event in events:
