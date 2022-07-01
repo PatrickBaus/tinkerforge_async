@@ -441,7 +441,10 @@ class IPConnectionAsync:
                 # Drop the packet, because it is not our sequence number
                 pass
             except asyncio.InvalidStateError:
-                self.__logger.exception("Invalid sequence number: %i.", header['sequence_number'])
+                self.__logger.error(
+                    "Invalid sequence number: %i. The request was already processed",
+                    header['sequence_number']
+                )
         else:
             self.__logger.info("Unknown packet: %(header)s - %(payload)s.", {'header': header, 'payload': payload})
 
