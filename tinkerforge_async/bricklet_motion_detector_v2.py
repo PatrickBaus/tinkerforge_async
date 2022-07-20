@@ -1,17 +1,18 @@
-# -*- coding: utf-8 -*-
 """
 Module for the Tinkerforge Barometer Bricklet 2.0
 (https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html)
-implemented using Python AsyncIO. It does the low-lvel communication with the
-Tinkerforge ip connection and also handles conversion of raw units to SI units.
+implemented using Python AsyncIO. It does the low-level communication with the Tinkerforge ip connection and also
+handles conversion of raw units to SI units.
 """
 from collections import namedtuple
 from enum import Enum, unique
+from typing import AsyncGenerator
 
-from .devices import DeviceIdentifier, BrickletWithMCU
+from . import IPConnectionAsync
+from .devices import BrickletWithMCU, DeviceIdentifier
 from .ip_connection_helper import pack_payload, unpack_payload
 
-GetIndicator = namedtuple('Indicator', ['top_left', 'top_right', 'bottom'])
+GetIndicator = namedtuple("GetIndicator", ["top_left", "top_right", "bottom"])
 
 
 @unique
@@ -19,6 +20,7 @@ class CallbackID(Enum):
     """
     The callbacks available to this bricklet
     """
+
     MOTION_DETECTED = 6
     DETECTION_CYCLE_ENDED = 7
 
@@ -28,6 +30,7 @@ class FunctionID(Enum):
     """
     The function calls available to this bricklet
     """
+
     GET_MOTION_DETECTED = 1
     SET_SENSITIVITY = 2
     GET_SENSITIVITY = 3
@@ -39,33 +42,33 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
     """
     Passive infrared (PIR) motion sensor with 12m range and dimmable backlight
     """
+
     DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_MOTION_DETECTOR_V2
-    DEVICE_DISPLAY_NAME = 'Motion Detector Bricklet 2.0'
+    DEVICE_DISPLAY_NAME = "Motion Detector Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
     FunctionID = FunctionID
 
     CALLBACK_FORMATS = {
-        CallbackID.MOTION_DETECTED: '',
-        CallbackID.DETECTION_CYCLE_ENDED: '',
+        CallbackID.MOTION_DETECTED: "",
+        CallbackID.DETECTION_CYCLE_ENDED: "",
     }
 
-    def __init__(self, uid, ipcon):
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
-        Creates an object with the unique device ID *uid* and adds it to
-        the IP Connection *ipcon*.
+        Creates an object with the unique device ID *uid* and adds it to the IP connection *ipcon*.
         """
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
 
-    async def get_value(self, sid):
+    async def get_value(self, sid: int) -> bool:
         assert sid == 0
 
         return await self.get_motion_detected()
 
-    async def get_motion_detected(self):
+    async def get_motion_detected(self) -> bool:
         """
         Returns True if a motion was detected. It returns True approx. for 1.8 seconds
         until the sensor checks for a new movement.
@@ -74,13 +77,11 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         in the "motion detected" state.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_MOTION_DETECTED,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_MOTION_DETECTED, response_expected=True
         )
-        return bool(unpack_payload(payload, 'B'))
+        return bool(unpack_payload(payload, "B"))
 
-    async def set_sensitivity(self, sensitivity=50, response_expected=True):
+    async def set_sensitivity(self, sensitivity: int = 50, response_expected: bool = True) -> None:
         """
         Sets the sensitivity of the PIR sensor. At full
         sensitivity (100), the Bricklet can detect motion in a range of approximately 12m.
@@ -96,26 +97,25 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SENSITIVITY,
-            data=pack_payload((int(sensitivity),), 'B'),
-            response_expected=response_expected
+            data=pack_payload((int(sensitivity),), "B"),
+            response_expected=response_expected,
         )
 
-    async def get_sensitivity(self):
+    async def get_sensitivity(self) -> int:
         """
         Returns the sensitivity as set by :func:`Set Sensitivity`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_SENSITIVITY,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_SENSITIVITY, response_expected=True
         )
-        return unpack_payload(payload, 'B')
+        return unpack_payload(payload, "B")
 
-    async def set_indicator(self, top_left=0, top_right=0, bottom=0, response_expected=True):
+    async def set_indicator(
+        self, top_left: int = 0, top_right: int = 0, bottom: int = 0, response_expected: bool = True
+    ) -> None:
         """
-        Sets the blue backlight of the fresnel lens. The backlight consists of
-        three LEDs. The brightness of each LED can be controlled with a 8-bit value
-        (0-255). A value of 0 turns the LED off and a value of 255 turns the LED
+        Sets the blue backlight of the fresnel lens. The backlight consists of three LEDs. The brightness of each LED
+        can be controlled with an 8-bit value (0-255). A value of 0 turns the LED off and a value of 255 turns the LED
         to full brightness.
         """
         assert 0 <= top_left <= 255
@@ -126,30 +126,30 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.SET_INDICATOR,
             data=pack_payload(
-              (
-                int(top_left),
-                int(top_right),
-                int(bottom),
-              ), 'B B B'),
-            response_expected=response_expected
+                (
+                    int(top_left),
+                    int(top_right),
+                    int(bottom),
+                ),
+                "B B B",
+            ),
+            response_expected=response_expected,
         )
 
-    async def get_indicator(self):
+    async def get_indicator(self) -> tuple[int, int, int]:
         """
         Returns the indicator configuration as set by :func:`Set Indicator`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_INDICATOR,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_INDICATOR, response_expected=True
         )
 
-        return GetIndicator(*unpack_payload(payload, 'B B B'))
+        return GetIndicator(*unpack_payload(payload, "B B B"))
 
-    async def read_events(self):
+    async def read_events(self) -> AsyncGenerator[bool, None]:
         async for header, payload in super().read_events():
             try:
-                function_id = CallbackID(header['function_id'])
+                function_id = CallbackID(header["function_id"])
             except ValueError:
                 # Invalid header. Drop the packet.
                 continue
