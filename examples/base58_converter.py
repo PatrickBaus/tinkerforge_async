@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 # Copyright (C) 2021  Patrick Baus
@@ -30,15 +29,12 @@ from tinkerforge_async.ip_connection_helper import base58decode, base58encode
 
 def init_argparse() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        usage="%(prog)s [OPTION] [UID]...",
-        description="Convert Tinkerforge base58 encoded uids to ints"
+        usage="%(prog)s [OPTION] [UID]...", description="Convert Tinkerforge base58 encoded uids to ints"
     )
-    parser.add_argument(
-        "-v", "--version", action="version",
-        version = f"{parser.prog} version 1.0.0"
-    )
-    parser.add_argument('uids', nargs='+')
+    parser.add_argument("-v", "--version", action="version", version=f"{parser.prog} version 1.0.0")
+    parser.add_argument("uids", nargs="+")
     return parser
+
 
 def main() -> None:
     parser = init_argparse()
@@ -48,4 +44,6 @@ def main() -> None:
             print(base58encode(int(uid)))
         except ValueError:
             print(base58decode(uid))
+
+
 main()
