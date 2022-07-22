@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The device factory which allows to create instances of Bricks and Bricklets from
 their device id
@@ -17,17 +16,17 @@ from .bricklet_humidity import BrickletHumidity
 from .bricklet_humidity_v2 import BrickletHumidityV2
 from .bricklet_industrial_dual_analog_in_v2 import BrickletIndustrialDualAnalogInV2
 from .bricklet_industrial_ptc import BrickletIndustrialPtc
-from .bricklet_io16 import BrickletIO16
 from .bricklet_io4_v2 import BrickletIO4V2
+from .bricklet_io16 import BrickletIO16
 from .bricklet_moisture import BrickletMoisture
 from .bricklet_motion_detector_v2 import BrickletMotionDetectorV2
 from .bricklet_ptc import BrickletPtc
 from .bricklet_ptc_v2 import BrickletPtcV2
 from .bricklet_rs232_v2 import BrickletRS232V2
-from .bricklet_temperature import BrickletTemperature
-from .bricklet_temperature_v2 import BrickletTemperatureV2
 from .bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
 from .bricklet_segment_display_4x7_v2 import BrickletSegmentDisplay4x7V2
+from .bricklet_temperature import BrickletTemperature
+from .bricklet_temperature_v2 import BrickletTemperatureV2
 
 if TYPE_CHECKING:
     from . import IPConnectionAsync
@@ -39,6 +38,7 @@ class DeviceFactory:
     The factory. Do not import this, as it is instantiated below to create a
     class object.
     """
+
     def __init__(self):
         self.__available_devices = {}
 
@@ -55,7 +55,7 @@ class DeviceFactory:
         try:
             return self.__available_devices[device_id](uid, ipcon)
         except KeyError:
-            raise ValueError(f'No device available for id {device_id}') from None
+            raise ValueError(f"No device available for id {device_id}") from None
 
 
 device_factory = DeviceFactory()

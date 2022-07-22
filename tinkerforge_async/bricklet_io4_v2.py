@@ -1,23 +1,21 @@
-# -*- coding: utf-8 -*-
 """
-Module for the Tinkerforge IO-4 Bricklet 2.0
-(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO4_V2.html)
-implemented using Python AsyncIO. It does the low-lvel communication with the
-Tinkerforge ip connection and also handles conversion of raw units to SI units.
+Module for the Tinkerforge IO-4 Bricklet 2.0 (https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO4_V2.html)
+implemented using Python asyncio. It does the low-level communication with the Tinkerforge ip connection and also
+handles conversion of raw units to SI units.
 """
-from collections import namedtuple
+from __future__ import annotations
+
 from decimal import Decimal
 from enum import Enum, unique
+from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-from .devices import DeviceIdentifier, BrickletWithMCU, GetCallbackConfiguration
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
+
+from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
+from .devices import ThresholdOption as Threshold
+from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
-
-GetConfiguration = namedtuple('Configuration', ['direction', 'value'])
-GetInputValueCallbackConfiguration = namedtuple('InputValueCallbackConfiguration', ['period', 'value_has_to_change'])
-GetAllInputValueCallbackConfiguration = namedtuple('AllInputValueCallbackConfiguration', ['period', 'value_has_to_change'])
-GetMonoflop = namedtuple('Monoflop', ['value', 'time', 'time_remaining'])
-GetEdgeCountConfiguration = namedtuple('EdgeCountConfiguration', ['edge_type', 'debounce'])
-GetPWMConfiguration = namedtuple('PWMConfiguration', ['frequency', 'duty_cycle'])
 
 
 @unique
@@ -25,16 +23,18 @@ class CallbackID(Enum):
     """
     The callbacks available to this bricklet
     """
+
     INPUT_VALUE = 17
     ALL_INPUT_VALUE = 18
     MONOFLOP_DONE = 19
 
 
 @unique
-class FunctionID(Enum):
+class FunctionID(_FunctionID):
     """
     The function calls available to this bricklet
     """
+
     SET_VALUE = 1
     GET_VALUE = 2
     SET_SELECTED_VALUE = 3
@@ -58,8 +58,12 @@ class Direction(Enum):
     """
     Configures a pin as input or output
     """
-    IN = 'i'
-    OUT = 'o'
+
+    IN = "i"
+    OUT = "o"
+
+
+_Direction = Direction
 
 
 @unique
@@ -67,17 +71,53 @@ class EdgeType(Enum):
     """
     Trigger at a rising or falling edge or both
     """
+
     RISING = 0
     FALLING = 1
     BOTH = 2
+
+
+_EdgeType = EdgeType
+
+
+class GetConfiguration(NamedTuple):
+    direction: Direction
+    value: bool
+
+
+class GetInputValueCallbackConfiguration(NamedTuple):
+    period: int
+    value_has_to_change: bool
+
+
+class GetAllInputValueCallbackConfiguration(NamedTuple):
+    period: int
+    value_has_to_change: bool
+
+
+class GetMonoflop(NamedTuple):
+    value: bool
+    time: int
+    time_remaining: int
+
+
+class GetEdgeCountConfiguration(NamedTuple):
+    edge_type: EdgeType
+    debounce: int
+
+
+class GetPWMConfiguration(NamedTuple):
+    frequency: Decimal
+    duty_cycle: Decimal
 
 
 class BrickletIO4V2(BrickletWithMCU):
     """
     4-channel digital input/output
     """
+
     DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_IO_4_V2
-    DEVICE_DISPLAY_NAME = 'IO-4 Bricklet 2.0'
+    DEVICE_DISPLAY_NAME = "IO-4 Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
@@ -86,19 +126,14 @@ class BrickletIO4V2(BrickletWithMCU):
     EdgeType = EdgeType
 
     CALLBACK_FORMATS = {
-        CallbackID.INPUT_VALUE: 'B ! !',
-        CallbackID.ALL_INPUT_VALUE: '4! 4!',
-        CallbackID.MONOFLOP_DONE: 'B !',
+        CallbackID.INPUT_VALUE: "B ! !",
+        CallbackID.ALL_INPUT_VALUE: "4! 4!",
+        CallbackID.MONOFLOP_DONE: "B !",
     }
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
-        1: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
-        2: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
-        3: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
-    }
+    SID_TO_CALLBACK = {i: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE) for i in range(4)}
 
-    def __init__(self, uid, ipcon):
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -107,7 +142,9 @@ class BrickletIO4V2(BrickletWithMCU):
 
         self.api_version = (2, 0, 0)
 
-    async def set_value(self, value, response_expected=True):
+    async def set_value(
+        self, value: tuple[bool, bool, bool, bool] | list[bool], response_expected: bool = True
+    ) -> None:
         """
         Sets the output value of all four channels. A value of *true* or *false* outputs
         logic 1 or logic 0 respectively on the corresponding channel.
@@ -126,27 +163,22 @@ class BrickletIO4V2(BrickletWithMCU):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_VALUE,
-            data=pack_payload(
-              (
-                list(map(bool, value)),
-              ), '4!'),
-            response_expected=response_expected
+            data=pack_payload((list(map(bool, value)),), "4!"),
+            response_expected=response_expected,
         )
 
-    async def get_value(self):
+    async def get_value(self) -> tuple[bool, bool, bool, bool]:
         """
         Returns the logic levels that are currently measured on the channels.
         This function works if the channel is configured as input as well as if it is
         configured as output.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_VALUE,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_VALUE, response_expected=True
         )
-        return unpack_payload(payload, '4!')
+        return unpack_payload(payload, "4!")
 
-    async def set_selected_value(self, channel, value, response_expected=True):
+    async def set_selected_value(self, channel: int, value: bool, response_expected: bool = True) -> None:
         """
         Sets the output value of a specific channel without affecting the other channels.
 
@@ -163,14 +195,22 @@ class BrickletIO4V2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.SET_SELECTED_VALUE,
             data=pack_payload(
-              (
-                channel,
-                bool(value),
-              ), 'B !'),
+                (
+                    channel,
+                    bool(value),
+                ),
+                "B !",
+            ),
             response_expected=response_expected,
         )
 
-    async def set_configuration(self, channel, direction=Direction.IN, value=True, response_expected=True):
+    async def set_configuration(
+        self,
+        channel: int,
+        direction: _Direction | str = Direction.IN,
+        value: bool = True,
+        response_expected: bool = True,
+    ) -> None:
         """
         Configures the value and direction of a specific channel. Possible directions
         are 'i' and 'o' for input and output.
@@ -199,15 +239,17 @@ class BrickletIO4V2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.SET_CONFIGURATION,
             data=pack_payload(
-              (
-                channel,
-                direction.value.encode('ascii'),
-                bool(value),
-              ), 'B c !'),
+                (
+                    channel,
+                    direction.value.encode("ascii"),
+                    bool(value),
+                ),
+                "B c !",
+            ),
             response_expected=response_expected,
         )
 
-    async def get_configuration(self, channel):
+    async def get_configuration(self, channel: int) -> GetConfiguration:
         """
         Returns the channel configuration as set by :func:`Set Configuration`.
         """
@@ -216,14 +258,23 @@ class BrickletIO4V2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_CONFIGURATION,
-            data=pack_payload((int(channel),), 'B'),
-            response_expected=True
+            data=pack_payload((int(channel),), "B"),
+            response_expected=True,
         )
-        direction, value = unpack_payload(payload, 'c !')
+        direction, value = unpack_payload(payload, "c !")
         direction = Direction(direction)
         return GetConfiguration(direction, value)
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=None, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(
+        self,
+        sid: int,
+        period: int = 0,
+        value_has_to_change: bool = False,
+        option: Threshold | int = Threshold.OFF,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
+        response_expected: bool = True,
+    ) -> None:  # pylint: disable=too-many-arguments
         assert sid in range(5)
 
         if sid in range(4):
@@ -231,25 +282,21 @@ class BrickletIO4V2(BrickletWithMCU):
         else:
             await self.set_all_input_value_callback_configuration(period, value_has_to_change, response_expected)
 
-    async def get_callback_configuration(self, sid):
+    async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         assert sid in range(5)
 
         if sid in range(4):
-            return GetCallbackConfiguration(
-                *(await self.get_input_value_callback_configuration(sid)),
-                option=None,
-                minimum=None,
-                maximum=None
+            return AdvancedCallbackConfiguration(
+                *(await self.get_input_value_callback_configuration(sid)), option=None, minimum=None, maximum=None
             )
         else:
-            return GetCallbackConfiguration(
-                *(await self.get_all_input_value_callback_configuration()),
-                option=None,
-                minimum=None,
-                maximum=None
+            return AdvancedCallbackConfiguration(
+                *(await self.get_all_input_value_callback_configuration()), option=None, minimum=None, maximum=None
             )
 
-    async def set_input_value_callback_configuration(self, channel, period=0, value_has_to_change=False, response_expected=True):
+    async def set_input_value_callback_configuration(
+        self, channel: int, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
+    ) -> None:
         """
         This callback can be configured per channel.
 
@@ -269,15 +316,17 @@ class BrickletIO4V2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.SET_INPUT_VALUE_CALLBACK_CONFIGURATION,
             data=pack_payload(
-              (
-                channel,
-                int(period),
-                bool(value_has_to_change),
-              ), 'B I !'),
+                (
+                    channel,
+                    int(period),
+                    bool(value_has_to_change),
+                ),
+                "B I !",
+            ),
             response_expected=response_expected,
         )
 
-    async def get_input_value_callback_configuration(self, channel):
+    async def get_input_value_callback_configuration(self, channel: int) -> GetInputValueCallbackConfiguration:
         """
         Returns the callback configuration for the given channel as set by
         :func:`Set Input Value Callback Configuration`.
@@ -287,12 +336,14 @@ class BrickletIO4V2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_INPUT_VALUE_CALLBACK_CONFIGURATION,
-            data=pack_payload((int(channel),), 'B'),
-            response_expected=True
+            data=pack_payload((int(channel),), "B"),
+            response_expected=True,
         )
-        return GetInputValueCallbackConfiguration(*unpack_payload(payload, 'I !'))
+        return GetInputValueCallbackConfiguration(*unpack_payload(payload, "I !"))
 
-    async def set_all_input_value_callback_configuration(self, period=0, value_has_to_change=False, response_expected=True):
+    async def set_all_input_value_callback_configuration(
+        self, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
+    ) -> None:
         """
         The period is the period with which the :cb:`All Input Value`
         callback is triggered periodically. A value of 0 turns the callback off.
@@ -308,26 +359,26 @@ class BrickletIO4V2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.SET_ALL_INPUT_VALUE_CALLBACK_CONFIGURATION,
             data=pack_payload(
-              (
-                int(period),
-                bool(value_has_to_change),
-              ), 'I !'),
+                (
+                    int(period),
+                    bool(value_has_to_change),
+                ),
+                "I !",
+            ),
             response_expected=response_expected,
         )
 
-    async def get_all_input_value_callback_configuration(self):
+    async def get_all_input_value_callback_configuration(self) -> GetAllInputValueCallbackConfiguration:
         """
         Returns the callback configuration as set by
         :func:`Set All Input Value Callback Configuration`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_ALL_INPUT_VALUE_CALLBACK_CONFIGURATION,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_ALL_INPUT_VALUE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return GetAllInputValueCallbackConfiguration(*unpack_payload(payload, 'I !'))
+        return GetAllInputValueCallbackConfiguration(*unpack_payload(payload, "I !"))
 
-    async def set_monoflop(self, channel, value, time, response_expected=True):
+    async def set_monoflop(self, channel: int, value: bool, time: int, response_expected: bool = True) -> None:
         """
         The first parameter is the desired state of the channel (*true* means output *high*
         and *false* means output *low*). The second parameter indicates the time that
@@ -350,15 +401,17 @@ class BrickletIO4V2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.SET_MONOFLOP,
             data=pack_payload(
-              (
-                int(channel),
-                bool(value),
-                int(time),
-              ), 'B ! I'),
+                (
+                    int(channel),
+                    bool(value),
+                    int(time),
+                ),
+                "B ! I",
+            ),
             response_expected=response_expected,
         )
 
-    async def get_monoflop(self, channel):
+    async def get_monoflop(self, channel: int) -> GetMonoflop:
         """
         Returns (for the given channel) the current value and the time as set by
         :func:`Set Monoflop` as well as the remaining time until the value flips.
@@ -371,12 +424,12 @@ class BrickletIO4V2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_MONOFLOP,
-            data=pack_payload((int(channel),), 'B'),
-            response_expected=True
+            data=pack_payload((int(channel),), "B"),
+            response_expected=True,
         )
-        return GetMonoflop(*unpack_payload(payload, '! I I'))
+        return GetMonoflop(*unpack_payload(payload, "! I I"))
 
-    async def get_edge_count(self, channel, reset_counter=False):
+    async def get_edge_count(self, channel: int, reset_counter: bool = False) -> int:
         """
         Returns the current value of the edge counter for the selected channel. You can
         configure the edges that are counted with :func:`Set Edge Count Configuration`.
@@ -393,15 +446,23 @@ class BrickletIO4V2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.GET_EDGE_COUNT,
             data=pack_payload(
-              (
-                int(channel),
-                bool(reset_counter),
-              ), 'B !'),
-            response_expected=True
+                (
+                    int(channel),
+                    bool(reset_counter),
+                ),
+                "B !",
+            ),
+            response_expected=True,
         )
-        return unpack_payload(payload, 'I')
+        return unpack_payload(payload, "I")
 
-    async def set_edge_count_configuration(self, channel, edge_type=EdgeType.RISING, debounce=100, response_expected=True):
+    async def set_edge_count_configuration(
+        self,
+        channel: int,
+        edge_type: _EdgeType | int = EdgeType.RISING,
+        debounce: int = 100,
+        response_expected: bool = True,
+    ) -> None:
         """
         Configures the edge counter for a specific channel.
 
@@ -428,15 +489,17 @@ class BrickletIO4V2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.SET_EDGE_COUNT_CONFIGURATION,
             data=pack_payload(
-              (
-                int(channel),
-                edge_type.value,
-                int(debounce),
-              ), 'B B B'),
+                (
+                    int(channel),
+                    edge_type.value,
+                    int(debounce),
+                ),
+                "B B B",
+            ),
             response_expected=response_expected,
         )
 
-    async def get_edge_count_configuration(self, channel):
+    async def get_edge_count_configuration(self, channel: int) -> GetEdgeCountConfiguration:
         """
         Returns the edge type and debounce time for the selected channel as set by
         :func:`Set Edge Count Configuration`.
@@ -449,17 +512,16 @@ class BrickletIO4V2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_EDGE_COUNT_CONFIGURATION,
-            data=pack_payload(
-              (
-                int(channel),
-              ), 'B'),
-            response_expected=True
+            data=pack_payload((int(channel),), "B"),
+            response_expected=True,
         )
-        edge_type, debounce = unpack_payload(payload, 'B B')
+        edge_type, debounce = unpack_payload(payload, "B B")
         edge_type = EdgeType(edge_type)
         return GetEdgeCountConfiguration(edge_type, debounce)
 
-    async def set_pwm_configuration(self, channel, frequency=0, duty_cycle=0, response_expected=True):
+    async def set_pwm_configuration(
+        self, channel: int, frequency: int = 0, duty_cycle: int = 0, response_expected: bool = True
+    ) -> None:
         """
         Activates a PWM for the given channel.
 
@@ -478,15 +540,17 @@ class BrickletIO4V2(BrickletWithMCU):
             device=self,
             function_id=FunctionID.SET_PWM_CONFIGURATION,
             data=pack_payload(
-              (
-                int(channel),
-                int(frequency),
-                int(duty_cycle),
-              ), 'B I H'),
+                (
+                    int(channel),
+                    int(frequency),
+                    int(duty_cycle),
+                ),
+                "B I H",
+            ),
             response_expected=response_expected,
         )
 
-    async def get_pwm_configuration(self, channel):
+    async def get_pwm_configuration(self, channel: int) -> GetPWMConfiguration:
         """
         Returns the PWM configuration as set by :func:`Set PWM Configuration`.
         """
@@ -495,20 +559,19 @@ class BrickletIO4V2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.GET_PWM_CONFIGURATION,
-            data=pack_payload(
-              (
-                int(channel),
-              ), 'B'),
-            response_expected=True
+            data=pack_payload((int(channel),), "B"),
+            response_expected=True,
         )
-        frequency, duty_cycle = unpack_payload(payload, 'I H')
-        return GetPWMConfiguration(Decimal(frequency)/10, Decimal(duty_cycle)/10000)
+        frequency, duty_cycle = unpack_payload(payload, "I H")
+        return GetPWMConfiguration(Decimal(frequency) / 10, Decimal(duty_cycle) / 10000)
 
-    async def read_events(self, events=None, sids=None):
+    async def read_events(
+        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+    ) -> AsyncGenerator[Event, None]:
         assert events is None or sids is None
 
         registered_events = set()
-        sids = set() if sids is None else sids
+        sids = tuple() if sids is None else sids
         if events:
             for event in events:
                 registered_events.add(self.CallbackID(event))
@@ -516,9 +579,9 @@ class BrickletIO4V2(BrickletWithMCU):
         if not events and not sids:
             registered_events = set(self.CALLBACK_FORMATS.keys())
 
-        async for header, payload in super().read_events():
+        async for header, payload in super()._read_events():
             try:
-                function_id = CallbackID(header['function_id'])
+                function_id = CallbackID(header.function_id)
             except ValueError:
                 # Invalid header. Drop the packet.
                 continue
@@ -526,23 +589,18 @@ class BrickletIO4V2(BrickletWithMCU):
             if function_id is CallbackID.INPUT_VALUE:
                 sid, value_has_changed, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in registered_events or sid in sids:
-                    result = self.build_event(sid, function_id, value)
-                    result['value_has_changed'] = value_has_changed
-                    yield result
+                    yield Event(self, sid, function_id, (value_has_changed, value))
                     continue
             elif function_id is CallbackID.MONOFLOP_DONE:
                 sid, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in registered_events or sid in sids:
-                    yield self.build_event(sid, function_id, value)
+                    yield Event(self, sid, function_id, value)
                     continue
             else:
                 changed_sids, values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in registered_events:
-                    result = self.build_event(4, function_id, values)   # Use a special sid for the CallbackID.ALL_INPUT_VALUE, because it returns a tuple
-                    result['value_has_changed'] = changed_sids
-                    yield result
+                    # Use a special sid for the CallbackID.ALL_INPUT_VALUE, because it returns a tuple
+                    yield Event(self, 4, function_id, (changed_sids, values))
                 else:
                     for sid in sids:
-                        result = self.build_event(sid, function_id, values[sid])
-                        result['value_has_changed'] = changed_sids[sid]
-                        yield result
+                        yield Event(self, sid, function_id, (changed_sids[sid], values[sid]))

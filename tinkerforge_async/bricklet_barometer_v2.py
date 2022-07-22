@@ -1,32 +1,21 @@
 """
 Module for the Tinkerforge Barometer Bricklet 2.0
-(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html) implemented using Python AsyncIO. It does the
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html) implemented using Python asyncio. It does the
 low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
 from __future__ import annotations
 
-from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
+from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-from . import IPConnectionAsync
-from .devices import BrickletWithMCU, DeviceIdentifier, GetCallbackConfiguration, ThresholdOption
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
+
+from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
+from .devices import ThresholdOption as Threshold
+from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
-
-GetAirPressureCallbackConfiguration = namedtuple(
-    "GetAirPressureCallbackConfiguration", ["period", "value_has_to_change", "option", "min", "max"]
-)
-GetAltitudeCallbackConfiguration = namedtuple(
-    "GetAltitudeCallbackConfiguration", ["period", "value_has_to_change", "option", "min", "max"]
-)
-GetTemperatureCallbackConfiguration = namedtuple(
-    "GetTemperatureCallbackConfiguration", ["period", "value_has_to_change", "option", "min", "max"]
-)
-GetMovingAverageConfiguration = namedtuple(
-    "GetMovingAverageConfiguration", ["moving_average_length_air_pressure", "moving_average_length_temperature"]
-)
-GetCalibration = namedtuple("GetCalibration", ["measured_air_pressure", "actual_air_pressure"])
-GetSensorConfiguration = namedtuple("GetSensorConfiguration", ["data_rate", "air_pressure_low_pass_filter"])
 
 
 @unique
@@ -41,7 +30,7 @@ class CallbackID(Enum):
 
 
 @unique
-class FunctionID(Enum):
+class FunctionID(_FunctionID):
     """
     The function calls available to this bricklet
     """
@@ -79,6 +68,9 @@ class DataRate(Enum):
     RATE_75HZ = 5
 
 
+_DataRate = DataRate  # We need the alias for MyPy type hinting
+
+
 @unique
 class LowPassFilter(Enum):
     """
@@ -88,6 +80,24 @@ class LowPassFilter(Enum):
     FILTER_OFF = 0
     FILTER_9TH = 1
     FILTER_20TH = 2
+
+
+_LowPassFilter = LowPassFilter  # We need the alias for MyPy type hinting
+
+
+class GetMovingAverageConfiguration(NamedTuple):
+    moving_average_length_air_pressure: int
+    moving_average_length_temperature: int
+
+
+class GetCalibration(NamedTuple):
+    measured_air_pressure: Decimal
+    actual_air_pressure: Decimal
+
+
+class GetSensorConfiguration(NamedTuple):
+    data_rate: DataRate
+    air_pressure_low_pass_filter: LowPassFilter
 
 
 class BrickletBarometerV2(BrickletWithMCU):
@@ -101,7 +111,7 @@ class BrickletBarometerV2(BrickletWithMCU):
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
     FunctionID = FunctionID
-    ThresholdOption = ThresholdOption
+    ThresholdOption = Threshold
     DataRate = DataRate
     LowPassFilter = LowPassFilter
 
@@ -140,7 +150,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         sid: int,
         period: int = 0,
         value_has_to_change: bool = False,
-        option: ThresholdOption = ThresholdOption.OFF,
+        option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -163,15 +173,15 @@ class BrickletBarometerV2(BrickletWithMCU):
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
 
-    async def get_callback_configuration(self, sid: int) -> GetCallbackConfiguration:
+    async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         assert sid in (0, 1, 2)
 
         if sid == 0:
-            return GetCallbackConfiguration(*(await self.get_air_pressure_callback_configuration()))
+            return await self.get_air_pressure_callback_configuration()
         elif sid == 1:
-            return GetCallbackConfiguration(*(await self.get_altitude_callback_configuration()))
+            return await self.get_altitude_callback_configuration()
         else:
-            return GetCallbackConfiguration(*(await self.get_temperature_callback_configuration()))
+            return await self.get_temperature_callback_configuration()
 
     async def get_air_pressure(self) -> Decimal:
         """
@@ -190,7 +200,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         self,
         period: int = 0,
         value_has_to_change: bool = False,
-        option: ThresholdOption = ThresholdOption.OFF,
+        option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
@@ -222,7 +232,7 @@ class BrickletBarometerV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        option = ThresholdOption(option)
+        option = Threshold(option)
         assert period >= 0
         assert minimum >= 0
         assert maximum >= 0
@@ -243,7 +253,7 @@ class BrickletBarometerV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_air_pressure_callback_configuration(self) -> GetAirPressureCallbackConfiguration:
+    async def get_air_pressure_callback_configuration(self) -> AdvancedCallbackConfiguration:
         """
         Returns the callback configuration as set by :func:`Set Air Pressure Callback Configuration`.
         """
@@ -251,9 +261,9 @@ class BrickletBarometerV2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_AIR_PRESSURE_CALLBACK_CONFIGURATION, response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
-        option = ThresholdOption(option)
+        option = Threshold(option)
         minimum, maximum = self.__air_pressure_sensor_to_si(minimum), self.__air_pressure_sensor_to_si(maximum)
-        return GetAirPressureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def get_altitude(self) -> Decimal:
         """
@@ -274,7 +284,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         self,
         period: int = 0,
         value_has_to_change: bool = False,
-        option: ThresholdOption = ThresholdOption.OFF,
+        option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
@@ -306,7 +316,7 @@ class BrickletBarometerV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        option = ThresholdOption(option)
+        option = Threshold(option)
         assert period >= 0
 
         await self.ipcon.send_request(
@@ -325,7 +335,7 @@ class BrickletBarometerV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_altitude_callback_configuration(self) -> GetAltitudeCallbackConfiguration:
+    async def get_altitude_callback_configuration(self) -> AdvancedCallbackConfiguration:
         """
         Returns the callback configuration as set by :func:`Set Altitude Callback Configuration`.
         """
@@ -333,9 +343,9 @@ class BrickletBarometerV2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_ALTITUDE_CALLBACK_CONFIGURATION, response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
-        option = ThresholdOption(option)
+        option = Threshold(option)
         minimum, maximum = self.__altitude_sensor_to_si(minimum), self.__altitude_sensor_to_si(maximum)
-        return GetAltitudeCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def get_temperature(self) -> Decimal:
         """
@@ -358,7 +368,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         self,
         period: int = 0,
         value_has_to_change: bool = False,
-        option: ThresholdOption = ThresholdOption.OFF,
+        option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
@@ -390,7 +400,7 @@ class BrickletBarometerV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        option = ThresholdOption(option)
+        option = Threshold(option)
         assert period >= 0
 
         await self.ipcon.send_request(
@@ -409,7 +419,7 @@ class BrickletBarometerV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_temperature_callback_configuration(self) -> GetTemperatureCallbackConfiguration:
+    async def get_temperature_callback_configuration(self) -> AdvancedCallbackConfiguration:
         """
         Returns the callback configuration as set by :func:`Set Temperature Callback Configuration`.
         """
@@ -417,9 +427,9 @@ class BrickletBarometerV2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_ALTITUDE_CALLBACK_CONFIGURATION, response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
-        option = ThresholdOption(option)
+        option = Threshold(option)
         minimum, maximum = self.__temperature_sensor_to_si(minimum), self.__temperature_sensor_to_si(maximum)
-        return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def set_moving_average_configuration(
         self,
@@ -537,8 +547,8 @@ class BrickletBarometerV2(BrickletWithMCU):
 
     async def set_sensor_configuration(
         self,
-        data_rate: DataRate = DataRate.RATE_50HZ,
-        air_pressure_low_pass_filter: LowPassFilter = LowPassFilter.FILTER_9TH,
+        data_rate: _DataRate | int = DataRate.RATE_50HZ,
+        air_pressure_low_pass_filter: _LowPassFilter | int = LowPassFilter.FILTER_9TH,
         response_expected: bool = True,
     ):
         """
@@ -625,7 +635,7 @@ class BrickletBarometerV2(BrickletWithMCU):
 
     async def read_events(
         self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
-    ) -> None:
+    ) -> AsyncGenerator[Event, None]:
         registered_events = set()
         if events:
             for event in events:
@@ -638,17 +648,17 @@ class BrickletBarometerV2(BrickletWithMCU):
         if not events and not sids:
             registered_events = set(self.CALLBACK_FORMATS.keys())
 
-        async for header, payload in super().read_events():
+        async for header, payload in super()._read_events():
             try:
-                function_id = CallbackID(header["function_id"])
+                function_id = CallbackID(header.function_id)
             except ValueError:
                 # Invalid header. Drop the packet.
                 continue
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id is CallbackID.AIR_PRESSURE:
-                    yield self.build_event(0, function_id, self.__air_pressure_sensor_to_si(value))
+                    yield Event(self, 0, function_id, self.__air_pressure_sensor_to_si(value))
                 elif function_id is CallbackID.ALTITUDE:
-                    yield self.build_event(1, function_id, self.__altitude_sensor_to_si(value))
+                    yield Event(self, 1, function_id, self.__altitude_sensor_to_si(value))
                 else:
-                    yield self.build_event(2, function_id, self.__temperature_sensor_to_si(value))
+                    yield Event(self, 2, function_id, self.__temperature_sensor_to_si(value))

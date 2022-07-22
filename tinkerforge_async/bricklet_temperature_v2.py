@@ -1,24 +1,22 @@
-# -*- coding: utf-8 -*-
 """
 Module for the Tinkerforge Temperature Bricklet 2.0
-(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html)
-implemented using Python AsyncIO. It does the low-lvel communication with the
-Tinkerforge ip connection and also handles conversion of raw units to SI units.
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html) implemented using Python asyncio. It does
+the low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
 from __future__ import annotations
 
-from collections import namedtuple
+import typing
 from decimal import Decimal
 from enum import Enum, unique
-from typing import AsyncGenerator, Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-from .devices import Device, DeviceIdentifier, BrickletWithMCU, ThresholdOption, GetCallbackConfiguration
+from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
+from .devices import ThresholdOption as Threshold
+from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
-
-GetTemperatureCallbackConfiguration = namedtuple('TemperatureCallbackConfiguration', ['period', 'value_has_to_change', 'option', 'minimum', 'maximum'])
 
 
 @unique
@@ -26,14 +24,16 @@ class CallbackID(Enum):
     """
     The callbacks available to this bricklet
     """
+
     TEMPERATURE = 4
 
 
 @unique
-class FunctionID(Enum):
+class FunctionID(_FunctionID):
     """
     The function calls available to this bricklet
     """
+
     GET_TEMPERATURE = 1
     SET_TEMPERATURE_CALLBACK_CONFIGURATION = 2
     GET_TEMPERATURE_CALLBACK_CONFIGURATION = 3
@@ -46,32 +46,37 @@ class HeaterConfig(Enum):
     """
     The builtin heater can be used for testing purposes
     """
+
     DISABLED = 0
     ENABLED = 1
+
+
+_HeaterConfig = HeaterConfig  # We need the alias for MyPy type hinting
 
 
 class BrickletTemperatureV2(BrickletWithMCU):
     """
     Measures ambient temperature with 0.2 K accuracy
     """
-    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_TEMPTERATURE_V2
-    DEVICE_DISPLAY_NAME = 'Temperature Bricklet 2.0'
+
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_TEMPERATURE_V2
+    DEVICE_DISPLAY_NAME = "Temperature Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
     FunctionID = FunctionID
-    ThresholdOption = ThresholdOption
+    ThresholdOption = Threshold
     HeaterConfig = HeaterConfig
 
     CALLBACK_FORMATS = {
-        CallbackID.TEMPERATURE: 'h',
+        CallbackID.TEMPERATURE: "h",
     }
 
     SID_TO_CALLBACK = {
-        0: (CallbackID.TEMPERATURE, ),
+        0: (CallbackID.TEMPERATURE,),
     }
 
-    def __init__(self, uid, ipcon: IPConnectionAsync):
+    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -80,32 +85,34 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
         self.api_version = (2, 0, 0)
 
-    async def get_value(self, sid: int):
+    async def get_value(self, sid: int) -> Decimal:
         assert sid == 0
 
         return await self.get_temperature()
 
     async def set_callback_configuration(
-            self,
-            sid: int,
-            period: int = 0,
-            value_has_to_change: bool = False,
-            option: ThresholdOption | int = ThresholdOption.OFF,
-            minimum: Decimal | int | float | None = None,
-            maximum: Decimal | int | float | None = None,
-            response_expected: bool = True
+        self,
+        sid: int,
+        period: int = 0,
+        value_has_to_change: bool = False,
+        option: Threshold | int = Threshold.OFF,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
+        response_expected: bool = True,
     ) -> None:  # pylint: disable=too-many-arguments
-        minimum = Decimal('273.15') if minimum is None else minimum
-        maximum = Decimal('273.15') if maximum is None else maximum
+        minimum = Decimal("273.15") if minimum is None else minimum
+        maximum = Decimal("273.15") if maximum is None else maximum
 
         assert sid == 0
 
-        await self.set_temperature_callback_configuration(period, value_has_to_change, option, minimum, maximum, response_expected)
+        await self.set_temperature_callback_configuration(
+            period, value_has_to_change, option, minimum, maximum, response_expected
+        )
 
-    async def get_callback_configuration(self, sid: int) -> GetCallbackConfiguration:
+    async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         assert sid == 0
 
-        return GetCallbackConfiguration(*(await self.get_temperature_callback_configuration()))
+        return await self.get_temperature_callback_configuration()
 
     async def get_temperature(self) -> Decimal:
         """
@@ -118,20 +125,18 @@ class BrickletTemperatureV2(BrickletWithMCU):
         :func:`Set Temperature Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_TEMPERATURE,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_TEMPERATURE, response_expected=True
         )
-        return self.__value_to_si(unpack_payload(payload, 'h'))
+        return self.__value_to_si(unpack_payload(payload, "h"))
 
     async def set_temperature_callback_configuration(
-            self,
-            period: int = 0,
-            value_has_to_change: bool = False,
-            option: ThresholdOption | int = ThresholdOption.OFF,
-            minimum: Decimal | int | float = Decimal('273.15'),
-            maximum: Decimal | int | float = Decimal('273.15'),
-            response_expected=True
+        self,
+        period: int = 0,
+        value_has_to_change: bool = False,
+        option: Threshold | int = Threshold.OFF,
+        minimum: Decimal | int | float = Decimal("273.15"),
+        maximum: Decimal | int | float = Decimal("273.15"),
+        response_expected=True,
     ) -> None:  # pylint: disable=too-many-arguments
         """
         The period in ms is the period with which the :cb:`Temperature` callback is triggered
@@ -165,8 +170,8 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
         The default value is (0, false, 'x', 0, 0).
         """
-        if not isinstance(option, ThresholdOption):
-            option = ThresholdOption(option)
+        if not isinstance(option, Threshold):
+            option = Threshold(option)
         assert period >= 0
 
         await self.ipcon.send_request(
@@ -176,33 +181,29 @@ class BrickletTemperatureV2(BrickletWithMCU):
                 (
                     int(period),
                     bool(value_has_to_change),
-                    option.value.encode('ascii'),
+                    option.value.encode("ascii"),
                     self.__si_to_value(minimum),
-                    self.__si_to_value(maximum)
+                    self.__si_to_value(maximum),
                 ),
-                'I ! c h h'
+                "I ! c h h",
             ),
-            response_expected=response_expected
+            response_expected=response_expected,
         )
 
-    async def get_temperature_callback_configuration(self) -> GetTemperatureCallbackConfiguration:
+    async def get_temperature_callback_configuration(self) -> AdvancedCallbackConfiguration:
         """
         Returns the callback configuration as set by :func:`Set Temperature Callback Configuration`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, 'I ! c h h')
-        option = ThresholdOption(option)
+        period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c h h")
+        option = Threshold(option)
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
-        return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def set_heater_configuration(
-            self,
-            heater_config: HeaterConfig | int = HeaterConfig.DISABLED,
-            response_expected: bool = True
+        self, heater_config: _HeaterConfig | int = HeaterConfig.DISABLED, response_expected: bool = True
     ) -> None:
         """
         Enables/disables the heater. The heater can be used to test the sensor.
@@ -213,21 +214,19 @@ class BrickletTemperatureV2(BrickletWithMCU):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_HEATER_CONFIGURATION,
-            data=pack_payload((heater_config.value,), 'B'),
-            response_expected=response_expected
+            data=pack_payload((heater_config.value,), "B"),
+            response_expected=response_expected,
         )
 
-    async def get_heater_configuration(self) -> HeaterConfig:
+    async def get_heater_configuration(self) -> _HeaterConfig:
         """
         Returns the heater configuration as set by :func:`Set Heater Configuration`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_HEATER_CONFIGURATION,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_HEATER_CONFIGURATION, response_expected=True
         )
 
-        return HeaterConfig(unpack_payload(payload, 'B'))
+        return HeaterConfig(unpack_payload(payload, "B"))
 
     @staticmethod
     def __value_to_si(value: int) -> Decimal:
@@ -237,14 +236,12 @@ class BrickletTemperatureV2(BrickletWithMCU):
         return Decimal(value + 27315) / 100
 
     @staticmethod
-    def __si_to_value(value: Decimal) -> int:
+    def __si_to_value(value: float | Decimal) -> int:
         return int(value * 100) - 27315
 
     async def read_events(
-            self,
-            events: Iterable[CallbackID] | None = None,
-            sids: Iterable[int] | None = None
-    ) -> AsyncGenerator[dict[str, Device | float, int], None]:
+        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+    ) -> typing.AsyncGenerator[Event, None]:
         registered_events = set()
         if events:
             for event in events:
@@ -257,12 +254,12 @@ class BrickletTemperatureV2(BrickletWithMCU):
         if events is None and sids is None:
             registered_events = set(self.CALLBACK_FORMATS.keys())
 
-        async for header, payload in super().read_events():
+        async for header, payload in super()._read_events():
             try:
-                function_id = CallbackID(header['function_id'])
+                function_id = CallbackID(header.function_id)
             except ValueError:
                 # Invalid header. Drop the packet.
                 continue
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                yield self.build_event(0, function_id, self.__value_to_si(value))
+                yield Event(self, 0, function_id, self.__value_to_si(value))

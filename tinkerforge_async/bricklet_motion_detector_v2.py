@@ -1,18 +1,19 @@
 """
 Module for the Tinkerforge Barometer Bricklet 2.0
-(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html)
-implemented using Python AsyncIO. It does the low-level communication with the Tinkerforge ip connection and also
-handles conversion of raw units to SI units.
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html) implemented using Python asyncio. It does the
+low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
-from collections import namedtuple
+from __future__ import annotations
+
 from enum import Enum, unique
-from typing import AsyncGenerator
+from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-from . import IPConnectionAsync
-from .devices import BrickletWithMCU, DeviceIdentifier
+from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
+
 from .ip_connection_helper import pack_payload, unpack_payload
-
-GetIndicator = namedtuple("GetIndicator", ["top_left", "top_right", "bottom"])
 
 
 @unique
@@ -26,7 +27,7 @@ class CallbackID(Enum):
 
 
 @unique
-class FunctionID(Enum):
+class FunctionID(_FunctionID):
     """
     The function calls available to this bricklet
     """
@@ -36,6 +37,12 @@ class FunctionID(Enum):
     GET_SENSITIVITY = 3
     SET_INDICATOR = 4
     GET_INDICATOR = 5
+
+
+class GetIndicator(NamedTuple):
+    top_left: int
+    top_right: int
+    bottom: int
 
 
 class BrickletMotionDetectorV2(BrickletWithMCU):
@@ -53,6 +60,11 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
     CALLBACK_FORMATS = {
         CallbackID.MOTION_DETECTED: "",
         CallbackID.DETECTION_CYCLE_ENDED: "",
+    }
+
+    SID_TO_CALLBACK = {
+        0: (CallbackID.MOTION_DETECTED,),
+        1: (CallbackID.DETECTION_CYCLE_ENDED,),
     }
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
@@ -146,13 +158,27 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
 
         return GetIndicator(*unpack_payload(payload, "B B B"))
 
-    async def read_events(self) -> AsyncGenerator[bool, None]:
-        async for header, payload in super().read_events():
+    async def read_events(
+        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+    ) -> AsyncGenerator[Event, None]:
+        registered_events = set()
+        if events:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+        if sids is not None:
+            for sid in sids:
+                for callback in self.SID_TO_CALLBACK.get(sid, []):
+                    registered_events.add(callback)
+
+        if not events and not sids:
+            registered_events = set(self.CALLBACK_FORMATS.keys())
+
+        async for header, payload in super()._read_events():
             try:
-                function_id = CallbackID(header["function_id"])
+                function_id = CallbackID(header.function_id)
             except ValueError:
                 # Invalid header. Drop the packet.
                 continue
-            if function_id in self._registered_events:
+            if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                yield self.build_event(0, function_id, value)
+                yield Event(self, 0, function_id, value)

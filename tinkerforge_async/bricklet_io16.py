@@ -1,18 +1,19 @@
 """
 Module for the Tinkerforge IO-16 Bricklet (https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)
-implemented using Python AsyncIO. It does the low-level communication with the Tinkerforge ip connection and also
+implemented using Python asyncio. It does the low-level communication with the Tinkerforge ip connection and also
 handles conversion of raw units to SI units.
 """
-from collections import namedtuple
+from __future__ import annotations
+
+from decimal import Decimal
 from enum import Enum, unique
+from typing import NamedTuple
 
 from . import IPConnectionAsync
 from .devices import Device, DeviceIdentifier
+from .devices import ThresholdOption as Threshold
+from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
-
-GetPortConfiguration = namedtuple("GetPortConfiguration", ["direction_mask", "value_mask"])
-GetPortMonoflop = namedtuple("GetPortMonoflop", ["value", "time", "time_remaining"])
-GetEdgeCountConfig = namedtuple("GetEdgeCountConfig", ["edge_type", "debounce"])
 
 
 @unique
@@ -26,7 +27,7 @@ class CallbackID(Enum):
 
 
 @unique
-class FunctionID(Enum):
+class FunctionID(_FunctionID):
     """
     The function calls available to this bricklet
     """
@@ -57,6 +58,9 @@ class Port(Enum):
     B = "b"
 
 
+_Port = Port  # We need the alias for MyPy type hinting
+
+
 @unique
 class Direction(Enum):
     """
@@ -65,6 +69,9 @@ class Direction(Enum):
 
     IN = "i"
     OUT = "o"
+
+
+_Direction = Direction  # We need the alias for MyPy type hinting
 
 
 @unique
@@ -77,6 +84,9 @@ class InputConfiguration(Enum):
     FLOATING = False
 
 
+_InputConfiguration = InputConfiguration
+
+
 @unique
 class OutputConfiguration(Enum):
     """
@@ -85,6 +95,9 @@ class OutputConfiguration(Enum):
 
     HIGH = True
     LOW = False
+
+
+_OutputConfiguration = OutputConfiguration
 
 
 @unique
@@ -96,6 +109,25 @@ class EdgeType(Enum):
     RISING = 0
     FALLING = 1
     BOTH = 2
+
+
+_EdgeType = EdgeType  # We need the alias for MyPy type hinting
+
+
+class GetPortConfiguration(NamedTuple):
+    direction_mask: int
+    value_mask: bool
+
+
+class GetPortMonoflop(NamedTuple):
+    value: bool
+    time: int
+    time_remaining: int
+
+
+class GetEdgeCountConfiguration(NamedTuple):
+    edge_type: EdgeType
+    debounce: int
 
 
 class BrickletIO16(Device):
@@ -120,6 +152,8 @@ class BrickletIO16(Device):
         CallbackID.MONOFLOP_DONE: "c B B",
     }
 
+    SID_TO_CALLBACK = {i: (CallbackID.INTERRUPT, CallbackID.MONOFLOP_DONE) for i in range(16)}
+
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to the IP connection *ipcon*.
@@ -128,7 +162,7 @@ class BrickletIO16(Device):
 
         self.api_version = (2, 0, 1)
 
-    async def set_port(self, port: Port, value_mask: int, response_expected: bool = True) -> None:
+    async def set_port(self, port: _Port | str, value_mask: int, response_expected: bool = True) -> None:
         """
         Sets the output value (high or low) for a port ("a" or "b") with a bitmask (8bit). A 1 in the bitmask means high
          and a 0 in the bitmask means low.
@@ -152,7 +186,7 @@ class BrickletIO16(Device):
             response_expected=response_expected,
         )
 
-    async def get_port(self, port: Port) -> int:
+    async def get_port(self, port: _Port | str) -> int:
         """
         Returns a bitmask of the values that are currently measured on the specified port. This function works if the
         pin is configured to input as well as if it is configured to output.
@@ -169,7 +203,12 @@ class BrickletIO16(Device):
         return unpack_payload(payload, "B")
 
     async def set_port_configuration(
-        self, port: Port, selection_mask: int, direction: Direction, value: bool = False, response_expected: bool = True
+        self,
+        port: _Port | str,
+        selection_mask: int,
+        direction: _Direction | str,
+        value: _InputConfiguration | _OutputConfiguration | bool = False,
+        response_expected: bool = True,
     ) -> None:  # pylint: disable=too-many-arguments
         """
         Configures the value and direction of a specified port. Possible directions are 'i' and 'o' for input and
@@ -207,7 +246,7 @@ class BrickletIO16(Device):
             response_expected=response_expected,
         )
 
-    async def get_port_configuration(self, port: Port) -> GetPortConfiguration:
+    async def get_port_configuration(self, port: _Port | str) -> GetPortConfiguration:
         """
         Returns a direction bitmask and a value bitmask for the specified port. A 1 in the direction bitmask means
         input and a 0 in the bitmask means output.
@@ -229,6 +268,23 @@ class BrickletIO16(Device):
             response_expected=True,
         )
         return GetPortConfiguration(*unpack_payload(payload, "B B"))
+
+    async def set_callback_configuration(
+        self,
+        sid: int,
+        period: int = 0,
+        value_has_to_change: bool = False,
+        option: Threshold | int = Threshold.OFF,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
+        response_expected: bool = True,
+    ) -> None:  # pylint: disable=too-many-arguments
+        pass
+        # TODO: implement
+
+    async def get_callback_configuration(self, sid: int):
+        pass
+        # TODO: implement
 
     async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
         """
@@ -255,7 +311,7 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, "I")
 
-    async def set_port_interrupt(self, port: Port, interrupt_mask: int, response_expected: bool = True) -> None:
+    async def set_port_interrupt(self, port: _Port | str, interrupt_mask: int, response_expected: bool = True) -> None:
         """
         Sets the pins on which an interrupt is activated with a bitmask. Interrupts are triggered on changes of the
         voltage level of the pin, i.e. changes from high to low and low to high.
@@ -275,7 +331,7 @@ class BrickletIO16(Device):
             response_expected=response_expected,
         )
 
-    async def get_port_interrupt(self, port: Port) -> int:
+    async def get_port_interrupt(self, port: _Port | str) -> int:
         """
         Returns the interrupt bitmask for the specified port as set by :func:`Set Port Interrupt`.
         """
@@ -291,7 +347,7 @@ class BrickletIO16(Device):
         return unpack_payload(payload, "B")
 
     async def set_port_monoflop(
-        self, port: Port, selection_mask: int, value_mask: int, time: int, response_expected: bool = True
+        self, port: _Port | str, selection_mask: int, value_mask: int, time: int, response_expected: bool = True
     ) -> None:  # pylint: disable=too-many-arguments
         """
         Configures a monoflop of the pins specified by the second parameter as an 8 bit long bitmask. The specified pins
@@ -323,7 +379,7 @@ class BrickletIO16(Device):
             response_expected=response_expected,
         )
 
-    async def get_port_monoflop(self, port: Port, pin: int) -> GetPortMonoflop:
+    async def get_port_monoflop(self, port: _Port | str, pin: int) -> GetPortMonoflop:
         """
         Returns the interrupt bitmask for the specified port as set by :func:`Set Port Interrupt`.
         """
@@ -340,7 +396,7 @@ class BrickletIO16(Device):
         return GetPortMonoflop(*unpack_payload(payload, "B I I"))
 
     async def set_selected_values(
-        self, port: Port, selection_mask: int, value_mask: int, response_expected: bool = True
+        self, port: _Port | str, selection_mask: int, value_mask: int, response_expected: bool = True
     ) -> None:
         """
         Sets the output value (high or low) for a port ("a" or "b" with a bitmask, according to the selection mask. The
@@ -387,7 +443,11 @@ class BrickletIO16(Device):
         return unpack_payload(payload, "I")
 
     async def set_edge_count_config(
-        self, pin: int, edge_type: EdgeType = EdgeType.RISING, debounce: int = 100, response_expected: bool = True
+        self,
+        pin: int,
+        edge_type: _EdgeType | int = EdgeType.RISING,
+        debounce: int = 100,
+        response_expected: bool = True,
     ) -> None:
         """
         Configures the edge counter for the selected pin of port A. Pins 0 and 1 are available for edge counting.
@@ -407,8 +467,7 @@ class BrickletIO16(Device):
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
         assert isinstance(pin, int) and (0 <= pin <= 1)
-        if not isinstance(edge_type, EdgeType):
-            edge_type = EdgeType(edge_type)
+        edge_type = EdgeType(edge_type)
         assert 0 <= debounce <= 255
 
         await self.ipcon.send_request(
@@ -418,7 +477,7 @@ class BrickletIO16(Device):
             response_expected=response_expected,
         )
 
-    async def get_edge_count_config(self, pin: int) -> GetEdgeCountConfig:
+    async def get_edge_count_config(self, pin: int) -> GetEdgeCountConfiguration:
         """
         Returns the edge type and debounce time for the selected pin of port A as set by :func:`Set Edge Count Config`.
 
@@ -434,4 +493,4 @@ class BrickletIO16(Device):
         )
         edge_type, debounce_time = unpack_payload(payload, "B B")
         edge_type = EdgeType(edge_type)
-        return GetEdgeCountConfig(edge_type, debounce_time)
+        return GetEdgeCountConfiguration(edge_type, debounce_time)

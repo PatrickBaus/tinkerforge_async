@@ -1,27 +1,21 @@
 """
 Module for the Tinkerforge PTC Bricklet 2.0 (https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)
-implemented using Python AsyncIO. It does the low-lvel communication with the Tinkerforge ip connection and also handles
-conversion of raw units to SI units.
+implemented using Python asyncio. It does the low-level communication with the Tinkerforge ip connection and also
+handles conversion of raw units to SI units.
 """
 from __future__ import annotations
 
-from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
+from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-from . import IPConnectionAsync
-from .devices import BrickletWithMCU, DeviceIdentifier, GetCallbackConfiguration, ThresholdOption
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
+
+from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
+from .devices import ThresholdOption as Threshold
+from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
-
-GetTemperatureCallbackConfiguration = namedtuple(
-    "GetTemperatureCallbackConfiguration", ["period", "value_has_to_change", "option", "minimum", "maximum"]
-)
-GetResistanceCallbackConfiguration = namedtuple(
-    "GetResistanceCallbackConfiguration", ["period", "value_has_to_change", "option", "minimum", "maximum"]
-)
-GetMovingAverageConfiguration = namedtuple(
-    "GetMovingAverageConfiguration", ["moving_average_length_resistance", "moving_average_length_temperature"]
-)
 
 
 @unique
@@ -36,7 +30,7 @@ class CallbackID(Enum):
 
 
 @unique
-class FunctionID(Enum):
+class FunctionID(_FunctionID):
     """
     The function calls available to this bricklet
     """
@@ -68,17 +62,22 @@ class LineFilter(Enum):
     FREQUENCY_60HZ = 1
 
 
+_LineFilter = LineFilter  # We need the alias for MyPy type hinting
+
+
 @unique
 class WireMode(Enum):
     """
-    Select the measurement setup. Use 3 or wires to eliminate most/all of the
-    resistance of the wire. Use 3 or 4 wire setups when using PT100 and long
-    cables.
+    Select the measurement setup. Use 3 or wires to eliminate most or all of the resistance of the wire. Use 3 or 4
+    wire setups when using PT100 and long cables.
     """
 
     WIRE_2 = 2
     WIRE_3 = 3
     WIRE_4 = 4
+
+
+_WireMode = WireMode  # We need the alias for MyPy type hinting
 
 
 @unique
@@ -89,6 +88,14 @@ class SensorType(Enum):
 
     PT_100 = 0
     PT_1000 = 1
+
+
+_SensorType = SensorType  # We need the alias for MyPy type hinting
+
+
+class GetMovingAverageConfiguration(NamedTuple):
+    moving_average_length_resistance: int
+    moving_average_length_temperature: int
 
 
 class BrickletPtcV2(BrickletWithMCU):
@@ -102,7 +109,7 @@ class BrickletPtcV2(BrickletWithMCU):
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
     FunctionID = FunctionID
-    ThresholdOption = ThresholdOption
+    ThresholdOption = Threshold
     LineFilter = LineFilter
     WireMode = WireMode
     SensorType = SensorType
@@ -120,24 +127,22 @@ class BrickletPtcV2(BrickletWithMCU):
     }
 
     @property
-    def sensor_type(self) -> SensorType:
+    def sensor_type(self) -> _SensorType:
         """
-        Return the type of sensor. Either PT100 oder PT1000 as a SensorType
-        enum.
+        Return the type of sensor. Either PT100 oder PT1000 as a SensorType enum.
         """
         return self.__sensor_type
 
     @sensor_type.setter
-    def sensor_type(self, value: SensorType):
+    def sensor_type(self, value: _SensorType):
         if not isinstance(value, SensorType):
-            self.__sensor_type = SensorType(value)
+            self.__sensor_type: SensorType = SensorType(value)
         else:
             self.__sensor_type = value
 
-    def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: SensorType = SensorType.PT_100) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: _SensorType = SensorType.PT_100) -> None:
         """
-        Creates an object with the unique device ID *uid* and adds it to
-        the IP Connection *ipcon*.
+        Creates an object with the unique device ID *uid* and adds it to the IP connection *ipcon*.
         """
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
@@ -162,7 +167,7 @@ class BrickletPtcV2(BrickletWithMCU):
         sid: int,
         period: int = 0,
         value_has_to_change: bool = False,
-        option: ThresholdOption = ThresholdOption.OFF,
+        option: Threshold = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -188,16 +193,15 @@ class BrickletPtcV2(BrickletWithMCU):
         assert sid in (0, 1, 2)
 
         if sid == 0:
-            return GetCallbackConfiguration(*(await self.get_temperature_callback_configuration()))
+            return await self.get_temperature_callback_configuration()
         elif sid == 1:
-            return GetCallbackConfiguration(*(await self.get_resistance_callback_configuration()))
+            return await self.get_resistance_callback_configuration()
         else:
             raise AttributeError("Configuration of the 'connected callback' is not supported.")
 
     async def get_temperature(self) -> Decimal:
         """
-        Returns the temperature of the connected sensor. The value
-        has a range of -246 to 849 °C and is given in °C/100,
+        Returns the temperature of the connected sensor. The value  has a range of -246 to 849 °C and is given in °C/100,
         e.g. a value of 4223 means that a temperature of 42.23 °C is measured.
 
 
@@ -214,21 +218,19 @@ class BrickletPtcV2(BrickletWithMCU):
         self,
         period: int = 0,
         value_has_to_change: bool = False,
-        option: ThresholdOption = ThresholdOption.OFF,
+        option: Threshold = Threshold.OFF,
         minimum: float | Decimal = Decimal("275.15"),
         maximum: float | Decimal = Decimal("275.15"),
         response_expected=True,
     ) -> None:  # pylint: disable=too-many-arguments
         """
-        The period is the period with which the :cb:`Temperature` callback is triggered
-        periodically. A value of 0 turns the callback off.
+        The period is the period with which the :cb:`Temperature` callback is triggered periodically. A value of 0 turns
+        the callback off.
 
-        If the `value has to change`-parameter is set to true, the callback is only
-        triggered after the value has changed. If the value didn't change
-        within the period, the callback is triggered immediately on change.
+        If the `value has to change`-parameter is set to true, the callback is only triggered after the value has
+        changed. If the value didn't change within the period, the callback is triggered immediately on change.
 
-        If it is set to false, the callback is continuously triggered with the period,
-        independent of the value.
+        If it is set to false, the callback is continuously triggered with the period, independent of the value.
 
         It is furthermore possible to constrain the callback with thresholds.
 
@@ -248,8 +250,8 @@ class BrickletPtcV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        if not isinstance(option, ThresholdOption):
-            option = ThresholdOption(option)
+        if not isinstance(option, Threshold):
+            option = Threshold(option)
         assert period >= 0
 
         await self.ipcon.send_request(
@@ -268,7 +270,7 @@ class BrickletPtcV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_temperature_callback_configuration(self) -> GetTemperatureCallbackConfiguration:
+    async def get_temperature_callback_configuration(self) -> AdvancedCallbackConfiguration:
         """
         Returns the callback configuration as set by :func:`Set Temperature Callback Configuration`.
         """
@@ -276,9 +278,9 @@ class BrickletPtcV2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION, response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
-        option = ThresholdOption(option)
+        option = Threshold(option)
         minimum, maximum = self.__value_to_si_temperature(minimum), self.__value_to_si_temperature(maximum)
-        return GetTemperatureCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def get_resistance(self) -> Decimal:
         """
@@ -290,9 +292,8 @@ class BrickletPtcV2(BrickletWithMCU):
         * Pt1000: resistance = (value * 3900) / 32768
 
 
-        If you want to get the value periodically, it is recommended to use the
-        :cb:`Resistance` callback. You can set the callback configuration
-        with :func:`Set Resistance Callback Configuration`.
+        If you want to get the value periodically, it is recommended to use the :cb:`Resistance` callback. You can set
+        the callback configuration with :func:`Set Resistance Callback Configuration`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_RESISTANCE, response_expected=True
@@ -303,21 +304,19 @@ class BrickletPtcV2(BrickletWithMCU):
         self,
         period: int = 0,
         value_has_to_change: bool = False,
-        option: ThresholdOption = ThresholdOption.OFF,
+        option: Threshold = Threshold.OFF,
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
     ) -> None:  # pylint: disable=too-many-arguments
         """
-        The period is the period with which the :cb:`Resistance` callback is triggered
-        periodically. A value of 0 turns the callback off.
+        The period is the period with which the :cb:`Resistance` callback is triggered periodically. A value of 0 turns
+        the callback off.
 
-        If the `value has to change`-parameter is set to true, the callback is only
-        triggered after the value has changed. If the value didn't change
-        within the period, the callback is triggered immediately on change.
+        If the `value has to change`-parameter is set to true, the callback is only triggered after the value has
+        changed. If the value didn't change within the period, the callback is triggered immediately on change.
 
-        If it is set to false, the callback is continuously triggered with the period,
-        independent of the value.
+        If it is set to false, the callback is continuously triggered with the period, independent of the value.
 
         It is furthermore possible to constrain the callback with thresholds.
 
@@ -337,8 +336,8 @@ class BrickletPtcV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        if not isinstance(option, ThresholdOption):
-            option = ThresholdOption(option)
+        if not isinstance(option, Threshold):
+            option = Threshold(option)
         assert period >= 0
         assert minimum >= 0
         assert maximum >= 0
@@ -359,7 +358,7 @@ class BrickletPtcV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_resistance_callback_configuration(self) -> GetResistanceCallbackConfiguration:
+    async def get_resistance_callback_configuration(self) -> AdvancedCallbackConfiguration:
         """
         Returns the callback configuration as set by :func:`Set Resistance Callback Configuration`.
         """
@@ -367,18 +366,16 @@ class BrickletPtcV2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_RESISTANCE_CALLBACK_CONFIGURATION, response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
-        option = ThresholdOption(option)
+        option = Threshold(option)
         minimum, maximum = self.__value_to_si_resistance(minimum), self.__value_to_si_resistance(maximum)
-        return GetResistanceCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
 
     async def set_noise_rejection_filter(
-        self, line_filter: LineFilter = LineFilter.FREQUENCY_50HZ, response_expected: bool = True
+        self, line_filter: _LineFilter = LineFilter.FREQUENCY_50HZ, response_expected: bool = True
     ):
         """
-        Sets the noise rejection filter to either 50Hz (0) or 60Hz (1).
-        Noise from 50Hz or 60Hz power sources (including
-        harmonics of the AC power's fundamental frequency) is
-        attenuated by 82dB.
+        Sets the noise rejection filter to either 50Hz (0) or 60Hz (1). Noise from 50Hz or 60Hz power sources (including
+        harmonics of the AC power's fundamental frequency) is attenuated by 82dB.
 
         Default value is 0 = 50Hz.
         """
@@ -392,10 +389,9 @@ class BrickletPtcV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_noise_rejection_filter(self) -> LineFilter:
+    async def get_noise_rejection_filter(self) -> _LineFilter:
         """
-        Returns the noise rejection filter option as set by
-        :func:`Set Noise Rejection Filter`
+        Returns the noise rejection filter option as set by :func:`Set Noise Rejection Filter`
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_NOISE_REJECTION_FILTER, response_expected=True
@@ -406,24 +402,21 @@ class BrickletPtcV2(BrickletWithMCU):
         """
         Returns *true* if the sensor is connected correctly.
 
-        If this function
-        returns *false*, there is either no Pt100 or Pt1000 sensor connected,
-        the sensor is connected incorrectly or the sensor itself is faulty.
+        If this function returns *false*, there is either no Pt100 or Pt1000 sensor connected, the sensor is connected
+        incorrectly or the sensor itself is faulty.
 
-        If you want to get the status automatically, it is recommended to use the
-        :cb:`Sensor Connected` callback. You can set the callback configuration
-        with :func:`Set Sensor Connected Callback Configuration`.
+        If you want to get the status automatically, it is recommended to use the :cb:`Sensor Connected` callback. You
+        can set the callback configuration with :func:`Set Sensor Connected Callback Configuration`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_SENSOR_CONNECTED, response_expected=True
         )
         return unpack_payload(payload, "!")
 
-    async def set_wire_mode(self, mode: WireMode = WireMode.WIRE_2, response_expected: bool = True) -> None:
+    async def set_wire_mode(self, mode: _WireMode = WireMode.WIRE_2, response_expected: bool = True) -> None:
         """
-        Sets the wire mode of the sensor. Possible values are 2, 3 and 4 which
-        correspond to 2-, 3- and 4-wire sensors. The value has to match the jumper
-        configuration on the Bricklet.
+        Sets the wire mode of the sensor. Possible values are 2, 3 and 4 which correspond to 2-, 3- and 4-wire sensors.
+        The value has to match the jumper configuration on the Bricklet.
 
         The default value is 2 = 2-wire.
         """
@@ -437,7 +430,7 @@ class BrickletPtcV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_wire_mode(self) -> WireMode:
+    async def get_wire_mode(self) -> _WireMode:
         """
         Returns the wire mode as set by :func:`Set Wire Mode`
         """
@@ -453,20 +446,19 @@ class BrickletPtcV2(BrickletWithMCU):
         response_expected: bool = True,
     ) -> None:
         """
-        Sets the length of a `moving averaging <https://en.wikipedia.org/wiki/Moving_average>`__
-        for the resistance and temperature.
+        Sets the length of a `moving averaging <https://en.wikipedia.org/wiki/Moving_average>`__ for the resistance and
+        temperature.
 
-        Setting the length to 1 will turn the averaging off. With less
-        averaging, there is more noise on the data.
+        Setting the length to 1 will turn the averaging off. With less averaging, there is more noise on the data.
 
         The range for the averaging is 1-1000.
 
-        New data is gathered every 20ms. With a moving average of length 1000 the resulting
-        averaging window has a length of 20s. If you want to do long term measurements the longest
-        moving average will give the cleanest results.
+        New data is gathered every 20ms. With a moving average of length 1000 the resulting averaging window has a
+        length of 20s. If you want to do long term measurements the longest moving average will give the cleanest
+        results.
 
-        The default value is 1 for resistance and 40 for temperature. The default values match
-        the non-changeable averaging settings of the old PTC Bricklet 1.0
+        The default value is 1 for resistance and 40 for temperature. The default values match the non-changeable
+        averaging settings of the old PTC Bricklet 1.0
         """
         assert moving_average_length_resistance > 0
         assert moving_average_length_temperature > 0
@@ -498,10 +490,10 @@ class BrickletPtcV2(BrickletWithMCU):
         self, enabled: bool = False, response_expected: bool = True
     ) -> None:
         """
-        If you enable this callback, the :cb:`Sensor Connected` callback is triggered
-        every time a Pt sensor is connected/disconnected.
+        If you enable this callback, the :cb:`Sensor Connected` callback is triggered every time a Pt sensor is
+        connected/disconnected.
 
-        By default this callback is disabled.
+        By default, this callback is disabled.
 
         .. versionadded:: 2.0.2$nbsp;(Plugin)
         """
@@ -538,10 +530,10 @@ class BrickletPtcV2(BrickletWithMCU):
         """
         Convert to the sensor value to SI units
         """
-        value = Decimal(value) * 390 / 32768
+        result = Decimal(value) * 390 / 32768
         if self.__sensor_type is SensorType.PT_1000:
-            value *= 10
-        return value
+            result *= 10
+        return result
 
     def __si_resistance_to_value(self, value: float | Decimal) -> int:
         if self.__sensor_type is SensorType.PT_1000:
@@ -550,7 +542,7 @@ class BrickletPtcV2(BrickletWithMCU):
 
     async def read_events(
         self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
-    ) -> None:
+    ) -> AsyncGenerator[Event, None]:
         registered_events = set()
         if events:
             for event in events:
@@ -563,17 +555,17 @@ class BrickletPtcV2(BrickletWithMCU):
         if not events and not sids:
             registered_events = set(self.CALLBACK_FORMATS.keys())
 
-        async for header, payload in super().read_events():
+        async for header, payload in super()._read_events():
             try:
-                function_id = CallbackID(header["function_id"])
+                function_id = CallbackID(header.function_id)
             except ValueError:
                 # Invalid header. Drop the packet.
                 continue
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id is CallbackID.TEMPERATURE:
-                    yield self.build_event(0, function_id, self.__value_to_si_temperature(value))
+                    yield Event(self, 0, function_id, self.__value_to_si_temperature(value))
                 elif function_id is CallbackID.RESISTANCE:
-                    yield self.build_event(1, function_id, self.__value_to_si_resistance(value))
+                    yield Event(self, 1, function_id, self.__value_to_si_resistance(value))
                 else:
-                    yield self.build_event(2, function_id, value)
+                    yield Event(self, 2, function_id, value)

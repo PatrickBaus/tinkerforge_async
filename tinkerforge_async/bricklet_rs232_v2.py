@@ -1,21 +1,21 @@
-# -*- coding: utf-8 -*-
 """
 Module for the RS232 Bricklet 2.0
 (https://www.tinkerforge.com/en/doc/Hardware/Bricklets/RS232_V2.html)
 implemented using Python AsyncIO. It does the low-lvel communication with the
 Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+from __future__ import annotations
+
 import asyncio
-from collections import namedtuple
 from enum import Enum, unique
+from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-from .devices import DeviceIdentifier, BrickletWithMCU
+from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
+
 from .ip_connection_helper import pack_payload, unpack_payload
-
-GetConfiguration = namedtuple('Configuration', ['baudrate', 'parity', 'stopbits', 'wordlength', 'flowcontrol'])
-GetBufferConfig = namedtuple('BufferConfig', ['send_buffer_size', 'receive_buffer_size'])
-GetBufferStatus = namedtuple('BufferStatus', ['send_buffer_used', 'receive_buffer_used'])
-GetErrorCount = namedtuple('ErrorCount', ['error_count_overrun', 'error_count_parity'])
 
 
 class Rs232IOError(Exception):
@@ -29,16 +29,18 @@ class CallbackID(Enum):
     """
     The callbacks available to this bricklet
     """
+
     READ = 12
     ERROR_COUNT = 13
     FRAME_READABLE = 16
 
 
 @unique
-class FunctionID(Enum):
+class FunctionID(_FunctionID):
     """
     The callbacks available to this bricklet
     """
+
     WRITE_LOW_LEVEL = 1
     READ_LOW_LEVEL = 2
     ENABLE_READ_CALLBACK = 3
@@ -59,9 +61,13 @@ class Parity(Enum):
     """
     The parity bit used for error correction. NONE disables parity
     """
+
     NONE = 0
     ODD = 1
     EVEN = 2
+
+
+_Parity = Parity  # We need the alias for MyPy type hinting
 
 
 @unique
@@ -70,8 +76,12 @@ class StopBits(Enum):
     The number of empty bits after each byte. Use 2 stop bits for very long
     lines to have more settling time.
     """
+
     ONE = 1
     TWO = 2
+
+
+_StopBits = StopBits  # We need the alias for MyPy type hinting
 
 
 @unique
@@ -79,10 +89,14 @@ class WordLength(Enum):
     """
     The number of bits per data word
     """
+
     LENGTH_5 = 5
     LENGTH_6 = 6
     LENGTH_7 = 7
     LENGTH_8 = 8
+
+
+_WordLength = WordLength
 
 
 @unique
@@ -90,17 +104,44 @@ class FlowControl(Enum):
     """
     Sets out-of-band hardware flow control using the DTR/DSR and RTS/CTS signals
     """
+
     OFF = 0
     SOFTWARE = 1
     HARDWARE = 2
+
+
+_FlowControl = FlowControl
+
+
+class GetConfiguration(NamedTuple):
+    baudrate: int
+    parity: Parity
+    stopbits: StopBits
+    wordlength: WordLength
+    flowcontrol: FlowControl
+
+
+class GetBufferConfig(NamedTuple):
+    send_buffer_size: int
+    receive_buffer_size: int
+
+
+class GetBufferStatus(GetBufferConfig):
+    pass
+
+
+class GetErrorCount(NamedTuple):
+    error_count_overrun: int
+    error_count_parity: int
 
 
 class BrickletRS232V2(BrickletWithMCU):
     """
     Communicates with RS232 devices
     """
+
     DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_RS232_V2
-    DEVICE_DISPLAY_NAME = 'RS232 Bricklet 2.0'
+    DEVICE_DISPLAY_NAME = "RS232 Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
@@ -111,24 +152,26 @@ class BrickletRS232V2(BrickletWithMCU):
     FlowControl = FlowControl
 
     CALLBACK_FORMATS = {
-        CallbackID.READ: 'H H 60B',
-        CallbackID.ERROR_COUNT: 'I I',
-        CallbackID.FRAME_READABLE: 'H',
+        CallbackID.READ: "H H 60B",
+        CallbackID.ERROR_COUNT: "I I",
+        CallbackID.FRAME_READABLE: "H",
     }
 
-    def __init__(self, uid, ipcon):
+    SID_TO_CALLBACK = {0: (CallbackID.READ, CallbackID.ERROR_COUNT, CallbackID.FRAME_READABLE)}
+
+    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
         """
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
-        self.__lock = None    # We create the the lock(), when needed to ensure the loop is running
+        self.__lock: asyncio.Lock | None = None  # We create the lock when needed to ensure the loop is running
         self.__callback_read_buffer = bytearray()
 
         self.api_version = (2, 0, 1)
 
-    async def __read_low_level(self, length):
+    async def __read_low_level(self, length: int) -> tuple[int, bytes]:
         """
         Returns up to *length* characters from receive buffer.
 
@@ -140,14 +183,21 @@ class BrickletRS232V2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.READ_LOW_LEVEL,
-            data=pack_payload((int(length),), 'H'),
-            response_expected=True
+            data=pack_payload((int(length),), "H"),
+            response_expected=True,
         )
-        bytes_read, offset, data, = unpack_payload(payload, 'H H 60B')
-        data = bytes(data[:bytes_read-offset])   # Strip null bytes that are not part of the message
+        bytes_read: int
+        offset: int
+        data: bytes
+        (
+            bytes_read,
+            offset,
+            data,
+        ) = unpack_payload(payload, "H H 60B")
+        data = bytes(data[: bytes_read - offset])  # Strip null bytes that are not part of the message
         return offset, data
 
-    async def __write_low_level(self, message_length, offset, data):
+    async def __write_low_level(self, message_length: int, offset: int, data: bytes) -> int:
         """
         Writes characters to the RS232 interface. The characters can be binary data,
         ASCII or similar is not necessary.
@@ -160,25 +210,29 @@ class BrickletRS232V2(BrickletWithMCU):
         assert len(data) <= 60
         msg = bytearray(data)
         length = len(msg)
-        msg.extend([0] * (60 - length))    # always send 60 bytes
+        msg.extend([0] * (60 - length))  # always send 60 bytes
 
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.WRITE_LOW_LEVEL,
             data=pack_payload(
-              (
-                message_length,
-                int(offset),
-                msg,
-              ), 'H H 60B'),
-            response_expected=True
+                (
+                    message_length,
+                    int(offset),
+                    msg,
+                ),
+                "H H 60B",
+            ),
+            response_expected=True,
         )
-        bytes_written = unpack_payload(payload, 'B')
+        bytes_written = unpack_payload(payload, "B")
         if bytes_written != length:
-            raise Rs232IOError(f'Error writing message {data}, offset: {offset}. {bytes_written} bytes written out of {length} bytes.')
+            raise Rs232IOError(
+                f"Error writing message {data!r}, offset: {offset}. {bytes_written} bytes written out of {length} bytes."
+            )
         return bytes_written
 
-    async def set_read_callback(self, enable=False, response_expected=True):
+    async def set_read_callback(self, enable: bool = False, response_expected: bool = True) -> None:
         """
         Enables/Disables the :cb:`Read` callback. When enabled, it will disable the :cb:`Frame Readable` callback.
 
@@ -186,73 +240,78 @@ class BrickletRS232V2(BrickletWithMCU):
         """
         if enable:
             await self.ipcon.send_request(
-                device=self,
-                function_id=FunctionID.ENABLE_READ_CALLBACK,
-                response_expected=response_expected
+                device=self, function_id=FunctionID.ENABLE_READ_CALLBACK, response_expected=response_expected
             )
         else:
             await self.ipcon.send_request(
-                device=self,
-                function_id=FunctionID.DISABLE_READ_CALLBACK,
-                response_expected=response_expected
+                device=self, function_id=FunctionID.DISABLE_READ_CALLBACK, response_expected=response_expected
             )
 
-    async def is_read_callback_enabled(self):
+    async def is_read_callback_enabled(self) -> bool:
         """
         Returns *true* if the :cb:`Read` callback is enabled,
         *false* otherwise.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.IS_READ_CALLBACK_ENABLED,
-            response_expected=True
+            device=self, function_id=FunctionID.IS_READ_CALLBACK_ENABLED, response_expected=True
         )
 
-        return unpack_payload(payload, '!')
+        return unpack_payload(payload, "!")
 
-    async def set_configuration(self, baudrate=115200, parity=Parity.NONE, stopbits=StopBits.ONE, wordlength=WordLength.LENGTH_8, flowcontrol=FlowControl.OFF, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_configuration(
+        self,
+        baudrate: int = 115200,
+        parity: _Parity | int = Parity.NONE,
+        stopbits: _StopBits | int = StopBits.ONE,
+        wordlength: _WordLength | int = WordLength.LENGTH_8,
+        flowcontrol: _FlowControl | int = FlowControl.OFF,
+        response_expected: bool = True,
+    ) -> None:  # pylint: disable=too-many-arguments
         """
         Sets the configuration for the RS232 communication.
         """
         assert 100 <= baudrate <= 2000000
-        if not isinstance(parity, Parity):
-            parity = Parity(parity)
-        if not isinstance(stopbits, StopBits):
-            stopbits = StopBits(stopbits)
-        if not isinstance(wordlength, WordLength):
-            wordlength = WordLength(wordlength)
-        if not isinstance(flowcontrol, FlowControl):
-            flowcontrol = FlowControl(flowcontrol)
+        parity = Parity(parity)
+        stopbits = StopBits(stopbits)
+        wordlength = WordLength(wordlength)
+        flowcontrol = FlowControl(flowcontrol)
 
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CONFIGURATION,
             data=pack_payload(
-              (
-                int(baudrate),
-                parity.value,
-                stopbits.value,
-                wordlength.value,
-                flowcontrol.value,
-              ), 'I B B B B'),
-            response_expected=response_expected
+                (
+                    int(baudrate),
+                    parity.value,
+                    stopbits.value,
+                    wordlength.value,
+                    flowcontrol.value,
+                ),
+                "I B B B B",
+            ),
+            response_expected=response_expected,
         )
 
-    async def get_configuration(self):
+    async def get_configuration(self) -> GetConfiguration:
         """
         Returns the configuration as set by :func:`Set Configuration`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_CONFIGURATION,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_CONFIGURATION, response_expected=True
         )
 
-        baudrate, parity, stopbits, wordlength, flowcontrol = unpack_payload(payload, 'I B B B B')
-        parity, stopbits, wordlength, flowcontrol = Parity(parity), StopBits(stopbits), WordLength(wordlength), FlowControl(flowcontrol)
-        return GetConfiguration(baudrate, parity, stopbits, wordlength, flowcontrol)
+        baudrate, parity, stopbits, wordlength, flowcontrol = unpack_payload(payload, "I B B B B")
+        return GetConfiguration(
+            baudrate,
+            Parity(parity),
+            StopBits(stopbits),
+            WordLength(wordlength),
+            FlowControl(flowcontrol),
+        )
 
-    async def set_buffer_config(self, send_buffer_size=5120, receive_buffer_size=5120, response_expected=True):
+    async def set_buffer_config(
+        self, send_buffer_size: int = 5120, receive_buffer_size: int = 5120, response_expected: bool = True
+    ) -> None:
         """
         Sets the send and receive buffer size in byte. In total the buffers have to be
         10240 byte (10KiB) in size, the minimum buffer size is 1024 byte (1KiB) for each.
@@ -266,65 +325,55 @@ class BrickletRS232V2(BrickletWithMCU):
         """
         assert 1024 <= send_buffer_size <= 9216
         assert 1024 <= receive_buffer_size <= 9216
-        assert send_buffer_size+receive_buffer_size <= 10240
+        assert send_buffer_size + receive_buffer_size <= 10240
 
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_BUFFER_CONFIG,
-            data=pack_payload(
-              (
-                int(send_buffer_size),
-                int(receive_buffer_size)
-              ), 'H H'),
-            response_expected=response_expected
+            data=pack_payload((int(send_buffer_size), int(receive_buffer_size)), "H H"),
+            response_expected=response_expected,
         )
 
-    async def get_buffer_config(self):
+    async def get_buffer_config(self) -> GetBufferConfig:
         """
         Returns the buffer configuration as set by :func:`Set Buffer Config`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_BUFFER_CONFIG,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_BUFFER_CONFIG, response_expected=True
         )
 
-        return GetBufferConfig(*unpack_payload(payload, 'H H'))
+        return GetBufferConfig(*unpack_payload(payload, "H H"))
 
-    async def get_buffer_status(self):
+    async def get_buffer_status(self) -> GetBufferStatus:
         """
-        Returns the currently used bytes for the send and received buffer.
+        Returns the number of bytes in use by the send and receive buffer.
 
         See :func:`Set Buffer Config` for buffer size configuration.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_BUFFER_STATUS,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_BUFFER_STATUS, response_expected=True
         )
 
-        return GetBufferStatus(*unpack_payload(payload, 'H H'))
+        return GetBufferStatus(*unpack_payload(payload, "H H"))
 
-    async def get_error_count(self):
+    async def get_error_count(self) -> GetErrorCount:
         """
-        Returns the currently used bytes for the send and received buffer.
-
-        See :func:`Set Buffer Config` for buffer size configuration.
+        Returns the current number of overrun and parity errors.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_ERROR_COUNT,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_ERROR_COUNT, response_expected=True
         )
 
-        return GetErrorCount(*unpack_payload(payload, 'I I'))
+        return GetErrorCount(*unpack_payload(payload, "I I"))
 
-    async def set_frame_readable_callback_configuration(self, frame_size=0, response_expected=True):
+    async def set_frame_readable_callback_configuration(
+        self, frame_size: int = 0, response_expected: bool = True
+    ) -> None:
         """
         Configures the :cb:`Frame Readable` callback. The frame size is the number of bytes, that have to be readable to trigger the callback.
         A frame size of 0 disables the callback. A frame size greater than 0 enables the callback and disables the :cb:`Read` callback.
 
-        By default the callback is disabled.
+        By default, the callback is disabled.
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
@@ -333,25 +382,23 @@ class BrickletRS232V2(BrickletWithMCU):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_FRAME_READABLE_CALLBACK_CONFIGURATION,
-            data=pack_payload((int(frame_size),), 'H'),
-            response_expected=response_expected
+            data=pack_payload((int(frame_size),), "H"),
+            response_expected=response_expected,
         )
 
-    async def get_frame_readable_callback_configuration(self):
+    async def get_frame_readable_callback_configuration(self) -> int:
         """
         Returns the callback configuration as set by :func:`Set Frame Readable Callback Configuration`.
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_FRAME_READABLE_CALLBACK_CONFIGURATION,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_FRAME_READABLE_CALLBACK_CONFIGURATION, response_expected=True
         )
 
-        return unpack_payload(payload, 'H')
+        return unpack_payload(payload, "H")
 
-    async def write(self, message):
+    async def write(self, message: bytes | str) -> int:
         """
         Writes characters to the RS232 interface. The characters can be binary data,
         ASCII or similar is not necessary.
@@ -361,19 +408,19 @@ class BrickletRS232V2(BrickletWithMCU):
         See :func:`Set Configuration` for configuration possibilities
         regarding baud rate, parity and so on.
         """
-        try:
-            message = message.encode('utf-8')
-        except AttributeError:
-            pass    # already a bytestring
+        if not isinstance(message, bytes):
+            message = message.encode("utf-8")
         if len(message) > 65535:
-            raise RuntimeError('Message length must not exceed 65535 bytes.')
+            raise RuntimeError("Message length must not exceed 65535 bytes.")
 
         # Split the message in chunks of 60 bytes
         try:
-            chunks = [message[i:i+60] for i in range(0, len(message), 60)]
+            chunks = [message[i : i + 60] for i in range(0, len(message), 60)]
         except ValueError:
             # Raised if the length is 0
-            chunks = ['', ]
+            chunks = [
+                b"",
+            ]
 
         if self.__lock is None:
             self.__lock = asyncio.Lock()
@@ -382,21 +429,25 @@ class BrickletRS232V2(BrickletWithMCU):
         bytes_written = 0
         async with self.__lock:
             for count, chunk in enumerate(chunks):
-                bytes_written += await self.__write_low_level(message_length=len(message), offset=count*60, data=chunk)
+                bytes_written += await self.__write_low_level(
+                    message_length=len(message), offset=count * 60, data=chunk
+                )
 
         return bytes_written
 
-    async def __find_first_block(self, length):
+    async def __find_first_block(self, length: int) -> tuple[int, bytes]:
         """
         Read the RS232 interface until we find a chunk with id 0, the start of a new
         transaction.
         """
-        while 'buffer not cleared':
+        while "buffer not cleared":
             offset, data = await self.__read_low_level(length)
             if offset == 0:
                 return offset, data
 
-    async def read(self, length):
+        assert False, "unreachable"
+
+    async def read(self, length: int) -> bytes:
         """
         Returns up to *length* characters from receive buffer.
 
@@ -406,7 +457,7 @@ class BrickletRS232V2(BrickletWithMCU):
         See :func:`Enable Read Callback` and :cb:`Read` callback.
         """
         if length == 0:
-            return b''
+            return b""
 
         if self.__lock is None:
             self.__lock = asyncio.Lock()
@@ -427,34 +478,48 @@ class BrickletRS232V2(BrickletWithMCU):
                 if len(data) == 0 and offset == 0:
                     # The bricklet returns 0, if there is no more data
                     break
-                if offset != i*60:
+                if offset != i * 60:
                     # If someone else is reading our stream, they will snatch a block.
                     # Abort the read and throw an error. A new call to read() will clean up the
                     # mess and drop all remaining chunks.
-                    raise Rs232IOError(f'Read out of sync. Wanted chunk {i}, got chunk {offset//60}. Data: {data}.')
+                    raise Rs232IOError(f"Read out of sync. Wanted chunk {i}, got chunk {offset//60}. Data: {data!r}.")
                 result.extend(data)
             return bytes(result)
 
-    async def read_events(self):
-        async for header, payload in super().read_events():
+    async def read_events(
+        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+    ) -> AsyncGenerator[Event, None]:
+        registered_events = set()
+        if events:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+        if sids is not None:
+            for sid in sids:
+                for callback in self.SID_TO_CALLBACK.get(sid, []):
+                    registered_events.add(callback)
+
+        if events is None and sids is None:
+            registered_events = set(self.CALLBACK_FORMATS.keys())
+
+        async for header, payload in super()._read_events():
             try:
-                function_id = CallbackID(header['function_id'])
+                function_id = CallbackID(header.function_id)
             except ValueError:
                 # Invalid header. Drop the packet.
                 continue
-            if function_id in self._registered_events:
+            if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id is CallbackID.READ:
                     final_size, offset, data = value
                     if final_size > offset + 60:
                         self.__callback_read_buffer.extend(data)
                     else:
-                        self.__callback_read_buffer.extend(data[:final_size-offset])
+                        self.__callback_read_buffer.extend(data[: final_size - offset])
                     if len(self.__callback_read_buffer) == final_size:
                         result = bytes(self.__callback_read_buffer)
                         self.__callback_read_buffer = bytearray()
-                        yield self.build_event(0, function_id, result)
+                        yield Event(self, 0, function_id, result)
                     else:
                         continue
                 else:
-                    yield self.build_event(1, function_id, value)
+                    yield Event(self, 1, function_id, value)

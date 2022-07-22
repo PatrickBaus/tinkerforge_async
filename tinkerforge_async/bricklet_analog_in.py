@@ -1,20 +1,22 @@
-# -*- coding: utf-8 -*-
 """
-Module for the Tinkerforge Analog In Bricklet
-(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)
-implemented using Python AsyncIO. It does the low-lvel communication with the
-Tinkerforge ip connection and also handles conversion of raw units to SI units.
+Module for the Tinkerforge Analog In Bricklet (https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)
+implemented using Python asyncio. It does the low-level communication with the Tinkerforge ip connection and also
+handles conversion of raw units to SI units.
 """
+from __future__ import annotations
+
 import asyncio
-from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
+from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-from .devices import DeviceIdentifier, Device, ThresholdOption, GetCallbackConfiguration
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
+
+from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
+from .devices import ThresholdOption as Threshold
+from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
-
-GetVoltageCallbackThreshold = namedtuple('VoltageCallbackThreshold', ['option', 'minimum', 'maximum'])
-GetAnalogValueCallbackThreshold = namedtuple('AnalogValueCallbackThreshold', ['option', 'minimum', 'maximum'])
 
 
 @unique
@@ -22,6 +24,7 @@ class CallbackID(Enum):
     """
     The callbacks available to this bricklet
     """
+
     VOLTAGE = 13
     ANALOG_VALUE = 14
     VOLTAGE_REACHED = 15
@@ -29,10 +32,11 @@ class CallbackID(Enum):
 
 
 @unique
-class FunctionID(Enum):
+class FunctionID(_FunctionID):
     """
     The function calls available to this bricklet
     """
+
     GET_VOLTAGE = 1
     GET_ANALOG_VALUE = 2
     SET_VOLTAGE_CALLBACK_PERIOD = 3
@@ -54,9 +58,9 @@ class FunctionID(Enum):
 @unique
 class Range(Enum):
     """
-    These ranges define the maximum voltage before the sensor goes out of
-    range.
+    These ranges define the maximum voltage before the sensor goes out of range.
     """
+
     AUTOMATIC = 0
     UP_TO_6V = 1
     UP_TO_10V = 2
@@ -65,32 +69,42 @@ class Range(Enum):
     UP_TO_3V = 5
 
 
+_Range = Range  # We need the alias for MyPy type hinting
+
+
+class GetAnalogValueCallbackThreshold(NamedTuple):
+    option: Threshold
+    minimum: int
+    maximum: int
+
+
 class BrickletAnalogIn(Device):
     """
     Measures DC voltage between 0V and 45V
     """
+
     DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_ANALOG_IN
-    DEVICE_DISPLAY_NAME = 'Analog In Bricklet'
+    DEVICE_DISPLAY_NAME = "Analog In Bricklet"
 
     # Convenience imports, so that the user does not need to additionally import them
     CallbackID = CallbackID
     FunctionID = FunctionID
     Range = Range
-    ThresholdOption = ThresholdOption
+    ThresholdOption = Threshold
 
     CALLBACK_FORMATS = {
-        CallbackID.VOLTAGE: 'H',
-        CallbackID.ANALOG_VALUE: 'H',
-        CallbackID.VOLTAGE_REACHED: 'H',
-        CallbackID.ANALOG_VALUE_REACHED: 'H',
+        CallbackID.VOLTAGE: "H",
+        CallbackID.ANALOG_VALUE: "H",
+        CallbackID.VOLTAGE_REACHED: "H",
+        CallbackID.ANALOG_VALUE_REACHED: "H",
     }
 
     SID_TO_CALLBACK = {
         0: (CallbackID.VOLTAGE, CallbackID.VOLTAGE_REACHED),
-        1: (CallbackID.ANALOG_VALUE, CallbackID.ANALOG_VALUE_REACHED)
+        1: (CallbackID.ANALOG_VALUE, CallbackID.ANALOG_VALUE_REACHED),
     }
 
-    def __init__(self, uid, ipcon):
+    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -99,7 +113,7 @@ class BrickletAnalogIn(Device):
 
         self.api_version = (2, 0, 3)
 
-    async def get_value(self, sid):
+    async def get_value(self, sid: int) -> int | Decimal:
         assert sid in (0, 1)
 
         if sid == 0:
@@ -107,7 +121,16 @@ class BrickletAnalogIn(Device):
         else:
             return await self.get_analog_value()
 
-    async def set_callback_configuration(self, sid, period=0, value_has_to_change=False, option=ThresholdOption.OFF, minimum=None, maximum=None, response_expected=True):  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(
+        self,
+        sid: int,
+        period: int = 0,
+        value_has_to_change: bool = False,
+        option: Threshold | int = Threshold.OFF,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
+        response_expected: bool = True,
+    ) -> None:  # pylint: disable=too-many-arguments
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
@@ -116,123 +139,114 @@ class BrickletAnalogIn(Device):
         if sid == 0:
             await asyncio.gather(
                 self.set_voltage_callback_period(period, response_expected),
-                self.set_voltage_callback_threshold(option, minimum, maximum, response_expected)
+                self.set_voltage_callback_threshold(option, minimum, maximum, response_expected),
             )
         else:
             await asyncio.gather(
                 self.set_analog_value_callback_period(period, response_expected),
-                self.set_analog_value_callback_threshold(option, minimum, maximum, response_expected)
+                self.set_analog_value_callback_threshold(option, minimum, maximum, response_expected),
             )
 
-    async def get_callback_configuration(self, sid):
+    async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         assert sid in (0, 1)
 
         if sid == 0:
             period, config = await asyncio.gather(
-                self.get_voltage_callback_period(),
-                self.get_voltage_callback_threshold()
+                self.get_voltage_callback_period(), self.get_voltage_callback_threshold()
             )
         else:
             period, config = await asyncio.gather(
-                self.get_analog_value_callback_period(),
-                self.get_analog_value_callback_threshold()
+                self.get_analog_value_callback_period(), self.get_analog_value_callback_threshold()
             )
-        return GetCallbackConfiguration(period, True, *config)
+        return AdvancedCallbackConfiguration(period, True, *config)
 
-    async def get_voltage(self):
+    async def get_voltage(self) -> Decimal:
         """
-        Returns the voltage of the sensor. The resolution between 0 and 6V is about 2mV.
-        Between 6 and 45V the resolution is about 10mV.
+        Returns the voltage of the sensor. The resolution between 0 and 6V is about 2mV. Between 6 and 45V the
+        resolution is about 10mV.
 
-        If you want to get the voltage periodically, it is recommended to use the
-        :cb:`Voltage` callback and set the period with
-        :func:`Set Voltage Callback Period`.
+        If you want to get the voltage periodically, it is recommended to use the :cb:`Voltage` callback and set the
+        period with :func:`Set Voltage Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_VOLTAGE,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_VOLTAGE, response_expected=True
         )
-        return self.__value_to_si(unpack_payload(payload, 'H'))
+        return self.__value_to_si(unpack_payload(payload, "H"))
 
-    async def get_analog_value(self):
+    async def get_analog_value(self) -> int:
         """
         Returns the value as read by a 12-bit analog-to-digital converter.
 
         .. note::
-         The value returned by :func:`Get Voltage` is averaged over several samples
-         to yield less noise, while :func:`Get Analog Value` gives back raw
-         unfiltered analog values. The only reason to use :func:`Get Analog Value` is,
-         if you need the full resolution of the analog-to-digital converter.
+         The value returned by :func:`Get Voltage` is averaged over several samples to yield less noise, while
+         :func:`Get Analog Value` gives back raw unfiltered analog values. The only reason to use
+         :func:`Get Analog Value` is, if you need the full resolution of the analog-to-digital converter.
 
-        If you want the analog value periodically, it is recommended to use the
-        :cb:`Analog Value` callback and set the period with
-        :func:`Set Analog Value Callback Period`.
+        If you want the analog value periodically, it is recommended to use the :cb:`Analog Value` callback and set the
+        period with :func:`Set Analog Value Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_ANALOG_VALUE,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_ANALOG_VALUE, response_expected=True
         )
-        return unpack_payload(payload, 'H')
+        return unpack_payload(payload, "H")
 
-    async def set_voltage_callback_period(self, period=0, response_expected=True):
+    async def set_voltage_callback_period(self, period: int = 0, response_expected: bool = True) -> None:
         """
-        Sets the period with which the :cb:`Voltage` callback is triggered
-        periodically. A value of 0 turns the callback off.
+        Sets the period with which the :cb:`Voltage` callback is triggered periodically. A value of 0 turns the callback
+        off.
 
-        The :cb:`Voltage` callback is only triggered if the voltage has changed since
-        the last triggering.
+        The :cb:`Voltage` callback is only triggered if the voltage has changed since the last triggering.
         """
         assert period >= 0
 
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_VOLTAGE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), 'I'),
+            data=pack_payload((int(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_voltage_callback_period(self):
+    async def get_voltage_callback_period(self) -> int:
         """
         Returns the period as set by :func:`Set Voltage Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_VOLTAGE_CALLBACK_PERIOD,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_VOLTAGE_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, 'I')
+        return unpack_payload(payload, "I")
 
-    async def set_analog_value_callback_period(self, period=0, response_expected=True):
+    async def set_analog_value_callback_period(self, period: int = 0, response_expected: bool = True) -> None:
         """
-        Sets the period with which the :cb:`Analog Value` callback is triggered
-        periodically. A value of 0 turns the callback off.
+        Sets the period with which the :cb:`Analog Value` callback is triggered periodically. A value of 0 turns the
+        callback off.
 
-        The :cb:`Analog Value` callback is only triggered if the analog value has
-        changed since the last triggering.
+        The :cb:`Analog Value` callback is only triggered if the analog value has changed since the last triggering.
         """
         assert period >= 0
 
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), 'I'),
+            data=pack_payload((int(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_analog_value_callback_period(self):
+    async def get_analog_value_callback_period(self) -> int:
         """
         Returns the period as set by :func:`Set Analog Value Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_ANALOG_VALUE_CALLBACK_PERIOD,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_ANALOG_VALUE_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, 'I')
+        return unpack_payload(payload, "I")
 
-    async def set_voltage_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_voltage_callback_threshold(
+        self,
+        option: Threshold | int = Threshold.OFF,
+        minimum: float | Decimal = 0,
+        maximum: float | Decimal = 0,
+        response_expected: bool = True,
+    ) -> None:
         """
         Sets the thresholds for the :cb:`Voltage Reached` callback.
 
@@ -248,36 +262,37 @@ class BrickletAnalogIn(Device):
          "'<'",    "Callback is triggered when the voltage is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the voltage is greater than the min value (max is ignored)"
         """
-        if not isinstance(option, ThresholdOption):
-            option = ThresholdOption(option)
+        if not isinstance(option, Threshold):
+            option = Threshold(option)
 
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_VOLTAGE_CALLBACK_THRESHOLD,
             data=pack_payload(
-              (
-                option.value.encode('ascii'),
-                self.__si_to_value(minimum),
-                self.__si_to_value(maximum)
-              ), 'c H H'),
-            response_expected=response_expected
+                (option.value.encode("ascii"), self.__si_to_value(minimum), self.__si_to_value(maximum)), "c H H"
+            ),
+            response_expected=response_expected,
         )
 
-    async def get_voltage_callback_threshold(self):
+    async def get_voltage_callback_threshold(self) -> BasicCallbackConfiguration:
         """
         Returns the threshold as set by :func:`Set Voltage Callback Threshold`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_VOLTAGE_CALLBACK_THRESHOLD,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_VOLTAGE_CALLBACK_THRESHOLD, response_expected=True
         )
-        option, minimum, maximum = unpack_payload(payload, 'c H H')
-        option = ThresholdOption(option)
+        option, minimum, maximum = unpack_payload(payload, "c H H")
+        option = Threshold(option)
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
-        return GetVoltageCallbackThreshold(option, minimum, maximum)
+        return BasicCallbackConfiguration(option, minimum, maximum)
 
-    async def set_analog_value_callback_threshold(self, option=ThresholdOption.OFF, minimum=0, maximum=0, response_expected=True):
+    async def set_analog_value_callback_threshold(
+        self,
+        option: Threshold | int = Threshold.OFF,
+        minimum: float | Decimal = 0,
+        maximum: float | Decimal = 0,
+        response_expected: bool = True,
+    ) -> None:
         """
         Sets the thresholds for the :cb:`Analog Value Reached` callback.
 
@@ -293,30 +308,28 @@ class BrickletAnalogIn(Device):
          "'<'",    "Callback is triggered when the analog value is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the analog value is greater than the min value (max is ignored)"
         """
-        if not isinstance(option, ThresholdOption):
-            option = ThresholdOption(option)
+        if not isinstance(option, Threshold):
+            option = Threshold(option)
 
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_THRESHOLD,
-            data=pack_payload((option.value.encode('ascii'), minimum, maximum), 'c H H'),
-            response_expected=response_expected
+            data=pack_payload((option.value.encode("ascii"), minimum, maximum), "c H H"),
+            response_expected=response_expected,
         )
 
-    async def get_analog_value_callback_threshold(self):
+    async def get_analog_value_callback_threshold(self) -> BasicCallbackConfiguration:
         """
         Returns the threshold as set by :func:`Set Analog Value Callback Threshold`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_ANALOG_VALUE_CALLBACK_THRESHOLD,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_ANALOG_VALUE_CALLBACK_THRESHOLD, response_expected=True
         )
-        option, minimum, maximum = unpack_payload(payload, 'c H H')
-        option = ThresholdOption(option)
-        return GetAnalogValueCallbackThreshold(option, minimum, maximum)
+        option, minimum, maximum = unpack_payload(payload, "c H H")
+        option = Threshold(option)
+        return BasicCallbackConfiguration(option, minimum, maximum)
 
-    async def set_debounce_period(self, debounce_period=100, response_expected=True):
+    async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
         """
         Sets the period with which the threshold callbacks
 
@@ -335,22 +348,20 @@ class BrickletAnalogIn(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((int(debounce_period),), 'I'),
-            response_expected=response_expected
+            data=pack_payload((int(debounce_period),), "I"),
+            response_expected=response_expected,
         )
 
-    async def get_debounce_period(self):
+    async def get_debounce_period(self) -> int:
         """
-        Returns the debounce period as set by :func:`Set Debounce Period`.
+        Returns the debounce-period as set by :func:`Set Debounce Period`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_DEBOUNCE_PERIOD,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_DEBOUNCE_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, 'I')
+        return unpack_payload(payload, "I")
 
-    async def set_range(self, value=Range.AUTOMATIC, response_expected=True):
+    async def set_range(self, value: _Range | int = Range.AUTOMATIC, response_expected: bool = True):
         """
         Sets the measurement range. Possible ranges:
 
@@ -369,30 +380,27 @@ class BrickletAnalogIn(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_RANGE,
-            data=pack_payload((value.value,), 'B'),
-            response_expected=response_expected
+            data=pack_payload((value.value,), "B"),
+            response_expected=response_expected,
         )
 
-    async def get_range(self):
+    async def get_range(self) -> _Range:
         """
         Returns the measurement range as set by :func:`Set Range`.
 
         .. versionadded:: 2.0.1$nbsp;(Plugin)
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_RANGE,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_RANGE, response_expected=True
         )
-        return Range(unpack_payload(payload, 'B'))
+        return Range(unpack_payload(payload, "B"))
 
-    async def set_averaging(self, average=50, response_expected=True):
+    async def set_averaging(self, average: int = 50, response_expected: bool = True) -> None:
         """
         Set the length of a averaging for the voltage value.
 
-        Setting the length to 0 will turn the averaging completely off. If the
-        averaging is off, there is more noise on the data, but the data is without
-        delay.
+        Setting the length to 0 will turn the averaging completely off. If the averaging is off, there is more noise on
+        the data, but the data is without delay.
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
@@ -401,25 +409,23 @@ class BrickletAnalogIn(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_AVERAGING,
-            data=pack_payload((int(average),), 'B'),
-            response_expected=response_expected
+            data=pack_payload((int(average),), "B"),
+            response_expected=response_expected,
         )
 
-    async def get_averaging(self):
+    async def get_averaging(self) -> int:
         """
         Returns the averaging configuration as set by :func:`Set Averaging`.
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
         _, payload = await self.ipcon.send_request(
-            device=self,
-            function_id=FunctionID.GET_AVERAGING,
-            response_expected=True
+            device=self, function_id=FunctionID.GET_AVERAGING, response_expected=True
         )
-        return unpack_payload(payload, 'B')
+        return unpack_payload(payload, "B")
 
     @staticmethod
-    def __value_to_si(value):
+    def __value_to_si(value: int) -> Decimal:
         """
         Convert to the sensor value to SI units
         """
@@ -429,16 +435,31 @@ class BrickletAnalogIn(Device):
     def __si_to_value(value):
         return int(value * 1000)
 
-    async def read_events(self):
-        async for header, payload in super().read_events():
+    async def read_events(
+        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+    ) -> AsyncGenerator[Event, None]:
+        registered_events = set()
+        if events:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+        if sids is not None:
+            for sid in sids:
+                for callback in self.SID_TO_CALLBACK.get(sid, []):
+                    registered_events.add(callback)
+
+        if not events and not sids:
+            registered_events = set(self.CALLBACK_FORMATS.keys())
+
+        async for header, payload in super()._read_events():
             try:
-                function_id = CallbackID(header['function_id'])
+                function_id = CallbackID(header.function_id)
             except ValueError:
                 # Invalid header. Drop the packet.
                 continue
-            value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-            if function_id in (CallbackID.VOLTAGE, CallbackID.VOLTAGE_REACHED):
-                yield self.build_event(0, function_id, self.__value_to_si(value))
-            else:
-                # If it is not a voltage callback there is no need for conversion
-                yield self.build_event(1, function_id, value)
+            if function_id in registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id in (CallbackID.VOLTAGE, CallbackID.VOLTAGE_REACHED):
+                    yield Event(self, 0, function_id, self.__value_to_si(value))
+                else:
+                    # If it is not a voltage callback there is no need for conversion
+                    yield Event(self, 1, function_id, value)

@@ -1,6 +1,8 @@
 """
 Some helper functions to encode and decode Tinkerforge protocol payloads.
 """
+from __future__ import annotations
+
 import math
 import struct
 from typing import Any
@@ -112,14 +114,14 @@ def unpack_payload(data: bytes, form: str) -> Any:
             if len(x) > 1:
                 ret.append(tuple(map(lambda item: chr(ord(item)), x)))
             else:
-                ret.append(chr(ord(x[0])))
+                ret.append(chr(ord(x[0])))  # type: ignore
         elif "s" in f:
             # convert from byte-array to string, removing all null bytes
             # Note: This works only in Python 3
             s = str(x[0], "latin-1").partition("\0")[0]
 
             # strip null bytes
-            ret.append(s)
+            ret.append(s)  # type: ignore
 
         elif len(x) > 1:
             ret.append(x)
