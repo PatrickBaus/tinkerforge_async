@@ -8,115 +8,278 @@ from __future__ import annotations
 import asyncio
 import re
 import warnings
-from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, AsyncGenerator, Iterable, NamedTuple
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
 
+from .devices import BasicCallbackConfiguration
 from .devices import BrickletPort as Port
-from .devices import DeviceIdentifier, DeviceWithMCU
+from .devices import DeviceIdentifier, DeviceWithMCU, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
 
-GetChibiErrorLog = namedtuple("GetChibiErrorLog", ["underrun", "crc_error", "no_ack", "overflow"])
-GetRS485Configuration = namedtuple("GetRS485Configuration", ["speed", "parity", "stopbits"])
-GetWifiConfiguration = namedtuple(
-    "GetWifiConfiguration", ["ssid", "connection", "ip", "subnet_mask", "gateway", "port"]
-)
-GetWifiEncryption = namedtuple(
-    "GetWifiEncryption",
-    [
-        "encryption",
-        "key_index",
-        "eap_options",
-        "ca_certificate_length",
-        "client_certificate_length",
-        "private_key_length",
-    ],
-)
-GetWifiStatus = namedtuple(
-    "GetWifiStatus",
-    ["mac_address", "bssid", "channel", "rssi", "ip", "subnet_mask", "gateway", "rx_count", "tx_count", "state"],
-)
-GetWifiCertificate = namedtuple("GetWifiCertificate", ["data", "data_length"])
-GetWifiBufferInfo = namedtuple("GetWifiBufferInfo", ["overflow", "low_watermark", "used"])
-GetStackCurrentCallbackThreshold = namedtuple("GetStackCurrentCallbackThreshold", ["option", "minimum", "maximum"])
-GetStackVoltageCallbackThreshold = namedtuple("GetStackVoltageCallbackThreshold", ["option", "minimum", "maximum"])
-GetUSBVoltageCallbackThreshold = namedtuple("GetUSBVoltageCallbackThreshold", ["option", "minimum", "maximum"])
-GetEthernetConfiguration = namedtuple(
-    "GetEthernetConfiguration", ["connection", "ip", "subnet_mask", "gateway", "port"]
-)
-GetEthernetStatus = namedtuple(
-    "GetEthernetStatus", ["mac_address", "ip", "subnet_mask", "gateway", "rx_count", "tx_count", "hostname"]
-)
-GetEthernetWebsocketConfiguration = namedtuple("GetEthernetWebsocketConfiguration", ["sockets", "port"])
-ReadWifi2SerialPort = namedtuple("ReadWifi2SerialPort", ["data", "result"])
-GetWifi2Configuration = namedtuple(
-    "GetWifi2Configuration", ["port", "websocket_port", "website_port", "phy_mode", "sleep_mode", "website"]
-)
-GetWifi2Status = namedtuple(
-    "GetWifi2Status",
-    [
-        "client_enabled",
-        "client_status",
-        "client_ip",
-        "client_subnet_mask",
-        "client_gateway",
-        "client_mac_address",
-        "client_rx_count",
-        "client_tx_count",
-        "client_rssi",
-        "ap_enabled",
-        "ap_ip",
-        "ap_subnet_mask",
-        "ap_gateway",
-        "ap_mac_address",
-        "ap_rx_count",
-        "ap_tx_count",
-        "ap_connected_count",
-    ],
-)
-GetWifi2ClientConfiguration = namedtuple(
-    "GetWifi2ClientConfiguration", ["enable", "ssid", "ip", "subnet_mask", "gateway", "mac_address", "bssid"]
-)
-GetWifi2APConfiguration = namedtuple(
-    "GetWifi2APConfiguration",
-    ["enable", "ssid", "ip", "subnet_mask", "gateway", "encryption", "hidden", "channel", "mac_address"],
-)
-GetWifi2MeshConfiguration = namedtuple(
-    "GetWifi2MeshConfiguration",
-    [
-        "enable",
-        "root_ip",
-        "root_subnet_mask",
-        "root_gateway",
-        "router_bssid",
-        "group_id",
-        "group_ssid_prefix",
-        "gateway_ip",
-        "gateway_port",
-    ],
-)
-GetWifi2MeshCommonStatus = namedtuple(
-    "GetWifi2MeshCommonStatus", ["status", "root_node", "root_candidate", "connected_nodes", "rx_count", "tx_count"]
-)
-GetWifi2MeshClientStatus = namedtuple(
-    "GetWifi2MeshClientStatus", ["hostname", "ip", "subnet_mask", "gateway", "mac_address"]
-)
-GetWifi2MeshAPStatus = namedtuple("GetWifi2MeshAPStatus", ["ssid", "ip", "subnet_mask", "gateway", "mac_address"])
-GetSPITFPBaudrateConfig = namedtuple("GetSPITFPBaudrateConfig", ["enable_dynamic_baudrate", "minimum_dynamic_baudrate"])
-GetSPITFPErrorCount = namedtuple(
-    "GetSPITFPErrorCount",
-    ["error_count_ack_checksum", "error_count_message_checksum", "error_count_frame", "error_count_overflow"],
-)
-GetProtocol1BrickletName = namedtuple("GetProtocol1BrickletName", ["protocol_version", "firmware_version", "name"])
-GetIdentity = namedtuple(
-    "GetIdentity", ["uid", "connected_uid", "position", "hardware_version", "firmware_version", "device_identifier"]
-)
+
+class GetChibiErrorLog(NamedTuple):
+    underrun: int
+    no_ack: int
+    crc_error: int
+    overflow: int
+
+
+class GetRS485Configuration(NamedTuple):
+    speed: int
+    parity: Rs485Parity
+    stopbits: int
+
+
+class GetWifiConfiguration(NamedTuple):
+    ssid: bytes
+    connection: WifiConnection
+    ip: tuple[int, int, int, int]
+    subnet_mask: tuple[int, int, int, int]
+    gateway: tuple[int, int, int, int]
+    port: int
+
+
+class GetWifiEncryption(NamedTuple):
+    encryption: WifiEncryptionMode
+    key_index: bytes
+    eap_options: EapOptions
+    ca_certificate_length: int
+    client_certificate_length: int
+    private_key_length: int
+
+
+class GetWifiStatus(NamedTuple):
+    mac_address: tuple[int, int, int, int, int, int]
+    bssid: tuple[int, int, int, int, int, int]
+    channel: int
+    rssi: int
+    ip: tuple[int, int, int, int]
+    subnet_mask: tuple[int, int, int, int]
+    gateway: tuple[int, int, int, int]
+    rx_count: int
+    tx_count: int
+    state: WifiState
+
+
+class GetWifiCertificate(NamedTuple):
+    data: tuple[
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+    ]
+    data_length: int
+
+
+class GetWifiBufferInfo(NamedTuple):
+    overflow: int
+    low_watermark: int
+    used: int
+
+
+class GetEthernetConfiguration(NamedTuple):
+    connection: EthernetConnection
+    ip: tuple[int, int, int, int]
+    subnet_mask: tuple[int, int, int, int]
+    gateway: tuple[int, int, int, int]
+    port: int
+
+
+class GetEthernetStatus(NamedTuple):
+    mac_address: tuple[int, int, int, int, int, int]
+    ip: tuple[int, int, int, int]
+    subnet_mask: tuple[int, int, int, int]
+    gateway: tuple[int, int, int, int]
+    rx_count: int
+    tx_count: int
+    hostname: bytes
+
+
+class GetEthernetWebsocketConfiguration(NamedTuple):
+    sockets: int
+    port: int
+
+
+class ReadWifi2SerialPort(NamedTuple):
+    data: tuple[
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+        int,
+    ]
+    result: int
+
+
+class GetWifi2Configuration(NamedTuple):
+    port: int
+    websocket_port: int
+    website_port: int
+    phy_mode: PhyMode
+    sleep_mode: int
+    website: bool
+
+
+class GetWifi2Status(NamedTuple):
+    client_enabled: bool
+    client_status: WifiClientStatus
+    client_ip: tuple[int, int, int, int]
+    client_subnet_mask: tuple[int, int, int, int]
+    client_gateway: tuple[int, int, int, int]
+    client_mac_address: tuple[int, int, int, int, int, int]
+    client_rx_count: int
+    client_tx_count: int
+    client_rssi: int
+    ap_enabled: bool
+    ap_ip: tuple[int, int, int, int]
+    ap_subnet_mask: tuple[int, int, int, int]
+    ap_gateway: tuple[int, int, int, int]
+    ap_mac_address: tuple[int, int, int, int, int, int]
+    ap_rx_count: int
+    ap_tx_count: int
+    ap_connected_count: int
+
+
+class GetWifi2ClientConfiguration(NamedTuple):
+    enable: bool
+    ssid: bytes
+    ip: tuple[int, int, int, int]
+    subnet_mask: tuple[int, int, int, int]
+    gateway: tuple[int, int, int, int]
+    mac_address: tuple[int, int, int, int, int, int]
+    bssid: tuple[int, int, int, int, int, int]
+
+
+class GetWifi2APConfiguration(NamedTuple):
+    enable: bool
+    ssid: bytes
+    ip: tuple[int, int, int, int]
+    subnet_mask: tuple[int, int, int, int]
+    gateway: tuple[int, int, int, int]
+    encryption: WifiApEncryption
+    hidden: bool
+    channel: int
+    mac_address: tuple[int, int, int, int, int, int]
+
+
+class GetWifi2MeshConfiguration(NamedTuple):
+    enable: bool
+    root_ip: tuple[int, int, int, int]
+    root_subnet_mask: tuple[int, int, int, int]
+    root_gateway: tuple[int, int, int, int]
+    router_bssid: tuple[int, int, int, int, int, int]
+    group_id: tuple[int, int, int, int, int, int]
+    group_ssid_prefix: bytes
+    gateway_ip: tuple[int, int, int, int]
+    gateway_port: int
+
+
+class GetWifi2MeshCommonStatus(NamedTuple):
+    status: WifiMeshStatus
+    root_node: bool
+    root_candidate: bool
+    connected_nodes: int
+    rx_count: int
+    tx_count: int
+
+
+class GetWifi2MeshClientStatus(NamedTuple):
+    hostname: bytes
+    ip: tuple[int, int, int, int]
+    subnet_mask: tuple[int, int, int, int]
+    gateway: tuple[int, int, int, int]
+    mac_address: tuple[int, int, int, int, int, int]
+
+
+class GetWifi2MeshAPStatus(NamedTuple):
+    ssid: bytes
+    ip: tuple[int, int, int, int]
+    subnet_mask: tuple[int, int, int, int]
+    gateway: tuple[int, int, int, int]
+    mac_address: tuple[int, int, int, int, int, int]
+
+
+class GetSPITFPBaudrateConfig(NamedTuple):
+    enable_dynamic_baudrate: bool
+    minimum_dynamic_baudrate: int
+
+
+class GetSPITFPErrorCount(NamedTuple):
+    error_count_ack_checksum: int
+    error_count_message_checksum: int
+    error_count_frame: int
+    error_count_overflow: int
+
+
+class GetProtocol1BrickletName(NamedTuple):
+    protocol_version: int
+    firmware_version: tuple[int, int, int]
+    name: bytes
 
 
 class Wifi2BootloaderError(Exception):
@@ -266,6 +429,7 @@ class FunctionID(_FunctionID):
     DISABLE_STATUS_LED = 239
     IS_STATUS_LED_ENABLED = 240
     GET_PROTOCOL1_BRICKLET_NAME = 241
+    GET_CHIP_TEMPERATURE = 242
 
 
 @unique
@@ -611,6 +775,12 @@ class BrickMaster(DeviceWithMCU):
         CallbackID.USB_VOLTAGE_REACHED: "H",
     }
 
+    SID_TO_CALLBACK = {
+        0: (CallbackID.USB_VOLTAGE, CallbackID.USB_VOLTAGE_REACHED),
+        1: (CallbackID.STACK_VOLTAGE, CallbackID.STACK_VOLTAGE_REACHED),
+        2: (CallbackID.STACK_CURRENT, CallbackID.STACK_CURRENT_REACHED),
+    }
+
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
@@ -629,7 +799,7 @@ class BrickMaster(DeviceWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STACK_VOLTAGE, response_expected=True
         )
-        return Decimal(unpack_payload(payload, "H")) / 1000
+        return self.__sensor_to_si(unpack_payload(payload, "H"))
 
     async def get_stack_current(self) -> Decimal:
         """
@@ -640,7 +810,7 @@ class BrickMaster(DeviceWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STACK_CURRENT, response_expected=True
         )
-        return Decimal(unpack_payload(payload, "H")) / 1000
+        return self.__sensor_to_si(unpack_payload(payload, "H"))
 
     async def set_extension_type(
         self, extension: _ExtensionPosition, exttype: _ExtensionType | int, response_expected: bool = True
@@ -662,7 +832,7 @@ class BrickMaster(DeviceWithMCU):
          "4",    "Ethernet"
          "5",    "Wi-Fi 2.0"
 
-        The extension type is already set when bought and it can be set with the
+        The extension type is already set when bought, and it can be set with the
         Brick Viewer, it is unlikely that you need this function.
         """
         if not isinstance(extension, ExtensionPosition):
@@ -1518,7 +1688,7 @@ class BrickMaster(DeviceWithMCU):
             device=self, function_id=FunctionID.GET_USB_VOLTAGE, response_expected=True
         )
 
-        return Decimal(unpack_payload(payload, "H")) / 1000
+        return self.__sensor_to_si(unpack_payload(payload, "H"))
 
     async def set_long_wifi_key(self, key: bytes | str, response_expected: bool = True) -> None:
         """
@@ -1726,15 +1896,15 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload(
                 (
                     option.value,
-                    int(minimum * 1000),
-                    int(maximum * 1000),
+                    self.__si_to_sensor(minimum),
+                    self.__si_to_sensor(maximum),
                 ),
                 "c H H",
             ),
             response_expected=response_expected,
         )
 
-    async def get_stack_current_callback_threshold(self) -> GetStackCurrentCallbackThreshold:
+    async def get_stack_current_callback_threshold(self) -> BasicCallbackConfiguration:
         """
         Returns the threshold as set by :func:`Set Stack Current Callback Threshold`.
 
@@ -1745,7 +1915,7 @@ class BrickMaster(DeviceWithMCU):
         )
 
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return GetStackCurrentCallbackThreshold(
+        return BasicCallbackConfiguration(
             Threshold(option),
             Decimal(minimum) / 1000,
             Decimal(maximum) / 1000,
@@ -1786,15 +1956,15 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload(
                 (
                     option.value,
-                    int(minimum * 1000),
-                    int(maximum * 1000),
+                    self.__si_to_sensor(minimum),
+                    self.__si_to_sensor(maximum),
                 ),
                 "c H H",
             ),
             response_expected=response_expected,
         )
 
-    async def get_stack_voltage_callback_threshold(self) -> GetStackVoltageCallbackThreshold:
+    async def get_stack_voltage_callback_threshold(self) -> BasicCallbackConfiguration:
         """
         Returns the threshold as set by :func:`Set Stack Voltage Callback Threshold`.
 
@@ -1805,7 +1975,7 @@ class BrickMaster(DeviceWithMCU):
         )
 
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return GetStackVoltageCallbackThreshold(
+        return BasicCallbackConfiguration(
             Threshold(option),
             Decimal(minimum) / 1000,
             Decimal(maximum) / 1000,
@@ -1846,15 +2016,15 @@ class BrickMaster(DeviceWithMCU):
             data=pack_payload(
                 (
                     option.value,
-                    int(minimum * 1000),
-                    int(maximum * 1000),
+                    self.__si_to_sensor(minimum),
+                    self.__si_to_sensor(maximum),
                 ),
                 "c H H",
             ),
             response_expected=response_expected,
         )
 
-    async def get_usb_voltage_callback_threshold(self) -> GetStackVoltageCallbackThreshold:
+    async def get_usb_voltage_callback_threshold(self) -> BasicCallbackConfiguration:
         """
         Returns the threshold as set by :func:`Set USB Voltage Callback Threshold`.
 
@@ -1865,10 +2035,10 @@ class BrickMaster(DeviceWithMCU):
         )
 
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return GetStackVoltageCallbackThreshold(
+        return BasicCallbackConfiguration(
             Threshold(option),
             Decimal(minimum) / 1000,
-            Decimal(maximum) // 1000,
+            Decimal(maximum) / 1000,
         )
 
     async def set_debounce_period(self, debounce: int = 100, response_expected: bool = True) -> None:
@@ -3329,12 +3499,58 @@ class BrickMaster(DeviceWithMCU):
 
     async def get_chip_temperature(self) -> Decimal:
         """
-        Returns the temperature in °C/10 as measured inside the microcontroller. The
-        value returned is not the ambient temperature!
+        Returns the temperature in K as measured inside the microcontroller. The value returned is not the ambient
+        temperature!
 
-        The temperature is only proportional to the real temperature and it has an
-        accuracy of +-15%. Practically it is only useful as an indicator for
-        temperature changes.
+        The temperature is only proportional to the real temperature, and it has an accuracy of +-15%. Practically it is
+        only useful as an indicator for temperature changes.
         """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_CHIP_TEMPERATURE, response_expected=True
+        )
+        result = unpack_payload(payload, "h")
+        return Decimal(result) / 10 + Decimal("273.15")
 
-        return Decimal(await super().get_chip_temperature()) / 10
+    @staticmethod
+    def __sensor_to_si(value: int) -> Decimal:
+        """
+        Convert to the sensor value to SI units
+        """
+        return Decimal(value) / 1000
+
+    @staticmethod
+    def __si_to_sensor(value: Decimal | float) -> int:
+        """
+        Convert to the sensor value to SI units
+        """
+        return int(value * 1000)
+
+    async def read_events(
+        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+    ) -> AsyncGenerator[Event, None]:
+        registered_events = set()
+        if events:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+        if sids is not None:
+            for sid in sids:
+                for callback in self.SID_TO_CALLBACK.get(sid, []):
+                    registered_events.add(callback)
+
+        if events is None and sids is None:
+            registered_events = set(self.CALLBACK_FORMATS.keys())
+
+        async for header, payload in super()._read_events():
+            try:
+                function_id = CallbackID(header.function_id)
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if function_id in (CallbackID.USB_VOLTAGE, CallbackID.USB_VOLTAGE_REACHED):
+                    yield Event(self, 0, function_id, self.__sensor_to_si(value))
+                elif function_id in (CallbackID.STACK_VOLTAGE, CallbackID.STACK_VOLTAGE_REACHED):
+                    yield Event(self, 1, function_id, self.__sensor_to_si(value))
+                else:
+                    yield Event(self, 2, function_id, self.__sensor_to_si(value))
