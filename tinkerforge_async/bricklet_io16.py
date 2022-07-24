@@ -7,10 +7,11 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
+
 from .devices import Device, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID

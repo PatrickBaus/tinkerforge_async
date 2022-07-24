@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-An example to demonstrate most of the capabilities of the Tinkerforge
-Ambient Light Bricklet 2.0.
+An example to demonstrate most of the capabilities of the Tinkerforge  Ambient Light Bricklet 2.0.
 """
 import asyncio
 import warnings
@@ -10,20 +9,14 @@ from tinkerforge_async.bricklet_ambient_light_v2 import BrickletAmbientLightV2
 from tinkerforge_async.ip_connection import IPConnectionAsync
 
 
-async def process_callbacks(bricklet: BrickletAmbientLightV2) -> None:
-    """
-    This infinite loop will print all callbacks.
-    It waits for packets from the callback queue,
-    which the ip connection will push.
-    """
-    async for packet in bricklet.read_events((bricklet.CallbackID.ILLUMINANCE_REACHED,)):
+async def process_callbacks(device: BrickletAmbientLightV2) -> None:
+    """Prints the callbacks (filtered by id) of the bricklet"""
+    async for packet in device.read_events((device.CallbackID.ILLUMINANCE_REACHED,)):
         print("Callback received", packet)
 
 
 async def run_example(bricklet: BrickletAmbientLightV2) -> None:
-    """
-    This is the actual demo. If the bricklet is found, this code will be run.
-    """
+    """This is the actual demo. If the bricklet is found, this code will be run."""
     callback_task = asyncio.create_task(process_callbacks(bricklet))
     try:
         print("Identity:", await bricklet.get_identity())
@@ -54,9 +47,7 @@ async def run_example(bricklet: BrickletAmbientLightV2) -> None:
 
 
 async def shutdown(tasks):
-    """
-    Clean up: Disconnect ip connection and stop the consumers
-    """
+    """Clean up by stopping all consumers"""
     for task in tasks:
         task.cancel()
     await asyncio.gather(*tasks)
@@ -72,7 +63,7 @@ async def main():
         # Use the context manager of the ip connection. It will automatically do the cleanup.
         async with IPConnectionAsync(host="127.0.0.1", port=4223) as connection:
             await connection.enumerate()
-            # Read all enumeration replies, then start the example if we find the correct bricklet
+            # Read all enumeration replies, then start the example if we find the correct device
             async for enumeration_type, device in connection.read_enumeration():  # pylint: disable=unused-variable
                 if isinstance(device, BrickletAmbientLightV2):
                     print(f"Found {device}, running example.")
