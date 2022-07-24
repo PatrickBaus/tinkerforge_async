@@ -24,7 +24,7 @@ async def main():
     except ConnectionRefusedError:
         print("Could not connect to server. Connection refused. Is the brick daemon up?")
     except asyncio.CancelledError:
-        print("Stopped the main loop")
+        print("Stopped the main loop.")
         raise
 
 
