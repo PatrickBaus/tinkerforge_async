@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -98,7 +98,7 @@ class BrickletAmbientLightV2(Device):
     DEVICE_DISPLAY_NAME = "Ambient Light Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     IlluminanceRange = IlluminanceRange
     IntegrationTime = IntegrationTime
@@ -132,8 +132,8 @@ class BrickletAmbientLightV2(Device):
         period: int = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
-        minimum: int = None,
-        maximum: int = None,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:  # pylint: disable=too-many-arguments
         minimum = 0 if minimum is None else minimum
@@ -199,8 +199,8 @@ class BrickletAmbientLightV2(Device):
     async def set_illuminance_callback_threshold(
         self,
         option: Threshold | int = Threshold.OFF,
-        minimum: int = 0,
-        maximum: int = 0,
+        minimum: float | Decimal = 0,
+        maximum: float | Decimal = 0,
         response_expected: bool = True,
     ) -> None:
         """
@@ -338,7 +338,9 @@ class BrickletAmbientLightV2(Device):
         return int(value * 100)
 
     async def read_events(
-        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+        self,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()
         if events:
