@@ -1,7 +1,6 @@
 """
 This module implements the underlying ip connection to the Bricks and Bricklets.
-See https://www.tinkerforge.com/de/doc/Low_Level_Protocols/TCPIP.html for
-details.
+See https://www.tinkerforge.com/de/doc/Low_Level_Protocols/TCPIP.html for details.
 """
 from __future__ import annotations
 
@@ -15,7 +14,8 @@ import struct
 from asyncio import StreamReader, StreamWriter
 from dataclasses import dataclass
 from enum import Enum, Flag, unique
-from typing import AsyncGenerator, Literal, cast, overload
+from types import TracebackType
+from typing import AsyncGenerator, Literal, Type, cast, overload
 
 from .device_factory import device_factory
 
@@ -108,8 +108,7 @@ DEFAULT_WAIT_TIMEOUT = 2.5  # in seconds
 class IPConnectionAsync:
     """
     The implementation of the Tinkerforge TCP/IP protocol. See
-    See https://www.tinkerforge.com/en/doc/Low_Level_Protocols/TCPIP.html
-    for details.
+    https://www.tinkerforge.com/en/doc/Low_Level_Protocols/TCPIP.html for details.
     """
 
     BROADCAST_UID = 0  # The uid used to broadcast enumeration events
@@ -170,7 +169,6 @@ class IPConnectionAsync:
         self.__port = port
         self.__authentication_secret = authentication_secret
 
-        self.__sequence_number = 0
         self.timeout = DEFAULT_WAIT_TIMEOUT if timeout is None else timeout
         self.__pending_requests: dict[int, asyncio.Future[tuple[HeaderPayload, bytes]]] = {}
         self.__next_nonce: int = 0
@@ -194,7 +192,11 @@ class IPConnectionAsync:
         self.__event_bus = EventBus()
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__module__}.{self.__class__.__qualname__}(host={self.__host}, port={self.__port}, authentication_secret={None if self.__authentication_secret is None else '*****'})"
+        return (
+            f"{self.__class__.__module__}.{self.__class__.__qualname__}"
+            f"(host={self.__host}, port={self.__port}, "
+            f"authentication_secret={None if self.__authentication_secret is None else '*****'})"
+        )
 
     def __str__(self) -> str:
         return f"IPConnectionAsync({self.__host}:{self.__port})"
@@ -203,7 +205,9 @@ class IPConnectionAsync:
         await self.connect()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
+    async def __aexit__(
+        self, exc_type: Type[BaseException] | None, exc: BaseException | None, traceback: TracebackType | None
+    ) -> None:
         await self.disconnect()
 
     @staticmethod
@@ -393,7 +397,8 @@ class IPConnectionAsync:
 
             # If we are waiting for a response, send the request, then pass on the response as a future
             self.__logger.debug(
-                "Sending request to device %(device)s (%(uid)s) and function %(function_id)s with sequence_number %(sequence_number)s: %(header)s - %(payload)s.",
+                "Sending request to device %(device)s (%(uid)s) and function %(function_id)s with sequence_number "
+                "%(sequence_number)s: %(header)s - %(payload)s.",
                 {
                     "device": device if device is not None else "all",
                     "uid": device.uid if device is not None else "all",
@@ -426,8 +431,7 @@ class IPConnectionAsync:
                     {"sequence_number": sequence_number, "header": result_header, "payload": payload},
                 )
                 return result_header, payload
-            else:
-                return None
+            return None
         finally:
             # Return the sequence number. We misuse the queue a little, so we
             # set the task to done immediately.
@@ -520,8 +524,6 @@ class IPConnectionAsync:
                     # May be raised by __read_packet()
                     # Either no data or invalid data.
                     pass
-        except asyncio.CancelledError:
-            raise
         except NotConnectedError:
             asyncio.create_task(self.disconnect())
         except Exception:
@@ -643,7 +645,7 @@ class IPConnectionAsync:
         except OSError as exc:
             if exc.errno == errno.ECONNREFUSED:
                 raise ConnectionRefusedError(f"Connection refused by host '{self.__host}:{self.__port}'") from None
-            elif exc.errno in (errno.ENETUNREACH, errno.EHOSTUNREACH):
+            if exc.errno in (errno.ENETUNREACH, errno.EHOSTUNREACH):
                 raise NetworkUnreachableError(
                     f"The network for host '{self.__host}:{self.__port}' is unreachable"
                 ) from None
@@ -656,7 +658,9 @@ class IPConnectionAsync:
         running task, it will cancel it.
         """
         # Cancel any pending connection attempt and disconnect now!
-        [task.cancel() for task in self.__running_tasks if not task.done()]
+        for task in self.__running_tasks:
+            if not task.done():
+                task.cancel()
 
         if self.__lock is None:
             self.__lock = asyncio.Lock()

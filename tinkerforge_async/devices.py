@@ -4,14 +4,14 @@ This file contains all base classes used by Bricks and bricklets
 from __future__ import annotations
 
 import time
-from collections import namedtuple
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum, unique
-from typing import Any, AsyncGenerator, Iterable, NamedTuple
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Iterable, NamedTuple
 
-from . import IPConnectionAsync
-from .ip_connection import HeaderPayload
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync, HeaderPayload
+
 from .ip_connection_helper import base58decode, pack_payload, uid64_to_uid32, unpack_payload
 
 

@@ -11,9 +11,10 @@ import warnings
 from collections import namedtuple
 from decimal import Decimal
 from enum import Enum, unique
-from typing import Iterable
+from typing import Iterable, TYPE_CHECKING
 
-from . import IPConnectionAsync
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 from .devices import BrickletPort as Port
 from .devices import DeviceIdentifier, DeviceWithMCU
 from .devices import ThresholdOption as Threshold
