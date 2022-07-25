@@ -1,218 +1,160 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# pylint: disable=duplicate-code
 """
-An example to demonstrate most of the capabilities of the Tinkerforge
-RS232 Bricklet 2.0.
+An example to demonstrate most of the capabilities of the Tinkerforge RS232 Bricklet 2.0.
 """
 import asyncio
-import logging
-import sys
 import warnings
+from decimal import Decimal
 
-from tinkerforge_async.ip_connection import IPConnectionAsync
-from tinkerforge_async.device_factory import device_factory
 from tinkerforge_async.bricklet_rs232_v2 import BrickletRS232V2
-
-sys.path.append("..")   # Adds higher directory to python modules path.
-
-ipcon = IPConnectionAsync()
-running_tasks = []
+from tinkerforge_async.devices import BrickletWithMCU
+from tinkerforge_async.ip_connection import IPConnectionAsync
 
 
-async def process_frame_readable_callback(queue):
+async def process_frame_readable_callback(device: BrickletRS232V2) -> None:
     """
-    This callback will be triggered if at least one dataframe is available. There
-    frame size can be configured via set_frame_readable_callback_configuration().
+    This callback will be triggered if at least one dataframe is available. The frame size can be configured via
+    set_frame_readable_callback_configuration().
     """
-    try:
-        while 'queue not canceled':
-            packet = await queue.get()
-            print('Frame readable callback received. Reading frames. Frames in buffer: {frames}'.format(frames=packet['payload']))
-            bricklet = packet['sender']
-            # We will receive one callback for each frame, so we only read one
-            # frame at a time.
-            # Read 3 bytes as set by run_example() with frame_size parameter of
-            # the set_frame_readable_callback_configuration() call.
-            print(await bricklet.read(3))
-    except asyncio.CancelledError:
-        print('Frame readable callback queue canceled')
+    async for event in device.read_events((device.CallbackID.FRAME_READABLE,)):
+        print(f"Frame readable callback received. Reading frames. Frames in buffer: {event.payload}")
+        # We will receive one callback for each frame, so we only read one
+        # frame at a time.
+        # Read 3 bytes as set by run_example() with frame_size parameter of
+        # the set_frame_readable_callback_configuration() call.
+        print(await device.read(3))
 
 
-async def process_callbacks(queue):
-    """
-    This infinite loop will print all callbacks.
-    It waits for packets from the callback queue,
-    which the ip connection will push.
-    """
-    try:
-        while 'queue not canceled':
-            packet = await queue.get()
-            if packet['function_id'] is BrickletRS232V2.CallbackID.FRAME_READABLE:
-                pass
-            print('Callback received', packet)
-    except asyncio.CancelledError:
-        print('Callback queue canceled')
+async def process_callbacks(device: BrickletRS232V2) -> None:
+    """Prints the callbacks (filtered by id) of the bricklet."""
+    async for packet in device.read_events():
+        print("Callback received", packet)
 
 
-async def process_enumerations(callback_queue, frame_readable_callback_queue):
-    """
-    This infinite loop pulls events from the internal enumeration queue
-    of the ip connection and waits for an enumeration event with a
-    certain device id, then it will run the example code.
-    """
-    try:
-        while 'queue not canceled':
-            packet = await ipcon.enumeration_queue.get()
-            if packet['device_id'] is BrickletRS232V2.DEVICE_IDENTIFIER:
-                await run_example(packet, callback_queue, frame_readable_callback_queue)
-    except asyncio.CancelledError:
-        print('Enumeration queue canceled')
-
-
-async def run_example_generic(bricklet):
-    """
-    This is a demo of the generic features of the Tinkerforge bricklets with a
-    microcontroller.
-    """
+async def run_example_generic(bricklet: BrickletWithMCU) -> None:
+    """This is a demo of the generic features of the Tinkerforge bricklets with a microcontroller."""
     uid = await bricklet.read_uid()
-    print('Device uid:', uid)
+    print("Device uid:", uid)
     await bricklet.write_uid(uid)
 
-    print('SPI error count:', await bricklet.get_spitfp_error_count())
+    print("SPI error count:", await bricklet.get_spitfp_error_count())
 
-    print('Current bootloader mode:', await bricklet.get_bootloader_mode())
+    print("Current bootloader mode:", await bricklet.get_bootloader_mode())
     bootloader_mode = bricklet.BootloaderMode.FIRMWARE
-    print('Setting bootloader mode to', bootloader_mode, ':', await bricklet.set_bootloader_mode(bootloader_mode))
+    print("Setting bootloader mode to", bootloader_mode, ":", await bricklet.set_bootloader_mode(bootloader_mode))
 
-    print('Disable status LED')
+    print("Disable status LED")
     await bricklet.set_status_led_config(bricklet.LedConfig.OFF)
-    print('Current status:', await bricklet.get_status_led_config())
+    print("Current status:", await bricklet.get_status_led_config())
     await asyncio.sleep(1)
-    print('Enable status LED')
+    print("Enable status LED")
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
-    print('Current status:', await bricklet.get_status_led_config())
+    print("Current status:", await bricklet.get_status_led_config())
 
-    print('Get Chip temperature:', await bricklet.get_chip_temperature(), '°C')
+    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
 
-    print('Reset Bricklet')
+    print("Reset Bricklet")
     await bricklet.reset()
 
 
-async def run_example(packet, callback_queue, frame_readable_callback_queue):
+async def run_example(bricklet: BrickletRS232V2) -> None:
     """
     This is the actual demo. If the bricklet is found, this code will be run.
     """
-    print('Registering bricklet')
-    bricklet = device_factory.get(packet['device_id'], packet['uid'], ipcon)    # Create device object
-    print('Identity:', await bricklet.get_identity())
+    callback_task = asyncio.create_task(process_callbacks(bricklet))
+    frame_callback_task = asyncio.create_task(process_frame_readable_callback(bricklet))
+    try:
+        print("Identity:", await bricklet.get_identity())
 
-    config = await bricklet.get_configuration()
-    print('Configuration:', config)
-    config = config._asdict()
-    config['baudrate'] = 2000000
-    await bricklet.set_configuration(**config)
+        config = await bricklet.get_configuration()
+        print("Configuration:", config)
+        config_dict = config._asdict()
+        config_dict["baudrate"] = 2000000
+        await bricklet.set_configuration(**config_dict)
 
-    config = await bricklet.get_buffer_config()
-    print('Buffer configuration:', config)
-    await bricklet.set_buffer_config(**config._asdict())
+        buffer_config = await bricklet.get_buffer_config()
+        print("Buffer configuration:", buffer_config)
+        await bricklet.set_buffer_config(**buffer_config._asdict())
 
-    print('Buffer status:', await bricklet.get_buffer_status())
-    print('Errors:', await bricklet.get_error_count())
+        print("Buffer status:", await bricklet.get_buffer_status())
+        print("Errors:", await bricklet.get_error_count())
 
-    frame_size = await bricklet.get_frame_readable_callback_configuration()
-    print('Trigger callback if number of bytes available:', frame_size)
-    await bricklet.set_frame_readable_callback_configuration(frame_size)
+        frame_size = await bricklet.get_frame_readable_callback_configuration()
+        print("Trigger callback if number of bytes available:", frame_size)
+        await bricklet.set_frame_readable_callback_configuration(frame_size)
 
-    # Register the callback queue used by process_callbacks()
-    # We can register the same queue for multiple callbacks.
-    bricklet.register_event_queue(bricklet.CallbackID.READ, callback_queue)
-    bricklet.register_event_queue(bricklet.CallbackID.ERROR_COUNT, callback_queue)
-    bricklet.register_event_queue(bricklet.CallbackID.FRAME_READABLE, frame_readable_callback_queue)
+        # Disable read callback to buffer a multi chunk message
+        await bricklet.set_read_callback(False)
+        await bricklet.set_frame_readable_callback_configuration(0)
+        print("Sending message, then enable the read callback.")
+        msg = b"foo" * 30
+        await bricklet.write(msg)
+        await bricklet.set_read_callback(True)
+        print("Read callback enabled?", await bricklet.is_read_callback_enabled())
 
-    # Disable read callback to buffer a multi chunk message
-    await bricklet.set_read_callback(False)
-    await bricklet.set_frame_readable_callback_configuration(0)
-    print('Sending message, then enable the read callback.')
-    msg = b'foo'*30
-    await bricklet.write(msg)
-    await bricklet.set_read_callback(True)
-    print('Read callback enabled?', await bricklet.is_read_callback_enabled())
+        await asyncio.sleep(0.1)
+        print("Disabling read callback")
+        await bricklet.set_read_callback()
 
-    await asyncio.sleep(0.1)
-    print('Disabling read callback')
-    await bricklet.set_read_callback()
+        # Use a frame readable callback
+        print("Enabling Frame readable callback")
+        await bricklet.set_frame_readable_callback_configuration(frame_size=3)
+        await bricklet.write(b"foo" * 3)
+        await asyncio.sleep(0.1)
+        print("Disabling Frame readable callback")
+        await bricklet.set_frame_readable_callback_configuration()
 
-    # Use a frame readable callback
-    print('Enabling Frame readable callback')
-    await bricklet.set_frame_readable_callback_configuration(frame_size=3)
-    await bricklet.write(b'foo'*3)
-    await asyncio.sleep(0.1)
-    print('Disabling Frame readable callback')
-    await bricklet.set_frame_readable_callback_configuration()
+        print("Polling the rs232 port")
+        await bricklet.write(b"foo" * 3)
+        result = await bricklet.read(len(msg))
+        print("Result:", result, "number of bytes:", len(result))
 
-    print('Polling the rs232 port')
-    await bricklet.write(b'foo'*3)
-    result = await bricklet.read(len(msg))
-    print('Result:', result, 'number of bytes:', len(result))
-
-    # Test the generic features of the bricklet. These are available with all
-    # new bricklets that have a microcontroller
-    await run_example_generic(bricklet)
-
-    # Terminate the loop
-    asyncio.create_task(shutdown())
+        # Test the generic features of the bricklet. These are available with all new bricklets that have a
+        # microcontroller
+        await run_example_generic(bricklet)
+    finally:
+        callback_task.cancel()
+        frame_callback_task.cancel()
 
 
-async def shutdown():
-    """
-    Clean up: Disconnect ip connection and stop the consumers
-    """
-    for task in running_tasks:
+async def shutdown(tasks: set[asyncio.Task]) -> None:
+    """Clean up by stopping all consumers"""
+    for task in tasks:
         task.cancel()
-    await asyncio.gather(*running_tasks)
-    await ipcon.disconnect()    # Disconnect the ip connection last to allow cleanup of the sensors
+    await asyncio.gather(*tasks)
 
 
-def error_handler(task):
+async def main() -> None:
     """
-    The main error handler. It will shutdown on any uncaught exception
+    The main loop, that will spawn all callback handlers and wait until they are done. There are two callback handlers,
+    one waits for the bricklet to connect and runs the demo, the other handles messages sent by the bricklet.
     """
+    tasks = set()
     try:
-        task.result()
-    except Exception:  # pylint: disable=broad-except
-        # Normally we should log these errors
-        asyncio.create_task(shutdown())
+        # Use the context manager of the ip connection. It will automatically do the cleanup.
+        async with IPConnectionAsync(host="127.0.0.1", port=4223) as connection:
+            await connection.enumerate()
+            # Read all enumeration replies, then start the example if we find the correct device
+            async for enumeration_type, device in connection.read_enumeration():  # pylint: disable=unused-variable
+                if isinstance(device, BrickletRS232V2):
+                    print(f"Found {device}, running example.")
+                    tasks.add(asyncio.create_task(run_example(device)))
+                    break
+                print(f"Found {device}, but not interested.")
 
-
-async def main():
-    """
-    The main loop, that will spawn all callback handlers and wait until they are
-    done. There are two callback handlers, one waits for the bricklet to connect
-    and run the demo, the other handles messages sent by the bricklet.
-    """
-    try:
-        await ipcon.connect(host='127.0.0.1', port=4223)
-        callback_queue = asyncio.Queue()
-        frame_readable_callback_queue = asyncio.Queue()
-        running_tasks.append(asyncio.create_task(process_callbacks(callback_queue)))
-        running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        running_tasks.append(asyncio.create_task(process_frame_readable_callback(frame_readable_callback_queue)))
-        running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        running_tasks.append(asyncio.create_task(process_enumerations(callback_queue, frame_readable_callback_queue)))
-        running_tasks[-1].add_done_callback(error_handler)  # Add error handler to catch exceptions
-        print('Enumerating brick and waiting for bricklets to reply')
-        await ipcon.enumerate()
-
-        # Wait for run_example() to finish
-        await asyncio.gather(*running_tasks)
+            # Wait for run_example() to finish
+            await asyncio.gather(*tasks)
     except ConnectionRefusedError:
-        print('Could not connect to server. Connection refused. Is the brick daemon up?')
+        print("Could not connect to server. Connection refused. Is the brick daemon up?")
     except asyncio.CancelledError:
-        print('Stopped the main loop')
+        print("Stopped the main loop.")
+    finally:
+        await shutdown(tasks)
+
 
 # Report all mistakes managing asynchronous resources.
-warnings.simplefilter('always', ResourceWarning)
-logging.basicConfig(level=logging.INFO)    # Enable logs from the ip connection. Set to debug for even more info
+warnings.simplefilter("always", ResourceWarning)
 
 # Start the main loop and run the async loop forever
 asyncio.run(main(), debug=True)

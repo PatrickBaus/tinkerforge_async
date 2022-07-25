@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # pylint: disable=duplicate-code
 """
-An example to demonstrate most of the capabilities of the Tinkerforge
-Motion Detector Bricklet 2.0.
+An example to demonstrate most of the capabilities of the Tinkerforge Motion Detector Bricklet 2.0.
 """
 import asyncio
-import logging
 import warnings
 from decimal import Decimal
 
@@ -55,7 +53,7 @@ async def run_example(bricklet: BrickletMotionDetectorV2) -> None:
         print("Motion detected?:", await bricklet.get_motion_detected())
         print("Set sensitivity to maximum and wait for callbacks")
         await bricklet.set_sensitivity(100)
-        print("Sensitivity set to {value}.".format(value=await bricklet.get_sensitivity()))
+        print(f"Sensitivity set to {await bricklet.get_sensitivity()}.")
         print("Enabling lights.")
         await bricklet.set_indicator(top_left=255, top_right=255, bottom=255)
         print("Indicator status:", await bricklet.get_indicator())
@@ -63,8 +61,8 @@ async def run_example(bricklet: BrickletMotionDetectorV2) -> None:
         await asyncio.sleep(10)  # Wait for callbacks
         print("Done waiting.")
 
-        # Test the generic features of the bricklet. These are available with all
-        # new bricklets that have a microcontroller
+        # Test the generic features of the bricklet. These are available with all new bricklets that have a
+        # microcontroller
         await run_example_generic(bricklet)
     finally:
         callback_task.cancel()
@@ -108,7 +106,6 @@ async def main() -> None:
 
 # Report all mistakes managing asynchronous resources.
 warnings.simplefilter("always", ResourceWarning)
-logging.basicConfig(level=logging.INFO)  # Enable logs from the ip connection. Set to debug for even more info
 
 # Start the main loop and run the async loop forever
 asyncio.run(main(), debug=True)

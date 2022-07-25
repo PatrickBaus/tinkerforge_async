@@ -522,7 +522,11 @@ class BrickletIO4V2(BrickletWithMCU):
         return GetEdgeCountConfiguration(edge_type, debounce)
 
     async def set_pwm_configuration(
-        self, channel: int, frequency: int = 0, duty_cycle: int = 0, response_expected: bool = True
+        self,
+        channel: int,
+        frequency: float | Decimal = 0,
+        duty_cycle: float | Decimal = 0,
+        response_expected: bool = True,
     ) -> None:
         """
         Activates a PWM for the given channel.
