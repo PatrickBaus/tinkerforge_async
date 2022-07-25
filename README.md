@@ -41,13 +41,17 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    Old style:
    ```python
    bricklet = BrickletHumidity(UID, ipcon)
-   bricklet.set_response_expected(BrickletHumidity.FUNCTION_SET_HUMIDITY_CALLBACK_PERIOD, True)
+   bricklet.set_response_expected(
+       BrickletHumidity.FUNCTION_SET_HUMIDITY_CALLBACK_PERIOD, True
+   )
    bricklet.set_humidity_callback_period(1000)
    ```
    New style:
    ```python
    bricklet = BrickletHumidity(UID, ipcon)
-   await bricklet.set_humidity_callback_period(1000, response_expected=True)    # Raises an exception if unsuccessful
+   await bricklet.set_humidity_callback_period(
+       1000, response_expected=True
+   )  # Raises an exception if unsuccessful
    ```
  - Replaced all constants with Enums and enforced their use using assertions. This will allow beginners to spot their mistakes earlier and make the code more readable, including any debug output statements.
 
@@ -94,16 +98,11 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
  - All callbacks now contain a timestamp (Unix timestamp) and the device object.
 
    Example:
-   ```python
-   {'timestamp': 1525308878, 'sender': Humidity Bricklet, 'device_id': <DeviceIdentifier.BrickletHumidity: 27>, 'function_id': <CallbackID.humidity_reached: 15>, 'sid': 0, 'payload': Decimal('43.6')}
+   ```
+    Event(timestamp=1658756708.6839857, sender=Temperature Bricklet 2.0 with uid 161085 connected at IPConnectionAsync(192.168.1.164:4223), sid=0, function_id=CallbackID.TEMPERATURE, payload=305.46)
    ```
 
- - Added the concept of secondary ids (`sid`). By default the secondary id is `0`. If there is more than one sensor on the bricklet, they will have a `sid` value of 1,2, etc. This is especially useful for sensors like the [Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html), which returns its two channels via the same callback.
-   Example:
-   ```python
-   {'timestamp': 1612785631, 'sender': Humidity Bricklet 2.0, 'function_id': <CallbackID.TEMPERATURE: 8>, 'sid': 1, 'payload': Decimal('30.64')}
-   ```
-
+ - Added the concept of secondary ids (`sid`). By defaultm the secondary id is `0`. If there is more than one sensor on the bricklet, they will have a `sid` value of 1,2, etc. This is especially useful for sensors like the [Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html), which returns its two channels via the same callback.
  - New functions:
 
    `BrickMaster.set_wpa_enterprise_username(username)`: Set the WPA enterprise username without calling `BrickMaster.set_wifi_certificate()`. Takes a `string` instead of an array of `int`.

@@ -466,8 +466,14 @@ class Event:
     function_id: Any
     payload: Any
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.timestamp = time.time()
+
+    def __str__(self) -> str:
+        return (
+            f"Event(timestamp={self.timestamp}, sender={self.sender}, sid={self.sid}, "
+            f"function_id={self.function_id}, payload={self.payload})"
+        )
 
 
 class BasicCallbackConfiguration(NamedTuple):
