@@ -29,6 +29,8 @@ class CallbackID(Enum):
     SENSOR_CONNECTED = 18
 
 
+_CallbackID = CallbackID
+
 @unique
 class FunctionID(_FunctionID):
     """
@@ -540,7 +542,9 @@ class BrickletPtcV2(BrickletWithMCU):
         return int(value * 32768 / 390)
 
     async def read_events(
-        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()
         if events:

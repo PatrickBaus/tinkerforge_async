@@ -29,6 +29,8 @@ class CallbackID(Enum):
     MOISTURE_REACHED = 9
 
 
+_CallbackID = CallbackID
+
 @unique
 class FunctionID(_FunctionID):
     """
@@ -253,7 +255,9 @@ class BrickletMoisture(Device):
         return unpack_payload(payload, "B")
 
     async def read_events(
-        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
     ) -> typing.AsyncGenerator[Event, None]:
         registered_events = set()
         if events:

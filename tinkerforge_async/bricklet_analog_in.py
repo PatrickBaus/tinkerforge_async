@@ -31,6 +31,8 @@ class CallbackID(Enum):
     ANALOG_VALUE_REACHED = 16
 
 
+_CallbackID = CallbackID
+
 @unique
 class FunctionID(_FunctionID):
     """
@@ -435,7 +437,9 @@ class BrickletAnalogIn(Device):
         return int(value * 1000)
 
     async def read_events(
-        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()
         if events:

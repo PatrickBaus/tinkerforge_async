@@ -24,6 +24,7 @@ class CallbackID(Enum):
     MOTION_DETECTED = 6
     DETECTION_CYCLE_ENDED = 7
 
+_CallbackID = CallbackID
 
 @unique
 class FunctionID(_FunctionID):
@@ -158,7 +159,9 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         return GetIndicator(*unpack_payload(payload, "B B B"))
 
     async def read_events(
-        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()
         if events:

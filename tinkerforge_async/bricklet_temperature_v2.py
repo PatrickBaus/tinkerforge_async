@@ -28,6 +28,8 @@ class CallbackID(Enum):
     TEMPERATURE = 4
 
 
+_CallbackID =CallbackID
+
 @unique
 class FunctionID(_FunctionID):
     """
@@ -240,8 +242,10 @@ class BrickletTemperatureV2(BrickletWithMCU):
         return int(value * 100) - 27315
 
     async def read_events(
-        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
-    ) -> typing.AsyncGenerator[Event, None]:
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
+    ) -> AsyncGenerator[Event, None]:
         registered_events = set()
         if events:
             for event in events:

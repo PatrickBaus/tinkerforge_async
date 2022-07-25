@@ -34,6 +34,8 @@ class CallbackID(Enum):
     FRAME_READABLE = 16
 
 
+_CallbackID = CallbackID
+
 @unique
 class FunctionID(_FunctionID):
     """
@@ -488,7 +490,9 @@ class BrickletRS232V2(BrickletWithMCU):
             return bytes(result)
 
     async def read_events(  # pylint: disable=too-many-branches
-        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()
         if events:

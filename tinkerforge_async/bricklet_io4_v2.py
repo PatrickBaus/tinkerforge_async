@@ -29,6 +29,8 @@ class CallbackID(Enum):
     MONOFLOP_DONE = 19
 
 
+_CallbackID = CallbackID
+
 @unique
 class FunctionID(_FunctionID):
     """
@@ -565,7 +567,9 @@ class BrickletIO4V2(BrickletWithMCU):
         return GetPWMConfiguration(Decimal(frequency) / 10, Decimal(duty_cycle) / 10000)
 
     async def read_events(
-        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         assert events is None or sids is None
 

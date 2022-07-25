@@ -29,6 +29,8 @@ class CallbackID(Enum):
     TEMPERATURE = 12
 
 
+_CallbackID = CallbackID
+
 @unique
 class FunctionID(_FunctionID):
     """
@@ -632,7 +634,9 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         return int(value * 100)
 
     async def read_events(
-        self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()
         if events:
