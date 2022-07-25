@@ -5,10 +5,9 @@ the low-level communication with the Tinkerforge ip connection and also handles 
 """
 from __future__ import annotations
 
-import typing
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, AsyncGenerator
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -28,7 +27,8 @@ class CallbackID(Enum):
     TEMPERATURE = 4
 
 
-_CallbackID =CallbackID
+_CallbackID = CallbackID
+
 
 @unique
 class FunctionID(_FunctionID):

@@ -45,7 +45,6 @@ async def run_example_generic(bricklet: BrickletMotionDetectorV2) -> None:
     await bricklet.reset()
 
 
-
 async def run_example(bricklet: BrickletMotionDetectorV2) -> None:
     """This is the actual demo. If the bricklet is found, this code will be run."""
     callback_task = asyncio.create_task(process_callbacks(bricklet))

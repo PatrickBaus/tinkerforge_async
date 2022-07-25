@@ -90,12 +90,12 @@ async def run_master_extension_wifi(brick: BrickMaster) -> None:
     # The mac and bssid are stored as tuples of int. We will replace them with the more common hex notation for
     # better readability, then we will recreate the named tuple.
     new_status["mac_address"] = []
-    new_status["mac_address"] = "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}".format(
-        *new_status["mac_address"]
-    )  # pylint: disable=consider-using-f-string
-    new_status["bssid"] = "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}".format(
+    new_status[  # pylint: disable=consider-using-f-string
+        "mac_address"
+    ] = "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}".format(*new_status["mac_address"])
+    new_status["bssid"] = "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}".format(  # pylint: disable=consider-using-f-string
         *new_status["bssid"]
-    )  # pylint: disable=consider-using-f-string
+    )
     print("WIFI status:", type(wifi_status)(**new_status))
 
     hostname = await brick.get_wifi_hostname()

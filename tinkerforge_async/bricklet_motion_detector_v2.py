@@ -24,7 +24,9 @@ class CallbackID(Enum):
     MOTION_DETECTED = 6
     DETECTION_CYCLE_ENDED = 7
 
+
 _CallbackID = CallbackID
+
 
 @unique
 class FunctionID(_FunctionID):
