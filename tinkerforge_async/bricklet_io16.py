@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, AsyncGenerator, Generator, NamedTuple
 
-from .devices import Device, DeviceIdentifier
+from .devices import AdvancedCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -27,6 +27,9 @@ class CallbackID(Enum):
 
     INTERRUPT = 9
     MONOFLOP_DONE = 12
+
+
+_CallbackID = CallbackID
 
 
 @unique
@@ -155,6 +158,7 @@ class BrickletIO16(Device):
         CallbackID.MONOFLOP_DONE: "c B B",
     }
 
+    # Callbacks are by pin
     SID_TO_CALLBACK = {i: (CallbackID.INTERRUPT, CallbackID.MONOFLOP_DONE) for i in range(16)}
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
@@ -273,7 +277,7 @@ class BrickletIO16(Device):
         )
         return GetPortConfiguration(*unpack_payload(payload, "B B"))
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,
@@ -283,12 +287,17 @@ class BrickletIO16(Device):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        pass
-        # TODO: implement
+        port = Port.A if sid < 16 else Port.B
+        interrupt_mask = await self.get_port_interrupt(port)
+        interrupt_mask &= ~(1 << (sid % 16))  # Reset the bit a position sid
+        interrupt_mask |= int(bool(period)) << (sid % 16)  # if period is non-zero, enable the interrupt
+        await self.set_port_interrupt(port, interrupt_mask)
 
-    async def get_callback_configuration(self, sid: int):
-        pass
-        # TODO: implement
+    async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
+        port = Port.A if sid < 16 else Port.B
+        interrupt_mask = await self.get_port_interrupt(port)
+        value = interrupt_mask & (1 << (sid % 16))
+        return AdvancedCallbackConfiguration(int(bool(value)), False, None, None, None)
 
     async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
         """
@@ -498,3 +507,51 @@ class BrickletIO16(Device):
         edge_type, debounce_time = unpack_payload(payload, "B B")
         edge_type = EdgeType(edge_type)
         return GetEdgeCountConfiguration(edge_type, debounce_time)
+
+    @staticmethod
+    def __bits_set(number: int) -> Generator[int, None, None]:
+        """
+        See https://lemire.me/blog/2018/02/21/iterating-over-set-bits-quickly/ for an explanation how this code
+        works.
+        """
+        while number:
+            bit = number & (~number + 1)
+            yield bit.bit_length() - 1
+            number ^= bit
+
+    async def read_events(
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
+    ) -> AsyncGenerator[Event, None]:
+        assert events is None or sids is None
+
+        registered_events = set()
+        if events is not None:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+        if sids is not None:
+            for sid in sids:
+                for callback in self.SID_TO_CALLBACK.get(sid, []):
+                    registered_events.add(callback)
+
+        if events is None and sids is None:
+            registered_events = set(self.CALLBACK_FORMATS.keys())
+
+        async for header, payload in super()._read_events():
+            try:
+                function_id = CallbackID(header.function_id)
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+
+            if function_id in registered_events:
+                port, interrupt_mask, value_mask = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                port = Port(port)
+                for sid in self.__bits_set(interrupt_mask):
+                    sid = sid if port is Port.A else sid + 16
+                    if sids is not None:
+                        if sid in sids:
+                            yield Event(self, sid, function_id, (port, interrupt_mask, value_mask))
+                    else:
+                        yield Event(self, sid, function_id, (port, interrupt_mask, value_mask))
