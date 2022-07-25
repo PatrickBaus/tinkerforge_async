@@ -105,7 +105,8 @@ async def run_example(bricklet: BrickletIndustrialDualAnalogInV2) -> None:
         await bricklet.set_channel_led_config(0, bricklet.ChannelLedConfig.SHOW_STATUS)
         await bricklet.set_channel_led_config(1, bricklet.ChannelLedConfig.SHOW_STATUS)
 
-        # Test the generic features of the bricklet. These are available with all new bricklets that have a microcontroller
+        # Test the generic features of the bricklet. These are available with all new bricklets that have a
+        # microcontroller
         await run_example_generic(bricklet)
     finally:
         callback_task.cancel()
