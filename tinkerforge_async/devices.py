@@ -9,10 +9,10 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, AsyncGenerator, Iterable, NamedTuple
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync, HeaderPayload
-
 from .ip_connection_helper import base58decode, pack_payload, uid64_to_uid32, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import HeaderPayload, IPConnectionAsync
 
 
 class UnknownFunctionError(Exception):

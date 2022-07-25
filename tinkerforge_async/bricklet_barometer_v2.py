@@ -9,13 +9,13 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 @unique
@@ -100,7 +100,7 @@ class GetSensorConfiguration(NamedTuple):
     air_pressure_low_pass_filter: LowPassFilter
 
 
-class BrickletBarometerV2(BrickletWithMCU):
+class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     """
     Measures air pressure and altitude changes
     """
@@ -140,12 +140,11 @@ class BrickletBarometerV2(BrickletWithMCU):
 
         if sid == 0:
             return await self.get_air_pressure()
-        elif sid == 1:
+        if sid == 1:
             return await self.get_altitude()
-        else:
-            return await self.get_temperature()
+        return await self.get_temperature()
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         sid: int,
         period: int = 0,
@@ -154,7 +153,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ):  # pylint: disable=too-many-arguments
+    ):
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
@@ -178,10 +177,9 @@ class BrickletBarometerV2(BrickletWithMCU):
 
         if sid == 0:
             return await self.get_air_pressure_callback_configuration()
-        elif sid == 1:
+        if sid == 1:
             return await self.get_altitude_callback_configuration()
-        else:
-            return await self.get_temperature_callback_configuration()
+        return await self.get_temperature_callback_configuration()
 
     async def get_air_pressure(self) -> Decimal:
         """
@@ -196,7 +194,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         )
         return self.__air_pressure_sensor_to_si(unpack_payload(payload, "i"))
 
-    async def set_air_pressure_callback_configuration(
+    async def set_air_pressure_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -204,7 +202,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         The period is the period with which the :cb:`Air Pressure` callback is triggered periodically. A value of 0
         turns the callback off.
@@ -280,7 +278,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         )
         return self.__altitude_sensor_to_si(unpack_payload(payload, "i"))
 
-    async def set_altitude_callback_configuration(
+    async def set_altitude_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -288,7 +286,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         The period is the period with which the :cb:`Altitude` callback is triggered periodically. A value of 0 turns
         the callback off.
@@ -364,7 +362,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         )
         return self.__temperature_sensor_to_si(unpack_payload(payload, "i"))
 
-    async def set_temperature_callback_configuration(
+    async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -372,7 +370,7 @@ class BrickletBarometerV2(BrickletWithMCU):
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         The period is the period with which the :cb:`Temperature` callback is triggered periodically. A value of 0 turns
         the callback off.

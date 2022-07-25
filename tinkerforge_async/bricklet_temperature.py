@@ -11,13 +11,13 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 @unique
@@ -98,7 +98,7 @@ class BrickletTemperature(Device):
 
         return await self.get_temperature()
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,
@@ -107,7 +107,7 @@ class BrickletTemperature(Device):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         minimum = Decimal("273.15") if minimum is None else minimum
         maximum = Decimal("273.15") if maximum is None else maximum
 

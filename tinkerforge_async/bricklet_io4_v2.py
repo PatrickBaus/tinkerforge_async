@@ -9,13 +9,13 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 @unique
@@ -265,7 +265,7 @@ class BrickletIO4V2(BrickletWithMCU):
         direction = Direction(direction)
         return GetConfiguration(direction, value)
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,
@@ -274,7 +274,7 @@ class BrickletIO4V2(BrickletWithMCU):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         assert sid in range(5)
 
         if sid in range(4):
@@ -289,10 +289,9 @@ class BrickletIO4V2(BrickletWithMCU):
             return AdvancedCallbackConfiguration(
                 *(await self.get_input_value_callback_configuration(sid)), option=None, minimum=None, maximum=None
             )
-        else:
-            return AdvancedCallbackConfiguration(
-                *(await self.get_all_input_value_callback_configuration()), option=None, minimum=None, maximum=None
-            )
+        return AdvancedCallbackConfiguration(
+            *(await self.get_all_input_value_callback_configuration()), option=None, minimum=None, maximum=None
+        )
 
     async def set_input_value_callback_configuration(
         self, channel: int, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True

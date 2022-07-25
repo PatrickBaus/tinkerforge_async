@@ -9,13 +9,13 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 @unique
@@ -119,7 +119,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
         return await self.get_illuminance()
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         sid: int,
         period: int = 0,
@@ -128,7 +128,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
@@ -162,7 +162,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         print(unpack_payload(payload, "I"))
         return self.__value_to_si(unpack_payload(payload, "I"))
 
-    async def set_illuminance_callback_configuration(
+    async def set_illuminance_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -170,7 +170,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         The period is the period with which the :cb:`Illuminance` callback is triggered periodically. A value of 0 turns
         the callback off.

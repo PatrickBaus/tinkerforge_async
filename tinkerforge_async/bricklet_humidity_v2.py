@@ -123,10 +123,9 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         if sid == 0:
             return await self.get_humidity()
-        else:
-            return await self.get_temperature()
+        return await self.get_temperature()
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         sid: int,
         period: int = 0,
@@ -135,7 +134,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         minimum: Decimal | float | None = None,
         maximum: Decimal | float | None = None,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         assert sid in (0, 1)
 
         if sid == 0:
@@ -156,8 +155,7 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         if sid == 0:
             return await self.get_humidity_callback_configuration()
-        else:
-            return await self.get_temperature_callback_configuration()
+        return await self.get_temperature_callback_configuration()
 
     async def get_humidity(self) -> Decimal:
         """
@@ -174,7 +172,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
         return self.__humidity_sensor_to_si(unpack_payload(payload, "H"))
 
-    async def set_humidity_callback_configuration(
+    async def set_humidity_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -182,7 +180,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         minimum: Decimal | float = 0,
         maximum: Decimal | float = 0,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         The period in ms is the period with which the :cb:`Humidity` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -265,7 +263,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
         return self.__temperature_sensor_to_si(unpack_payload(payload, "h"))
 
-    async def set_temperature_callback_configuration(
+    async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -273,7 +271,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         minimum: Decimal | float = Decimal("273.15"),
         maximum: Decimal | float = Decimal("273.15"),
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         The period in ms is the period with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.

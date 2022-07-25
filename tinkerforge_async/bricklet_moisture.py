@@ -10,13 +10,13 @@ import typing
 from decimal import Decimal
 from enum import Enum, unique
 
-if typing.TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if typing.TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 @unique
@@ -81,7 +81,7 @@ class BrickletMoisture(Device):
 
         return await self.get_moisture_value()
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,
@@ -90,7 +90,7 @@ class BrickletMoisture(Device):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ):  # pylint: disable=too-many-arguments
+    ):
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 

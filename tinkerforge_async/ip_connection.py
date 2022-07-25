@@ -105,7 +105,7 @@ class HeaderPayload:
 DEFAULT_WAIT_TIMEOUT = 2.5  # in seconds
 
 
-class IPConnectionAsync:
+class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
     """
     The implementation of the Tinkerforge TCP/IP protocol. See
     https://www.tinkerforge.com/en/doc/Low_Level_Protocols/TCPIP.html for details.
@@ -438,7 +438,9 @@ class IPConnectionAsync:
             self.__sequence_number_queue.put_nowait(sequence_number)
             self.__sequence_number_queue.task_done()
 
-    async def __process_packet(self, header: HeaderPayload, payload: bytes) -> None:
+    async def __process_packet(  # pylint: disable=too-many-branches
+        self, header: HeaderPayload, payload: bytes
+    ) -> None:
         # There are two types of packets:
         # - Broadcasts/Callbacks
         # - Replies
@@ -526,7 +528,7 @@ class IPConnectionAsync:
                     pass
         except NotConnectedError:
             asyncio.create_task(self.disconnect())
-        except Exception:
+        except Exception:  # pylint: disable=broad-except  # Catch-all, since we process data from external inputs
             self.__logger.exception("Error reading packet from host %s:%i", self.__host, self.__port)
             asyncio.create_task(self.disconnect())
 
@@ -599,8 +601,7 @@ class IPConnectionAsync:
             if isinstance(authentication_secret, str):
                 authentication_secret = authentication_secret.encode("ascii")
 
-            # Use cast(), because we now know the type is bytes
-            await self.__authenticate(cast(bytes, authentication_secret))
+            await self.__authenticate(authentication_secret)
 
         self.__logger.info("Tinkerforge IP connection (%s:%i) connected.", self.__host, self.__port)
 

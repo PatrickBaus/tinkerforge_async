@@ -11,11 +11,10 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
+from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
-
-from .ip_connection_helper import pack_payload, unpack_payload
 
 
 class Rs232IOError(Exception):
@@ -38,7 +37,7 @@ class CallbackID(Enum):
 @unique
 class FunctionID(_FunctionID):
     """
-    The callbacks available to this bricklet
+    The functions available to this bricklet
     """
 
     WRITE_LOW_LEVEL = 1
@@ -228,7 +227,8 @@ class BrickletRS232V2(BrickletWithMCU):
         bytes_written = unpack_payload(payload, "B")
         if bytes_written != length:
             raise Rs232IOError(
-                f"Error writing message {data!r}, offset: {offset}. {bytes_written} bytes written out of {length} bytes."
+                f"Error writing message {data!r}, offset: {offset}. "
+                f"{bytes_written} bytes written out of {length} bytes."
             )
         return bytes_written
 
@@ -258,7 +258,7 @@ class BrickletRS232V2(BrickletWithMCU):
 
         return unpack_payload(payload, "!")
 
-    async def set_configuration(
+    async def set_configuration(  # pylint: disable=too-many-arguments
         self,
         baudrate: int = 115200,
         parity: _Parity | int = Parity.NONE,
@@ -266,7 +266,7 @@ class BrickletRS232V2(BrickletWithMCU):
         wordlength: _WordLength | int = WordLength.LENGTH_8,
         flowcontrol: _FlowControl | int = FlowControl.OFF,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         Sets the configuration for the RS232 communication.
         """
@@ -370,8 +370,9 @@ class BrickletRS232V2(BrickletWithMCU):
         self, frame_size: int = 0, response_expected: bool = True
     ) -> None:
         """
-        Configures the :cb:`Frame Readable` callback. The frame size is the number of bytes, that have to be readable to trigger the callback.
-        A frame size of 0 disables the callback. A frame size greater than 0 enables the callback and disables the :cb:`Read` callback.
+        Configures the :cb:`Frame Readable` callback. The frame size is the number of bytes, that have to be readable to
+        trigger the callback. A frame size of 0 disables the callback. A frame size greater than 0 enables the callback
+        and disables the :cb:`Read` callback.
 
         By default, the callback is disabled.
 
@@ -486,7 +487,7 @@ class BrickletRS232V2(BrickletWithMCU):
                 result.extend(data)
             return bytes(result)
 
-    async def read_events(
+    async def read_events(  # pylint: disable=too-many-branches
         self, events: tuple[int, ...] | list[int] | None = None, sids: tuple[int, ...] | list[int] | None = None
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()
@@ -512,10 +513,13 @@ class BrickletRS232V2(BrickletWithMCU):
                 if function_id is CallbackID.READ:
                     final_size, offset, data = value
                     if final_size > offset + 60:
+                        # There is at least one more chunk to read, so we just read the full length and append it
                         self.__callback_read_buffer.extend(data)
                     else:
+                        # Read the last chunk, which does not have the full length
                         self.__callback_read_buffer.extend(data[: final_size - offset])
                     if len(self.__callback_read_buffer) == final_size:
+                        # If we are done reading, flush the buffer and yield the result
                         result = bytes(self.__callback_read_buffer)
                         self.__callback_read_buffer = bytearray()
                         yield Event(self, 0, function_id, result)

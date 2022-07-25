@@ -10,11 +10,10 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, Iterable, NamedTuple
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
+from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
-
-from .ip_connection_helper import pack_payload, unpack_payload
 
 
 @unique
@@ -200,9 +199,9 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         return unpack_payload(payload, "!")
 
-    async def start_counter(
+    async def start_counter(  # pylint: disable=too-many-arguments
         self, value_from: int, value_to: int, increment: int, length: int, response_expected: bool = True
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         Turns one specified segment on or off.
 

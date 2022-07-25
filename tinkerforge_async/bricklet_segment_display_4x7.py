@@ -9,11 +9,11 @@ from __future__ import annotations
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import Device, DeviceIdentifier, Event, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 @unique
@@ -119,9 +119,9 @@ class BrickletSegmentDisplay4x7(Device):
         )
         return GetSegments(*unpack_payload(payload, "4B B !"))
 
-    async def start_counter(
+    async def start_counter(  # pylint: disable=too-many-arguments
         self, value_from: int, value_to: int, increment: int = 1, length: int = 1000, response_expected: bool = True
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         Starts a counter with the *from* value that counts to the *to*
         value each step incremented with by *increment*.

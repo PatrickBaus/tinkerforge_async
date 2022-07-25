@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 """
-An example to demonstrate most of the capabilities of the Tinkerforge Master brick
+An example to demonstrate most of the capabilities of the Tinkerforge Master brick.
 """
 import asyncio
 import warnings
@@ -16,7 +17,7 @@ async def process_callbacks(device: BrickMaster) -> None:
         print("Callback received", packet)
 
 
-async def run_master_extension_chibi(brick):
+async def run_master_extension_chibi(brick: BrickMaster):
     """
     This is the demo for the chibi extension
     """
@@ -44,7 +45,7 @@ async def run_master_extension_chibi(brick):
     await brick.set_chibi_channel(chibi_channel)
 
 
-async def run_master_extension_rs485(brick):
+async def run_master_extension_rs485(brick: BrickMaster):
     """
     This is the demo for the RS485 extension
     """
@@ -63,7 +64,7 @@ async def run_master_extension_rs485(brick):
     print("RS-485 CRC error count:", await brick.get_rs485_error_log())
 
 
-async def run_master_extension_wifi(brick):
+async def run_master_extension_wifi(brick: BrickMaster):
     """
     This is the demo for the WIFI extension
     """
@@ -76,7 +77,7 @@ async def run_master_extension_wifi(brick):
     await brick.set_wifi_encryption(**wifi_encryption._asdict())
     # await master.set_long_wifi_key('foobar')
 
-    print('WIFI Key (only FW <2.4.4): "{}"'.format(await brick.get_long_wifi_key()))
+    print(f"WIFI Key (only FW <2.4.4): '{await brick.get_long_wifi_key()!r}'")
 
     wifi_power_mode = await brick.get_wifi_power_mode()
     print("WIFI power mode:", wifi_power_mode)
@@ -94,8 +95,13 @@ async def run_master_extension_wifi(brick):
     new_status = wifi_status._asdict()
     # The mac and bssid are stored as tuples of int. We will replace them with the more common hex notation for
     # better readability, then we will recreate the named tuple.
-    new_status["mac_address"] = "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}".format(*new_status["mac_address"])
-    new_status["bssid"] = "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}".format(*new_status["bssid"])
+    new_status["mac_address"] = []
+    new_status["mac_address"] = "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}".format(
+        *new_status["mac_address"]
+    )  # pylint: disable=consider-using-f-string
+    new_status["bssid"] = "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}".format(
+        *new_status["bssid"]
+    )  # pylint: disable=consider-using-f-string
     print("WIFI status:", type(wifi_status)(**new_status))
 
     hostname = await brick.get_wifi_hostname()
@@ -103,15 +109,15 @@ async def run_master_extension_wifi(brick):
     await brick.set_wifi_hostname("hostname")
 
     # await brick.set_wifi_authentication_secret('')
-    print('WIFI authentication secret: "{secret}"'.format(secret=await brick.get_wifi_authentication_secret()))
+    print(f"WIFI authentication secret: '{await brick.get_wifi_authentication_secret()!r}'")
 
     # await brick.set_wpa_enterprise_username('user')
     # await brick.set_wpa_enterprise_password('password')
-    print('WPA Enterprise username: "{user}"'.format(user=await brick.get_wpa_enterprise_username()))
-    print('WPA Enterprise password: "{passwd}"'.format(passwd=await brick.get_wpa_enterprise_password()))
+    print(f"WPA Enterprise username: '{await brick.get_wpa_enterprise_username()!r}'")
+    print(f"WPA Enterprise password: '{await brick.get_wpa_enterprise_password()!r}'")
 
 
-async def run_master_extension_ethernet(brick):
+async def run_master_extension_ethernet(brick: BrickMaster):
     """
     This is the demo for the ethernet extension
     """
@@ -130,10 +136,10 @@ async def run_master_extension_ethernet(brick):
     print("Websocket config:", config_websocket)
 
     # await brick.set_ethernet_authentication_secret('')
-    print('Ethernet authentication secret: "{secret}"'.format(secret=await brick.get_ethernet_authentication_secret()))
+    print(f"Ethernet authentication secret: '{await brick.get_ethernet_authentication_secret()!r}'")
 
 
-async def run_master_extension_wifi2(brick):
+async def run_master_extension_wifi2(brick: BrickMaster):
     """
     This is the demo for the WIFI 2.0 extension
     """
@@ -146,17 +152,17 @@ async def run_master_extension_wifi2(brick):
     await brick.set_wifi2_status_led(led_status)
     print("WIFI 2.0 status led enabled?", await brick.is_wifi2_status_led_enabled())
 
-    config = await brick.get_wifi2_configuration()
-    print("WIFI 2.0 config:", config)
-    new_config = config._asdict()
+    config_wifi = await brick.get_wifi2_configuration()
+    print("WIFI 2.0 config:", config_wifi)
+    new_config = config_wifi._asdict()
     # new_config["website"] = True
     await brick.set_wifi2_configuration(**new_config)
     print("New WIFI 2.0 config:", await brick.get_wifi2_configuration())
 
     print("WIFI 2.0 status:", await brick.get_wifi2_status())
-    config = await brick.get_wifi2_client_configuration()
-    print("WIFI 2.0 client configuration:", config)
-    new_config = config._asdict()
+    config_client = await brick.get_wifi2_client_configuration()
+    print("WIFI 2.0 client configuration:", config_client)
+    new_config = config_client._asdict()
     # new_config["ip"] = (0,0,0,0)    # Set to DHCP
     await brick.set_wifi2_client_configuration(**new_config)
     print("New WIFI 2.0 client configuration:", await brick.get_wifi2_client_configuration())
@@ -168,18 +174,18 @@ async def run_master_extension_wifi2(brick):
     # await brick.set_wifi2_client_password('foo')
     print("WIFI 2.0 client password:", await brick.get_wifi2_client_password())
 
-    config = await brick.get_wifi2_ap_configuration()
-    print("WIFI 2.0 AP configuration:", config)
-    new_config = config._asdict()
+    config_ap = await brick.get_wifi2_ap_configuration()
+    print("WIFI 2.0 AP configuration:", config_ap)
+    new_config = config_ap._asdict()
     # new_config["enable"] = False
     await brick.set_wifi2_ap_configuration(**new_config)
 
     # await brick.set_wifi2_ap_password('foobar')
     print("WIFI 2.0 AP password:", await brick.get_wifi2_ap_password())
 
-    config = await brick.get_wifi2_mesh_configuration()
-    print("WIFI 2.0 Mesh configuration:", config)
-    new_config = config._asdict()
+    config_mesh = await brick.get_wifi2_mesh_configuration()
+    print("WIFI 2.0 Mesh configuration:", config_mesh)
+    new_config = config_mesh._asdict()
     # new_config['group_id'] = (26, 254, 52, 0, 0, 0)
     await brick.set_wifi2_mesh_configuration(**new_config)
 
@@ -274,7 +280,7 @@ async def main():
     tasks = set()
     try:
         # Use the context manager of the ip connection. It will automatically do the cleanup.
-        async with IPConnectionAsync(host="127.0.0.1", port=4223) as connection:
+        async with IPConnectionAsync(host="10.0.0.5", port=4223) as connection:
             await connection.enumerate()
             # Read all enumeration replies, then start the example if we find the correct device
             async for enumeration_type, device in connection.read_enumeration():  # pylint: disable=unused-variable

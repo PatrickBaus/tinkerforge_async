@@ -9,13 +9,13 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, NamedTuple
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import Device, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 @unique
@@ -204,14 +204,14 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, "B")
 
-    async def set_port_configuration(
+    async def set_port_configuration(  # pylint: disable=too-many-arguments
         self,
         port: _Port | str,
         selection_mask: int,
         direction: _Direction | str,
         value: _InputConfiguration | _OutputConfiguration | bool = False,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         Configures the value and direction of a specified port. Possible directions are 'i' and 'o' for input and
         output.
@@ -223,7 +223,8 @@ class BrickletIO16(Device):
         For example:
 
         * ('a', 255, 'i', true) or ('a', 0b11111111, 'i', true) will set all pins of port A as input pull-up.
-        * ('a', 128, 'i', false) or ('a', 0b10000000, 'i', false) will set pin 7 of port A as input default (floating if nothing is connected).
+        * ('a', 128, 'i', false) or ('a', 0b10000000, 'i', false) will set pin 7 of port A as input default (floating if
+         nothing is connected).
         * ('b', 3, 'o', false) or ('b', 0b00000011, 'o', false) will set pins 0 and 1 of port B as output low.
         * ('b', 4, 'o', true) or ('b', 0b00000100, 'o', true) will set pin 2 of port B as output high.
 
@@ -271,7 +272,7 @@ class BrickletIO16(Device):
         )
         return GetPortConfiguration(*unpack_payload(payload, "B B"))
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         sid: int,
         period: int = 0,
@@ -280,7 +281,7 @@ class BrickletIO16(Device):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         pass
         # TODO: implement
 
@@ -348,9 +349,9 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, "B")
 
-    async def set_port_monoflop(
+    async def set_port_monoflop(  # pylint: disable=too-many-arguments
         self, port: _Port | str, selection_mask: int, value_mask: int, time: int, response_expected: bool = True
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         Configures a monoflop of the pins specified by the second parameter as an 8 bit long bitmask. The specified pins
         must be configured for output. Non-output pins will be ignored.

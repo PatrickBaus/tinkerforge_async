@@ -9,11 +9,10 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
+from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
-
-from .ip_connection_helper import pack_payload, unpack_payload
 
 
 @unique

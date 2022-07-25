@@ -14,11 +14,10 @@ from typing import TYPE_CHECKING, AsyncGenerator
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
-
-from .ip_connection_helper import pack_payload, unpack_payload
 
 
 @unique
@@ -103,7 +102,7 @@ class SensorType(Enum):
 _SensorType = SensorType
 
 
-class BrickletPtc(Device):
+class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
     """
     Reads temperatures from Pt100 und Pt1000 sensors
     """
@@ -156,19 +155,21 @@ class BrickletPtc(Device):
         self.sensor_type = sensor_type  # type: ignore  # Use the setter to automatically convert to enum
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__module__}.{self.__class__.__qualname__}(uid={self.uid}, ipcon={self.ipcon!r}, sensor_type={self.sensor_type})"
+        return (
+            f"{self.__class__.__module__}.{self.__class__.__qualname__}"
+            f"(uid={self.uid}, ipcon={self.ipcon!r}, sensor_type={self.sensor_type})"
+        )
 
     async def get_value(self, sid: int) -> Decimal | bool:
         assert sid in (0, 1, 2)
 
         if sid == 0:
             return await self.get_temperature()
-        elif sid == 1:
+        if sid == 1:
             return await self.get_resistance()
-        else:
-            return await self.is_sensor_connected()
+        return await self.is_sensor_connected()
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,
@@ -177,7 +178,7 @@ class BrickletPtc(Device):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ):  # pylint: disable=too-many-arguments
+    ):
         assert sid in (0, 1, 2)
 
         if sid == 0:

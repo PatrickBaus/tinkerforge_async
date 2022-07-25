@@ -10,13 +10,13 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event, LedConfig
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 @unique
@@ -140,10 +140,9 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         if sid in (0, 1):
             return await self.get_voltage(sid)
-        else:
-            return await self.get_all_voltages()
+        return await self.get_all_voltages()
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         sid: int,
         period: int = 0,
@@ -152,7 +151,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
@@ -169,10 +168,9 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         assert sid in (0, 1, 2)
         if sid in (0, 1):
             return await self.get_voltage_callback_configuration(sid)
-        else:
-            return AdvancedCallbackConfiguration(
-                *(await self.get_all_voltages_callback_configuration()), option=None, minimum=None, maximum=None
-            )
+        return AdvancedCallbackConfiguration(
+            *(await self.get_all_voltages_callback_configuration()), option=None, minimum=None, maximum=None
+        )
 
     async def get_voltage(self, channel: int) -> Decimal:
         """
@@ -192,7 +190,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         )
         return self.__value_to_si(unpack_payload(payload, "i"))
 
-    async def set_voltage_callback_configuration(
+    async def set_voltage_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         channel: int,
         period: int = 0,
@@ -201,7 +199,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         The period is the period with which the :cb:`Voltage` callback is triggered periodically. A value of 0 turns the
         callback off.
@@ -425,14 +423,14 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         return LedConfig(unpack_payload(payload, "B"))
 
-    async def set_channel_led_status_config(
+    async def set_channel_led_status_config(  # pylint: disable=too-many-arguments
         self,
         channel: int,
         minimum: float | Decimal,
         maximum: float | Decimal,
         config: _ChannelLedStatusConfig | int,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         Sets the channel LED status config. This config is used if the channel LED is configured as "Channel Status",
         see :func:`Set Channel LED Config`.

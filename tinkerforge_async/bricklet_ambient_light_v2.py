@@ -129,7 +129,7 @@ class BrickletAmbientLightV2(Device):
 
         return await self.get_illuminance()
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,
@@ -138,7 +138,7 @@ class BrickletAmbientLightV2(Device):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 

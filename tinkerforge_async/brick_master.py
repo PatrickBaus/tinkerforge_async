@@ -3,6 +3,7 @@ Module for the Tinkerforge Master Brick (https://www.tinkerforge.com/en/doc/Hard
 implemented using Python AsyncIO. It does the low-level communication with the Tinkerforge ip connection and also
 handles conversion of raw units to SI units.
 """
+# pylint: disable=too-many-lines
 from __future__ import annotations
 
 import asyncio
@@ -12,15 +13,15 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, Iterable, NamedTuple
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import BasicCallbackConfiguration
 from .devices import BrickletPort as Port
 from .devices import DeviceIdentifier, DeviceWithMCU, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 class GetChibiErrorLog(NamedTuple):
@@ -39,7 +40,7 @@ class GetRS485Configuration(NamedTuple):
 class GetWifiConfiguration(NamedTuple):
     ssid: bytes
     connection: WifiConnection
-    ip: tuple[int, int, int, int]
+    ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
     port: int
@@ -59,7 +60,7 @@ class GetWifiStatus(NamedTuple):
     bssid: tuple[int, int, int, int, int, int]
     channel: int
     rssi: int
-    ip: tuple[int, int, int, int]
+    ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
     rx_count: int
@@ -105,7 +106,7 @@ class GetWifiBufferInfo(NamedTuple):
 
 class GetEthernetConfiguration(NamedTuple):
     connection: EthernetConnection
-    ip: tuple[int, int, int, int]
+    ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
     port: int
@@ -113,7 +114,7 @@ class GetEthernetConfiguration(NamedTuple):
 
 class GetEthernetStatus(NamedTuple):
     mac_address: tuple[int, int, int, int, int, int]
-    ip: tuple[int, int, int, int]
+    ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
     rx_count: int
@@ -208,7 +209,7 @@ class GetWifi2Status(NamedTuple):
 class GetWifi2ClientConfiguration(NamedTuple):
     enable: bool
     ssid: bytes
-    ip: tuple[int, int, int, int]
+    ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
     mac_address: tuple[int, int, int, int, int, int]
@@ -218,7 +219,7 @@ class GetWifi2ClientConfiguration(NamedTuple):
 class GetWifi2APConfiguration(NamedTuple):
     enable: bool
     ssid: bytes
-    ip: tuple[int, int, int, int]
+    ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
     encryption: WifiApEncryption
@@ -250,7 +251,7 @@ class GetWifi2MeshCommonStatus(NamedTuple):
 
 class GetWifi2MeshClientStatus(NamedTuple):
     hostname: bytes
-    ip: tuple[int, int, int, int]
+    ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
     mac_address: tuple[int, int, int, int, int, int]
@@ -258,7 +259,7 @@ class GetWifi2MeshClientStatus(NamedTuple):
 
 class GetWifi2MeshAPStatus(NamedTuple):
     ssid: bytes
-    ip: tuple[int, int, int, int]
+    ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
     mac_address: tuple[int, int, int, int, int, int]
@@ -304,6 +305,7 @@ class CallbackID(Enum):
 
 
 _CallbackID = CallbackID
+
 
 @unique
 class FunctionID(_FunctionID):
@@ -580,9 +582,7 @@ class EapOptions:
     """
 
     def __repr__(self) -> str:
-        return "({outer}, {inner}, {cert_type})".format(
-            outer=self.__outer_auth, inner=self.__inner_auth, cert_type=self.__cert_type
-        )
+        return f"{self.__outer_auth}, {self.__inner_auth}, {self.__cert_type})"
 
     def __init__(self, value: int) -> None:
         self.__outer_auth = WifiEapOuterAuth(value & 0b11)
@@ -744,7 +744,7 @@ class WifiMeshStatus(Enum):
     LEAF_AVAILABLE = 7
 
 
-class BrickMaster(DeviceWithMCU):
+class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
     """
     Basis to build stacks and has 4 Bricklet ports
     """
@@ -1263,16 +1263,16 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, "!")
 
-    async def set_wifi_configuration(
+    async def set_wifi_configuration(  # pylint: disable=too-many-arguments
         self,
         ssid: str | bytes,
         connection: _WifiConnection | int,
-        ip: tuple[int, int, int, int] | list[int] = (0, 0, 0, 0),
+        ip_address: tuple[int, int, int, int] | list[int] = (0, 0, 0, 0),
         subnet_mask: tuple[int, int, int, int] | list[int] = (0, 0, 0, 0),
         gateway: tuple[int, int, int, int] | list[int] = (0, 0, 0, 0),
         port: int = 4223,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments,invalid-name
+    ) -> None:
         """
         Sets the configuration of the Wi-Fi Extension. The ``ssid`` can have a max length
         of 32 characters. Possible values for ``connection`` are:
@@ -1304,7 +1304,7 @@ class BrickMaster(DeviceWithMCU):
         """
         if not isinstance(connection, WifiConnection):
             connection = WifiConnection(connection)
-        assert isinstance(ip, (tuple, list)) and len(ip) == 4
+        assert isinstance(ip_address, (tuple, list)) and len(ip_address) == 4
         assert isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4
         assert isinstance(gateway, (tuple, list)) and len(gateway) == 4
         assert 1 <= port <= 65535
@@ -1322,7 +1322,7 @@ class BrickMaster(DeviceWithMCU):
                 (
                     ssid,
                     connection.value,
-                    list(map(int, reversed(ip))),
+                    list(map(int, reversed(ip_address))),
                     list(map(int, reversed(subnet_mask))),
                     list(map(int, reversed(gateway))),
                     int(port),
@@ -1345,7 +1345,7 @@ class BrickMaster(DeviceWithMCU):
             ssid, WifiConnection(connection), ip_addr[::-1], subnet_mask[::-1], gateway[::-1], port
         )
 
-    async def set_wifi_encryption(
+    async def set_wifi_encryption(  # pylint: disable=too-many-arguments
         self,
         encryption: WifiEncryptionMode,
         key_index: int = 1,
@@ -1354,7 +1354,7 @@ class BrickMaster(DeviceWithMCU):
         client_certificate_length: int = 0,
         private_key_length: int = 0,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         Sets the encryption of the Wi-Fi Extension. The first parameter is the
         type of the encryption. Possible values are:
@@ -2095,15 +2095,15 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, "!")
 
-    async def set_ethernet_configuration(
+    async def set_ethernet_configuration(  # pylint: disable=too-many-arguments
         self,
         connection: _EthernetConnection,
-        ip: tuple[int, int, int, int] = (0, 0, 0, 0),
+        ip_address: tuple[int, int, int, int] = (0, 0, 0, 0),
         subnet_mask: tuple[int, int, int, int] = (0, 0, 0, 0),
         gateway: tuple[int, int, int, int] = (0, 0, 0, 0),
         port: int = 4223,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments, invalid-name
+    ) -> None:
         """
         Sets the configuration of the Ethernet Extension. Possible values for
         ``connection`` are:
@@ -2133,7 +2133,7 @@ class BrickMaster(DeviceWithMCU):
         """
         if not isinstance(connection, EthernetConnection):
             connection = EthernetConnection(connection)
-        assert isinstance(ip, (tuple, list)) and len(ip) == 4
+        assert isinstance(ip_address, (tuple, list)) and len(ip_address) == 4
         assert isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4
         assert isinstance(gateway, (tuple, list)) and len(gateway) == 4
         assert 1 <= port <= 65535
@@ -2142,7 +2142,13 @@ class BrickMaster(DeviceWithMCU):
             device=self,
             function_id=FunctionID.SET_ETHERNET_CONFIGURATION,
             data=pack_payload(
-                (connection.value, list(map(int, ip)), list(map(int, subnet_mask)), list(map(int, gateway)), int(port)),
+                (
+                    connection.value,
+                    list(map(int, ip_address)),
+                    list(map(int, subnet_mask)),
+                    list(map(int, gateway)),
+                    int(port),
+                ),
                 "B 4B 4B 4B H",
             ),
             response_expected=response_expected,
@@ -2515,7 +2521,7 @@ class BrickMaster(DeviceWithMCU):
 
         return unpack_payload(payload, "64s")
 
-    async def set_wifi2_configuration(
+    async def set_wifi2_configuration(  # pylint: disable=too-many-arguments
         self,
         port: int = 4223,
         websocket_port: int = 4280,
@@ -2524,7 +2530,7 @@ class BrickMaster(DeviceWithMCU):
         sleep_mode: int = 0,
         website: bool = False,
         response_expected=True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         Sets the general configuration of the Wi-Fi Extension 2.0.
 
@@ -2641,17 +2647,17 @@ class BrickMaster(DeviceWithMCU):
             ap_connected_count,
         )
 
-    async def set_wifi2_client_configuration(
+    async def set_wifi2_client_configuration(  # pylint: disable=too-many-arguments
         self,
         enable: bool = True,
         ssid: bytes | str = "tinkerforge",
-        ip: tuple[int, int, int, int] = (0, 0, 0, 0),
+        ip_address: tuple[int, int, int, int] = (0, 0, 0, 0),
         subnet_mask: tuple[int, int, int, int] = (0, 0, 0, 0),
         gateway: tuple[int, int, int, int] = (0, 0, 0, 0),
         mac_address: tuple[int, int, int, int, int, int] = (0, 0, 0, 0, 0, 0),
         bssid: tuple[int, int, int, int, int, int] = (0, 0, 0, 0, 0, 0),
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments, invalid-name
+    ) -> None:
         """
         Sets the client specific configuration of the Wi-Fi Extension 2.0.
 
@@ -2683,7 +2689,7 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert isinstance(ip, (tuple, list)) and len(ip) == 4
+        assert isinstance(ip_address, (tuple, list)) and len(ip_address) == 4
         assert isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4
         assert isinstance(gateway, (tuple, list)) and len(gateway) == 4
         assert isinstance(mac_address, (tuple, list)) and len(mac_address) == 6
@@ -2700,7 +2706,7 @@ class BrickMaster(DeviceWithMCU):
                 (
                     bool(enable),
                     ssid,
-                    list(map(int, ip)),
+                    list(map(int, ip_address)),
                     list(map(int, subnet_mask)),
                     list(map(int, gateway)),
                     list(map(int, mac_address)),
@@ -2814,11 +2820,11 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, "64s")
 
-    async def set_wifi2_ap_configuration(
+    async def set_wifi2_ap_configuration(  # pylint: disable=too-many-arguments
         self,
         enable: bool = True,
         ssid: bytes | str = "WIFI Extension 2.0 Access Point",
-        ip: tuple[int, int, int, int] = (0, 0, 0, 0),
+        ip_address: tuple[int, int, int, int] = (0, 0, 0, 0),
         subnet_mask: tuple[int, int, int, int] = (0, 0, 0, 0),
         gateway: tuple[int, int, int, int] = (0, 0, 0, 0),
         encryption: _WifiApEncryption = WifiApEncryption.WPA2_PSK,
@@ -2826,7 +2832,7 @@ class BrickMaster(DeviceWithMCU):
         channel: int = 1,
         mac_address: tuple[int, int, int, int, int, int] = (0, 0, 0, 0, 0, 0),
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments, invalid-name
+    ) -> None:
         """
         Sets the access point specific configuration of the Wi-Fi Extension 2.0.
 
@@ -2863,6 +2869,7 @@ class BrickMaster(DeviceWithMCU):
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
+        assert isinstance(ip_address, (tuple, list)) and len(ip_address) == 4
         assert isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4
         assert isinstance(gateway, (tuple, list)) and len(gateway) == 4
         assert isinstance(mac_address, (tuple, list)) and len(mac_address) == 6
@@ -2880,7 +2887,7 @@ class BrickMaster(DeviceWithMCU):
                 (
                     bool(enable),
                     ssid,
-                    list(map(int, ip)),
+                    list(map(int, ip_address)),
                     list(map(int, subnet_mask)),
                     list(map(int, gateway)),
                     encryption.value,
@@ -3030,7 +3037,7 @@ class BrickMaster(DeviceWithMCU):
         )
         return unpack_payload(payload, "!")
 
-    async def set_wifi2_mesh_configuration(
+    async def set_wifi2_mesh_configuration(  # pylint: disable=too-many-arguments
         self,
         enable: bool = False,
         root_ip: tuple[int, int, int, int] = (0, 0, 0, 0),
@@ -3042,7 +3049,7 @@ class BrickMaster(DeviceWithMCU):
         gateway_ip: tuple[int, int, int, int] = (0, 0, 0, 0),
         gateway_port: int = 4240,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         Requires Wi-Fi Extension 2.0 firmware 2.1.0.
 

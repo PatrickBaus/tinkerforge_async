@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 """
 An example to demonstrate most of the capabilities of the Tinkerforge  Ambient Light Bricklet 2.0.
 """

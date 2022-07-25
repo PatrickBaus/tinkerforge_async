@@ -9,13 +9,13 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
-
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
 
 
 @unique
@@ -150,19 +150,21 @@ class BrickletPtcV2(BrickletWithMCU):
         self.sensor_type = sensor_type  # Use the setter to automatically convert to enum
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__module__}.{self.__class__.__qualname__}(uid={self.uid}, ipcon={self.ipcon!r}, sensor_type={self.sensor_type})"
+        return (
+            f"{self.__class__.__module__}.{self.__class__.__qualname__}"
+            f"(uid={self.uid}, ipcon={self.ipcon!r}, sensor_type={self.sensor_type})"
+        )
 
     async def get_value(self, sid) -> Decimal | bool:
         assert sid in (0, 1, 2)
 
         if sid == 0:
             return await self.get_temperature()
-        elif sid == 1:
+        if sid == 1:
             return await self.get_resistance()
-        else:
-            return await self.is_sensor_connected()
+        return await self.is_sensor_connected()
 
-    async def set_callback_configuration(
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         sid: int,
         period: int = 0,
@@ -171,7 +173,7 @@ class BrickletPtcV2(BrickletWithMCU):
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         assert sid in (0, 1, 2)
 
         if sid == 0:
@@ -194,16 +196,13 @@ class BrickletPtcV2(BrickletWithMCU):
 
         if sid == 0:
             return await self.get_temperature_callback_configuration()
-        elif sid == 1:
+        if sid == 1:
             return await self.get_resistance_callback_configuration()
-        else:
-            raise AttributeError("Configuration of the 'connected callback' is not supported.")
+        raise AttributeError("Configuration of the 'connected callback' is not supported.")
 
     async def get_temperature(self) -> Decimal:
         """
-        Returns the temperature of the connected sensor. The value  has a range of -246 to 849 °C and is given in °C/100,
-        e.g. a value of 4223 means that a temperature of 42.23 °C is measured.
-
+        Returns the temperature of the connected sensor. The value  has a range of -246 to 849 °C and is given in K,
 
         If you want to get the value periodically, it is recommended to use the
         :cb:`Temperature` callback. You can set the callback configuration
@@ -214,7 +213,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return self.__value_to_si_temperature(unpack_payload(payload, "i"))
 
-    async def set_temperature_callback_configuration(
+    async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -222,7 +221,7 @@ class BrickletPtcV2(BrickletWithMCU):
         minimum: float | Decimal = Decimal("275.15"),
         maximum: float | Decimal = Decimal("275.15"),
         response_expected=True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         The period is the period with which the :cb:`Temperature` callback is triggered periodically. A value of 0 turns
         the callback off.
@@ -300,7 +299,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return self.__value_to_si_resistance(unpack_payload(payload, "i"))
 
-    async def set_resistance_callback_configuration(
+    async def set_resistance_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -308,7 +307,7 @@ class BrickletPtcV2(BrickletWithMCU):
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         """
         The period is the period with which the :cb:`Resistance` callback is triggered periodically. A value of 0 turns
         the callback off.
