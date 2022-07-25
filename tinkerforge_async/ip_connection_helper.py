@@ -40,97 +40,93 @@ def base58decode(encoded: str) -> int:
     value = 0
     column_multiplier = 1
 
-    for c in encoded[::-1]:
-        column = BASE58.index(c)
+    for character in encoded[::-1]:
+        column = BASE58.index(character)
         value += column * column_multiplier
         column_multiplier *= 58
 
     return value
 
 
-def pack_payload(data: tuple[Any, ...], form: str) -> bytes:
+def pack_payload(data: tuple[Any, ...], form: str) -> bytes:  # pylint: disable=too-many-branches
     packed = b""
 
-    for f, d in zip(form.split(" "), data):
-        if "!" in f:
-            if len(f) > 1:
-                if int(f.replace("!", "")) != len(d):
+    for format_str, data_unpacked in zip(form.split(" "), data):
+        if "!" in format_str:
+            if len(format_str) > 1:
+                if int(format_str.replace("!", "")) != len(data_unpacked):
                     raise ValueError("Incorrect bool list length")
 
-                p = [0] * int(math.ceil(len(d) / 8.0))
+                packed_bools = [0] * int(math.ceil(len(data_unpacked) / 8.0))
 
-                for i, b in enumerate(d):
-                    if b:
-                        p[i // 8] |= 1 << (i % 8)
+                for i, bool_value in enumerate(data_unpacked):
+                    if bool_value:
+                        packed_bools[i // 8] |= 1 << (i % 8)
 
-                packed += struct.pack("<{0}B".format(len(p)), *p)
+                packed += struct.pack(f"<{len(packed_bools)}B", *packed_bools)
             else:
-                packed += struct.pack("<?", d)
-        elif "c" in f:
-            if len(f) > 1:
-                packed += struct.pack("<" + f, *list(map(lambda char: bytes([ord(char)]), d)))
+                packed += struct.pack("<?", data_unpacked)
+        elif "c" in format_str:
+            if len(format_str) > 1:
+                packed += struct.pack("<" + format_str, *list(map(lambda char: bytes([ord(char)]), data_unpacked)))
             else:
-                packed += struct.pack("<" + f, bytes([ord(d)]))
-        elif "s" in f:
-            packed += struct.pack("<" + f, d)
-        elif len(f) > 1:
-            packed += struct.pack("<" + f, *d)
+                packed += struct.pack("<" + format_str, bytes([ord(data_unpacked)]))
+        elif "s" in format_str:
+            packed += struct.pack("<" + format_str, data_unpacked)
+        elif len(format_str) > 1:
+            packed += struct.pack("<" + format_str, *data_unpacked)
         else:
-            packed += struct.pack("<" + f, d)
+            packed += struct.pack("<" + format_str, data_unpacked)
 
     return packed
 
 
-def unpack_payload(data: bytes, form: str) -> Any:
+def unpack_payload(data: bytes, form: str) -> Any:  # pylint: disable=too-many-branches
     ret = []
     if not form or len(data) == 0:
         return None
 
-    for f in form.split(" "):
-        o = f
+    for format_str in form.split(" "):
+        # We need to decode the TF format string to the standard Python format string
+        struct_format_str = format_str
 
-        if "!" in f:
-            if len(f) > 1:
-                f = "{0}B".format(int(math.ceil(int(f.replace("!", "")) / 8.0)))
+        if "!" in struct_format_str:
+            if len(struct_format_str) > 1:
+                struct_format_str = f"{int(math.ceil(int(struct_format_str.replace('!', '')) / 8.0))}B"
             else:
-                f = "B"
+                struct_format_str = "B"
 
-        f = "<" + f
-        length = struct.calcsize(f)
-        x = struct.unpack(f, data[:length])
+        struct_format_str = "<" + struct_format_str
+        length = struct.calcsize(struct_format_str)
+        data_unpacked = struct.unpack(struct_format_str, data[:length])
 
-        if "!" in o:
-            y = []
+        if "!" in format_str:
+            temp_array = []
 
-            if len(o) > 1:
-                for i in range(int(o.replace("!", ""))):
-                    y.append(x[i // 8] & (1 << (i % 8)) != 0)
+            if len(format_str) > 1:
+                for i in range(int(format_str.replace("!", ""))):
+                    temp_array.append(data_unpacked[i // 8] & (1 << (i % 8)) != 0)
             else:
-                y.append(x[0] != 0)
+                temp_array.append(data_unpacked[0] != 0)
 
-            x = tuple(y)
+            data_unpacked = tuple(temp_array)
 
-        if "c" in f:
-            if len(x) > 1:
-                ret.append(tuple(map(lambda item: chr(ord(item)), x)))
+        if "c" in struct_format_str:
+            if len(data_unpacked) > 1:
+                ret.append(tuple(map(lambda item: chr(ord(item)), data_unpacked)))
             else:
-                ret.append(chr(ord(x[0])))  # type: ignore
-        elif "s" in f:
+                ret.append(chr(ord(data_unpacked[0])))  # type: ignore
+        elif "s" in struct_format_str:
             # convert from byte-array to string, removing all null bytes
-            # Note: This works only in Python 3
-            s = str(x[0], "latin-1").partition("\0")[0]
+            ret.append(str(data_unpacked[0], "latin-1").partition("\0")[0])  # type: ignore
 
-            # strip null bytes
-            ret.append(s)  # type: ignore
-
-        elif len(x) > 1:
-            ret.append(x)
+        elif len(data_unpacked) > 1:
+            ret.append(data_unpacked)
         else:
-            ret.append(x[0])
+            ret.append(data_unpacked[0])
 
         data = data[length:]
 
     if len(ret) == 1:
         return ret[0]
-    else:
-        return ret
+    return ret
