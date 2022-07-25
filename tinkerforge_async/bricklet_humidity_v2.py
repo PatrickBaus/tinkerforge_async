@@ -1,9 +1,9 @@
 """
 Module for the Tinkerforge Humidity Bricklet 2.0
-(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)
-implemented using Python AsyncIO. It does the low-level communication with the
-Tinkerforge ip connection and also handles conversion of raw units to SI units.
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html) implemented using Python asyncIO. It does the
+low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+# pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
 from decimal import Decimal

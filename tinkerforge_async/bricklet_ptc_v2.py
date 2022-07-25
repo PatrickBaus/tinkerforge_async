@@ -3,6 +3,7 @@ Module for the Tinkerforge PTC Bricklet 2.0 (https://www.tinkerforge.com/en/doc/
 implemented using Python asyncio. It does the low-level communication with the Tinkerforge ip connection and also
 handles conversion of raw units to SI units.
 """
+# pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
 from decimal import Decimal
@@ -55,6 +56,7 @@ class FunctionID(_FunctionID):
     GET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION = 17
 
 
+# pylint: disable=duplicate-code
 @unique
 class LineFilter(Enum):
     """
@@ -415,7 +417,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return unpack_payload(payload, "!")
 
-    async def set_wire_mode(self, mode: _WireMode = WireMode.WIRE_2, response_expected: bool = True) -> None:
+    async def set_wire_mode(self, mode: _WireMode | int = WireMode.WIRE_2, response_expected: bool = True) -> None:
         """
         Sets the wire mode of the sensor. Possible values are 2, 3 and 4 which correspond to 2-, 3- and 4-wire sensors.
         The value has to match the jumper configuration on the Bricklet.

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, Iterable, NamedTuple
 
 from .devices import BasicCallbackConfiguration
 from .devices import BrickletPort as Port
-from .devices import DeviceIdentifier, DeviceWithMCU, Event
+from .devices import DeviceIdentifier, DeviceWithMCU, Event, GetSPITFPErrorCount
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -268,13 +268,6 @@ class GetWifi2MeshAPStatus(NamedTuple):
 class GetSPITFPBaudrateConfig(NamedTuple):
     enable_dynamic_baudrate: bool
     minimum_dynamic_baudrate: int
-
-
-class GetSPITFPErrorCount(NamedTuple):
-    error_count_ack_checksum: int
-    error_count_message_checksum: int
-    error_count_frame: int
-    error_count_overflow: int
 
 
 class GetProtocol1BrickletName(NamedTuple):
@@ -3520,6 +3513,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         result = unpack_payload(payload, "h")
         return Decimal(result) / 10 + Decimal("273.15")
 
+    # pylint: disable=duplicate-code
     @staticmethod
     def __sensor_to_si(value: int) -> Decimal:
         """

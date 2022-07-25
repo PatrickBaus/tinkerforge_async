@@ -1,8 +1,8 @@
 """
 Module for the Segment Display 4x7 Bricklet
-(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html)
-implemented using Python AsyncIO. It does the low-lvel communication with the
-Tinkerforge ip connection and also handles conversion of raw units to SI units.
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html) implemented using Python asyncIO. It
+does the low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI
+units.
 """
 from __future__ import annotations
 
