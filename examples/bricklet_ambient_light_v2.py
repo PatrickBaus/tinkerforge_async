@@ -47,14 +47,14 @@ async def run_example(bricklet: BrickletAmbientLightV2) -> None:
         callback_task.cancel()
 
 
-async def shutdown(tasks):
+async def shutdown(tasks: set[asyncio.Task]) -> None:
     """Clean up by stopping all consumers"""
     for task in tasks:
         task.cancel()
     await asyncio.gather(*tasks)
 
 
-async def main():
+async def main() -> None:
     """
     The main loop, that will spawn all callback handlers and wait until they are done. There are two callback handlers,
     one waits for the bricklet to connect and runs the demo, the other handles messages sent by the bricklet.

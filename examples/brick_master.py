@@ -17,10 +17,8 @@ async def process_callbacks(device: BrickMaster) -> None:
         print("Callback received", packet)
 
 
-async def run_master_extension_chibi(brick: BrickMaster):
-    """
-    This is the demo for the chibi extension
-    """
+async def run_master_extension_chibi(brick: BrickMaster) -> None:
+    """This is the demo for the chibi extension"""
     chibi_address = await brick.get_chibi_address()
     print("Chibi address:", chibi_address)
     await brick.set_chibi_address(chibi_address)
@@ -45,10 +43,8 @@ async def run_master_extension_chibi(brick: BrickMaster):
     await brick.set_chibi_channel(chibi_channel)
 
 
-async def run_master_extension_rs485(brick: BrickMaster):
-    """
-    This is the demo for the RS485 extension
-    """
+async def run_master_extension_rs485(brick: BrickMaster) -> None:
+    """This is the demo for the RS485 extension"""
     config = await brick.get_rs485_configuration()
     print("RS-485 configuration:", config)
     new_config = config._asdict()
@@ -64,10 +60,8 @@ async def run_master_extension_rs485(brick: BrickMaster):
     print("RS-485 CRC error count:", await brick.get_rs485_error_log())
 
 
-async def run_master_extension_wifi(brick: BrickMaster):
-    """
-    This is the demo for the WIFI extension
-    """
+async def run_master_extension_wifi(brick: BrickMaster) -> None:
+    """This is the demo for the Wi-Fi extension"""
     config = await brick.get_wifi_configuration()
     print("WIFI config:", config)
     await brick.set_wifi_configuration(**config._asdict())
@@ -117,10 +111,8 @@ async def run_master_extension_wifi(brick: BrickMaster):
     print(f"WPA Enterprise password: '{await brick.get_wpa_enterprise_password()!r}'")
 
 
-async def run_master_extension_ethernet(brick: BrickMaster):
-    """
-    This is the demo for the ethernet extension
-    """
+async def run_master_extension_ethernet(brick: BrickMaster) -> None:
+    """This is the demo for the ethernet extension"""
     config = await brick.get_ethernet_configuration()
     print("Ethernet config:", config)
     await brick.set_ethernet_configuration(**config._asdict())
@@ -139,10 +131,8 @@ async def run_master_extension_ethernet(brick: BrickMaster):
     print(f"Ethernet authentication secret: '{await brick.get_ethernet_authentication_secret()!r}'")
 
 
-async def run_master_extension_wifi2(brick: BrickMaster):
-    """
-    This is the demo for the WIFI 2.0 extension
-    """
+async def run_master_extension_wifi2(brick: BrickMaster) -> None:
+    """This is the demo for the Wi-Fi 2.0 extension"""
     print("WIFI 2.0 firmware version:", await brick.get_wifi2_firmware_version())
     led_status = await brick.is_wifi2_status_led_enabled()
     print("WIFI 2.0 status led enabled?", led_status)
@@ -205,7 +195,7 @@ async def run_master_extension_wifi2(brick: BrickMaster):
     # await brick.save_wifi2_configuration()
 
 
-async def run_example(master: BrickMaster):
+async def run_example(master: BrickMaster) -> None:
     """This is the actual demo. If the brick is found, this code will be run."""
     callback_task = asyncio.create_task(process_callbacks(master))
     try:
@@ -264,14 +254,14 @@ async def run_example(master: BrickMaster):
         callback_task.cancel()
 
 
-async def shutdown(tasks):
+async def shutdown(tasks: set[asyncio.Task]) -> None:
     """Clean up by stopping all consumers"""
     for task in tasks:
         task.cancel()
     await asyncio.gather(*tasks)
 
 
-async def main():
+async def main() -> None:
     """
     The main loop, that will spawn all callback handlers and wait until they are
     done. There are two callback handlers, one waits for the bricklet to connect
