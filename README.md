@@ -3,6 +3,8 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 
 **Note: This API implementation is not an official Tinkerforge implementation. I am in no way affiliated with the Tinkerforge GmbH. Use at your own risk. If you find any bugs, please report them.**
 
+The library is fully type-hinted.
+
 # Supported Bricks/Bricklets
 |Brick|Supported|Tested|Comments|
 |--|--|--|--|
@@ -31,8 +33,23 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 |[Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)|:heavy_check_mark:|:heavy_check_mark:|
 |[Temperature 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
 
+## Documentation
+The documentation is currently work in progress. The full documentation will be moved to
+[https://patrickbaus.github.io/tinkerforge_async/](https://patrickbaus.github.io/tinkerforge_async/). Below you can
+find the current state of the documentation. I use the
+[Numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) style for documentation and
+[Sphinx](https://www.sphinx-doc.org/en/master/index.html) for compiling it.
+
+# Setup
+To install the library in a virtual environment (always use venvs with every project):
+```bash
+python3 -m venv env  # virtual environment, optional
+source env/bin/activate  # only if the virtual environment is used
+pip install tinkerforge-async
+```
+
 # Changes made to the API
-Some of the design choices of the original Tinkerforge API are overly complex. I therefore replaced them with a simpler and more intuitive approach. A list of things that were changed can be found below:
+Some design choices of the original Tinkerforge API are overly complex. I therefore replaced them with a simpler and more intuitive approach. A list of things that were changed can be found below:
 ### Design Changes
 - Only Python 3 is supported (3.7+)
  - Replaced threads with an async event loop
@@ -93,7 +110,7 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
    ```
  - Moved from base58 encoded uids to integers.
  - Moved from callbacks to queues in order to keep users out of the callback hell. It makes the code style more readable when using the `await` syntax anyway.
- - Payloads will now be decoded by the `Device` object and not by the `ip_connection` any more. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it, if possible, and pass it on to the queue.
+ - Payloads will now be decoded by the `Device` object and no longer by the `ip_connection`. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it, if possible, and pass it on to the queue.
  - If physical quantities are measured we will now return standard SI units, not some unexpected stuff like centi °C (Temperature Bricklet). To preserve the precision the Decimal package is used. The only exception to this rule is the use of °C for temperature. This is for convenience.
  - All callbacks now contain a timestamp (Unix timestamp) and the device object.
 
@@ -102,7 +119,7 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
     Event(timestamp=1658756708.6839857, sender=Temperature Bricklet 2.0 with uid 161085 connected at IPConnectionAsync(192.168.1.164:4223), sid=0, function_id=CallbackID.TEMPERATURE, payload=305.46)
    ```
 
- - Added the concept of secondary ids (`sid`). By defaultm the secondary id is `0`. If there is more than one sensor on the bricklet, they will have a `sid` value of 1,2, etc. This is especially useful for sensors like the [Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html), which returns its two channels via the same callback.
+ - Added the concept of secondary ids (`sid`). By default, the secondary id is `0`. If there is more than one sensor on the bricklet, they will have a `sid` value of 1,2, etc. This is especially useful for sensors like the [Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html), which returns its two channels via the same callback.
  - New functions:
 
    `BrickMaster.set_wpa_enterprise_username(username)`: Set the WPA enterprise username without calling `BrickMaster.set_wifi_certificate()`. Takes a `string` instead of an array of `int`.
@@ -123,7 +140,7 @@ Some of the design choices of the original Tinkerforge API are overly complex. I
 - #### [Master Brick](https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html)
    - `BrickMaster.set_wifi_configuration()`/`BrickMaster.get_wifi_configuration()` will take/return all ips in natural order
    - `BrickMaster.set_ethernet_configuration()`/`BrickMaster.get_ethernet_configuration()` will take/return all ips in natural order
-   - `BrickMaster.write_wifi2_serial_port()` will only accept a `bytestring` and no length argument any more. The length will be automatically determined from the string.
+   - `BrickMaster.write_wifi2_serial_port()` will only accept a `bytestring` and no length argument. The length will be automatically determined from the string.
    - `BrickMaster.set_wifi2_status_led(enabled)` added. This allows setting the status led by value instead of calling `enable_wifi2_status_led`/`disable_wifi2_status_led`
 
 - #### [PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)
@@ -144,3 +161,14 @@ python3 -m venv env  # virtual environment, optional
 source env/bin/activate  # only if the virtual environment is used
 python3 setup.py install
 ```
+
+## Versioning
+I use [SemVer](http://semver.org/) for versioning. For the versions available, see the
+[tags on this repository](https://github.com/PatrickBaus/tinkerforge_async/tags).
+
+## Authors
+* **Patrick Baus** - *Initial work* - [PatrickBaus](https://github.com/PatrickBaus)
+
+## License
+This project is licensed under the GPL v3 license - see the
+[LICENSE](https://github.com/PatrickBaus/tinkerforge_async/tree/master/LICENSE) file for details
