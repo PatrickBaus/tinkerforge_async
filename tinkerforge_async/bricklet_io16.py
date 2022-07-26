@@ -329,7 +329,7 @@ class BrickletIO16(Device):
         Sets the pins on which an interrupt is activated with a bitmask. Interrupts are triggered on changes of the
         voltage level of the pin, i.e. changes from high to low and low to high.
 
-        For example: ('a', 129) or ('a', 0b10000001) will enable the interrupt for pins 0 and 7 of port a.
+        For example: ('a', 129) or ('a', 0b10000001) will enable the interrupt for pins 0 and 7 of port A.
 
         The interrupt is delivered with the :cb:`Interrupt` callback.
         """
@@ -519,7 +519,7 @@ class BrickletIO16(Device):
             yield bit.bit_length() - 1
             number ^= bit
 
-    async def read_events(
+    async def read_events(  # pylint: disable=too-many-branches
         self,
         events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
@@ -532,6 +532,8 @@ class BrickletIO16(Device):
                 registered_events.add(self.CallbackID(event))
         if sids is not None:
             for sid in sids:
+                if sid > 15 or sid < 0:
+                    raise ValueError("Invalid secondary id. All sids must be in range(16).")
                 for callback in self.SID_TO_CALLBACK.get(sid, []):
                     registered_events.add(callback)
 
@@ -548,10 +550,13 @@ class BrickletIO16(Device):
             if function_id in registered_events:
                 port, interrupt_mask, value_mask = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 port = Port(port)
-                for sid in self.__bits_set(interrupt_mask):
-                    sid = sid if port is Port.A else sid + 16
-                    if sids is not None:
+                if port is Port.B:
+                    interrupt_mask, value_mask = interrupt_mask << 8, value_mask << 8
+
+                if sids is not None:
+                    for sid in self.__bits_set(interrupt_mask):
                         if sid in sids:
-                            yield Event(self, sid, function_id, (port, interrupt_mask, value_mask))
-                    else:
-                        yield Event(self, sid, function_id, (port, interrupt_mask, value_mask))
+                            yield Event(self, sid, function_id, bool(value_mask & (1 << sid)))
+                else:
+                    # Use a special sid if all channels are returned, because it returns a tuple
+                    yield Event(self, 16, function_id, value_mask, interrupt_mask)

@@ -465,6 +465,7 @@ class Event:
     sid: int
     function_id: Any
     payload: Any
+    additional: Any = None
 
     def __post_init__(self) -> None:
         self.timestamp = time.time()

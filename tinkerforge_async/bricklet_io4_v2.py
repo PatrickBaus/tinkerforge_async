@@ -598,7 +598,7 @@ class BrickletIO4V2(BrickletWithMCU):
             if function_id is CallbackID.INPUT_VALUE:
                 sid, value_has_changed, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in registered_events or sid in sids:
-                    yield Event(self, sid, function_id, (value_has_changed, value))
+                    yield Event(self, sid, function_id, value, value_has_changed)
                     continue
             elif function_id is CallbackID.MONOFLOP_DONE:
                 sid, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
@@ -609,7 +609,7 @@ class BrickletIO4V2(BrickletWithMCU):
                 changed_sids, values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in registered_events:
                     # Use a special sid for the CallbackID.ALL_INPUT_VALUE, because it returns a tuple
-                    yield Event(self, 4, function_id, (changed_sids, values))
+                    yield Event(self, 4, function_id, values, changed_sids)
                 else:
                     for sid in sids:
-                        yield Event(self, sid, function_id, (changed_sids[sid], values[sid]))
+                        yield Event(self, sid, function_id, values[sid], changed_sids[sid])
