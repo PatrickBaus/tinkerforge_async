@@ -48,6 +48,8 @@ test = [
 [tool.pylint.'MESSAGES CONTROL']
 max-line-length = 120
 disable = "missing-class-docstring,missing-function-docstring"
+
+[tool.pylint.'MAIN']
 load-plugins = "pylint.extensions.docparams"
 
 [tool.pylint.'MISCELLANEOUS']
