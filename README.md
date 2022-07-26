@@ -1,3 +1,5 @@
+[![pylint](https://github.com/PatrickBaus/tinkerforge_async/actions/workflows/pylint.yml/badge.svg)](https://github.com/PatrickBaus/tinkerforge_async/actions/workflows/pylint.yml)
+[![code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 # TinkerforgeAsync
 This is a reimplementation of the Tinkerforge Python bindings ([original Python bindings](https://www.tinkerforge.com/en/doc/Software/API_Bindings_Python.html)) using Python 3 asyncio. The original bindings used threads to manage the blocking operations. A much cleaner implementation is possible using the `await` syntax from asyncio.
 
