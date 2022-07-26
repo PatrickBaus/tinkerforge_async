@@ -47,6 +47,8 @@ test = [
 
 [tool.pylint.'MESSAGES CONTROL']
 max-line-length = 120
+disable = "missing-class-docstring,missing-function-docstring"
+load-plugins = "pylint.extensions.docparams"
 
 [tool.pylint.'MISCELLANEOUS']
 notes = ["FIXME", "XXX",]

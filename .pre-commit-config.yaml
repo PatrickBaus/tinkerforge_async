@@ -33,11 +33,6 @@ repos:
         language: system
         types: [python]
         require_serial: true
-        args:
-          [
-            "--disable=missing-class-docstring,missing-function-docstring",
-            "--load-plugins=pylint.extensions.docparams", # Load an extension
-          ]
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v0.961'
     hooks:
