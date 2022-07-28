@@ -41,6 +41,10 @@ dev = [
     "black", "build", "isort", "mypy", "pre-commit", "pylint", "pytest", "twine",
 ]
 
+doc = [
+    "myst-parser", "sphinx",
+]
+
 test = [
     "mypy", "pylint", "pytest",
 ]
