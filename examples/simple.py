@@ -14,7 +14,7 @@ async def main() -> None:
     try:
         uid = 123456  # alternatively use base58decode("XXX")
         # Use the context manager of the ip connection. It will automatically do the cleanup.
-        async with IPConnectionAsync(host="10.0.0.5", port=4223) as connection:
+        async with IPConnectionAsync(host="127.0.0.1", port=4223) as connection:
             bricklet = BrickletTemperatureV2(uid, connection)
             # The temperature is in Kelvin. Convert to float and subtract 273.15 to get Celsius.
             print(f"Bricklet: {bricklet}\nTemperature: {await bricklet.get_temperature()} K")
