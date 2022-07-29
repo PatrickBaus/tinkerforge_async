@@ -26,11 +26,14 @@ async def main():
         print("Could not connect to server. Connection refused. Is the brick daemon up?")
     except asyncio.CancelledError:
         print("Stopped the main loop.")
-        raise
+        raise  # It is good practice to re-raise CancelledErrors
 
 
 # Report all mistakes managing asynchronous resources.
 warnings.simplefilter("always", ResourceWarning)
 
-# Start the main loop and run the async loop forever
-asyncio.run(main(), debug=True)
+# Start the main loop and run the async loop forever. Turn off the debug parameter for production code.
+try:
+    asyncio.run(main(), debug=True)
+except KeyboardInterrupt:
+    print("Shutting down gracefully.")
