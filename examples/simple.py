@@ -5,6 +5,7 @@ A simple example, that reads a value from a temperature bricklet
 """
 import asyncio
 
+from tinkerforge_async import base58decode  # pylint: disable=unused-import # uncomment below to use base58 encoded uids
 from tinkerforge_async.bricklet_temperature_v2 import BrickletTemperatureV2
 from tinkerforge_async.ip_connection import IPConnectionAsync
 
