@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Examples &#8212; tinkerforge_async v1.4.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Readme" href="readme.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="readme.html" title="Readme"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">tinkerforge_async v1.4.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Examples</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h1>
+<p>All tinkerforge connections require a brick daemon connection. This ip connection can either be a brick daemon running
+on a computer or a one the Master Extension available:
+<a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Master_Extensions/Ethernet_Extension.html">Ethernet Master Extension</a>,
+<a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Master_Extensions/WIFI_Extension.html">WIFI Master Extension</a>,
+or <a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Master_Extensions/WIFI_V2_Extension.html">WIFI Master Extension 2.0</a>.</p>
+<p>Below is a vers simple example, that reads a value from a
+<a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html">Temperature Bricklet 2.0</a>. In this case
+the user needs to provide the ip and the unique id of the bricklet. In case you are using the
+<a class="reference external" href="https://www.tinkerforge.com/en/doc/Software/Brickv.html">&lt;Brick Viewer</a> software, the uids are Base58 encoded and
+need to be decoded first.</p>
+<section id="basic-example">
+<h2>Basic Example<a class="headerlink" href="#basic-example" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># pylint: disable=duplicate-code</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A simple example, that reads a value from a temperature bricklet</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
+
+<span class="kn">from</span> <span class="nn">tinkerforge_async.bricklet_temperature_v2</span> <span class="kn">import</span> <span class="n">BrickletTemperatureV2</span>
+<span class="kn">from</span> <span class="nn">tinkerforge_async.ip_connection</span> <span class="kn">import</span> <span class="n">IPConnectionAsync</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Connect to the bricklet and query the temperature value&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="mi">123456</span>  <span class="c1"># alternatively use base58decode(&quot;XXX&quot;)</span>
+        <span class="c1"># Use the context manager of the ip connection. It will automatically do the cleanup.</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">IPConnectionAsync</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">4223</span><span class="p">)</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+            <span class="n">bricklet</span> <span class="o">=</span> <span class="n">BrickletTemperatureV2</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">connection</span><span class="p">)</span>
+            <span class="c1"># The temperature is in Kelvin. Convert to float and subtract 273.15 to get Celsius.</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bricklet: </span><span class="si">{</span><span class="n">bricklet</span><span class="si">}</span><span class="se">\n</span><span class="s2">Temperature: </span><span class="si">{</span><span class="k">await</span> <span class="n">bricklet</span><span class="o">.</span><span class="n">get_temperature</span><span class="p">()</span><span class="si">}</span><span class="s2"> K&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ConnectionRefusedError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not connect to server. Connection refused. Is the brick daemon up?&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># Start the main loop and run the async loop forever. Turn off the debug parameter for production code.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">(),</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Shutting down gracefully.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="more-examples">
+<h2>More Examples<a class="headerlink" href="#more-examples" title="Permalink to this heading">¶</a></h2>
+<p>More examples, that also use the autodiscovery capability of the ip connection can be found in the
+<a class="reference external" href="https://github.com/PatrickBaus/tinkerforge_async/tree/master/examples/">examples folder</a>.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Examples</a><ul>
+<li><a class="reference internal" href="#basic-example">Basic Example</a></li>
+<li><a class="reference internal" href="#more-examples">More Examples</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="readme.html"
+                          title="previous chapter">Readme</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/examples.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="readme.html" title="Readme"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">tinkerforge_async v1.4.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Examples</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Patrick Baus.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+    </div>
+  </body>
+</html>
