@@ -120,7 +120,7 @@ async def main() -> None:
     tasks = set()
     try:
         # Use the context manager of the ip connection. It will automatically do the cleanup.
-        async with IPConnectionAsync(host="10.0.0.05", port=4223) as connection:
+        async with IPConnectionAsync(host="127.0.0.1", port=4223) as connection:
             await connection.enumerate()
             # Read all enumeration replies, then start the example if we find the correct device
             async for enumeration_type, device in connection.read_enumeration():  # pylint: disable=unused-variable

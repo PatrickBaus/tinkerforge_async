@@ -55,7 +55,7 @@ pip install tinkerforge-async
 
 # Changes made to the API
 Some design choices of the original Tinkerforge API are overly complex. I therefore replaced them with a simpler and more intuitive approach. A list of things that were changed can be found below:
-### Design Changes
+## Design Changes
 - Only Python 3 is supported (3.7+)
  - Replaced threads with an async event loop
  - Completely rewritten how responses from bricks/bricklets work. All setters now have a `response_expected` parameter, which is set to `True` by default. If there is an error when calling the function, it will then raise an exception - either an `AttributeError` if the function is unknown, or a `ValueError` if one or more parameters are invalid.
@@ -132,31 +132,31 @@ Some design choices of the original Tinkerforge API are overly complex. I theref
    `BrickMaster.get_wpa_enterprise_username()`: Get the WPA enterprise password without calling `BrickMaster.get_wifi_certificate()`. Also returns a `string` instead of an array of `int`.
    `BrickMaster.get_wpa_enterprise_password()`: Get the WPA enterprise password without calling `BrickMaster.get_wifi_certificate()`. Also returns a `string` instead of an array of `int`.
 
-- #### [IP Connection](https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#api)
+- ### [IP Connection](https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#api)
    - `IPConnection.authenticate(secret)`: removed. This can now be done through connect()
    - `IPConnection.set_timeout/IPConnection.get_timeout`: Replaced by a property
    - `IPConnection.register_callback(callback_id, function)`: Replaced by `register_event_queue()`
    - `IPConnection.connect(host, port=4223, authentication_secret='')`: If `authentication_secret` is not empty, try to authenticate.
 
-- #### [IP Connection](https://www.tinkerforge.com/de/doc/Software/Bricklets/IO4V2_Bricklet_Python.html)
+- ### [IP Connection](https://www.tinkerforge.com/de/doc/Software/Bricklets/IO4V2_Bricklet_Python.html)
    - `BrickletIO4V2.set_pwm_configuration()` will now take the frequency in units of Hz and the duty cycle is normalized to 1, so it will take a float from [0...1].
    - `BrickletIO4V2.get_pwm_configuration()` will return the frequency in units of HZ and the duty cycle is normalized to 1.
 
-- #### [Master Brick](https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html)
+- ### [Master Brick](https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html)
    - `BrickMaster.set_wifi_configuration()`/`BrickMaster.get_wifi_configuration()` will take/return all ips in natural order
    - `BrickMaster.set_ethernet_configuration()`/`BrickMaster.get_ethernet_configuration()` will take/return all ips in natural order
    - `BrickMaster.write_wifi2_serial_port()` will only accept a `bytestring` and no length argument. The length will be automatically determined from the string.
    - `BrickMaster.set_wifi2_status_led(enabled)` added. This allows setting the status led by value instead of calling `enable_wifi2_status_led`/`disable_wifi2_status_led`
 
-- #### [PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)
+- ### [PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)
    - `BrickletPtc()` takes an additional parameter to define the type of sensor. The options are `BrickletPtc.SensorType.PT_100` and `BrickletPtc.SensorType.PT_1000`. This only determines the resistance returned by the bricklet. The default is `BrickletPtc.SensorType.PT_100`.
    - `BrickletPtc.sensor_type` getter and setter to change the type of sensor used.
 
-- #### [PTC Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)
+- ### [PTC Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)
    - `BrickletPtcV2()` takes an additional parameter to define the type of sensor. The options are `BrickletPtc.SensorType.PT_100` and `BrickletPtc.SensorType.PT_1000`. This only determines the resistance returned by the bricklet. The default is `BrickletPtc.SensorType.PT_100`.
    - `BrickletPtcV2.sensor_type` getter and setter to change the type of sensor used.
 
-- #### [Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)
+- ### [Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)
    - `BrickletSegmentDisplay4x7V2.set_segments()` takes a `list`/`tuple` of 4 `int` instead of digit0, digit1, digit2, digit3. This is the same API as the older [Segment Display 4x7 Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html).
 
 # Setup

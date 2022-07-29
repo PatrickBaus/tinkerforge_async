@@ -10,6 +10,8 @@ Welcome to tinkerforge_async's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   readme
+   examples
 
 
 Indices and tables
