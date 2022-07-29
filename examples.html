@@ -40,15 +40,15 @@
   <section id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h1>
 <p>All tinkerforge connections require a brick daemon connection. This ip connection can either be a brick daemon running
-on a computer or a one the Master Extension available:
+on a computer or a one the <a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Master_Extensions/Master_Extensions.html">Master Extensions</a> available:
 <a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Master_Extensions/Ethernet_Extension.html">Ethernet Master Extension</a>,
 <a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Master_Extensions/WIFI_Extension.html">WIFI Master Extension</a>,
 or <a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Master_Extensions/WIFI_V2_Extension.html">WIFI Master Extension 2.0</a>.</p>
 <p>Below is a vers simple example, that reads a value from a
-<a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html">Temperature Bricklet 2.0</a>. In this case
-the user needs to provide the ip and the unique id of the bricklet. In case you are using the
-<a class="reference external" href="https://www.tinkerforge.com/en/doc/Software/Brickv.html">&lt;Brick Viewer</a> software, the uids are Base58 encoded and
-need to be decoded first.</p>
+<a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html">Temperature Bricklet 2.0</a>. In this case,
+the user needs to provide the ip and the unique id of the bricklet. If you are using the
+<a class="reference external" href="https://www.tinkerforge.com/en/doc/Software/Brickv.html">Brick Viewer</a> software or the original Tinkerforge API, the
+uids are Base58 encoded and need to be decoded first.</p>
 <section id="basic-example">
 <h2>Basic Example<a class="headerlink" href="#basic-example" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python3</span>
@@ -58,6 +58,7 @@ need to be decoded first.</p>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">asyncio</span>
 
+<span class="kn">from</span> <span class="nn">tinkerforge_async</span> <span class="kn">import</span> <span class="n">base58decode</span>  <span class="c1"># pylint: disable=unused-import # uncomment below to use base58 encoded uids</span>
 <span class="kn">from</span> <span class="nn">tinkerforge_async.bricklet_temperature_v2</span> <span class="kn">import</span> <span class="n">BrickletTemperatureV2</span>
 <span class="kn">from</span> <span class="nn">tinkerforge_async.ip_connection</span> <span class="kn">import</span> <span class="n">IPConnectionAsync</span>
 
