@@ -25,9 +25,6 @@ classifiers = [
 keywords = ["IoT", "Tinkerforge", "API"]
 dependencies = [
     "typing-extensions; python_version <'3.11'",
-    "cbor2",
-    "cobs",
-    "pyserial-asyncio",
 ]
 dynamic = ["version"]
 
@@ -38,7 +35,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 dev = [
-    "black", "build", "isort", "mypy", "pre-commit", "pylint", "pytest", "twine",
+    "black", "build", "isort", "mypy", "pre-commit", "pylint", "twine",
 ]
 
 doc = [

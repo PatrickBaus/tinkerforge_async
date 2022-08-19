@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # pylint: disable=duplicate-code
 """
-A simple example, that reads a value from a temperature bricklet
+A simple example, that reads a value from a temperature bricklet.
 """
 import asyncio
 
