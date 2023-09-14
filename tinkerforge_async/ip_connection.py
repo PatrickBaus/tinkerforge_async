@@ -311,7 +311,7 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         async for data in self.__event_bus.register(f"/events/{uid}"):
             yield data
 
-    async def read_enumeration(self, uid: int = None) -> AsyncGenerator[tuple[EnumerationType, Device], None]:
+    async def read_enumeration(self, uid: int | None = None) -> AsyncGenerator[tuple[EnumerationType, Device], None]:
         data: EnumerationPayload
         async for data in self.__event_bus.register("/enumerations"):
             if uid is None or uid == data.uid:
