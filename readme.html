@@ -1,19 +1,16 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Readme &#8212; tinkerforge_async v1.4.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <script src="_static/documentation_options.js?v=02f2166e"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Examples" href="examples.html" />
@@ -42,20 +39,20 @@
           <div class="body" role="main">
             
   <section id="readme">
-<h1>Readme<a class="headerlink" href="#readme" title="Permalink to this heading">¶</a></h1>
+<h1>Readme<a class="headerlink" href="#readme" title="Link to this heading">¶</a></h1>
 <p><a class="reference external" href="https://github.com/PatrickBaus/tinkerforge_async/actions/workflows/pylint.yml"><img alt="pylint" src="https://github.com/PatrickBaus/tinkerforge_async/actions/workflows/pylint.yml/badge.svg" /></a>
 <a class="reference external" href="https://pypi.org/project/tinkerforge-async/"><img alt="PyPI" src="https://img.shields.io/pypi/v/tinkerforge-async" /></a>
 <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/tinkerforge-async" />
 <img alt="PyPI - Status" src="https://img.shields.io/pypi/status/tinkerforge-async" />
 <a class="reference external" href="https://github.com/psf/black"><img alt="code style" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a></p>
 <section id="tinkerforgeasync">
-<h2>TinkerforgeAsync<a class="headerlink" href="#tinkerforgeasync" title="Permalink to this heading">¶</a></h2>
+<h2>TinkerforgeAsync<a class="headerlink" href="#tinkerforgeasync" title="Link to this heading">¶</a></h2>
 <p>This is a reimplementation of the Tinkerforge Python bindings (<a class="reference external" href="https://www.tinkerforge.com/en/doc/Software/API_Bindings_Python.html">original Python bindings</a>) using Python 3 asyncio. The original bindings used threads to manage the blocking operations. A much cleaner implementation is possible using the <code class="docutils literal notranslate"><span class="pre">await</span></code> syntax from asyncio.</p>
 <p><strong>Note: This API implementation is not an official Tinkerforge implementation. I am in no way affiliated with the Tinkerforge GmbH. Use at your own risk. If you find any bugs, please report them.</strong></p>
 <p>The library is fully type-hinted.</p>
 </section>
 <section id="supported-bricks-bricklets">
-<h2>Supported Bricks/Bricklets<a class="headerlink" href="#supported-bricks-bricklets" title="Permalink to this heading">¶</a></h2>
+<h2>Supported Bricks/Bricklets<a class="headerlink" href="#supported-bricks-bricklets" title="Link to this heading">¶</a></h2>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Brick</p></th>
@@ -163,7 +160,7 @@
 </tbody>
 </table>
 <section id="documentation">
-<h3>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">¶</a></h3>
+<h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h3>
 <p>The documentation is currently work in progress. The full documentation will be moved to
 <a class="reference external" href="https://patrickbaus.github.io/tinkerforge_async/">https://patrickbaus.github.io/tinkerforge_async/</a>. Below you can
 find the current state of the documentation. I use the
@@ -172,19 +169,19 @@ find the current state of the documentation. I use the
 </section>
 </section>
 <section id="setup">
-<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this heading">¶</a></h2>
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">¶</a></h2>
 <p>To install the library in a virtual environment (always use venvs with every project):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 -m venv env  <span class="c1"># virtual environment, optional</span>
-<span class="nb">source</span> env/bin/activate  <span class="c1"># only if the virtual environment is used</span>
-pip install tinkerforge-async
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>env<span class="w">  </span><span class="c1"># virtual environment, optional</span>
+<span class="nb">source</span><span class="w"> </span>env/bin/activate<span class="w">  </span><span class="c1"># only if the virtual environment is used</span>
+pip<span class="w"> </span>install<span class="w"> </span>tinkerforge-async
 </pre></div>
 </div>
 </section>
 <section id="changes-made-to-the-api">
-<h2>Changes made to the API<a class="headerlink" href="#changes-made-to-the-api" title="Permalink to this heading">¶</a></h2>
+<h2>Changes made to the API<a class="headerlink" href="#changes-made-to-the-api" title="Link to this heading">¶</a></h2>
 <p>Some design choices of the original Tinkerforge API are overly complex. I therefore replaced them with a simpler and more intuitive approach. A list of things that were changed can be found below:</p>
 <section id="design-changes">
-<h3>Design Changes<a class="headerlink" href="#design-changes" title="Permalink to this heading">¶</a></h3>
+<h3>Design Changes<a class="headerlink" href="#design-changes" title="Link to this heading">¶</a></h3>
 <ul>
 <li><p>Only Python 3 is supported (3.7+)</p></li>
 <li><p>Replaced threads with an async event loop</p></li>
@@ -259,81 +256,69 @@ pip install tinkerforge-async
 <code class="docutils literal notranslate"><span class="pre">BrickMaster.get_wpa_enterprise_username()</span></code>: Get the WPA enterprise password without calling <code class="docutils literal notranslate"><span class="pre">BrickMaster.get_wifi_certificate()</span></code>. Also returns a <code class="docutils literal notranslate"><span class="pre">string</span></code> instead of an array of <code class="docutils literal notranslate"><span class="pre">int</span></code>.
 <code class="docutils literal notranslate"><span class="pre">BrickMaster.get_wpa_enterprise_password()</span></code>: Get the WPA enterprise password without calling <code class="docutils literal notranslate"><span class="pre">BrickMaster.get_wifi_certificate()</span></code>. Also returns a <code class="docutils literal notranslate"><span class="pre">string</span></code> instead of an array of <code class="docutils literal notranslate"><span class="pre">int</span></code>.</p>
 </li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-</ul>
-<section id="ip-connection">
-<h4><a class="reference external" href="https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#api">IP Connection</a><a class="headerlink" href="#ip-connection" title="Permalink to this heading">¶</a></h4>
+<li><h3 class="rubric" id="ip-connection"><a class="reference external" href="https://www.tinkerforge.com/en/doc/Software/IPConnection_Python.html#api">IP Connection</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">IPConnection.authenticate(secret)</span></code>: removed. This can now be done through connect()</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">IPConnection.set_timeout/IPConnection.get_timeout</span></code>: Replaced by a property</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">IPConnection.register_callback(callback_id,</span> <span class="pre">function)</span></code>: Replaced by <code class="docutils literal notranslate"><span class="pre">register_event_queue()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">IPConnection.connect(host,</span> <span class="pre">port=4223,</span> <span class="pre">authentication_secret='')</span></code>: If <code class="docutils literal notranslate"><span class="pre">authentication_secret</span></code> is not empty, try to authenticate.</p></li>
 </ul>
-</section>
-<section id="id1">
-<h4><a class="reference external" href="https://www.tinkerforge.com/de/doc/Software/Bricklets/IO4V2_Bricklet_Python.html">IP Connection</a><a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h4>
+</li>
+<li><h3 class="rubric" id="id1"><a class="reference external" href="https://www.tinkerforge.com/de/doc/Software/Bricklets/IO4V2_Bricklet_Python.html">IP Connection</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickletIO4V2.set_pwm_configuration()</span></code> will now take the frequency in units of Hz and the duty cycle is normalized to 1, so it will take a float from [0…1].</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickletIO4V2.get_pwm_configuration()</span></code> will return the frequency in units of HZ and the duty cycle is normalized to 1.</p></li>
 </ul>
-</section>
-<section id="master-brick">
-<h4><a class="reference external" href="https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html">Master Brick</a><a class="headerlink" href="#master-brick" title="Permalink to this heading">¶</a></h4>
+</li>
+<li><h3 class="rubric" id="master-brick"><a class="reference external" href="https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html">Master Brick</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickMaster.set_wifi_configuration()</span></code>/<code class="docutils literal notranslate"><span class="pre">BrickMaster.get_wifi_configuration()</span></code> will take/return all ips in natural order</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickMaster.set_ethernet_configuration()</span></code>/<code class="docutils literal notranslate"><span class="pre">BrickMaster.get_ethernet_configuration()</span></code> will take/return all ips in natural order</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickMaster.write_wifi2_serial_port()</span></code> will only accept a <code class="docutils literal notranslate"><span class="pre">bytestring</span></code> and no length argument. The length will be automatically determined from the string.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickMaster.set_wifi2_status_led(enabled)</span></code> added. This allows setting the status led by value instead of calling <code class="docutils literal notranslate"><span class="pre">enable_wifi2_status_led</span></code>/<code class="docutils literal notranslate"><span class="pre">disable_wifi2_status_led</span></code></p></li>
 </ul>
-</section>
-<section id="ptc-bricklet">
-<h4><a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html">PTC Bricklet</a><a class="headerlink" href="#ptc-bricklet" title="Permalink to this heading">¶</a></h4>
+</li>
+<li><h3 class="rubric" id="ptc-bricklet"><a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html">PTC Bricklet</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickletPtc()</span></code> takes an additional parameter to define the type of sensor. The options are <code class="docutils literal notranslate"><span class="pre">BrickletPtc.SensorType.PT_100</span></code> and <code class="docutils literal notranslate"><span class="pre">BrickletPtc.SensorType.PT_1000</span></code>. This only determines the resistance returned by the bricklet. The default is <code class="docutils literal notranslate"><span class="pre">BrickletPtc.SensorType.PT_100</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickletPtc.sensor_type</span></code> getter and setter to change the type of sensor used.</p></li>
 </ul>
-</section>
-<section id="ptc-bricklet-2-0">
-<h4><a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html">PTC Bricklet 2.0</a><a class="headerlink" href="#ptc-bricklet-2-0" title="Permalink to this heading">¶</a></h4>
+</li>
+<li><h3 class="rubric" id="ptc-bricklet-2-0"><a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html">PTC Bricklet 2.0</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickletPtcV2()</span></code> takes an additional parameter to define the type of sensor. The options are <code class="docutils literal notranslate"><span class="pre">BrickletPtc.SensorType.PT_100</span></code> and <code class="docutils literal notranslate"><span class="pre">BrickletPtc.SensorType.PT_1000</span></code>. This only determines the resistance returned by the bricklet. The default is <code class="docutils literal notranslate"><span class="pre">BrickletPtc.SensorType.PT_100</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickletPtcV2.sensor_type</span></code> getter and setter to change the type of sensor used.</p></li>
 </ul>
-</section>
-<section id="segment-display-4x7-bricklet-2-0">
-<h4><a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html">Segment Display 4x7 Bricklet 2.0</a><a class="headerlink" href="#segment-display-4x7-bricklet-2-0" title="Permalink to this heading">¶</a></h4>
+</li>
+<li><h3 class="rubric" id="segment-display-4x7-bricklet-2-0"><a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html">Segment Display 4x7 Bricklet 2.0</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickletSegmentDisplay4x7V2.set_segments()</span></code> takes a <code class="docutils literal notranslate"><span class="pre">list</span></code>/<code class="docutils literal notranslate"><span class="pre">tuple</span></code> of 4 <code class="docutils literal notranslate"><span class="pre">int</span></code> instead of digit0, digit1, digit2, digit3. This is the same API as the older <a class="reference external" href="https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html">Segment Display 4x7 Bricklet</a>.</p></li>
 </ul>
-</section>
+</li>
+</ul>
 </section>
 </section>
 <section id="id2">
-<h2>Setup<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<h2>Setup<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
 <p>There are currently no packages available at the PyPi repository. To install the module, clone the repository and run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 -m venv env  <span class="c1"># virtual environment, optional</span>
-<span class="nb">source</span> env/bin/activate  <span class="c1"># only if the virtual environment is used</span>
-python3 setup.py install
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>env<span class="w">  </span><span class="c1"># virtual environment, optional</span>
+<span class="nb">source</span><span class="w"> </span>env/bin/activate<span class="w">  </span><span class="c1"># only if the virtual environment is used</span>
+python3<span class="w"> </span>setup.py<span class="w"> </span>install
 </pre></div>
 </div>
 <section id="versioning">
-<h3>Versioning<a class="headerlink" href="#versioning" title="Permalink to this heading">¶</a></h3>
+<h3>Versioning<a class="headerlink" href="#versioning" title="Link to this heading">¶</a></h3>
 <p>I use <a class="reference external" href="http://semver.org/">SemVer</a> for versioning. For the versions available, see the
 <a class="reference external" href="https://github.com/PatrickBaus/tinkerforge_async/tags">tags on this repository</a>.</p>
 </section>
 <section id="authors">
-<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading">¶</a></h3>
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p><strong>Patrick Baus</strong> - <em>Initial work</em> - <a class="reference external" href="https://github.com/PatrickBaus">PatrickBaus</a></p></li>
 </ul>
 </section>
 <section id="license">
-<h3>License<a class="headerlink" href="#license" title="Permalink to this heading">¶</a></h3>
+<h3>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h3>
 <p>This project is licensed under the GPL v3 license - see the
 <a class="reference external" href="https://github.com/PatrickBaus/tinkerforge_async/tree/master/LICENSE">LICENSE</a> file for details</p>
 </section>
@@ -358,15 +343,7 @@ python3 setup.py install
 </li>
 <li><a class="reference internal" href="#setup">Setup</a></li>
 <li><a class="reference internal" href="#changes-made-to-the-api">Changes made to the API</a><ul>
-<li><a class="reference internal" href="#design-changes">Design Changes</a><ul>
-<li><a class="reference internal" href="#ip-connection">IP Connection</a></li>
-<li><a class="reference internal" href="#id1">IP Connection</a></li>
-<li><a class="reference internal" href="#master-brick">Master Brick</a></li>
-<li><a class="reference internal" href="#ptc-bricklet">PTC Bricklet</a></li>
-<li><a class="reference internal" href="#ptc-bricklet-2-0">PTC Bricklet 2.0</a></li>
-<li><a class="reference internal" href="#segment-display-4x7-bricklet-2-0">Segment Display 4x7 Bricklet 2.0</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#design-changes">Design Changes</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#id2">Setup</a><ul>
@@ -428,8 +405,8 @@ python3 setup.py install
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, Patrick Baus.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+    &#169; Copyright 2022, Patrick Baus.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>
 </html>
