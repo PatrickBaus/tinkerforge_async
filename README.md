@@ -1,4 +1,4 @@
-[![pylint](https://github.com/PatrickBaus/tinkerforge_async/actions/workflows/pylint.yml/badge.svg)](https://github.com/PatrickBaus/tinkerforge_async/actions/workflows/pylint.yml)
+[![pylint](../../actions/workflows/pylint.yml/badge.svg)](../../actions/workflows/pylint.yml)
 [![PyPI](https://img.shields.io/pypi/v/tinkerforge-async)](https://pypi.org/project/tinkerforge-async/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tinkerforge-async)
 ![PyPI - Status](https://img.shields.io/pypi/status/tinkerforge-async)
@@ -169,11 +169,11 @@ python3 setup.py install
 
 ## Versioning
 I use [SemVer](http://semver.org/) for versioning. For the versions available, see the
-[tags on this repository](https://github.com/PatrickBaus/tinkerforge_async/tags).
+[tags on this repository](../../tags).
 
 ## Authors
 * **Patrick Baus** - *Initial work* - [PatrickBaus](https://github.com/PatrickBaus)
 
 ## License
 This project is licensed under the GPL v3 license - see the
-[LICENSE](https://github.com/PatrickBaus/tinkerforge_async/tree/master/LICENSE) file for details
+[LICENSE](LICENSE) file for details
