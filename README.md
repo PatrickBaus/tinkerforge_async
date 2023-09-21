@@ -2,6 +2,7 @@
 [![PyPI](https://img.shields.io/pypi/v/tinkerforge-async)](https://pypi.org/project/tinkerforge-async/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tinkerforge-async)
 ![PyPI - Status](https://img.shields.io/pypi/status/tinkerforge-async)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 # TinkerforgeAsync
 This is a reimplementation of the Tinkerforge Python bindings ([original Python bindings](https://www.tinkerforge.com/en/doc/Software/API_Bindings_Python.html)) using Python 3 asyncio. The original bindings used threads to manage the blocking operations. A much cleaner implementation is possible using the `await` syntax from asyncio.
