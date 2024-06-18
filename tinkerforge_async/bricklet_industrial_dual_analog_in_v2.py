@@ -11,7 +11,14 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event, LedConfig
+from .devices import (
+    AdvancedCallbackConfiguration,
+    BrickletWithMCU,
+    DeviceIdentifier,
+    Event,
+    LedConfig,
+    SimpleCallbackConfiguration,
+)
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -97,11 +104,6 @@ class GetChannelLEDStatusConfig(NamedTuple):
     minimum: Decimal
     maximum: Decimal
     config: ChannelLedStatusConfig
-
-
-class GetAllVoltagesCallbackConfiguration(NamedTuple):
-    period: int
-    value_has_to_change: bool
 
 
 class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
@@ -313,7 +315,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_all_voltages_callback_configuration(self) -> GetAllVoltagesCallbackConfiguration:
+    async def get_all_voltages_callback_configuration(self) -> SimpleCallbackConfiguration:
         """
         Returns the callback configuration as set by :func:`Set All Voltages Callback Configuration`.
 
@@ -322,7 +324,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return GetAllVoltagesCallbackConfiguration(*unpack_payload(payload, "I !"))
+        return SimpleCallbackConfiguration(*unpack_payload(payload, "I !"))
 
     async def set_sample_rate(self, rate: _SamplingRate | int, response_expected: bool = True) -> None:
         """

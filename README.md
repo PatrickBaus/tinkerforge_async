@@ -16,28 +16,29 @@ The library is fully type-hinted.
 |--|--|--|--|
 |[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:heavy_check_mark:|:heavy_check_mark:|  |
 
-|Bricklet|Supported|Tested|
-|--|--|--|
-|[Ambient Light 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Ambient Light 3.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Analog In](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Barometer](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Barometer 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Industrial Dual Analog In Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Industrial PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_PTC.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[IO-4 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/IO4_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[IO-16](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Motion Detector 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Motion_Detector_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[PTC Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[PTC Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[RS232 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/RS232_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Segment Display 4x7 Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)|:heavy_check_mark:|:heavy_check_mark:|
-|[Temperature 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html)|:heavy_check_mark:|:heavy_check_mark:|
+| Bricklet                                                                                                                 |Supported|Tested|
+|--------------------------------------------------------------------------------------------------------------------------|--|--|
+| [Ambient Light 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V2.html)                         |:heavy_check_mark:|:heavy_check_mark:|
+| [Ambient Light 3.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)                         |:heavy_check_mark:|:heavy_check_mark:|
+| [Analog In](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)                                        |:heavy_check_mark:|:heavy_check_mark:|
+| [Barometer](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)                                        |:heavy_check_mark:|:heavy_check_mark:|
+| [Barometer 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html)                                 |:heavy_check_mark:|:heavy_check_mark:|
+| [Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)                                          |:heavy_check_mark:|:heavy_check_mark:|
+| [Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)                                   |:heavy_check_mark:|:heavy_check_mark:|
+| [Industrial Dual Analog In 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html) |:heavy_check_mark:|:heavy_check_mark:|
+| [Industrial PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_PTC.html)                              |:heavy_check_mark:|:heavy_check_mark:|
+| [IO-4 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/IO4_V2.html)                                            |:heavy_check_mark:|:heavy_check_mark:|
+| [IO-16](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)                                                 |:heavy_check_mark:|:heavy_check_mark:|
+| [Isolator](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Isolator.html)                                          |:heavy_check_mark:|:heavy_check_mark:|
+| [Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)                                          |:heavy_check_mark:|:heavy_check_mark:|
+| [Motion Detector 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Motion_Detector_V2.html)                     |:heavy_check_mark:|:heavy_check_mark:|
+| [PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)                                                    |:heavy_check_mark:|:heavy_check_mark:|
+| [PTC 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)                                             |:heavy_check_mark:|:heavy_check_mark:|
+| [RS232 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/RS232_V2.html)                                         |:heavy_check_mark:|:heavy_check_mark:|
+| [Segment Display 4x7](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html)                    |:heavy_check_mark:|:heavy_check_mark:|
+| [Segment Display 4x7 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)             |:heavy_check_mark:|:heavy_check_mark:|
+| [Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)                                    |:heavy_check_mark:|:heavy_check_mark:|
+| [Temperature 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html)                             |:heavy_check_mark:|:heavy_check_mark:|
 
 ## Documentation
 The documentation is currently work in progress. The full documentation will be moved to

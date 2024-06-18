@@ -18,6 +18,7 @@ from .bricklet_industrial_dual_analog_in_v2 import BrickletIndustrialDualAnalogI
 from .bricklet_industrial_ptc import BrickletIndustrialPtc
 from .bricklet_io4_v2 import BrickletIO4V2
 from .bricklet_io16 import BrickletIO16
+from .bricklet_isolator import BrickletIsolator
 from .bricklet_moisture import BrickletMoisture
 from .bricklet_motion_detector_v2 import BrickletMotionDetectorV2
 from .bricklet_ptc import BrickletPtc
@@ -55,7 +56,7 @@ class DeviceFactory:
         try:
             return self.__available_devices[device_id](uid, ipcon)
         except KeyError:
-            raise ValueError(f"No device available for id {device_id}") from None
+            raise ValueError(f"No device available for id {device_id!s}") from None
 
 
 device_factory = DeviceFactory()
@@ -70,8 +71,9 @@ device_factory.register(BrickletHumidity)
 device_factory.register(BrickletHumidityV2)
 device_factory.register(BrickletIndustrialDualAnalogInV2)
 device_factory.register(BrickletIndustrialPtc)
-device_factory.register(BrickletIO16)
 device_factory.register(BrickletIO4V2)
+device_factory.register(BrickletIO16)
+device_factory.register(BrickletIsolator)
 device_factory.register(BrickletMoisture)
 device_factory.register(BrickletMotionDetectorV2)
 device_factory.register(BrickletPtc)

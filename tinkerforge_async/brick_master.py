@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, Iterable, NamedTuple
 
 from .devices import BasicCallbackConfiguration
 from .devices import BrickletPort as Port
-from .devices import DeviceIdentifier, DeviceWithMCU, Event, GetSPITFPErrorCount
+from .devices import DeviceIdentifier, DeviceWithMCU, Event, GetSPITFPBaudrateConfig, GetSPITFPErrorCount
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -263,11 +263,6 @@ class GetWifi2MeshAPStatus(NamedTuple):
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
     mac_address: tuple[int, int, int, int, int, int]
-
-
-class GetSPITFPBaudrateConfig(NamedTuple):
-    enable_dynamic_baudrate: bool
-    minimum_dynamic_baudrate: int
 
 
 class GetProtocol1BrickletName(NamedTuple):
