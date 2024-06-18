@@ -318,7 +318,7 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
                 try:
                     yield data.enumeration_type, device_factory.get(self, data.device_id, data.uid)  # type: ignore
                 except ValueError:
-                    self.__logger.warning("No driver for device id '%i' found.", data.device_id)
+                    self.__logger.warning("No driver for device id '%s' found.", data.device_id)
 
     async def enumerate(self) -> None:
         """

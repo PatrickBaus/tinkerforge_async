@@ -55,7 +55,7 @@ class DeviceFactory:
         try:
             return self.__available_devices[device_id](uid, ipcon)
         except KeyError:
-            raise ValueError(f"No device available for id {device_id}") from None
+            raise ValueError(f"No device available for id {device_id!s}") from None
 
 
 device_factory = DeviceFactory()
