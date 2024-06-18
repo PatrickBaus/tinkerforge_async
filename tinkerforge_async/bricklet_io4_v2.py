@@ -10,7 +10,13 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
-from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
+from .devices import (
+    AdvancedCallbackConfiguration,
+    BrickletWithMCU,
+    DeviceIdentifier,
+    Event,
+    SimpleCallbackConfiguration,
+)
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -90,11 +96,6 @@ class GetConfiguration(NamedTuple):
 
 
 class GetInputValueCallbackConfiguration(NamedTuple):
-    period: int
-    value_has_to_change: bool
-
-
-class GetAllInputValueCallbackConfiguration(NamedTuple):
     period: int
     value_has_to_change: bool
 
@@ -329,7 +330,7 @@ class BrickletIO4V2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_input_value_callback_configuration(self, channel: int) -> GetInputValueCallbackConfiguration:
+    async def get_input_value_callback_configuration(self, channel: int) -> SimpleCallbackConfiguration:
         """
         Returns the callback configuration for the given channel as set by
         :func:`Set Input Value Callback Configuration`.
@@ -342,7 +343,7 @@ class BrickletIO4V2(BrickletWithMCU):
             data=pack_payload((int(channel),), "B"),
             response_expected=True,
         )
-        return GetInputValueCallbackConfiguration(*unpack_payload(payload, "I !"))
+        return SimpleCallbackConfiguration(*unpack_payload(payload, "I !"))
 
     async def set_all_input_value_callback_configuration(
         self, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
@@ -371,7 +372,7 @@ class BrickletIO4V2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_all_input_value_callback_configuration(self) -> GetAllInputValueCallbackConfiguration:
+    async def get_all_input_value_callback_configuration(self) -> SimpleCallbackConfiguration:
         """
         Returns the callback configuration as set by
         :func:`Set All Input Value Callback Configuration`.
@@ -379,7 +380,7 @@ class BrickletIO4V2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ALL_INPUT_VALUE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return GetAllInputValueCallbackConfiguration(*unpack_payload(payload, "I !"))
+        return SimpleCallbackConfiguration(*unpack_payload(payload, "I !"))
 
     async def set_monoflop(self, channel: int, value: bool, time: int, response_expected: bool = True) -> None:
         """

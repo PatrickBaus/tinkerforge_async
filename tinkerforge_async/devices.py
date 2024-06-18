@@ -60,6 +60,7 @@ class DeviceIdentifier(Enum):
     BRICKLET_TEMPERATURE_V2 = 2113
     BRICKLET_BAROMETER_V2 = 2117
     BRICKLET_INDUSTRIAL_DUAL_ANALOG_IN_V2 = 2121
+    BRICKLET_ISOLATOR = 2122
     BRICKLET_AMBIENT_LIGHT_V3 = 2131
     BRICKLET_SEGMENT_DISPLAY_4x7_V2 = 2137  # pylint: disable=invalid-name
     BRICKLET_INDUSTRIAL_PTC = 2164
@@ -483,9 +484,19 @@ class BasicCallbackConfiguration(NamedTuple):
     maximum: Decimal
 
 
+class SimpleCallbackConfiguration(NamedTuple):
+    period: int
+    value_has_to_change: bool
+
+
 class AdvancedCallbackConfiguration(NamedTuple):
     period: int
     value_has_to_change: bool
     option: ThresholdOption | None
     minimum: Decimal | None
     maximum: Decimal | None
+
+
+class GetSPITFPBaudrateConfig(NamedTuple):
+    enable_dynamic_baudrate: bool
+    minimum_dynamic_baudrate: int
