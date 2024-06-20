@@ -149,12 +149,14 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
         self.api_version = (2, 0, 0)
 
-    async def get_value(self, sid: int) -> Decimal:
-        assert sid == 0
+    async def get_value(self, sid: int) -> Decimal | GetErrorState:
+        assert sid in (0, 1)
 
         if sid == 0:
             return await self.get_temperature()
-        raise ValueError(f"Invalid sid: {sid}. sid must be in (0, ).")
+        if sid == 1:
+            return await self.get_error_state()
+        raise ValueError(f"Invalid sid: {sid}. sid must be in (0, 1).")
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
@@ -381,4 +383,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
                 continue
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                yield Event(self, 0, function_id, self.__value_to_si(value))
+                if function_id is CallbackID.TEMPERATURE:
+                    yield Event(self, 0, function_id, self.__value_to_si(value))
+                else:
+                    yield Event(self, 1, function_id, value)
