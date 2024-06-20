@@ -39,6 +39,7 @@ The library is fully type-hinted.
 | [Segment Display 4x7 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)             |:heavy_check_mark:|:heavy_check_mark:|
 | [Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)                                    |:heavy_check_mark:|:heavy_check_mark:|
 | [Temperature 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html)                             |:heavy_check_mark:|:heavy_check_mark:|
+| [Thermocouple 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Thermocouple_V2.html)                           |:heavy_check_mark:|:heavy_check_mark:|
 
 ## Documentation
 The documentation is currently work in progress. The full documentation will be moved to

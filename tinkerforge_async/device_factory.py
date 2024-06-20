@@ -28,6 +28,7 @@ from .bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
 from .bricklet_segment_display_4x7_v2 import BrickletSegmentDisplay4x7V2
 from .bricklet_temperature import BrickletTemperature
 from .bricklet_temperature_v2 import BrickletTemperatureV2
+from .bricklet_thermocouple_v2 import BrickletThermocoupleV2
 
 if TYPE_CHECKING:
     from . import IPConnectionAsync
@@ -83,3 +84,4 @@ device_factory.register(BrickletSegmentDisplay4x7V2)
 device_factory.register(BrickletRS232V2)
 device_factory.register(BrickletTemperature)
 device_factory.register(BrickletTemperatureV2)
+device_factory.register(BrickletThermocoupleV2)
