@@ -198,8 +198,8 @@ class BrickletThermocoupleV2(BrickletWithMCU):
             await self.set_temperature_callback_configuration(
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
-
-        raise ValueError(f"Invalid sid: {sid}. sid must be in (0, ).")
+        else:
+            raise ValueError(f"Invalid sid: {sid}. sid must be in (0, ).")
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         if sid == 0:
