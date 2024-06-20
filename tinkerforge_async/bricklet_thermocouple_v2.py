@@ -131,7 +131,9 @@ class BrickletThermocoupleV2(BrickletWithMCU):
     CallbackID = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
+    Averaging = Averaging
     SensorType = SensorType
+    LineFilter = LineFilter
 
     CALLBACK_FORMATS = {CallbackID.TEMPERATURE: "i", CallbackID.ERROR_STATE: "! !"}
 
@@ -346,7 +348,6 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         )
 
         averaging, sensor_type, line_filter = unpack_payload(payload, "B B B")
-        self.__sensor_type = sensor_type
         return GetConfiguration(Averaging(averaging), SensorType(sensor_type), LineFilter(line_filter))
 
     async def get_error_state(self) -> GetErrorState:

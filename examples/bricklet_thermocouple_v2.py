@@ -50,6 +50,9 @@ async def run_example(bricklet: BrickletThermocoupleV2) -> None:
     try:
         print("Identity:", await bricklet.get_identity())
 
+        # Query the config
+        print("Bricklet config:", await bricklet.get_configuration())
+
         # Query the value
         print("Get temperature:", await bricklet.get_temperature())
         print("Set callback period to", 1000, "ms")

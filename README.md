@@ -159,6 +159,11 @@ Some design choices of the original Tinkerforge API are overly complex. I theref
    - `BrickletPtcV2()` takes an additional parameter to define the type of sensor. The options are `BrickletPtc.SensorType.PT_100` and `BrickletPtc.SensorType.PT_1000`. This only determines the resistance returned by the bricklet. The default is `BrickletPtc.SensorType.PT_100`.
    - `BrickletPtcV2.sensor_type` getter and setter to change the type of sensor used.
 
+- ### [Thermocouple Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Thermocouple_V2.html)
+   - `BrickletThermocoupleV2()` takes an additional parameter to define the type of sensor. The options are of type `BrickletThermocoupleV2.SensorType`. The default is `BrickletPtc.SensorType.TYPE_K`.
+   - `BrickletThermocoupleV2.sensor_type` getter and setter to change the type of sensor used.
+
+
 - ### [Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)
    - `BrickletSegmentDisplay4x7V2.set_segments()` takes a `list`/`tuple` of 4 `int` instead of digit0, digit1, digit2, digit3. This is the same API as the older [Segment Display 4x7 Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html).
 
