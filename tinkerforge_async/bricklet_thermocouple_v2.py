@@ -67,7 +67,7 @@ _Averaging = Averaging
 
 
 @unique
-class ThermocoupleType(Enum):
+class SensorType(Enum):
     """
     The type of thermocouple connected to the bricklet.
     """
@@ -86,7 +86,7 @@ class ThermocoupleType(Enum):
 
 # We need the alias for MyPy type hinting
 # See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_ThermocoupleType = ThermocoupleType
+_SensorType = SensorType
 
 
 class LineFilter(Enum):
@@ -105,7 +105,7 @@ _LineFilter = LineFilter
 
 class GetConfiguration(NamedTuple):
     averaging: Averaging
-    thermocouple_type: ThermocoupleType
+    sensor_type: SensorType
     filter: LineFilter
 
 
@@ -131,7 +131,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
     CallbackID = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
-    ThermocoupleType = ThermocoupleType
+    SensorType = SensorType
 
     CALLBACK_FORMATS = {CallbackID.TEMPERATURE: "i", CallbackID.ERROR_STATE: "! !"}
 
@@ -140,7 +140,21 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         1: (CallbackID.ERROR_STATE,),
     }
 
-    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
+    @property
+    def sensor_type(self) -> _SensorType:
+        """
+        Return the type of sensor. Either PT100 oder PT1000 as a SensorType enum.
+        """
+        return self.__sensor_type
+
+    @sensor_type.setter
+    def sensor_type(self, value: _SensorType):
+        if not isinstance(value, SensorType):
+            self.__sensor_type: SensorType = SensorType(value)
+        else:
+            self.__sensor_type = value
+
+    def __init__(self, uid, ipcon: IPConnectionAsync, sensor_type: _SensorType = SensorType.TYPE_K) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -148,6 +162,13 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
+        self.sensor_type = sensor_type  # Use the setter to automatically convert to enum
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__module__}.{self.__class__.__qualname__}"
+            f"(uid={self.uid}, ipcon={self.ipcon!r}, sensor_type={self.sensor_type})"
+        )
 
     async def get_value(self, sid: int) -> Decimal | GetErrorState:
         assert sid in (0, 1)
@@ -275,7 +296,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
     async def set_configuration(
         self,
         averaging: _Averaging,
-        thermocouple_type: _ThermocoupleType,
+        sensor_type: _SensorType,
         line_filter: _LineFilter,
         response_expected: bool = True,
     ) -> None:
@@ -306,15 +327,16 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         """
         if not isinstance(averaging, Averaging):
             averaging = Averaging(averaging)
-        if not isinstance(thermocouple_type, ThermocoupleType):
-            thermocouple_type = ThermocoupleType(thermocouple_type)
+        if not isinstance(sensor_type, SensorType):
+            sensor_type = SensorType(sensor_type)
         if not isinstance(line_filter, LineFilter):
             line_filter = LineFilter(line_filter)
 
+        self.__sensor_type = sensor_type
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CONFIGURATION,
-            data=pack_payload((averaging.value, thermocouple_type.value, line_filter.value), "B B B"),
+            data=pack_payload((averaging.value, sensor_type.value, line_filter.value), "B B B"),
             response_expected=response_expected,
         )
 
@@ -323,8 +345,9 @@ class BrickletThermocoupleV2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_CONFIGURATION, response_expected=True
         )
 
-        averaging, thermocouple_type, line_filter = unpack_payload(payload, "B B B")
-        return GetConfiguration(Averaging(averaging), ThermocoupleType(thermocouple_type), LineFilter(line_filter))
+        averaging, sensor_type, line_filter = unpack_payload(payload, "B B B")
+        self.__sensor_type = sensor_type
+        return GetConfiguration(Averaging(averaging), SensorType(sensor_type), LineFilter(line_filter))
 
     async def get_error_state(self) -> GetErrorState:
         """
@@ -347,15 +370,21 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         over_under, open_circuit = unpack_payload(payload, "! !")
         return GetErrorState(over_under, open_circuit)
 
-    @staticmethod
-    def __value_to_si(value: int) -> Decimal:
+    def __value_to_si(self, value: int) -> Decimal:
         """
         Convert to the sensor value to SI units
         """
+        if self.__sensor_type is SensorType.TYPE_G8:
+            return Decimal(value / 8 / 1.6 / 2**17)
+        if self.__sensor_type is SensorType.TYPE_G32:
+            return Decimal(value / 8 / 1.6 / 2**17)
         return Decimal(value + 27315) / 100
 
-    @staticmethod
-    def __si_to_value(value: float | Decimal) -> int:
+    def __si_to_value(self, value: float | Decimal) -> int:
+        if self.__sensor_type is SensorType.TYPE_G8:
+            return int(float(value) * 8 * 1.6 * 2**17)
+        if self.__sensor_type is SensorType.TYPE_G32:
+            return int(float(value) * 8 * 1.6 * 2**17)
         return int(value * 100) - 27315
 
     async def read_events(
