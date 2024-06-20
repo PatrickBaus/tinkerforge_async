@@ -297,9 +297,9 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
     async def set_configuration(
         self,
-        averaging: _Averaging,
-        sensor_type: _SensorType,
-        line_filter: _LineFilter,
+        averaging: _Averaging = Averaging.AVERAGING_16,
+        sensor_type: _SensorType = SensorType.TYPE_K,
+        line_filter: _LineFilter = LineFilter.FREQUENCY_50HZ,
         response_expected: bool = True,
     ) -> None:
         """
