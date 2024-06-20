@@ -33,6 +33,8 @@ class CallbackID(Enum):
     SENSOR_CONNECTED = 24
 
 
+# We need the alias for MyPy type hinting
+# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
 _CallbackID = CallbackID
 
 
@@ -73,13 +75,15 @@ class LineFilter(Enum):
     FREQUENCY_60HZ = 1
 
 
-_LineFilter = LineFilter  # We need the alias for MyPy type hinting
+# We need the alias for MyPy type hinting
+# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
+_LineFilter = LineFilter
 
 
 @unique
 class WireMode(Enum):
     """
-    Select the measurement setup. Use 3 or wires to eliminate most/all of the
+    Select the measurement setup. Use 3 or 4 wires to eliminate most/all the
     resistance of the wire. Use 3 or 4 wire setups when using PT100 and long
     cables.
     """
@@ -89,7 +93,9 @@ class WireMode(Enum):
     WIRE_4 = 4
 
 
-_WireMode = WireMode  # We need the alias for MyPy type hinting
+# We need the alias for MyPy type hinting
+# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
+_WireMode = WireMode
 
 
 @unique
@@ -102,6 +108,8 @@ class SensorType(Enum):
     PT_1000 = 1
 
 
+# We need the alias for MyPy type hinting
+# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
 _SensorType = SensorType
 
 

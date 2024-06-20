@@ -30,6 +30,8 @@ class CallbackID(Enum):
     SENSOR_CONNECTED = 18
 
 
+# We need the alias for MyPy type hinting
+# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
 _CallbackID = CallbackID
 
 
@@ -67,7 +69,9 @@ class LineFilter(Enum):
     FREQUENCY_60HZ = 1
 
 
-_LineFilter = LineFilter  # We need the alias for MyPy type hinting
+# We need the alias for MyPy type hinting
+# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
+_LineFilter = LineFilter
 
 
 @unique
@@ -82,6 +86,8 @@ class WireMode(Enum):
     WIRE_4 = 4
 
 
+# We need the alias for MyPy type hinting
+# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
 _WireMode = WireMode  # We need the alias for MyPy type hinting
 
 
@@ -95,7 +101,9 @@ class SensorType(Enum):
     PT_1000 = 1
 
 
-_SensorType = SensorType  # We need the alias for MyPy type hinting
+# We need the alias for MyPy type hinting
+# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
+_SensorType = SensorType
 
 
 class GetMovingAverageConfiguration(NamedTuple):
