@@ -1,5 +1,5 @@
 [project]
-name = "tinkerforge_async"
+name = "tinkerforge-async"
 authors = [
   { name="Patrick Baus", email="patrick.baus@physik.tu-darmstadt.de" },
 ]
