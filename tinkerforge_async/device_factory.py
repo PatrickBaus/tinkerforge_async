@@ -2,6 +2,7 @@
 The device factory which allows to create instances of Bricks and Bricklets from
 their device id
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

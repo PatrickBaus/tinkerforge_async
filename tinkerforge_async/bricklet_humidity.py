@@ -3,6 +3,7 @@ Module for the Tinkerforge Humidity Bricklet (https://www.tinkerforge.com/en/doc
 implemented using Python AsyncIO. It does the low-level communication with the Tinkerforge ip connection and also
 handles conversion of raw units to SI units.
 """
+
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 

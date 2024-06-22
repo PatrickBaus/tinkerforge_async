@@ -3,6 +3,7 @@ Module for the Tinkerforge Ambient Light Bricklet 3.0
 (https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html) implemented using Python asyncio. It does
 the low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI units.
 """
+
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 

@@ -2,6 +2,7 @@
 A lightweight event bus for the asyncio framework, that relies on asynchronous
 generators to deliver messages.
 """
+
 import asyncio
 from typing import Any, AsyncGenerator
 

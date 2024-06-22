@@ -1,6 +1,7 @@
 """
 This file contains all base classes used by Bricks and bricklets
 """
+
 from __future__ import annotations
 
 import time

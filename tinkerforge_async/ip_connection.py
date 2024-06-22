@@ -2,6 +2,7 @@
 This module implements the underlying ip connection to the Bricks and Bricklets.
 See https://www.tinkerforge.com/de/doc/Low_Level_Protocols/TCPIP.html for details.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -296,9 +297,11 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         # We will return None for all 'invalid' fields instead of garbage like the Tinkerforge API
         return EnumerationPayload(
             base58decode(uid),
-            None
-            if (enumeration_type is EnumerationType.DISCONNECTED or connected_uid == "0")
-            else base58decode(connected_uid),
+            (
+                None
+                if (enumeration_type is EnumerationType.DISCONNECTED or connected_uid == "0")
+                else base58decode(connected_uid)
+            ),
             None if enumeration_type is EnumerationType.DISCONNECTED else position,
             None if enumeration_type is EnumerationType.DISCONNECTED else hardware_version,
             None if enumeration_type is EnumerationType.DISCONNECTED else firmware_version,
@@ -340,8 +343,7 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         data: bytes = b"",
         *,
         response_expected: Literal[True],
-    ) -> tuple[HeaderPayload, bytes]:
-        ...
+    ) -> tuple[HeaderPayload, bytes]: ...
 
     @overload
     async def send_request(
@@ -351,8 +353,7 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         data: bytes = b"",
         *,
         response_expected: Literal[False] = ...,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     async def send_request(
@@ -362,8 +363,7 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         data: bytes = b"",
         *,
         response_expected: bool = ...,
-    ) -> tuple[HeaderPayload, bytes] | None:
-        ...
+    ) -> tuple[HeaderPayload, bytes] | None: ...
 
     async def send_request(
         self,

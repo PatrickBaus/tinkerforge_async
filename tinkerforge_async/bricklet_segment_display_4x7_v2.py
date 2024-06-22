@@ -4,6 +4,7 @@ Module for the Tinkerforge Segment Display 4x7 Bricklet 2.0
 does the low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI
 units.
 """
+
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 

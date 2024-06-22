@@ -3,6 +3,7 @@ Module for the Tinkerforge Master Brick (https://www.tinkerforge.com/en/doc/Hard
 implemented using Python AsyncIO. It does the low-level communication with the Tinkerforge ip connection and also
 handles conversion of raw units to SI units.
 """
+
 # pylint: disable=too-many-lines
 from __future__ import annotations
 

@@ -3,6 +3,7 @@ Module for the RS232 Bricklet 2.0 (https://www.tinkerforge.com/en/doc/Hardware/B
 using Python asyncIO. It does the low-level communication with the Tinkerforge ip connection and also handles conversion
 of raw units to SI units.
 """
+
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 

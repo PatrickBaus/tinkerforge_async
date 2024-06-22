@@ -3,6 +3,7 @@ Module for the Tinkerforge Isolator Bricklet
 (https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Isolator.html) implemented using Python asyncio. It does
 the low-level communication with the Tinkerforge ip connection.
 """
+
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 

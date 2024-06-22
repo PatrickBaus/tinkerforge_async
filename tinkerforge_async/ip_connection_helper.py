@@ -1,6 +1,7 @@
 """
 Some helper functions to encode and decode Tinkerforge protocol payloads.
 """
+
 from __future__ import annotations
 
 import math

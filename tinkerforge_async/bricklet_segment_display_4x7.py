@@ -4,6 +4,7 @@ Module for the Segment Display 4x7 Bricklet
 does the low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI
 units.
 """
+
 from __future__ import annotations
 
 from enum import Enum, unique
