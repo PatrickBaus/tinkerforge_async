@@ -1252,7 +1252,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         )
         return unpack_payload(payload, "!")
 
-    async def set_wifi_configuration(  # pylint: disable=too-many-arguments
+    async def set_wifi_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         ssid: str | bytes,
         connection: _WifiConnection | int,
@@ -1334,7 +1334,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             ssid, WifiConnection(connection), ip_addr[::-1], subnet_mask[::-1], gateway[::-1], port
         )
 
-    async def set_wifi_encryption(  # pylint: disable=too-many-arguments
+    async def set_wifi_encryption(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         encryption: WifiEncryptionMode,
         key_index: int = 1,
@@ -2084,7 +2084,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         return unpack_payload(payload, "!")
 
-    async def set_ethernet_configuration(  # pylint: disable=too-many-arguments
+    async def set_ethernet_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         connection: _EthernetConnection,
         ip_address: tuple[int, int, int, int] = (0, 0, 0, 0),
@@ -2510,7 +2510,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         return unpack_payload(payload, "64s")
 
-    async def set_wifi2_configuration(  # pylint: disable=too-many-arguments
+    async def set_wifi2_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         port: int = 4223,
         websocket_port: int = 4280,
@@ -2636,7 +2636,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             ap_connected_count,
         )
 
-    async def set_wifi2_client_configuration(  # pylint: disable=too-many-arguments
+    async def set_wifi2_client_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         enable: bool = True,
         ssid: bytes | str = "tinkerforge",
@@ -2809,7 +2809,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         )
         return unpack_payload(payload, "64s")
 
-    async def set_wifi2_ap_configuration(  # pylint: disable=too-many-arguments
+    async def set_wifi2_ap_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         enable: bool = True,
         ssid: bytes | str = "WIFI Extension 2.0 Access Point",
@@ -3026,7 +3026,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         )
         return unpack_payload(payload, "!")
 
-    async def set_wifi2_mesh_configuration(  # pylint: disable=too-many-arguments
+    async def set_wifi2_mesh_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         enable: bool = False,
         root_ip: tuple[int, int, int, int] = (0, 0, 0, 0),

@@ -97,7 +97,7 @@ class BrickletHumidity(Device):
             return await self.get_humidity()
         return await self.get_analog_value()
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,

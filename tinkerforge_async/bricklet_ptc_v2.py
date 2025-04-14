@@ -178,7 +178,7 @@ class BrickletPtcV2(BrickletWithMCU):
             return await self.get_resistance()
         return await self.is_sensor_connected()
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: int = 0,
@@ -227,7 +227,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return self.__value_to_si_temperature(unpack_payload(payload, "i"))
 
-    async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -313,7 +313,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return self.__value_to_si_resistance(unpack_payload(payload, "i"))
 
-    async def set_resistance_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_resistance_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,

@@ -181,7 +181,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
             return await self.get_resistance()
         return await self.is_sensor_connected()
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,

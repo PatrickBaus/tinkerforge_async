@@ -123,7 +123,7 @@ class BrickletSegmentDisplay4x7(Device):
         )
         return GetSegments(*unpack_payload(payload, "4B B !"))
 
-    async def start_counter(  # pylint: disable=too-many-arguments
+    async def start_counter(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self, value_from: int, value_to: int, increment: int = 1, length: int = 1000, response_expected: bool = True
     ) -> None:
         """

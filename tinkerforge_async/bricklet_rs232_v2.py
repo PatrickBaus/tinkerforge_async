@@ -262,7 +262,7 @@ class BrickletRS232V2(BrickletWithMCU):
 
         return unpack_payload(payload, "!")
 
-    async def set_configuration(  # pylint: disable=too-many-arguments
+    async def set_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         baudrate: int = 115200,
         parity: _Parity | int = Parity.NONE,

@@ -129,7 +129,7 @@ class BrickletHumidityV2(BrickletWithMCU):
             return await self.get_humidity()
         return await self.get_temperature()
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: int = 0,
@@ -176,7 +176,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
         return self.__humidity_sensor_to_si(unpack_payload(payload, "H"))
 
-    async def set_humidity_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_humidity_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -267,7 +267,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
         return self.__temperature_sensor_to_si(unpack_payload(payload, "h"))
 
-    async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,

@@ -210,7 +210,7 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, "B")
 
-    async def set_port_configuration(  # pylint: disable=too-many-arguments
+    async def set_port_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         port: _Port | str,
         selection_mask: int,
@@ -278,7 +278,7 @@ class BrickletIO16(Device):
         )
         return GetPortConfiguration(*unpack_payload(payload, "B B"))
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,
@@ -360,7 +360,7 @@ class BrickletIO16(Device):
         )
         return unpack_payload(payload, "B")
 
-    async def set_port_monoflop(  # pylint: disable=too-many-arguments
+    async def set_port_monoflop(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self, port: _Port | str, selection_mask: int, value_mask: int, time: int, response_expected: bool = True
     ) -> None:
         """

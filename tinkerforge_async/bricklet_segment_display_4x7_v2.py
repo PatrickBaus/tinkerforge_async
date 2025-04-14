@@ -204,7 +204,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         return unpack_payload(payload, "!")
 
-    async def start_counter(  # pylint: disable=too-many-arguments
+    async def start_counter(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self, value_from: int, value_to: int, increment: int, length: int, response_expected: bool = True
     ) -> None:
         """

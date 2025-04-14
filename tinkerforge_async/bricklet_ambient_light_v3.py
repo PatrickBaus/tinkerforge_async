@@ -124,7 +124,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
         return await self.get_illuminance()
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: int = 0,
@@ -167,7 +167,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         print(unpack_payload(payload, "I"))
         return self.__value_to_si(unpack_payload(payload, "I"))
 
-    async def set_illuminance_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_illuminance_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
