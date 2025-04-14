@@ -149,7 +149,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
             return await self.get_altitude()
         return await self.get_temperature()
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: int = 0,
@@ -199,7 +199,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         )
         return self.__air_pressure_sensor_to_si(unpack_payload(payload, "i"))
 
-    async def set_air_pressure_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_air_pressure_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -283,7 +283,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         )
         return self.__altitude_sensor_to_si(unpack_payload(payload, "i"))
 
-    async def set_altitude_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_altitude_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,
@@ -367,7 +367,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         )
         return self.__temperature_sensor_to_si(unpack_payload(payload, "i"))
 
-    async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: int = 0,
         value_has_to_change: bool = False,

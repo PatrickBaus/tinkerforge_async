@@ -19,7 +19,9 @@ from .devices import (
     SimpleCallbackConfiguration,
 )
 from .devices import ThresholdOption as Threshold
-from .devices import _FunctionID
+from .devices import (
+    _FunctionID,
+)
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -271,7 +273,7 @@ class BrickletIO4V2(BrickletWithMCU):
         direction = Direction(direction)
         return GetConfiguration(direction, value)
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments,unused-argument
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
         period: int = 0,

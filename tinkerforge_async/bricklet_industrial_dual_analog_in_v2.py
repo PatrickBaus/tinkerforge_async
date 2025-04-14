@@ -21,7 +21,9 @@ from .devices import (
     SimpleCallbackConfiguration,
 )
 from .devices import ThresholdOption as Threshold
-from .devices import _FunctionID
+from .devices import (
+    _FunctionID,
+)
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -149,7 +151,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             return await self.get_voltage(sid)
         return await self.get_all_voltages()
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: int = 0,
@@ -197,7 +199,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         )
         return self.__value_to_si(unpack_payload(payload, "i"))
 
-    async def set_voltage_callback_configuration(  # pylint: disable=too-many-arguments
+    async def set_voltage_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         channel: int,
         period: int = 0,
@@ -430,7 +432,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         return LedConfig(unpack_payload(payload, "B"))
 
-    async def set_channel_led_status_config(  # pylint: disable=too-many-arguments
+    async def set_channel_led_status_config(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         channel: int,
         minimum: float | Decimal,
