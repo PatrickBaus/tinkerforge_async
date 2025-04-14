@@ -6,17 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Readme &#8212; tinkerforge_async v1.5.3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
     <script src="_static/documentation_options.js?v=d75fd82e"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Examples" href="examples.html" />
     <link rel="prev" title="Welcome to tinkerforge_async’s documentation!" href="index.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -213,7 +213,7 @@ pip<span class="w"> </span>install<span class="w"> </span>tinkerforge-async
 </li>
 <li><p>Replaced all constants with Enums and enforced their use using assertions. This will allow beginners to spot their mistakes earlier and make the code more readable, including any debug output statements.</p>
 <p>Old style:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">BrickletHumidity</span><span class="p">(</span><span class="n">Device</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">BrickletHumidity</span><span class="p">(</span><span class="n">Device</span><span class="p">):</span>
     <span class="n">FUNCTION_GET_HUMIDITY</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">FUNCTION_GET_ANALOG_VALUE</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">FUNCTION_SET_HUMIDITY_CALLBACK_PERIOD</span> <span class="o">=</span> <span class="mi">3</span>
@@ -230,9 +230,9 @@ pip<span class="w"> </span>install<span class="w"> </span>tinkerforge-async
 </pre></div>
 </div>
 <p>New style:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">BrickletHumidity</span><span class="p">(</span><span class="n">Device</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">BrickletHumidity</span><span class="p">(</span><span class="n">Device</span><span class="p">):</span>
     <span class="nd">@unique</span>
-    <span class="k">class</span> <span class="nc">FunctionID</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">FunctionID</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
         <span class="n">GET_HUMIDITY</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">GET_ANALOG_VALUE</span> <span class="o">=</span> <span class="mi">2</span>
         <span class="n">SET_HUMIDITY_CALLBACK_PERIOD</span> <span class="o">=</span> <span class="mi">3</span>
@@ -345,7 +345,7 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -403,7 +403,7 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -421,7 +421,7 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2022, Patrick Baus.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>
