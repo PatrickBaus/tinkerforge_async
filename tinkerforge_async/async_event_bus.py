@@ -9,7 +9,7 @@ from typing import Any, AsyncGenerator
 
 class EventBus:
     """
-    An event bus, that is using the async generator syntax for distributing events.
+    An event bus that is using the async generator syntax for distributing events.
     It uses dicts and sets internally to ensure good performance.
     """
 
@@ -18,7 +18,7 @@ class EventBus:
 
     async def register(self, event_name: str) -> AsyncGenerator[Any, None]:
         """
-        The async generator, that yields events subscribed to `event_name`.
+        The async generator that yields events subscribed to `event_name`.
 
         Parameters
         ----------
