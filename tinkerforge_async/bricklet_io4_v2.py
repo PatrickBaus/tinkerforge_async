@@ -7,9 +7,11 @@ handles conversion of raw units to SI units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+import asyncio
+from asyncio import CancelledError
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple, TypeAlias, TypedDict
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -22,10 +24,11 @@ from .devices import ThresholdOption as Threshold
 from .devices import (
     _FunctionID,
 )
+from .helper import join
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
-    from .ip_connection import IPConnectionAsync
+    from .ip_connection import HeaderPayload, IPConnectionAsync
 
 
 @unique
@@ -37,9 +40,10 @@ class CallbackID(Enum):
     INPUT_VALUE = 17
     ALL_INPUT_VALUE = 18
     MONOFLOP_DONE = 19
+    EDGE_COUNT = 20
 
 
-_CallbackID = CallbackID
+_CallbackID: TypeAlias = CallbackID  # pylint: disable=invalid-name
 
 
 @unique
@@ -93,6 +97,14 @@ class EdgeType(Enum):
 _EdgeType = EdgeType
 
 
+class _EdgeCountTaskConfig(TypedDict):
+    queue: asyncio.Queue[Event]
+    task: asyncio.Task | None
+    lock: asyncio.Lock
+    period: int
+    value_has_to_change: bool
+
+
 class GetConfiguration(NamedTuple):
     direction: Direction
     value: bool
@@ -119,7 +131,7 @@ class GetPWMConfiguration(NamedTuple):
     duty_cycle: Decimal
 
 
-class BrickletIO4V2(BrickletWithMCU):
+class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     """
     4-channel digital input/output
     """
@@ -149,6 +161,17 @@ class BrickletIO4V2(BrickletWithMCU):
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 0)
+        # The queues are used by the pulse counter
+        self.__counter_queue: dict[int, _EdgeCountTaskConfig] = {
+            channel: {
+                "queue": asyncio.Queue(maxsize=1),
+                "task": None,
+                "lock": asyncio.Lock(),
+                "period": 0,
+                "value_has_to_change": False,
+            }
+            for channel in range(4)
+        }
 
     async def set_value(
         self, value: tuple[bool, bool, bool, bool] | list[bool], response_expected: bool = True
@@ -283,23 +306,32 @@ class BrickletIO4V2(BrickletWithMCU):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        assert sid in range(5)
+        assert sid in range(4 + 1 + 4)
 
         if sid in range(4):
             await self.set_input_value_callback_configuration(sid, period, value_has_to_change, response_expected)
-        else:
+        elif sid == 4:
             await self.set_all_input_value_callback_configuration(period, value_has_to_change, response_expected)
+        elif sid in range(5, 5 + 4):
+            await self.set_edge_count_callback_configuration(sid - 5, period, value_has_to_change, response_expected)
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        assert sid in range(5)
+        assert sid in range(4 + 1 + 4)
 
         if sid in range(4):
             return AdvancedCallbackConfiguration(
                 *(await self.get_input_value_callback_configuration(sid)), option=None, minimum=None, maximum=None
             )
-        return AdvancedCallbackConfiguration(
-            *(await self.get_all_input_value_callback_configuration()), option=None, minimum=None, maximum=None
-        )
+        if sid == 4:
+            return AdvancedCallbackConfiguration(
+                *(await self.get_all_input_value_callback_configuration()), option=None, minimum=None, maximum=None
+            )
+        if sid in range(5, 5 + 4):
+            return AdvancedCallbackConfiguration(
+                *(await self.get_edge_count_callback_configuration(sid - 5)), option=None, minimum=None, maximum=None
+            )
+
+        raise ValueError(f"Invalid sid: {sid}")
 
     async def set_input_value_callback_configuration(
         self, channel: int, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
@@ -384,6 +416,53 @@ class BrickletIO4V2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_ALL_INPUT_VALUE_CALLBACK_CONFIGURATION, response_expected=True
         )
         return SimpleCallbackConfiguration(*unpack_payload(payload, "I !"))
+
+    async def set_edge_count_callback_configuration(  # pylint: disable=unused-argument
+        self, channel: int, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
+    ) -> None:
+        """
+        Enable an edge counter task. This task will feed a queue to be read by calling __read_edge_counter().
+        Do note, that the edge counter needs to sync first, so the first value will be available after period * 2.
+
+        Parameters
+        ----------
+        channel: int
+            The input channel used for edge counting. Must in range(0,3).
+        period: int
+            Time in ms
+        value_has_to_change: bool
+            If True, the event will be suppressed if there was no change
+        response_expected: bool
+            No effect. Parameter is used for compatibility with other callback configuration functions only.
+        """
+        assert channel in (0, 1, 2, 3)
+
+        async with self.__counter_queue[channel]["lock"]:
+            task = self.__counter_queue[channel]["task"]
+            # We either need to create a new task or just kill the existing one
+            if task is not None:
+                task.cancel()
+                try:
+                    await task
+                except CancelledError:
+                    pass
+
+            if period > 0:
+                self.__counter_queue[channel]["task"] = asyncio.create_task(
+                    self.__edge_counter_task(channel, period, value_has_to_change)
+                )
+            else:
+                queue = self.__counter_queue[channel]["queue"]
+                if not queue.empty():  # The queue has a maximum of 1 element
+                    queue.get_nowait()
+                    queue.task_done()
+            self.__counter_queue[channel]["period"] = period
+            self.__counter_queue[channel]["value_has_to_change"] = value_has_to_change
+
+    async def get_edge_count_callback_configuration(self, channel: int) -> SimpleCallbackConfiguration:
+        period = self.__counter_queue[channel]["period"]
+        value_has_to_change = self.__counter_queue[channel]["value_has_to_change"]
+        return SimpleCallbackConfiguration(period=period, value_has_to_change=value_has_to_change)
 
     async def set_monoflop(self, channel: int, value: bool, time: int, response_expected: bool = True) -> None:
         """
@@ -576,21 +655,59 @@ class BrickletIO4V2(BrickletWithMCU):
         frequency, duty_cycle = unpack_payload(payload, "I H")
         return GetPWMConfiguration(Decimal(frequency) / 10, Decimal(duty_cycle) / 10000)
 
-    async def read_events(
+    async def __edge_counter_task(self, channel: int, period: int, value_has_to_change: bool) -> None:
+        previous_value: int | None = None
+        # Throw away the first value, because we need to reset and sync the internal counter of the IO bricklet.
+        try:
+            await asyncio.gather(self.get_edge_count(channel, reset_counter=True), asyncio.sleep(period / 1000))
+            while "not canceled":
+                value, _ = await asyncio.gather(
+                    self.get_edge_count(channel, reset_counter=True), asyncio.sleep(period / 1000)
+                )
+                queue = self.__counter_queue[channel]["queue"]
+                if not value_has_to_change or previous_value != value:
+                    previous_value = value
+                    event = Event(self, sid=channel + 5, function_id=CallbackID.EDGE_COUNT, payload=value)
+                    try:
+                        queue.put_nowait(event)
+                    except asyncio.QueueFull:
+                        queue.get_nowait()
+                        queue.put_nowait(event)
+        except ValueError:
+            # raised if the channel is set to output. We will then stop the edge counter callback without notice.
+            pass
+
+    async def __read_edge_counter(self, channel: int) -> AsyncGenerator[Event, None]:
+        while "not cancelled":
+            queue = self.__counter_queue[channel]["queue"]
+            yield await queue.get()
+            queue.task_done()
+
+    async def __read_callback_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
+        events: set[_CallbackID],
+        sids: tuple[int, ...] | list[int],
     ) -> AsyncGenerator[Event, None]:
-        assert events is None or sids is None
+        """
+        This functions connects to the ip connection and retrieves callback events for a given list of events or sids.
+        The callback must be enabled prior to registering to this generator.
 
-        registered_events = set()
-        sids = tuple() if sids is None else sids
-        if events:
-            for event in events:
-                registered_events.add(self.CallbackID(event))
+        Parameters
+        ----------
+        events: set of CallbackID
+            Any value of CallbackID.INPUT_VALUE, CallbackID.ALL_INPUT_VALUE or CallbackID.MONOFLOP_DONE. Other values
+            in the set will be ignored.
+        sids: tuple or list of int
+            A tuple with ints in range of range(4). Other sids will be ignored.
 
+        Yields
+        -------
+        Event
+            Events matching the desired sid/event filters
+
+        """
         if not events and not sids:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
+            return
 
         async for header, payload in super()._read_events():
             try:
@@ -601,19 +718,52 @@ class BrickletIO4V2(BrickletWithMCU):
 
             if function_id is CallbackID.INPUT_VALUE:
                 sid, value_has_changed, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if function_id in registered_events or sid in sids:
+                if function_id in events or sid in sids:
                     yield Event(self, sid, function_id, value, value_has_changed)
                     continue
             elif function_id is CallbackID.MONOFLOP_DONE:
                 sid, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if function_id in registered_events or sid in sids:
+                if function_id in events or sid in sids:
                     yield Event(self, sid, function_id, value)
                     continue
             else:
                 changed_sids, values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if function_id in registered_events:
+                if function_id in events:
                     # Use a special sid for the CallbackID.ALL_INPUT_VALUE, because it returns a tuple
                     yield Event(self, 4, function_id, values, changed_sids)
                 else:
                     for sid in sids:
                         yield Event(self, sid, function_id, values[sid], changed_sids[sid])
+
+    async def read_events(
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
+    ) -> AsyncGenerator[Event, None]:
+        assert events is None or sids is None
+
+        sids = tuple() if sids is None else sids
+
+        registered_edge_count_sids = tuple(sid for sid in sids if sid in range(5, 5 + 4))
+        registered_callback_events: set[_CallbackID] = set()
+
+        if events:
+            for event in events:
+                event = self.CallbackID(event)
+                # CallbackID.PULSE_COUNT is not a regular callback, so it must be treated special
+                if event != CallbackID.EDGE_COUNT:
+                    registered_callback_events.add(event)
+                else:
+                    registered_edge_count_sids = tuple(range(5, 5 + 4))
+        registered_callback_sids = tuple(sid for sid in sids if sid in range(5))
+
+        # register all callback events if no specific filter is given
+        if not events and not sids:
+            registered_callback_events = set(self.CALLBACK_FORMATS.keys())
+            registered_edge_count_sids = tuple(range(5, 5 + 4))
+
+        async for res in join(
+            self.__read_callback_events(registered_callback_events, registered_callback_sids),
+            *(self.__read_edge_counter(sid - 5) for sid in registered_edge_count_sids),
+        ):
+            yield res
