@@ -288,16 +288,16 @@ class BrickletIO16(Device):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        port = Port.A if sid < 16 else Port.B
+        port = Port.A if sid < 8 else Port.B
         interrupt_mask = await self.get_port_interrupt(port)
-        interrupt_mask &= ~(1 << (sid % 16))  # Reset the bit a position sid
-        interrupt_mask |= int(bool(period)) << (sid % 16)  # if period is non-zero, enable the interrupt
+        interrupt_mask &= ~(1 << (sid % 8))  # Reset the bit a position sid
+        interrupt_mask |= int(bool(period)) << (sid % 8)  # if period is non-zero, enable the interrupt
         await self.set_port_interrupt(port, interrupt_mask)
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        port = Port.A if sid < 16 else Port.B
+        port = Port.A if sid < 8 else Port.B
         interrupt_mask = await self.get_port_interrupt(port)
-        value = interrupt_mask & (1 << (sid % 16))
+        value = interrupt_mask & (1 << (sid % 8))
         return AdvancedCallbackConfiguration(int(bool(value)), False, None, None, None)
 
     async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
@@ -446,7 +446,7 @@ class BrickletIO16(Device):
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
-        assert isinstance(pin, int) and (0 <= pin <= 7)
+        assert isinstance(pin, int) and (0 <= pin <= 1)
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -497,7 +497,7 @@ class BrickletIO16(Device):
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
-        assert isinstance(pin, int) and (0 <= pin <= 7)
+        assert isinstance(pin, int) and (0 <= pin <= 1)
 
         _, payload = await self.ipcon.send_request(
             device=self,
