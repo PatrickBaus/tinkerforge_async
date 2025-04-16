@@ -59,7 +59,7 @@ pip install tinkerforge-async
 # Changes made to the API
 Some design choices of the original Tinkerforge API are overly complex. I therefore replaced them with a simpler and more intuitive approach. A list of things that were changed can be found below:
 ## Design Changes
-- Only Python 3 is supported (3.7+)
+- Only Python 3 is supported (3.9+)
  - Replaced threads with an async event loop
  - Completely rewritten how responses from bricks/bricklets work. All setters now have a `response_expected` parameter, which is set to `True` by default. If there is an error when calling the function, it will then raise an exception - either an `AttributeError` if the function is unknown, or a `ValueError` if one or more parameters are invalid.
 
@@ -141,9 +141,11 @@ Some design choices of the original Tinkerforge API are overly complex. I theref
    - `IPConnection.register_callback(callback_id, function)`: Replaced by `register_event_queue()`
    - `IPConnection.connect(host, port=4223, authentication_secret='')`: If `authentication_secret` is not empty, try to authenticate.
 
-- ### [IP Connection](https://www.tinkerforge.com/de/doc/Software/Bricklets/IO4V2_Bricklet_Python.html)
+- ### [IO-4 Bricklet 2.0](https://www.tinkerforge.com/de/doc/Software/Bricklets/IO4V2_Bricklet_Python.html)
    - `BrickletIO4V2.set_pwm_configuration()` will now take the frequency in units of Hz and the duty cycle is normalized to 1, so it will take a float from [0...1].
-   - `BrickletIO4V2.get_pwm_configuration()` will return the frequency in units of HZ and the duty cycle is normalized to 1.
+   - `BrickletIO4V2.get_pwm_configuration()` will return the frequency in units of Hz and the duty cycle is normalized to 1.
+   - `BrickletIO4V2.set_edge_count_callback_configuration()` sets the callback configuration for the edge counter callback. Its secondary ids are in [5...8] for channels [0...3].
+   - `BrickletIO4V2.get_edge_count_callback_configuration()` returns the callback configuration for the edge counter callback.
 
 - ### [Master Brick](https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html)
    - `BrickMaster.set_wifi_configuration()`/`BrickMaster.get_wifi_configuration()` will take/return all ips in natural order
@@ -162,7 +164,6 @@ Some design choices of the original Tinkerforge API are overly complex. I theref
 - ### [Thermocouple Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Thermocouple_V2.html)
    - `BrickletThermocoupleV2()` takes an additional parameter to define the type of sensor. The options are of type `BrickletThermocoupleV2.SensorType`. The default is `BrickletPtc.SensorType.TYPE_K`.
    - `BrickletThermocoupleV2.sensor_type` getter and setter to change the type of sensor used.
-
 
 - ### [Segment Display 4x7 Bricklet 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)
    - `BrickletSegmentDisplay4x7V2.set_segments()` takes a `list`/`tuple` of 4 `int` instead of digit0, digit1, digit2, digit3. This is the same API as the older [Segment Display 4x7 Bricklet](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html).
