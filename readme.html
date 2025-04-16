@@ -192,7 +192,7 @@ pip<span class="w"> </span>install<span class="w"> </span>tinkerforge-async
 <section id="design-changes">
 <h3>Design Changes<a class="headerlink" href="#design-changes" title="Link to this heading">¶</a></h3>
 <ul>
-<li><p>Only Python 3 is supported (3.7+)</p></li>
+<li><p>Only Python 3 is supported (3.9+)</p></li>
 <li><p>Replaced threads with an async event loop</p></li>
 <li><p>Completely rewritten how responses from bricks/bricklets work. All setters now have a <code class="docutils literal notranslate"><span class="pre">response_expected</span></code> parameter, which is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> by default. If there is an error when calling the function, it will then raise an exception - either an <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> if the function is unknown, or a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if one or more parameters are invalid.</p>
 <p>Old style:</p>
@@ -273,10 +273,12 @@ pip<span class="w"> </span>install<span class="w"> </span>tinkerforge-async
 <li><p><code class="docutils literal notranslate"><span class="pre">IPConnection.connect(host,</span> <span class="pre">port=4223,</span> <span class="pre">authentication_secret='')</span></code>: If <code class="docutils literal notranslate"><span class="pre">authentication_secret</span></code> is not empty, try to authenticate.</p></li>
 </ul>
 </li>
-<li><h3 class="rubric" id="id1"><a class="reference external" href="https://www.tinkerforge.com/de/doc/Software/Bricklets/IO4V2_Bricklet_Python.html">IP Connection</a></h3>
+<li><h3 class="rubric" id="io-4-bricklet-2-0"><a class="reference external" href="https://www.tinkerforge.com/de/doc/Software/Bricklets/IO4V2_Bricklet_Python.html">IO-4 Bricklet 2.0</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">BrickletIO4V2.set_pwm_configuration()</span></code> will now take the frequency in units of Hz and the duty cycle is normalized to 1, so it will take a float from [0…1].</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">BrickletIO4V2.get_pwm_configuration()</span></code> will return the frequency in units of HZ and the duty cycle is normalized to 1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BrickletIO4V2.get_pwm_configuration()</span></code> will return the frequency in units of Hz and the duty cycle is normalized to 1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BrickletIO4V2.set_edge_count_callback_configuration()</span></code> sets the callback configuration for the edge counter callback. Its secondary ids are in [5…8] for channels [0…3].</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BrickletIO4V2.get_edge_count_callback_configuration()</span></code> returns the callback configuration for the edge counter callback.</p></li>
 </ul>
 </li>
 <li><h3 class="rubric" id="master-brick"><a class="reference external" href="https://www.tinkerforge.com/en/doc/Software/Bricks/Master_Brick_Python.html">Master Brick</a></h3>
@@ -313,8 +315,8 @@ pip<span class="w"> </span>install<span class="w"> </span>tinkerforge-async
 </ul>
 </section>
 </section>
-<section id="id2">
-<h2>Setup<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<section id="id1">
+<h2>Setup<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
 <p>There are currently no packages available at the PyPi repository. To install the module, clone the repository and run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>env<span class="w">  </span><span class="c1"># virtual environment, optional</span>
 <span class="nb">source</span><span class="w"> </span>env/bin/activate<span class="w">  </span><span class="c1"># only if the virtual environment is used</span>
@@ -361,7 +363,7 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install
 <li><a class="reference internal" href="#design-changes">Design Changes</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id2">Setup</a><ul>
+<li><a class="reference internal" href="#id1">Setup</a><ul>
 <li><a class="reference internal" href="#versioning">Versioning</a></li>
 <li><a class="reference internal" href="#authors">Authors</a></li>
 <li><a class="reference internal" href="#license">License</a></li>
