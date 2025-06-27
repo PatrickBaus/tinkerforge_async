@@ -151,7 +151,13 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         CallbackID.MONOFLOP_DONE: "B !",
     }
 
-    SID_TO_CALLBACK = {i: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE) for i in range(4)}
+    SID_TO_CALLBACK = {
+        0: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
+        1: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
+        2: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
+        3: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
+        4: (CallbackID.EDGE_COUNT,),
+    }
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
