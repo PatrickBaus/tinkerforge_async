@@ -1,0 +1,476 @@
+"""
+Module for the Tinkerforge Industrial Dual 0-20mA Bricklet 2.0
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_020mA_V2.html) implemented using Python
+asyncio. It does the low-level communication with the Tinkerforge ip connection and also handles conversion of raw
+units to SI units.
+"""
+
+# pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
+from __future__ import annotations
+
+from decimal import Decimal
+from enum import Enum, unique
+from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+
+from .devices import (
+    AdvancedCallbackConfiguration,
+    BrickletWithMCU,
+    DeviceIdentifier,
+    Event,
+    LedConfig,
+)
+from .devices import ThresholdOption as Threshold
+from .devices import (
+    _FunctionID,
+)
+from .ip_connection_helper import pack_payload, unpack_payload
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
+
+
+@unique
+class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
+
+    CURRENT = 4
+
+
+_CallbackID = CallbackID
+
+
+@unique
+class FunctionID(_FunctionID):
+    """
+    The function calls available to this bricklet
+    """
+
+    GET_CURRENT = 1
+    SET_CURRENT_CALLBACK_CONFIGURATION = 2
+    GET_CURRENT_CALLBACK_CONFIGURATION = 3
+    SET_SAMPLE_RATE = 5
+    GET_SAMPLE_RATE = 6
+    SET_GAIN = 7
+    GET_GAIN = 8
+    SET_CHANNEL_LED_CONFIG = 9
+    GET_CHANNEL_LED_CONFIG = 10
+    SET_CHANNEL_LED_STATUS_CONFIG = 11
+    GET_CHANNEL_LED_STATUS_CONFIG = 12
+
+
+@unique
+class ChannelLedStatusConfig(Enum):
+    """
+    Defines the LED brightness when LedConfig.SHOW_STATUS
+    """
+
+    THRESHOLD = 0
+    INTENSITY = 1
+
+
+_ChannelLedStatusConfig = ChannelLedStatusConfig  # We need the alias for MyPy type hinting
+
+
+@unique
+class SamplingRate(Enum):
+    """
+    Defines the sampling rate of the ADC. The resolution of the ADC depends on the sampling rate: 12 bit at 240 SPS,
+    14 bit at 60 SPS, 16 bit at 15 SPS and 18 bit at 4 SPS.
+    """
+
+    RATE_240_SPS = 0
+    RATE_60_SPS = 1
+    RATE_15_SPS = 2
+    RATE_4_SPS = 3
+
+
+_SamplingRate = SamplingRate  # We need the alias for MyPy type hinting
+
+
+@unique
+class Gain(Enum):
+    """
+    Defines the gain of the ADC
+    """
+
+    GAIN_1X = 0
+    GAIN_2X = 1
+    GAIN_4X = 2
+    GAIN_8X = 3
+
+
+_Gain = Gain  # We need the alias for MyPy type hinting
+
+
+class GetChannelLEDStatusConfig(NamedTuple):
+    minimum: Decimal
+    maximum: Decimal
+    config: ChannelLedStatusConfig
+
+
+class BrickletIndustrialDual020mAV2(BrickletWithMCU):
+    """
+    Measures two currents between 0mA and 22.5mA (IEC 60381-1 compatible, so 4-20mA sensors work as well) with up to
+    18bit resolution each. All currents are returned in A.
+    """
+
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_INDUSTRIAL_DUAL_0_20MA_V2
+    DEVICE_DISPLAY_NAME = "Industrial Dual 0-20mA Bricklet 2.0"
+
+    # Convenience imports, so that the user does not need to additionally import them
+    CallbackID = CallbackID
+    FunctionID = FunctionID
+    ThresholdOption = Threshold
+    ChannelLedConfig = LedConfig
+    ChannelLedStatusConfig = ChannelLedStatusConfig
+    SamplingRate = SamplingRate
+    Gain = Gain
+
+    CALLBACK_FORMATS = {
+        CallbackID.CURRENT: "B i",
+    }
+
+    SID_TO_CALLBACK = {
+        0: (CallbackID.CURRENT,),
+        1: (CallbackID.CURRENT,),
+    }
+
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
+        """
+        Creates an object with the unique device ID *uid* and adds it to the IP connection *ipcon*.
+        """
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
+
+        self.api_version = (2, 0, 0)
+
+    async def get_value(self, sid: int) -> Decimal:
+        assert sid in (0, 1)
+
+        return await self.get_current(sid)
+
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        sid: int,
+        period: int = 0,
+        value_has_to_change: bool = False,
+        option: Threshold | str = Threshold.OFF,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
+        response_expected: bool = True,
+    ) -> None:
+        minimum = 0 if minimum is None else minimum
+        maximum = 0 if maximum is None else maximum
+
+        assert sid in (0, 1)
+
+        await self.set_current_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
+        )
+
+    async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
+        assert sid in (0, 1)
+
+        return await self.get_current_callback_configuration(sid)
+
+    async def get_current(self, channel: int) -> Decimal:
+        """
+        Returns the current of the specified channel in A.
+
+        It is possible to detect if an IEC 60381-1 compatible sensor is connected and if it works probably.
+
+        If the returned current is below 4mA, there is likely no sensor connected or the connected sensor is defective.
+        If the returned current is over 20mA, there might be a short circuit or the sensor is defective.
+
+        If you want to get the value periodically, it is recommended to use the :cb:`Current` callback. You can set the
+        callback configuration with :func:`Set Current Callback Configuration`.
+        """
+        assert channel in (0, 1)
+
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_CURRENT,
+            data=pack_payload((int(channel),), "B"),
+            response_expected=True,
+        )
+        return self.__value_to_si(unpack_payload(payload, "i"))
+
+    async def set_current_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        channel: int,
+        period: int = 0,
+        value_has_to_change: bool = False,
+        option: Threshold | str = Threshold.OFF,
+        minimum: float | Decimal = 0,
+        maximum: float | Decimal = 0,
+        response_expected: bool = True,
+    ) -> None:
+        """
+        The period is the period with which the :cb:`Current` callback is triggered periodically. A value of 0 turns
+        the callback off.
+
+        If the `value has to change`-parameter is set to true, the callback is only triggered after the value has
+        changed. If the value didn't change within the period, the callback is triggered immediately on change.
+
+        If it is set to false, the callback is continuously triggered with the period, independent of the value.
+
+        It is furthermore possible to constrain the callback with thresholds.
+
+        The `option`-parameter together with min/max sets a threshold for the :cb:`Current` callback. The thresholds
+        are given in A.
+
+        The following options are possible:
+
+        .. csv-table::
+         :header: "Option", "Description"
+         :widths: 10, 100
+
+         "'x'",    "Threshold is turned off"
+         "'o'",    "Threshold is triggered when the value is *outside* the min and max values"
+         "'i'",    "Threshold is triggered when the value is *inside* or equal to the min and max values"
+         "'<'",    "Threshold is triggered when the value is smaller than the min value (max is ignored)"
+         "'>'",    "Threshold is triggered when the value is greater than the min value (max is ignored)"
+
+        If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
+        """
+        assert channel in (0, 1)
+        option = Threshold(option)
+        assert period >= 0
+
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_CURRENT_CALLBACK_CONFIGURATION,
+            data=pack_payload(
+                (
+                    int(channel),
+                    int(period),
+                    bool(value_has_to_change),
+                    option.value,
+                    self.__si_to_value(minimum),
+                    self.__si_to_value(maximum),
+                ),
+                "B I ! c i i",
+            ),
+            response_expected=response_expected,
+        )
+
+    async def get_current_callback_configuration(self, channel: int) -> AdvancedCallbackConfiguration:
+        """
+        Returns the callback configuration as set by :func:`Set Current Callback Configuration`.
+        """
+        assert channel in (0, 1)
+
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_CURRENT_CALLBACK_CONFIGURATION,
+            data=pack_payload((int(channel),), "B"),
+            response_expected=True,
+        )
+        period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
+        return AdvancedCallbackConfiguration(
+            period, value_has_to_change, Threshold(option), self.__value_to_si(minimum), self.__value_to_si(maximum)
+        )
+
+    async def set_sample_rate(self, rate: _SamplingRate | int, response_expected: bool = True) -> None:
+        """
+        Sets the sample rate to either 240, 60, 15 or 4 samples per second. The resolution for the rates is 12, 14, 16
+        and 18 bit respectively.
+
+        .. csv-table::
+         :header: "Value", "Description"
+         :widths: 10, 100
+
+         "0",    "240 samples per second, 12 bit resolution"
+         "1",    "60 samples per second, 14 bit resolution"
+         "2",    "15 samples per second, 16 bit resolution"
+         "3",    "4 samples per second, 18 bit resolution"
+        """
+        rate = SamplingRate(rate)
+
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_SAMPLE_RATE,
+            data=pack_payload((rate.value,), "B"),
+            response_expected=response_expected,
+        )
+
+    async def get_sample_rate(self) -> _SamplingRate:
+        """
+        Returns the sample rate as set by :func:`Set Sample Rate`.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_SAMPLE_RATE, response_expected=True
+        )
+
+        return SamplingRate(unpack_payload(payload, "B"))
+
+    async def set_gain(self, gain: _Gain | int, response_expected: bool = True) -> None:
+        """
+        Sets a gain between 1x and 8x. If you want to measure a very small current, you can increase the gain to get
+        some more resolution.
+
+        Example: If you measure 0.5mA with a gain of 8x the return value will be 4mA.
+        """
+        gain = Gain(gain)
+
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_GAIN,
+            data=pack_payload((gain.value,), "B"),
+            response_expected=response_expected,
+        )
+
+    async def get_gain(self) -> _Gain:
+        """
+        Returns the gain as set by :func:`Set Gain`.
+        """
+        _, payload = await self.ipcon.send_request(device=self, function_id=FunctionID.GET_GAIN, response_expected=True)
+
+        return Gain(unpack_payload(payload, "B"))
+
+    async def set_channel_led_config(
+        self, channel: int, config: LedConfig | int, response_expected: bool = True
+    ) -> None:
+        """
+        Each channel has a corresponding LED. You can turn the LED off, on or show a heartbeat. You can also set the LED
+        to "Channel Status". In this mode the LED can either be turned on with a pre-defined threshold or the intensity
+        of the LED can change with the measured value.
+
+        You can configure the channel status behavior with :func:`Set Channel LED Status Config`.
+
+        By default, all channel LEDs are configured as "Channel Status".
+        """
+        assert channel in (0, 1)
+        config = LedConfig(config)
+
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_CHANNEL_LED_CONFIG,
+            data=pack_payload((int(channel), config.value), "B B"),
+            response_expected=response_expected,
+        )
+
+    async def get_channel_led_config(self, channel: int) -> LedConfig:
+        """
+        Returns the channel LED configuration as set by :func:`Set Channel LED Config`.
+        """
+        assert channel in (0, 1)
+
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_CHANNEL_LED_CONFIG,
+            data=pack_payload((int(channel),), "B"),
+            response_expected=True,
+        )
+
+        return LedConfig(unpack_payload(payload, "B"))
+
+    async def set_channel_led_status_config(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        channel: int,
+        minimum: float | Decimal,
+        maximum: float | Decimal,
+        config: _ChannelLedStatusConfig | int,
+        response_expected: bool = True,
+    ) -> None:
+        """
+        Sets the channel LED status config. This config is used if the channel LED is configured as "Channel Status",
+        see :func:`Set Channel LED Config`. The `minimum` and `maximum` values are given in A.
+
+        For each channel you can choose between threshold and intensity mode.
+
+        In threshold mode you can define a positive or a negative threshold. For a positive threshold set the "min"
+        parameter to the threshold value in A above which the LED should turn on and set the "max" parameter to 0.
+        Example: If you set a positive threshold of 10mA, the LED will turn on as soon as the current exceeds 10mA and
+        turn off again if it goes below 10mA. For a negative threshold set the "max" parameter to the threshold value in
+        A below which the LED should turn on and set the "min" parameter to 0. Example: If you set a negative threshold
+        of 10mA, the LED will turn on as soon as the current goes below 10mA and the LED will turn off when the current
+        exceeds 10mA.
+
+        In intensity mode you can define a range in A that is used to scale the brightness of the LED. Example with
+        min=4mA and max=20mA: The LED is off at 4mA and below, on at 20mA and above and the brightness is linearly
+        scaled between the values 4mA and 20mA. If the min value is greater than the max value, the LED brightness is
+        scaled the other way around.
+        """
+        assert channel in (0, 1)
+        config = ChannelLedStatusConfig(config)
+
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_CHANNEL_LED_STATUS_CONFIG,
+            data=pack_payload(
+                (
+                    int(channel),
+                    self.__si_to_value(minimum),
+                    self.__si_to_value(maximum),
+                    config.value,
+                ),
+                "B i i B",
+            ),
+            response_expected=response_expected,
+        )
+
+    async def get_channel_led_status_config(self, channel: int) -> GetChannelLEDStatusConfig:
+        """
+        Returns the channel LED status configuration as set by :func:`Set Channel LED Status Config`.
+        """
+        assert channel in (0, 1)
+
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.GET_CHANNEL_LED_STATUS_CONFIG,
+            data=pack_payload((int(channel),), "B"),
+            response_expected=True,
+        )
+
+        minimum, maximum, config = unpack_payload(payload, "i i B")
+        return GetChannelLEDStatusConfig(
+            self.__value_to_si(minimum), self.__value_to_si(maximum), ChannelLedStatusConfig(config)
+        )
+
+    @staticmethod
+    def __value_to_si(value: int) -> Decimal:
+        """
+        Convert the sensor value (nA) to SI units (A)
+        """
+        return Decimal(value) / 1_000_000_000
+
+    @staticmethod
+    def __si_to_value(value: float | Decimal) -> int:
+        """
+        Convert SI units (A) to the sensor value (nA). Rounding avoids floating point errors, e.g. 0.0029 A * 1e9
+        would otherwise result in 2899999 nA.
+        """
+        return round(Decimal(value) * 1_000_000_000)
+
+    async def read_events(
+        self,
+        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        sids: tuple[int, ...] | list[int] | None = None,
+    ) -> AsyncGenerator[Event, None]:
+        registered_events = set()
+        if events:
+            for event in events:
+                registered_events.add(self.CallbackID(event))
+        if sids is not None:
+            for sid in sids:
+                for callback in self.SID_TO_CALLBACK.get(sid, []):
+                    registered_events.add(callback)
+
+        if not events and sids is None:
+            registered_events = set(self.CALLBACK_FORMATS.keys())
+
+        async for header, payload in super()._read_events():
+            try:
+                function_id = CallbackID(header.function_id)
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if function_id in registered_events:
+                channel, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
+                if sids is not None and channel not in sids:
+                    # We got a reply from the wrong channel, maybe there is another callback running on that other
+                    # channel, so we ignore the value
+                    continue
+                yield Event(self, channel, function_id, self.__value_to_si(value))
