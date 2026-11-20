@@ -340,7 +340,7 @@ class BrickletAmbientLightV2(Device):
 
     @staticmethod
     def __si_to_value(value) -> int:
-        return int(value * 100)
+        return round(value * 100)
 
     async def read_events(
         self,

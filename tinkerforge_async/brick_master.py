@@ -3522,7 +3522,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         Convert to the sensor value to SI units
         """
-        return int(value * 1000)
+        return round(value * 1000)
 
     async def read_events(
         self,

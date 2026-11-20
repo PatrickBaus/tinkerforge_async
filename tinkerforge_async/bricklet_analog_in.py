@@ -437,7 +437,7 @@ class BrickletAnalogIn(Device):
 
     @staticmethod
     def __si_to_value(value):
-        return int(value * 1000)
+        return round(value * 1000)
 
     async def read_events(
         self,

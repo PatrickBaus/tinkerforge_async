@@ -384,10 +384,10 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
     def __si_to_value(self, value: float | Decimal) -> int:
         if self.__sensor_type is SensorType.TYPE_G8:
-            return int(float(value) * 8 * 1.6 * 2**17)
+            return round(float(value) * 8 * 1.6 * 2**17)
         if self.__sensor_type is SensorType.TYPE_G32:
-            return int(float(value) * 32 * 1.6 * 2**17)
-        return int(value * 100) - 27315
+            return round(float(value) * 32 * 1.6 * 2**17)
+        return round(value * 100) - 27315
 
     async def read_events(
         self,

@@ -458,7 +458,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def __si_altitude_to_value(value: float | Decimal) -> int:
-        return int(value * 100)
+        return round(value * 100)
 
     @staticmethod
     def __value_to_si_pressure(value: int) -> Decimal:
@@ -469,7 +469,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def __si_pressure_to_value(value: float | Decimal) -> int:
-        return int(value * 10)
+        return round(value * 10)
 
     async def read_events(
         self,

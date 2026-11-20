@@ -606,7 +606,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         """
         Convert SI units to raw values
         """
-        return int(value * 10)
+        return round(value * 10)
 
     @staticmethod
     def __altitude_sensor_to_si(value: int) -> Decimal:
@@ -620,7 +620,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         """
         Convert SI units to raw values
         """
-        return int(value * 1000)
+        return round(value * 1000)
 
     @staticmethod
     def __temperature_sensor_to_si(value: int) -> Decimal:

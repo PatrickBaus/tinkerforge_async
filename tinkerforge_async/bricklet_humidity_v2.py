@@ -467,7 +467,7 @@ class BrickletHumidityV2(BrickletWithMCU):
 
     @staticmethod
     def __si_to_humidity_sensor(value: Decimal | float) -> int:
-        return int(value * 100)
+        return round(value * 100)
 
     @staticmethod
     def __temperature_sensor_to_si(value: int) -> Decimal:
@@ -478,7 +478,7 @@ class BrickletHumidityV2(BrickletWithMCU):
 
     @staticmethod
     def __si_to_temperature_sensor(value: Decimal | float) -> int:
-        return int(value * 100) - 27315
+        return round(value * 100) - 27315
 
     async def read_events(
         self,
