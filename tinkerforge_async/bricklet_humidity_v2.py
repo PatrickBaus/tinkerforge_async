@@ -322,7 +322,7 @@ class BrickletHumidityV2(BrickletWithMCU):
                     self.__si_to_temperature_sensor(minimum),
                     self.__si_to_temperature_sensor(maximum),
                 ),
-                "I ! c H H",
+                "I ! c h h",
             ),
             response_expected=response_expected,
         )
@@ -334,7 +334,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c H H")
+        period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c h h")
         option = Threshold(option)
         minimum, maximum = self.__temperature_sensor_to_si(minimum), self.__temperature_sensor_to_si(maximum)
         return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
