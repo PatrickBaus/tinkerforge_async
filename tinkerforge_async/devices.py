@@ -111,6 +111,11 @@ class BrickletPort(Enum):
     B = "b"
     C = "c"
     D = "d"
+    E = "e"  # Only available on Bricks/HATs with more than four ports
+    F = "f"
+    G = "g"
+    H = "h"
+    Z = "z"  # Bricklets connected to an Isolator Bricklet are always at position 'z'
 
 
 class GetSPITFPErrorCount(NamedTuple):
@@ -184,7 +189,7 @@ class Device:
         the position, the hardware and firmware version as well as the
         device identifier.
 
-        The position can be 'a', 'b', 'c' or 'd'.
+        The position can be 'a' to 'h' or 'z' (behind an Isolator Bricklet).
 
         The device identifier numbers can be found :ref:`here <device_identifier>`.
         |device_identifier_constant|

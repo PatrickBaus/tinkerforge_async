@@ -427,7 +427,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         Returns the callback configuration as set by :func:`Set Temperature Callback Configuration`.
         """
         _, payload = await self.ipcon.send_request(
-            device=self, function_id=FunctionID.GET_ALTITUDE_CALLBACK_CONFIGURATION, response_expected=True
+            device=self, function_id=FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION, response_expected=True
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
