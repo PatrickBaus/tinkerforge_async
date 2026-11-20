@@ -503,7 +503,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
     @staticmethod
     def __si_to_value(value: float | Decimal) -> int:
-        return int(value * 1000)
+        return round(value * 1000)
 
     async def read_events(
         self,

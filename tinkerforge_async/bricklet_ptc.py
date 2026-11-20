@@ -554,7 +554,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def __si_temperature_to_value(value: float | Decimal) -> int:
-        return int(value * 100) - 27315
+        return round(value * 100) - 27315
 
     def __value_to_si_resistance(self, value: int) -> Decimal:
         """
@@ -568,7 +568,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
     def __si_resistance_to_value(self, value: float | Decimal) -> int:
         if self.__sensor_type is SensorType.PT_1000:
             value /= 10
-        return int(value * 32768 / 390)
+        return round(value * 32768 / 390)
 
     async def read_events(
         self,

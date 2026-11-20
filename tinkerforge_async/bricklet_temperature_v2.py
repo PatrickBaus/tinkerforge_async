@@ -241,7 +241,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
     @staticmethod
     def __si_to_value(value: float | Decimal) -> int:
-        return int(value * 100) - 27315
+        return round(value * 100) - 27315
 
     async def read_events(
         self,
