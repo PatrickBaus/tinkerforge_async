@@ -15,6 +15,7 @@ from .bricklet_barometer import BrickletBarometer
 from .bricklet_barometer_v2 import BrickletBarometerV2
 from .bricklet_humidity import BrickletHumidity
 from .bricklet_humidity_v2 import BrickletHumidityV2
+from .bricklet_industrial_dual_0_20ma_v2 import BrickletIndustrialDual020mAV2
 from .bricklet_industrial_dual_analog_in_v2 import BrickletIndustrialDualAnalogInV2
 from .bricklet_industrial_ptc import BrickletIndustrialPtc
 from .bricklet_io4_v2 import BrickletIO4V2
@@ -71,6 +72,7 @@ device_factory.register(BrickletBarometer)
 device_factory.register(BrickletBarometerV2)
 device_factory.register(BrickletHumidity)
 device_factory.register(BrickletHumidityV2)
+device_factory.register(BrickletIndustrialDual020mAV2)
 device_factory.register(BrickletIndustrialDualAnalogInV2)
 device_factory.register(BrickletIndustrialPtc)
 device_factory.register(BrickletIO4V2)

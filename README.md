@@ -25,6 +25,7 @@ The library is fully type-hinted.
 | [Barometer 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html)                                 |:heavy_check_mark:|:heavy_check_mark:|
 | [Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)                                          |:heavy_check_mark:|:heavy_check_mark:|
 | [Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)                                   |:heavy_check_mark:|:heavy_check_mark:|
+| [Industrial Dual 0-20mA 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_020mA_V2.html)        |:heavy_check_mark:|:heavy_check_mark:|
 | [Industrial Dual Analog In 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html) |:heavy_check_mark:|:heavy_check_mark:|
 | [Industrial PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_PTC.html)                              |:heavy_check_mark:|:heavy_check_mark:|
 | [IO-4 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/IO4_V2.html)                                            |:heavy_check_mark:|:heavy_check_mark:|
