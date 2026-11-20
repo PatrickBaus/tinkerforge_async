@@ -325,7 +325,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         .. versionadded:: 2.0.6$nbsp;(Plugin)
         """
         _, payload = await self.ipcon.send_request(
-            device=self, function_id=FunctionID.GET_VOLTAGE_CALLBACK_CONFIGURATION, response_expected=True
+            device=self, function_id=FunctionID.GET_ALL_VOLTAGES_CALLBACK_CONFIGURATION, response_expected=True
         )
         return SimpleCallbackConfiguration(*unpack_payload(payload, "I !"))
 
@@ -540,4 +540,4 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
                 elif function_id is CallbackID.ALL_VOLTAGES:
                     values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                    yield Event(self, 2, function_id, (self.__value_to_si(value) for value in values))
+                    yield Event(self, 2, function_id, tuple(self.__value_to_si(value) for value in values))
