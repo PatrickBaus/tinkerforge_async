@@ -4,12 +4,13 @@ This file contains all base classes used by Bricks and bricklets
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections.abc import AsyncGenerator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, TypeAlias, cast
 
 from .ip_connection_helper import base58decode, pack_payload, uid64_to_uid32, unpack_payload
 from .quantities import CELSIUS_ZERO
@@ -143,6 +144,69 @@ class GetIdentity(NamedTuple):
     device_identifier: DeviceIdentifier
 
 
+@dataclass(frozen=True, slots=True)
+class ChannelConfiguration:
+    """
+    Describes how the callbacks of a channel are configured, i.e. which methods of the device are called by
+    `Device.set_callback_configuration()` and `Device.get_callback_configuration()`.
+
+    Parameters
+    ----------
+    name: str
+        The name used by the methods. The configuration of a channel called `temperature` is set by
+        `set_temperature_callback_configuration()`, or by `set_temperature_callback_period()` and
+        `set_temperature_callback_threshold()` if `split` is set.
+    split: bool
+        The device configures the period and the threshold with separate functions. These are the devices that do not
+        have a `value_has_to_change` option.
+    thresholds: bool
+        The callback has a threshold with an option, a minimum and a maximum. If not, only the period and
+        `value_has_to_change` are set.
+    default: Decimal or int
+        The value of the minimum and maximum, if they are not given. This is the SI value of the raw value 0 of the
+        device.
+    wrap_advanced: bool
+        Return the configuration of a callback without thresholds as an `AdvancedCallbackConfiguration`, where the
+        option, minimum and maximum are `None`.
+    """
+
+    name: str
+    split: bool = False
+    thresholds: bool = True
+    default: Decimal | int = 0
+    wrap_advanced: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class Channel:
+    """
+    Describes a value of a Brick or Bricklet, that is addressed by its secondary id (sid). The table of all channels
+    of a device (`Device.CHANNELS`) is the source for the validation of the sids, the callbacks of a sid
+    (`Device.SID_TO_CALLBACK`) and the generic implementations `Device._get_value()`,
+    `Device._set_callback_configuration()` and `Device._get_callback_configuration()`.
+
+    Parameters
+    ----------
+    sid: int
+        The secondary id of the channel.
+    getter: str, optional
+        The name of the method that returns the value of the channel. `None` if the value cannot be read.
+    callbacks: tuple of CallbackID
+        The callbacks that belong to the channel.
+    configuration: ChannelConfiguration, optional
+        How the callbacks are configured. `None` if the callbacks cannot be configured.
+    index: int, optional
+        If set, it is passed as the first argument to the methods, that read and configure the channel. These are the
+        devices that have several identical channels, which are selected by an argument.
+    """
+
+    sid: int
+    getter: str | None = None
+    callbacks: tuple[Any, ...] = ()
+    configuration: ChannelConfiguration | None = None
+    index: int | None = None
+
+
 class Device:
     """
     The base class of all Bricks and Bricklets. Newer Bricks or Bricklets inherit from this class and add their
@@ -158,6 +222,13 @@ class Device:
     CallbackID: ClassVar[Any]
     CALLBACK_FORMATS: ClassVar[Mapping[Any, str]]
     SID_TO_CALLBACK: ClassVar[Mapping[int, Sequence[Any]]]
+    # The channels of the device. If a class defines it, `SID_TO_CALLBACK` is generated from it.
+    CHANNELS: ClassVar[Sequence[Channel]] = ()
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        if "CHANNELS" in cls.__dict__:
+            cls.SID_TO_CALLBACK = {channel.sid: channel.callbacks for channel in cls.CHANNELS}
 
     def __str__(self) -> str:
         return f"{self.__display_name} with uid {self.uid} connected at {self.__ipcon}"
@@ -210,6 +281,97 @@ class Device:
         valid_sids = tuple(valid_sids)
         if sid not in valid_sids:
             raise InvalidSidError(f"Invalid sid {sid!r} for {self}. Valid sids: {valid_sids}.")
+
+    def _get_channel(self, sid: int, *, configurable: bool = False) -> Channel:
+        """
+        Get the channel with the secondary id (sid) from the table of channels.
+
+        Parameters
+        ----------
+        sid: int
+            The secondary id of the channel
+        configurable: bool
+            Only accept channels with a callback configuration. Otherwise, only accept channels with a getter.
+
+        Raises
+        ------
+        InvalidSidError
+            If there is no such channel.
+        """
+        if configurable:
+            channels = [channel for channel in self.CHANNELS if channel.configuration is not None]
+        else:
+            channels = [channel for channel in self.CHANNELS if channel.getter is not None]
+        self._validate_sid(sid, (channel.sid for channel in channels))
+        return next(channel for channel in channels if channel.sid == sid)
+
+    async def _get_value(self, sid: int) -> Any:
+        """
+        Get the current value of a channel. See `Channel`.
+        """
+        channel = self._get_channel(sid)
+        arguments = () if channel.index is None else (channel.index,)
+        # _get_channel() only returns channels with a getter
+        return await getattr(self, cast(str, channel.getter))(*arguments)
+
+    async def _set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        sid: int,
+        period: float | Decimal = 0,
+        value_has_to_change: bool = False,
+        option: ThresholdOption | int = ThresholdOption.OFF,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
+        response_expected: bool = True,
+    ) -> None:
+        """
+        Configure the callbacks of a channel. See `Channel`.
+        """
+        channel = self._get_channel(sid, configurable=True)
+        # _get_channel() only returns channels with a configuration
+        configuration = cast(ChannelConfiguration, channel.configuration)
+        arguments = () if channel.index is None else (channel.index,)
+
+        if not configuration.thresholds:
+            await getattr(self, f"set_{configuration.name}_callback_configuration")(
+                *arguments, period, value_has_to_change, response_expected
+            )
+            return
+
+        minimum = configuration.default if minimum is None else minimum
+        maximum = configuration.default if maximum is None else maximum
+        if configuration.split:
+            await asyncio.gather(
+                getattr(self, f"set_{configuration.name}_callback_period")(*arguments, period, response_expected),
+                getattr(self, f"set_{configuration.name}_callback_threshold")(
+                    *arguments, option, minimum, maximum, response_expected
+                ),
+            )
+        else:
+            await getattr(self, f"set_{configuration.name}_callback_configuration")(
+                *arguments, period, value_has_to_change, option, minimum, maximum, response_expected
+            )
+
+    async def _get_callback_configuration(self, sid: int) -> Any:
+        """
+        Get the configuration of the callbacks of a channel. See `Channel`.
+        """
+        channel = self._get_channel(sid, configurable=True)
+        # _get_channel() only returns channels with a configuration
+        configuration = cast(ChannelConfiguration, channel.configuration)
+        arguments = () if channel.index is None else (channel.index,)
+
+        if configuration.split:
+            period, config = await asyncio.gather(
+                getattr(self, f"get_{configuration.name}_callback_period")(*arguments),
+                getattr(self, f"get_{configuration.name}_callback_threshold")(*arguments),
+            )
+            return AdvancedCallbackConfiguration(period, True, *config)
+
+        result = await getattr(self, f"get_{configuration.name}_callback_configuration")(*arguments)
+        if configuration.wrap_advanced:
+            return AdvancedCallbackConfiguration(result.period, result.value_has_to_change, None, None, None)
+        return result
 
     def get_api_version(self) -> tuple[int, int, int]:
         """

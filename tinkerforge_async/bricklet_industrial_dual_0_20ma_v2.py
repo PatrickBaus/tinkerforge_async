@@ -16,6 +16,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 from .devices import (
     AdvancedCallbackConfiguration,
     BrickletWithMCU,
+    Channel,
+    ChannelConfiguration,
     DeviceIdentifier,
     Event,
     LedConfig,
@@ -124,10 +126,22 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         CallbackID.CURRENT: "B i",
     }
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.CURRENT,),
-        1: (CallbackID.CURRENT,),
-    }
+    CHANNELS = (
+        Channel(
+            0,
+            getter="get_current",
+            callbacks=(CallbackID.CURRENT,),
+            configuration=ChannelConfiguration("current"),
+            index=0,
+        ),
+        Channel(
+            1,
+            getter="get_current",
+            callbacks=(CallbackID.CURRENT,),
+            configuration=ChannelConfiguration("current"),
+            index=1,
+        ),
+    )
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
@@ -138,33 +152,24 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> Decimal:
-        self._validate_sid(sid, (0, 1))
-
-        return await self.get_current(sid)
+        return await self._get_value(sid)
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | str = Threshold.OFF,
+        option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        minimum = 0 if minimum is None else minimum
-        maximum = 0 if maximum is None else maximum
-
-        self._validate_sid(sid, (0, 1))
-
-        await self.set_current_callback_configuration(
+        await self._set_callback_configuration(
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        self._validate_sid(sid, (0, 1))
-
-        return await self.get_current_callback_configuration(sid)
+        return await self._get_callback_configuration(sid)
 
     async def get_current(self, channel: int) -> Decimal:
         """
@@ -194,7 +199,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         channel: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | str = Threshold.OFF,
+        option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,

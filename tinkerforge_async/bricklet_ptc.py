@@ -7,12 +7,18 @@ of raw units to SI units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
-import asyncio
 from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, TypeAlias
 
-from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier
+from .devices import (
+    AdvancedCallbackConfiguration,
+    BasicCallbackConfiguration,
+    Channel,
+    ChannelConfiguration,
+    Device,
+    DeviceIdentifier,
+)
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
@@ -120,11 +126,21 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         CallbackID.SENSOR_CONNECTED: "!",
     }
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.TEMPERATURE, CallbackID.TEMPERATURE_REACHED),
-        1: (CallbackID.RESISTANCE, CallbackID.RESISTANCE_REACHED),
-        2: (CallbackID.SENSOR_CONNECTED,),
-    }
+    CHANNELS = (
+        Channel(
+            0,
+            getter="get_temperature",
+            callbacks=(CallbackID.TEMPERATURE, CallbackID.TEMPERATURE_REACHED),
+            configuration=ChannelConfiguration("temperature", split=True, default=CELSIUS_ZERO),
+        ),
+        Channel(
+            1,
+            getter="get_resistance",
+            callbacks=(CallbackID.RESISTANCE, CallbackID.RESISTANCE_REACHED),
+            configuration=ChannelConfiguration("resistance", split=True),
+        ),
+        Channel(2, getter="is_sensor_connected", callbacks=(CallbackID.SENSOR_CONNECTED,)),
+    )
 
     @property
     def sensor_type(self) -> SensorType:
@@ -155,15 +171,9 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         )
 
     async def get_value(self, sid: int) -> Decimal | bool:
-        self._validate_sid(sid, (0, 1, 2))
+        return await self._get_value(sid)
 
-        if sid == 0:
-            return await self.get_temperature()
-        if sid == 1:
-            return await self.get_resistance()
-        return await self.is_sensor_connected()
-
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: Duration = 0,
@@ -174,37 +184,13 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         response_expected: bool = True,
     ):
         # The sensor connected callback (sid 2) cannot be configured.
-        self._validate_sid(sid, (0, 1))
-
-        if sid == 0:
-            minimum = CELSIUS_ZERO if minimum is None else minimum
-            maximum = CELSIUS_ZERO if maximum is None else maximum
-            await asyncio.gather(
-                self.set_temperature_callback_period(period, response_expected),
-                self.set_temperature_callback_threshold(option, minimum, maximum, response_expected),
-            )
-        else:
-            minimum = 0 if minimum is None else minimum
-            maximum = 0 if maximum is None else maximum
-            await asyncio.gather(
-                self.set_resistance_callback_period(period, response_expected),
-                self.set_resistance_callback_threshold(option, minimum, maximum, response_expected),
-            )
+        await self._set_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
+        )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         # The sensor connected callback (sid 2) cannot be configured.
-        self._validate_sid(sid, (0, 1))
-
-        if sid == 0:
-            period, config = await asyncio.gather(
-                self.get_temperature_callback_period(), self.get_temperature_callback_threshold()
-            )
-        else:
-            period, config = await asyncio.gather(
-                self.get_resistance_callback_period(), self.get_resistance_callback_threshold()
-            )
-
-        return AdvancedCallbackConfiguration(period, True, *config)
+        return await self._get_callback_configuration(sid)
 
     async def get_temperature(self) -> Decimal:
         """
