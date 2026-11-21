@@ -8,12 +8,11 @@ of raw units to SI units.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
-from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
+from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
@@ -546,34 +545,9 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
             value /= 10
         return round(value * 32768 / 390)
 
-    async def read_events(
-        self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
-    ) -> AsyncGenerator[Event, None]:
-        registered_events = set()
-        if events:
-            for event in events:
-                registered_events.add(self.CallbackID(event))
-        if sids is not None:
-            for sid in sids:
-                for callback in self.SID_TO_CALLBACK.get(sid, []):
-                    registered_events.add(callback)
-
-        if not events and not sids:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
-
-        async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
-                continue
-            if function_id in registered_events:
-                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if function_id in (CallbackID.TEMPERATURE, CallbackID.TEMPERATURE_REACHED):
-                    yield Event(self, 0, function_id, TEMPERATURE.to_si(value))
-                elif function_id in (CallbackID.RESISTANCE, CallbackID.RESISTANCE_REACHED):
-                    yield Event(self, 1, function_id, self.__value_to_si_resistance(value))
-                else:
-                    yield Event(self, 2, function_id, value)
+    def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
+        if callback_id in (CallbackID.TEMPERATURE, CallbackID.TEMPERATURE_REACHED):
+            return 0, TEMPERATURE.to_si(value)
+        if callback_id in (CallbackID.RESISTANCE, CallbackID.RESISTANCE_REACHED):
+            return 1, self.__value_to_si_resistance(value)
+        return 2, value

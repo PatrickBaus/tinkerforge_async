@@ -8,12 +8,11 @@ the low-level communication with the Tinkerforge ip connection and also handles 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
-from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
+from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
@@ -336,29 +335,5 @@ class BrickletAmbientLightV2(Device):
         illuminance_range, integration_time = unpack_payload(payload, "B B")
         return GetConfiguration(IlluminanceRange(illuminance_range), IntegrationTime(integration_time))
 
-    async def read_events(
-        self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
-    ) -> AsyncGenerator[Event, None]:
-        registered_events = set()
-        if events:
-            for event in events:
-                registered_events.add(CallbackID(event))
-        if sids is not None:
-            for sid in sids:
-                for callback in self.SID_TO_CALLBACK.get(sid, []):
-                    registered_events.add(callback)
-
-        if not events and not sids:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
-
-        async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
-                continue
-            if function_id in registered_events:
-                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                yield Event(self, 0, function_id, ILLUMINANCE.to_si(value))
+    def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
+        return 0, ILLUMINANCE.to_si(value)

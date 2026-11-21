@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import CancelledError
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Sequence
 from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, NamedTuple, TypeAlias, TypedDict
@@ -761,8 +761,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
 
     async def read_events(
         self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
+        events: Sequence[int | CallbackID] | None = None,
+        sids: Sequence[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         if not (events is None or sids is None):
             raise ValueError(

@@ -8,10 +8,10 @@ units to SI units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -431,33 +431,10 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         minimum, maximum, config = unpack_payload(payload, "i i B")
         return GetChannelLEDStatusConfig(CURRENT.to_si(minimum), CURRENT.to_si(maximum), ChannelLedStatusConfig(config))
 
-    async def read_events(
-        self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
-    ) -> AsyncGenerator[Event, None]:
-        registered_events = set()
-        if events:
-            for event in events:
-                registered_events.add(self.CallbackID(event))
-        if sids is not None:
-            for sid in sids:
-                for callback in self.SID_TO_CALLBACK.get(sid, []):
-                    registered_events.add(callback)
-
-        if not events and sids is None:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
-
-        async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
-                continue
-            if function_id in registered_events:
-                channel, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if sids is not None and channel not in sids:
-                    # We got a reply from the wrong channel, maybe there is another callback running on that other
-                    # channel, so we ignore the value
-                    continue
-                yield Event(self, channel, function_id, CURRENT.to_si(value))
+    def _to_events(self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None) -> Iterable[Event]:
+        channel, current = value
+        if sids is not None and channel not in sids:
+            # We got a reply from the wrong channel, maybe there is another callback running on that other
+            # channel, so we ignore the value
+            return ()
+        return (Event(self, channel, callback_id, CURRENT.to_si(current)),)

@@ -7,12 +7,11 @@ units.
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
-from .devices import Device, DeviceIdentifier, Event, _FunctionID
+from .devices import Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
@@ -186,30 +185,3 @@ class BrickletSegmentDisplay4x7(Device):
             device=self, function_id=FunctionID.GET_COUNTER_VALUE, response_expected=True
         )
         return unpack_payload(payload, "H")
-
-    async def read_events(
-        self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
-    ) -> AsyncGenerator[Event, None]:
-        registered_events = set()
-        if events:
-            for event in events:
-                registered_events.add(self.CallbackID(event))
-        if sids is not None:
-            for sid in sids:
-                for callback in self.SID_TO_CALLBACK.get(sid, []):
-                    registered_events.add(callback)
-
-        if events is None and sids is None:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
-
-        async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
-                continue
-            if function_id in registered_events:
-                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                yield Event(self, 0, function_id, value)
