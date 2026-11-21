@@ -123,7 +123,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         self.api_version = (2, 0, 2)
 
     async def get_value(self, sid: int) -> Decimal:
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             return await self.get_humidity()
@@ -139,7 +139,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         maximum: Decimal | float | None = None,
         response_expected: bool = True,
     ) -> None:
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             minimum = 0 if minimum is None else minimum
@@ -155,7 +155,7 @@ class BrickletHumidityV2(BrickletWithMCU):
             )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             return await self.get_humidity_callback_configuration()

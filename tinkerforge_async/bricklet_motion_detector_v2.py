@@ -80,7 +80,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> bool:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         return await self.get_motion_detected()
 

@@ -145,7 +145,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> Decimal | tuple[Decimal, Decimal]:
-        assert sid in (0, 1, 2)
+        self._validate_sid(sid, (0, 1, 2))
 
         if sid in (0, 1):
             return await self.get_voltage(sid)
@@ -164,7 +164,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
-        assert sid in (0, 1, 2)
+        self._validate_sid(sid, (0, 1, 2))
 
         if sid in (0, 1):
             await self.set_voltage_callback_configuration(
@@ -174,7 +174,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             await self.set_all_voltages_callback_configuration(period, value_has_to_change, response_expected)
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        assert sid in (0, 1, 2)
+        self._validate_sid(sid, (0, 1, 2))
         if sid in (0, 1):
             return await self.get_voltage_callback_configuration(sid)
         return AdvancedCallbackConfiguration(

@@ -174,13 +174,11 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         )
 
     async def get_value(self, sid: int) -> Decimal | GetErrorState:
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             return await self.get_temperature()
-        if sid == 1:
-            return await self.get_error_state()
-        raise ValueError(f"Invalid sid: {sid}. sid must be in (0, 1).")
+        return await self.get_error_state()
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -195,18 +193,18 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         minimum = Decimal("273.15") if minimum is None else minimum
         maximum = Decimal("273.15") if maximum is None else maximum
 
-        if sid == 0:
-            await self.set_temperature_callback_configuration(
-                period, value_has_to_change, option, minimum, maximum, response_expected
-            )
-        else:
-            raise ValueError(f"Invalid sid: {sid}. sid must be in (0, ).")
+        # Only the temperature (sid 0) has a callback configuration. The error state is always reported.
+        self._validate_sid(sid, (0,))
+
+        await self.set_temperature_callback_configuration(
+            period, value_has_to_change, option, minimum, maximum, response_expected
+        )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        if sid == 0:
-            return await self.get_temperature_callback_configuration()
+        # Only the temperature (sid 0) has a callback configuration. The error state is always reported.
+        self._validate_sid(sid, (0,))
 
-        raise ValueError(f"Invalid sid: {sid}. sid must be in (0, ).")
+        return await self.get_temperature_callback_configuration()
 
     async def get_temperature(self) -> Decimal:
         """

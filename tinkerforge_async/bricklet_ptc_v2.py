@@ -170,7 +170,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
 
     async def get_value(self, sid) -> Decimal | bool:
-        assert sid in (0, 1, 2)
+        self._validate_sid(sid, (0, 1, 2))
 
         if sid == 0:
             return await self.get_temperature()
@@ -188,7 +188,8 @@ class BrickletPtcV2(BrickletWithMCU):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        assert sid in (0, 1, 2)
+        # The sensor connected callback (sid 2) cannot be configured.
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             minimum = Decimal("273.15") if minimum is None else minimum
@@ -196,23 +197,20 @@ class BrickletPtcV2(BrickletWithMCU):
             await self.set_temperature_callback_configuration(
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
-        elif sid == 1:
+        else:
             minimum = 0 if minimum is None else minimum
             maximum = 0 if maximum is None else maximum
             await self.set_resistance_callback_configuration(
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
-        else:
-            raise AttributeError("Configuration of the 'connected callback' is not supported.")
 
     async def get_callback_configuration(self, sid: int):
-        assert sid in (0, 1, 2)
+        # The sensor connected callback (sid 2) cannot be configured.
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             return await self.get_temperature_callback_configuration()
-        if sid == 1:
-            return await self.get_resistance_callback_configuration()
-        raise AttributeError("Configuration of the 'connected callback' is not supported.")
+        return await self.get_resistance_callback_configuration()
 
     async def get_temperature(self) -> Decimal:
         """

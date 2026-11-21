@@ -173,7 +173,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         )
 
     async def get_value(self, sid: int) -> Decimal | bool:
-        assert sid in (0, 1, 2)
+        self._validate_sid(sid, (0, 1, 2))
 
         if sid == 0:
             return await self.get_temperature()
@@ -191,7 +191,8 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ):
-        assert sid in (0, 1, 2)
+        # The sensor connected callback (sid 2) cannot be configured.
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             minimum = Decimal("273.15") if minimum is None else minimum
@@ -200,29 +201,26 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
                 self.set_temperature_callback_period(period, response_expected),
                 self.set_temperature_callback_threshold(option, minimum, maximum, response_expected),
             )
-        elif sid == 1:
+        else:
             minimum = 0 if minimum is None else minimum
             maximum = 0 if maximum is None else maximum
             await asyncio.gather(
                 self.set_resistance_callback_period(period, response_expected),
                 self.set_resistance_callback_threshold(option, minimum, maximum, response_expected),
             )
-        else:
-            raise AttributeError("Configuration of the 'connected callback' is not supported.")
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        assert sid in (0, 1, 2)
+        # The sensor connected callback (sid 2) cannot be configured.
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             period, config = await asyncio.gather(
                 self.get_temperature_callback_period(), self.get_temperature_callback_threshold()
             )
-        elif sid == 1:
+        else:
             period, config = await asyncio.gather(
                 self.get_resistance_callback_period(), self.get_resistance_callback_threshold()
             )
-        else:
-            raise AttributeError("Configuration of the 'connected callback' is not supported.")
 
         return AdvancedCallbackConfiguration(period, True, *config)
 

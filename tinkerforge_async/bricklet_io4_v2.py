@@ -18,6 +18,7 @@ from .devices import (
     BrickletWithMCU,
     DeviceIdentifier,
     Event,
+    InvalidSidError,
     SimpleCallbackConfiguration,
 )
 from .devices import ThresholdOption as Threshold
@@ -312,7 +313,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        assert sid in range(4 + 1 + 4)
+        self._validate_sid(sid, range(4 + 1 + 4))
 
         if sid in range(4):
             await self.set_input_value_callback_configuration(sid, period, value_has_to_change, response_expected)
@@ -322,7 +323,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             await self.set_edge_count_callback_configuration(sid - 5, period, value_has_to_change, response_expected)
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        assert sid in range(4 + 1 + 4)
+        self._validate_sid(sid, range(4 + 1 + 4))
 
         if sid in range(4):
             return AdvancedCallbackConfiguration(
@@ -337,7 +338,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                 *(await self.get_edge_count_callback_configuration(sid - 5)), option=None, minimum=None, maximum=None
             )
 
-        raise ValueError(f"Invalid sid: {sid}")
+        raise InvalidSidError(f"Invalid sid {sid!r} for {self}.")
 
     async def set_input_value_callback_configuration(
         self, channel: int, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
