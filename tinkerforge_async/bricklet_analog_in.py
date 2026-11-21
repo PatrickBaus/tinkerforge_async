@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -128,7 +129,7 @@ class BrickletAnalogIn(Device):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -194,7 +195,7 @@ class BrickletAnalogIn(Device):
         )
         return unpack_payload(payload, "H")
 
-    async def set_voltage_callback_period(self, period: int = 0, response_expected: bool = True) -> None:
+    async def set_voltage_callback_period(self, period: float | Decimal = 0, response_expected: bool = True) -> None:
         """
         Sets the period with which the :cb:`Voltage` callback is triggered periodically. A value of 0 turns the callback
         off.
@@ -206,20 +207,22 @@ class BrickletAnalogIn(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_VOLTAGE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_voltage_callback_period(self) -> int:
+    async def get_voltage_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Voltage Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_analog_value_callback_period(self, period: int = 0, response_expected: bool = True) -> None:
+    async def set_analog_value_callback_period(
+        self, period: float | Decimal = 0, response_expected: bool = True
+    ) -> None:
         """
         Sets the period with which the :cb:`Analog Value` callback is triggered periodically. A value of 0 turns the
         callback off.
@@ -231,18 +234,18 @@ class BrickletAnalogIn(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_analog_value_callback_period(self) -> int:
+    async def get_analog_value_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Analog Value Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ANALOG_VALUE_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_voltage_callback_threshold(
         self,
@@ -333,7 +336,9 @@ class BrickletAnalogIn(Device):
         option = Threshold(option)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
-    async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
+    async def set_debounce_period(
+        self, debounce_period: float | Decimal = Decimal("0.1"), response_expected: bool = True
+    ) -> None:
         """
         Sets the period with which the threshold callbacks
 
@@ -352,18 +357,18 @@ class BrickletAnalogIn(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((int(debounce_period),), "I"),
+            data=pack_payload((seconds_to_ms(debounce_period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_debounce_period(self) -> int:
+    async def get_debounce_period(self) -> Decimal:
         """
         Returns the debounce-period as set by :func:`Set Debounce Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DEBOUNCE_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_range(self, value: _Range | int = Range.AUTOMATIC, response_expected: bool = True):
         """

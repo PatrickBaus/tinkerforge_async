@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, AsyncGenerator
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -97,7 +98,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -120,9 +121,8 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
     async def get_temperature(self) -> Decimal:
         """
-        Returns the temperature of the sensor. The value
-        has a range of -2500 to 8500 and is given in °C/100,
-        e.g. a value of 4223 means that a temperature of 42.23 °C is measured.
+        Returns the temperature of the sensor in K. The value has a range of 248.15 to 358.15 K,
+        e.g. a value of 315.38 K means that a temperature of 315.38 K is measured.
 
         If you want to get the temperature periodically, it is recommended
         to use the :cb:`Temperature` callback and set the period with
@@ -135,7 +135,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
     async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: Decimal | int | float = Decimal("273.15"),
@@ -143,7 +143,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
         response_expected=True,
     ) -> None:
         """
-        The period in ms is the period with which the :cb:`Temperature` callback is triggered
+        The period in s is the period with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
 
         If the `value has to change`-parameter is set to true, the callback is only
@@ -155,7 +155,8 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
         It is furthermore possible to constrain the callback with thresholds.
 
-        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback.
+        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback. The
+        thresholds are given in K.
 
         The following options are possible:
 
@@ -172,7 +173,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
 
-        The default value is (0, false, 'x', 0, 0).
+        The default value is (0, false, 'x', 273.15, 273.15).
         """
         if not isinstance(option, Threshold):
             option = Threshold(option)
@@ -183,7 +184,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_to_value(minimum),
@@ -204,7 +205,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c h h")
         option = Threshold(option)
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_heater_configuration(
         self, heater_config: _HeaterConfig | int = HeaterConfig.DISABLED, response_expected: bool = True

@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge Thermocoup
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_thermocouple_v2 import BrickletThermocoupleV2
 from tinkerforge_async.devices import BrickletWithMCU
@@ -38,7 +37,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -55,11 +54,15 @@ async def run_example(bricklet: BrickletThermocoupleV2) -> None:
 
         # Query the value
         print("Get temperature:", await bricklet.get_temperature())
-        print("Set callback period to", 1000, "ms")
-        print("Set threshold to >10 °C and wait for callbacks")
+        print("Set callback period to", 1, "s")
+        print("Set threshold to >283.15 K and wait for callbacks")
         # We use a low temperature value on purpose, so that the callback will be triggered
         await bricklet.set_temperature_callback_configuration(
-            period=1000, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=10, maximum=0
+            period=1,
+            value_has_to_change=False,
+            option=bricklet.ThresholdOption.GREATER_THAN,
+            minimum=283.15,
+            maximum=273.15,
         )
         print("Temperature callback configuration:", await bricklet.get_temperature_callback_configuration())
         await asyncio.sleep(10.1)  # Wait for 2-3 callbacks

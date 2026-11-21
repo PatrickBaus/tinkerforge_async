@@ -35,14 +35,14 @@ async def run_example(bricklet: BrickletPtc) -> None:
         print("Wire mode:", wire_mode)
         await bricklet.set_wire_mode(wire_mode)
 
-        print("PTC temperature:", await bricklet.get_temperature(), "°C")
+        print("PTC temperature:", await bricklet.get_temperature(), "K")
         print("PTC resistance:", await bricklet.get_resistance(), "Ω")
 
         # Use a temperature and resistance value callback
-        print("Set callback period to", 1000, "ms and wait for callbacks")
+        print("Set callback period to", 1, "s and wait for callbacks")
         await asyncio.gather(
-            bricklet.set_temperature_callback_period(1000),
-            bricklet.set_resistance_callback_period(1000),
+            bricklet.set_temperature_callback_period(1),
+            bricklet.set_resistance_callback_period(1),
             bricklet.set_sensor_connected_callback_configuration(True),
             bricklet.set_temperature_callback_threshold(
                 option=bricklet.ThresholdOption.GREATER_THAN, minimum=0, maximum=0
@@ -59,7 +59,7 @@ async def run_example(bricklet: BrickletPtc) -> None:
         )
 
         debounce_period = await bricklet.get_debounce_period()
-        print("Set bricklet debounce period to", debounce_period, "ms")
+        print("Set bricklet debounce period to", debounce_period, "s")
         await bricklet.set_debounce_period(debounce_period)
         print("Get bricklet debounce period:", await bricklet.get_debounce_period())
 

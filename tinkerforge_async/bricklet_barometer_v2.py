@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -152,27 +153,31 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ):
-        minimum = 0 if minimum is None else minimum
-        maximum = 0 if maximum is None else maximum
-
         self._validate_sid(sid, (0, 1, 2))
 
         if sid == 0:
+            minimum = 0 if minimum is None else minimum
+            maximum = 0 if maximum is None else maximum
             await self.set_air_pressure_callback_configuration(
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
         elif sid == 1:
+            minimum = 0 if minimum is None else minimum
+            maximum = 0 if maximum is None else maximum
             await self.set_altitude_callback_configuration(
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
         else:
+            # The temperature is given in K, so the default value of the device (0) is 273.15 K
+            minimum = Decimal("273.15") if minimum is None else minimum
+            maximum = Decimal("273.15") if maximum is None else maximum
             await self.set_temperature_callback_configuration(
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
@@ -188,7 +193,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
     async def get_air_pressure(self) -> Decimal:
         """
-        Returns the measured air pressure.
+        Returns the measured air pressure in Pa.
 
 
         If you want to get the value periodically, it is recommended to use the :cb:`Air Pressure` callback. You can set
@@ -201,7 +206,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
     async def set_air_pressure_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal = 0,
@@ -245,7 +250,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
             function_id=FunctionID.SET_AIR_PRESSURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_to_air_pressure_sensor(minimum),
@@ -266,11 +271,11 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
         minimum, maximum = self.__air_pressure_sensor_to_si(minimum), self.__air_pressure_sensor_to_si(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def get_altitude(self) -> Decimal:
         """
-        Returns the relative altitude of the air pressure sensor. The value is calculated based on the difference
+        Returns the relative altitude of the air pressure sensor in m. The value is calculated based on the difference
         between the current air pressure and the reference air pressure that can be set with
         :func:`Set Reference Air Pressure`.
 
@@ -285,7 +290,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
     async def set_altitude_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal = 0,
@@ -327,7 +332,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
             function_id=FunctionID.SET_ALTITUDE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_to_altitude_sensor(minimum),
@@ -348,11 +353,11 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
         minimum, maximum = self.__altitude_sensor_to_si(minimum), self.__altitude_sensor_to_si(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def get_temperature(self) -> Decimal:
         """
-        Returns the temperature of the air pressure sensor.
+        Returns the temperature of the air pressure sensor in K.
 
         This temperature is used internally for temperature compensation of the air pressure measurement. It is not as
         accurate as the temperature measured by the :ref:`temperature_v2_bricklet` or the
@@ -369,11 +374,11 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
     async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
-        minimum: float | Decimal = 0,
-        maximum: float | Decimal = 0,
+        minimum: float | Decimal = Decimal("273.15"),
+        maximum: float | Decimal = Decimal("273.15"),
         response_expected: bool = True,
     ) -> None:
         """
@@ -387,7 +392,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
         It is furthermore possible to constrain the callback with thresholds.
 
-        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback.
+        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback. The
+        thresholds are given in K.
 
         The following options are possible:
 
@@ -411,7 +417,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_to_temperature_sensor(minimum),
@@ -432,7 +438,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
         minimum, maximum = self.__temperature_sensor_to_si(minimum), self.__temperature_sensor_to_si(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_moving_average_configuration(
         self,
@@ -479,7 +485,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
     ) -> None:
         """
         Sets the reference air pressure for the altitude calculation. Setting the reference to the current air pressure
-        results in a calculated altitude of 0mm. Passing 0 is a shortcut for passing the current air pressure as
+        results in a calculated altitude of 0 m. Passing 0 is a shortcut for passing the current air pressure as
         reference.
 
         Well known reference values are the Q codes `QNH <https://en.wikipedia.org/wiki/QNH>`__ and
@@ -517,7 +523,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         Then the current air pressure has to be measured using the Bricklet (``measured air pressure``) and with an
         accurate reference barometer (``actual air pressure``) at the same time and passed to this function.
 
-        After proper calibration the air pressure measurement can achieve an accuracy up to 0.2 hPa.
+        After proper calibration the air pressure measurement can achieve an accuracy up to 20 Pa.
 
         The calibration is saved in the EEPROM of the Bricklet and only needs to be configured once.
         """
@@ -625,16 +631,16 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
     @staticmethod
     def __temperature_sensor_to_si(value: int) -> Decimal:
         """
-        Convert the sensor value to SI units
+        Convert the sensor value (centi-degrees Celsius) to SI units (K)
         """
-        return Decimal(value) / 100
+        return Decimal(value + 27315) / 100
 
     @staticmethod
     def __si_to_temperature_sensor(value: float | Decimal) -> int:
         """
-        Convert SI units to raw values
+        Convert SI units (K) to raw values (centi-degrees Celsius)
         """
-        return round(value * 100)
+        return round(value * 100) - 27315
 
     async def read_events(
         self,

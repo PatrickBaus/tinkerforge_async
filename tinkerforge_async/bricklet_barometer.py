@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -110,7 +111,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -148,7 +149,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
 
     async def get_air_pressure(self) -> Decimal:
         """
-        Returns the air pressure of the air pressure sensor.
+        Returns the air pressure of the air pressure sensor in Pa.
 
         If you want to get the air pressure periodically, it is recommended to use the :cb:`Air Pressure` callback and
         set the period with :func:`Set Air Pressure Callback Period`.
@@ -160,7 +161,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
 
     async def get_altitude(self) -> Decimal:
         """
-        Returns the relative altitude of the air pressure sensor. The value is calculated based on the difference
+        Returns the relative altitude of the air pressure sensor in m. The value is calculated based on the difference
         between the current air pressure and the reference air pressure that can be set with
         :func:`Set Reference Air Pressure`.
 
@@ -172,7 +173,9 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         )
         return self.__value_to_si_altitude(unpack_payload(payload, "i"))
 
-    async def set_air_pressure_callback_period(self, period: int = 0, response_expected: bool = True) -> None:
+    async def set_air_pressure_callback_period(
+        self, period: float | Decimal = 0, response_expected: bool = True
+    ) -> None:
         """
         Sets the period with which the :cb:`Air Pressure` callback is triggered periodically. A value of 0 turns the
         callback off.
@@ -185,20 +188,20 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_AIR_PRESSURE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_air_pressure_callback_period(self) -> int:
+    async def get_air_pressure_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Air Pressure Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_AIR_PRESSURE_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_altitude_callback_period(self, period: int = 0, response_expected: bool = True) -> None:
+    async def set_altitude_callback_period(self, period: float | Decimal = 0, response_expected: bool = True) -> None:
         """
         Sets the period with which the :cb:`Altitude` callback is triggered periodically. A value of 0 turns the
         callback off.
@@ -211,18 +214,18 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ALTITUDE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_altitude_callback_period(self) -> int:
+    async def get_altitude_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Altitude Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ALTITUDE_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_air_pressure_callback_threshold(
         self,
@@ -326,7 +329,9 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         minimum, maximum = self.__value_to_si_altitude(minimum), self.__value_to_si_altitude(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
-    async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
+    async def set_debounce_period(
+        self, debounce_period: float | Decimal = Decimal("0.1"), response_expected: bool = True
+    ) -> None:
         """
         Sets the period with which the threshold callbacks
 
@@ -345,22 +350,22 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((int(debounce_period),), "I"),
+            data=pack_payload((seconds_to_ms(debounce_period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_debounce_period(self) -> int:
+    async def get_debounce_period(self) -> Decimal:
         """
         Returns the debounce-period as set by :func:`Set Debounce Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DEBOUNCE_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def get_chip_temperature(self) -> int:
+    async def get_chip_temperature(self) -> Decimal:
         """
-        Returns the temperature of the air pressure sensor.
+        Returns the temperature of the air pressure sensor in K.
 
         This temperature is used internally for temperature compensation of the air pressure measurement. It is not as
         accurate as the temperature measured by the :ref:`temperature_bricklet` or the :ref:`temperature_ir_bricklet`.
@@ -368,14 +373,14 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CHIP_TEMPERATURE, response_expected=True
         )
-        return unpack_payload(payload, "h")
+        return self.__value_to_si_temperature(unpack_payload(payload, "h"))
 
     async def set_reference_air_pressure(
         self, air_pressure: float | Decimal = 101325, response_expected: bool = True
     ) -> None:
         """
         Sets the reference air pressure for the altitude calculation. Setting the reference to the current air pressure
-        results in a calculated altitude of 0cm. Passing 0 is a shortcut for passing the current air pressure as
+        results in a calculated altitude of 0 m. Passing 0 is a shortcut for passing the current air pressure as
         reference.
 
         Well known reference values are the Q codes
@@ -470,6 +475,13 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
     @staticmethod
     def __si_pressure_to_value(value: float | Decimal) -> int:
         return round(value * 10)
+
+    @staticmethod
+    def __value_to_si_temperature(value: int) -> Decimal:
+        """
+        Convert the sensor value (centi-degrees Celsius) to SI units (K)
+        """
+        return Decimal(value + 27315) / 100
 
     async def read_events(
         self,

@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -134,7 +135,7 @@ class BrickletAmbientLightV2(Device):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -176,7 +177,7 @@ class BrickletAmbientLightV2(Device):
         )
         return self.__value_to_si(unpack_payload(payload, "I"))
 
-    async def set_illuminance_callback_period(self, period: int = 0, response_expected=True) -> None:
+    async def set_illuminance_callback_period(self, period: float | Decimal = 0, response_expected=True) -> None:
         """
         Sets the period with which the :cb:`Illuminance` callback is triggered periodically. A value of 0 turns the
         callback off.
@@ -188,18 +189,18 @@ class BrickletAmbientLightV2(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ILLUMINANCE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_illuminance_callback_period(self) -> int:
+    async def get_illuminance_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Illuminance Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ILLUMINANCE_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_illuminance_callback_threshold(
         self,
@@ -249,7 +250,9 @@ class BrickletAmbientLightV2(Device):
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
-    async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
+    async def set_debounce_period(
+        self, debounce_period: float | Decimal = Decimal("0.1"), response_expected: bool = True
+    ) -> None:
         """
         Sets the period with which the threshold callbacks
 
@@ -266,18 +269,18 @@ class BrickletAmbientLightV2(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((int(debounce_period),), "I"),
+            data=pack_payload((seconds_to_ms(debounce_period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_debounce_period(self) -> int:
+    async def get_debounce_period(self) -> Decimal:
         """
         Returns the debounce-period as set by :func:`Set Debounce Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DEBOUNCE_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_configuration(
         self,
@@ -298,7 +301,7 @@ class BrickletAmbientLightV2(Device):
 
         .. versionchanged:: 2.0.2$nbsp;(Plugin)
           If the actual measure illuminance is out-of-range then the current illuminance range maximum +0.01lux is
-          reported by :func:`Get Illuminance` and the :cb:`Illuminance` callback. For example, 800001 for the 0-8000lux
+          reported by :func:`Get Illuminance` and the :cb:`Illuminance` callback. For example, 8000.01 for the 0-8000lux
           range.
 
         .. versionchanged:: 2.0.2$nbsp;(Plugin)

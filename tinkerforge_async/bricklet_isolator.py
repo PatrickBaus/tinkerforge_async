@@ -7,6 +7,7 @@ the low-level communication with the Tinkerforge ip connection.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
@@ -19,6 +20,7 @@ from .devices import (
     SimpleCallbackConfiguration,
     _FunctionID,
 )
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -97,7 +99,7 @@ class BrickletIsolator(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         response_expected: bool = True,
     ) -> None:
@@ -236,7 +238,7 @@ class BrickletIsolator(BrickletWithMCU):
 
     async def set_statistics_callback_configuration(  # pylint: disable=too-many-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         response_expected=True,
     ) -> None:
@@ -260,7 +262,7 @@ class BrickletIsolator(BrickletWithMCU):
             function_id=FunctionID.SET_STATISTICS_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                 ),
                 "I !",
@@ -278,7 +280,8 @@ class BrickletIsolator(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STATISTICS_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return SimpleCallbackConfiguration(*unpack_payload(payload, "I !"))
+        period, value_has_to_change = unpack_payload(payload, "I !")
+        return SimpleCallbackConfiguration(ms_to_seconds(period), value_has_to_change)
 
     async def read_events(
         self,

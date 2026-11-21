@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge IO-4 Brick
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_io4_v2 import BrickletIO4V2
 from tinkerforge_async.devices import BrickletWithMCU
@@ -38,7 +37,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -81,13 +80,13 @@ async def run_example(bricklet: BrickletIO4V2) -> None:  # pylint: disable=too-m
         print("Output values:", await bricklet.get_value())
 
         print("Enabling monoflop, going HIGH for 1 second")
-        await bricklet.set_monoflop(0, True, 1000)
+        await bricklet.set_monoflop(0, True, 1)
         print("Monoflop status:", await bricklet.get_monoflop(0))
         await asyncio.sleep(1)
 
         print("Triggering an error, because we want to enable edge counting on an output")
         try:
-            await bricklet.set_edge_count_configuration(channel=2, edge_type=bricklet.EdgeType.RISING, debounce=1)
+            await bricklet.set_edge_count_configuration(channel=2, edge_type=bricklet.EdgeType.RISING, debounce=0.001)
         except ValueError:
             print("Got a ValueError.")
 
@@ -98,19 +97,19 @@ async def run_example(bricklet: BrickletIO4V2) -> None:  # pylint: disable=too-m
                 for channel in range(4)
             ]
         )  # Set all pins to "input with pull-up"
-        await bricklet.set_input_value_callback_configuration(channel=2, period=100, value_has_to_change=False)
+        await bricklet.set_input_value_callback_configuration(channel=2, period=0.1, value_has_to_change=False)
         print("Callback configuration for channel 2:", await bricklet.get_input_value_callback_configuration(2))
-        await bricklet.set_all_input_value_callback_configuration(period=100, value_has_to_change=False)
+        await bricklet.set_all_input_value_callback_configuration(period=0.1, value_has_to_change=False)
         print("Callback configuration for all inputs:", await bricklet.get_all_input_value_callback_configuration())
         await asyncio.sleep(0.5)
-        await bricklet.set_input_value_callback_configuration(channel=2, period=100, value_has_to_change=True)
-        await bricklet.set_all_input_value_callback_configuration(period=100, value_has_to_change=True)
+        await bricklet.set_input_value_callback_configuration(channel=2, period=0.1, value_has_to_change=True)
+        await bricklet.set_all_input_value_callback_configuration(period=0.1, value_has_to_change=True)
 
         print("Enabling edge counting on channel 2")
-        await bricklet.set_edge_count_configuration(channel=2, edge_type=bricklet.EdgeType.BOTH, debounce=1)
+        await bricklet.set_edge_count_configuration(channel=2, edge_type=bricklet.EdgeType.BOTH, debounce=0.001)
         print("Edge counting config:", await bricklet.get_edge_count_configuration(2))
-        print("Enabling edge count callback with 500 ms period")
-        await bricklet.set_edge_count_callback_configuration(channel=2, period=500)
+        print("Enabling edge count callback with 0.5 s period")
+        await bricklet.set_edge_count_callback_configuration(channel=2, period=0.5)
         print("Toggling channel 2")
         await bricklet.set_configuration(channel=2, direction=bricklet.Direction.IN, value=True)
         await bricklet.set_configuration(channel=2, direction=bricklet.Direction.IN, value=False)

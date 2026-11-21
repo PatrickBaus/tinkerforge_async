@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge PTC Brickl
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_ptc_v2 import BrickletPtcV2
 from tinkerforge_async.devices import BrickletWithMCU
@@ -38,7 +37,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -64,14 +63,14 @@ async def run_example(bricklet: BrickletPtcV2) -> None:
         print("Wire mode:", wire_mode)
         await bricklet.set_wire_mode(wire_mode)
 
-        print("PTC temperature:", await bricklet.get_temperature(), "°C")
+        print("PTC temperature:", await bricklet.get_temperature(), "K")
         print("PTC resistance:", await bricklet.get_resistance(), "Ω")
 
         # Use a temperature and resistance value callback
-        print("Set callback period to", 1000, "ms and wait for callbacks")
+        print("Set callback period to", 1, "s and wait for callbacks")
         await asyncio.gather(
-            bricklet.set_temperature_callback_configuration(period=1000),
-            bricklet.set_resistance_callback_configuration(period=1000),
+            bricklet.set_temperature_callback_configuration(period=1),
+            bricklet.set_resistance_callback_configuration(period=1),
             bricklet.set_sensor_connected_callback_configuration(True),
         )
         print("Temperature callback configuration:", await bricklet.get_temperature_callback_configuration())

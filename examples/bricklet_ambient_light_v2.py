@@ -28,11 +28,11 @@ async def run_example(bricklet: BrickletAmbientLightV2) -> None:
         new_config["illuminance_range"] = bricklet.IlluminanceRange.RANGE_600LUX
         await bricklet.set_configuration(**new_config)
 
-        print("Set callback period to", 1000, "ms")
-        await bricklet.set_illuminance_callback_period(1000)
+        print("Set callback period to", 1, "s")
+        await bricklet.set_illuminance_callback_period(1)
         print("Get callback period:", await bricklet.get_illuminance_callback_period())
-        print("Set bricklet debounce period to", 1000, "ms")
-        await bricklet.set_debounce_period(1000)
+        print("Set bricklet debounce period to", 1, "s")
+        await bricklet.set_debounce_period(1)
         print("Get bricklet debounce period:", await bricklet.get_debounce_period())
         print("Set threshold to >1 lux and wait for callbacks")
         # We use a low illuminance on purpose, so that the callback will be triggered

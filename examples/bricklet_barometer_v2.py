@@ -5,6 +5,7 @@ An example to demonstrate most of the capabilities of the Tinkerforge Barometer 
 """
 import asyncio
 import warnings
+from decimal import Decimal
 
 from tinkerforge_async.bricklet_barometer_v2 import BrickletBarometerV2
 from tinkerforge_async.devices import BrickletWithMCU
@@ -37,7 +38,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -56,11 +57,11 @@ async def run_example(bricklet: BrickletBarometerV2) -> None:
         # Query a value
         print("Get air pressure:", await bricklet.get_air_pressure())
         # Use an air pressure callback
-        print("Set callback period to", 1000, "ms")
-        print("Set threshold to >500 hPa  and wait for callbacks")
+        print("Set callback period to", 1, "s")
+        print("Set threshold to >50000 Pa and wait for callbacks")
         # We use a low pressure value on purpose, so that the callback will be triggered
         await bricklet.set_air_pressure_callback_configuration(
-            period=1000, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=500, maximum=0
+            period=1, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=50000, maximum=0
         )
         print("Air pressure callback configuration:", await bricklet.get_air_pressure_callback_configuration())
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks
@@ -71,11 +72,11 @@ async def run_example(bricklet: BrickletBarometerV2) -> None:
         # Use a altitude value callback
         print("Get altitude:", await bricklet.get_altitude())
         # Use an altitude callback
-        print("Set callback period to", 1000, "ms")
-        print("Set threshold to >-100 m and < 5000 m and wait for callbacks")
+        print("Set callback period to", 1, "s")
+        print("Set threshold to >-1000 m and < 5000 m and wait for callbacks")
         # We use a low altitude value on purpose, so that the callback will be triggered
         await bricklet.set_altitude_callback_configuration(
-            period=1000,
+            period=1,
             value_has_to_change=False,
             option=bricklet.ThresholdOption.GREATER_THAN,
             minimum=-1000,
@@ -88,10 +89,12 @@ async def run_example(bricklet: BrickletBarometerV2) -> None:
         print("Altitude callback configuration:", await bricklet.get_altitude_callback_configuration())
 
         # Use a temperature value callback
-        print("Get temperature:", await bricklet.get_temperature())
-        print("Set callback period to", 1000, "ms")
-        print("Set threshold to >10 °C and wait for callbacks")
-        await bricklet.set_temperature_callback_configuration(1000, False, bricklet.ThresholdOption.GREATER_THAN, 10, 0)
+        print("Get temperature:", await bricklet.get_temperature(), "K")
+        print("Set callback period to", 1, "s")
+        print("Set threshold to >283.15 K and wait for callbacks")
+        await bricklet.set_temperature_callback_configuration(
+            1, False, bricklet.ThresholdOption.GREATER_THAN, Decimal("283.15")
+        )
         print("Temperature callback configuration:", await bricklet.get_temperature_callback_configuration())
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks
         print("Disable threshold callback")
@@ -100,8 +103,8 @@ async def run_example(bricklet: BrickletBarometerV2) -> None:
 
         print("Enable two callbacks at once")
         await asyncio.gather(
-            bricklet.set_temperature_callback_configuration(1000, False),
-            bricklet.set_air_pressure_callback_configuration(1000, False),
+            bricklet.set_temperature_callback_configuration(1, False),
+            bricklet.set_air_pressure_callback_configuration(1, False),
         )
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks
         print("Disable all callbacks")
@@ -110,7 +113,7 @@ async def run_example(bricklet: BrickletBarometerV2) -> None:
         )
 
         pressure_ref = await bricklet.get_reference_air_pressure()
-        print("Reference air pressure:", pressure_ref, "hPa")
+        print("Reference air pressure:", pressure_ref, "Pa")
         await bricklet.set_reference_air_pressure(pressure_ref)
         print("Calibration constants:", await bricklet.get_reference_air_pressure())
 

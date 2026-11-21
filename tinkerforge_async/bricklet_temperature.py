@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, AsyncGenerator
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -105,7 +106,7 @@ class BrickletTemperature(Device):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -132,9 +133,8 @@ class BrickletTemperature(Device):
 
     async def get_temperature(self) -> Decimal:
         """
-        Returns the temperature of the sensor. The value
-        has a range of -2500 to 8500 and is given in °C/100,
-        e.g. a value of 4223 means that a temperature of 42.23 °C is measured.
+        Returns the temperature of the sensor in K. The value has a range of 248.15 to 358.15 K,
+        e.g. a value of 315.38 K means that a temperature of 315.38 K is measured.
 
         If you want to get the temperature periodically, it is recommended
         to use the :cb:`Temperature` callback and set the period with
@@ -145,9 +145,11 @@ class BrickletTemperature(Device):
         )
         return self.__value_to_si(unpack_payload(payload, "h"))
 
-    async def set_temperature_callback_period(self, period: int = 0, response_expected: bool = True) -> None:
+    async def set_temperature_callback_period(
+        self, period: float | Decimal = 0, response_expected: bool = True
+    ) -> None:
         """
-        Sets the period in ms with which the :cb:`Temperature` callback is triggered
+        Sets the period in s with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
 
         The :cb:`Temperature` callback is only triggered if the temperature has changed
@@ -160,18 +162,18 @@ class BrickletTemperature(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_temperature_callback_period(self) -> int:
+    async def get_temperature_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Temperature Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TEMPERATURE_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_temperature_callback_threshold(
         self,
@@ -181,7 +183,7 @@ class BrickletTemperature(Device):
         response_expected: bool = True,
     ) -> None:
         """
-        Sets the thresholds for the :cb:`Temperature Reached` callback.
+        Sets the thresholds for the :cb:`Temperature Reached` callback. The thresholds are given in K.
 
         The following options are possible:
 
@@ -195,7 +197,7 @@ class BrickletTemperature(Device):
          "'<'",    "Callback is triggered when the temperature is smaller than the min value (max is ignored)"
          "'>'",    "Callback is triggered when the temperature is greater than the min value (max is ignored)"
 
-        The default value is ('x', 0, 0).
+        The default value is ('x', 273.15, 273.15).
         """
         option = Threshold(option)
 
@@ -220,9 +222,11 @@ class BrickletTemperature(Device):
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
-    async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
+    async def set_debounce_period(
+        self, debounce_period: float | Decimal = Decimal("0.1"), response_expected: bool = True
+    ) -> None:
         """
-        Sets the period in ms with which the threshold callback
+        Sets the period in s with which the threshold callback
 
         * :cb:`Temperature Reached`
 
@@ -232,25 +236,25 @@ class BrickletTemperature(Device):
 
         keeps being reached.
 
-        The default value is 100.
+        The default value is 0.1.
         """
         assert debounce_period >= 0
 
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((int(debounce_period),), "I"),
+            data=pack_payload((seconds_to_ms(debounce_period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_debounce_period(self) -> int:
+    async def get_debounce_period(self) -> Decimal:
         """
         Returns the debounce-period as set by :func:`Set Debounce Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DEBOUNCE_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_i2c_mode(self, mode: _I2cOption | int = I2cOption.FAST, response_expected: bool = True) -> None:
         """

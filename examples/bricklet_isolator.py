@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge Isolator B
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_isolator import BrickletIsolator
 from tinkerforge_async.devices import BrickletWithMCU
@@ -38,7 +37,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -64,9 +63,9 @@ async def run_example(bricklet: BrickletIsolator) -> None:
         await bricklet.set_spitfp_baudrate_config(*baud_rate_config)
 
         # Use a configuration callback
-        print("Set callback period to", 1000, "ms and wait for callbacks.")
+        print("Set callback period to", 1, "s and wait for callbacks.")
         # We use a low humidity value on purpose, so that the callback will be triggered
-        await bricklet.set_statistics_callback_configuration(period=1000, value_has_to_change=False)
+        await bricklet.set_statistics_callback_configuration(period=1, value_has_to_change=False)
         print("Configuration callback configuration:", await bricklet.get_statistics_callback_configuration())
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks
         print("Disable configuration callback")

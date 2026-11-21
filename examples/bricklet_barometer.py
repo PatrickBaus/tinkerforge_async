@@ -22,7 +22,7 @@ async def run_example(bricklet: BrickletBarometer) -> None:
     try:
         print("Identity:", await bricklet.get_identity())
 
-        print("Get chip temperature:", await bricklet.get_chip_temperature(), "°C")
+        print("Get chip temperature:", await bricklet.get_chip_temperature(), "K")
 
         print("Air pressure:", await bricklet.get_air_pressure(), "Pa")
         print("Altitude:", await bricklet.get_altitude(), "m")
@@ -35,14 +35,12 @@ async def run_example(bricklet: BrickletBarometer) -> None:
         print("Averaging config:", averaging_config)
         await bricklet.set_averaging(**averaging_config._asdict())
 
-        print("Set callback period to", 1000, "ms")
-        await asyncio.gather(
-            bricklet.set_air_pressure_callback_period(1000), bricklet.set_altitude_callback_period(1000)
-        )
+        print("Set callback period to", 1, "s")
+        await asyncio.gather(bricklet.set_air_pressure_callback_period(1), bricklet.set_altitude_callback_period(1))
         print("Air pressure callback period:", await bricklet.get_air_pressure_callback_period())
         print("Altitude callback period:", await bricklet.get_altitude_callback_period())
-        print("Set bricklet debounce period to", 1000, "ms")
-        await bricklet.set_debounce_period(1000)
+        print("Set bricklet debounce period to", 1, "s")
+        await bricklet.set_debounce_period(1)
         print("Get bricklet debounce period:", await bricklet.get_debounce_period())
 
         # Use an air pressure and altitude callback

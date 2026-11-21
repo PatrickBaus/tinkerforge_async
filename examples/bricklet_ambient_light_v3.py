@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge Ambient Li
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_ambient_light_v3 import BrickletAmbientLightV3
 from tinkerforge_async.devices import BrickletWithMCU
@@ -38,7 +37,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -56,9 +55,9 @@ async def run_example(bricklet: BrickletAmbientLightV3) -> None:
         # Query the value
         print("Get illuminance:", await bricklet.get_illuminance())
 
-        print("Set callback period to", 1000, "ms")
+        print("Set callback period to", 1, "s")
         await bricklet.set_illuminance_callback_configuration(
-            period=1000, value_has_to_change=False, option=bricklet.ThresholdOption.OFF, minimum=0, maximum=0
+            period=1, value_has_to_change=False, option=bricklet.ThresholdOption.OFF, minimum=0, maximum=0
         )
         print("Illuminance callback configuration:", await bricklet.get_illuminance_callback_configuration())
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks

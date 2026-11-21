@@ -76,7 +76,7 @@ Some design choices of the original Tinkerforge API are overly complex. I theref
    ```python
    bricklet = BrickletHumidity(UID, ipcon)
    await bricklet.set_humidity_callback_period(
-       1000, response_expected=True
+       1, response_expected=True
    )  # Raises an exception if unsuccessful
    ```
  - Replaced all constants with Enums and enforced their use using assertions. This will allow beginners to spot their mistakes earlier and make the code more readable, including any debug output statements.
@@ -120,7 +120,7 @@ Some design choices of the original Tinkerforge API are overly complex. I theref
  - Moved from base58 encoded uids to integers.
  - Moved from callbacks to queues in order to keep users out of the callback hell. It makes the code style more readable when using the `await` syntax anyway.
  - Payloads will now be decoded by the `Device` object and no longer by the `ip_connection`. This makes the code a lot more readable. To do so, the payload and decoded header will be handed to the device. It will then decode it, if possible, and pass it on to the queue.
- - If physical quantities are measured we will now return standard SI units, not some unexpected stuff like centi °C (Temperature Bricklet). To preserve the precision the Decimal package is used. The only exception to this rule is the use of °C for temperature. This is for convenience.
+ - If physical quantities are measured we will now return standard SI units, not some unexpected stuff like centi °C (Temperature Bricklet). To preserve the precision the Decimal package is used. This includes temperatures, which are given in K, not °C. Durations (callback periods, debounce periods, monoflop times, ...) are given in s, not ms, like the delay of `asyncio.sleep()`. Durations that are passed to the library can be `int`, `float` or `Decimal`, durations returned by the library are `Decimal`.
  - All callbacks now contain a timestamp (Unix timestamp) and the device object.
 
    Example:

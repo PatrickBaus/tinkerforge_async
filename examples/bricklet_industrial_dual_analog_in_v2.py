@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge Industrial
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_industrial_dual_analog_in_v2 import BrickletIndustrialDualAnalogInV2
 from tinkerforge_async.devices import BrickletWithMCU
@@ -38,7 +37,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -79,9 +78,9 @@ async def run_example(bricklet: BrickletIndustrialDualAnalogInV2) -> None:
         print("Get voltage, channel 1:", await bricklet.get_voltage(1), "V")
 
         # Use a voltage value callback
-        print("Set callback period to", 1000, "ms and wait for callbacks")
-        await bricklet.set_voltage_callback_configuration(channel=0, period=1000)
-        await bricklet.set_voltage_callback_configuration(channel=1, period=500)
+        print("Set callback period to", 1, "s and wait for callbacks")
+        await bricklet.set_voltage_callback_configuration(channel=0, period=1)
+        await bricklet.set_voltage_callback_configuration(channel=1, period=0.5)
         print("Voltage callback configuration, channel 0:", await bricklet.get_voltage_callback_configuration(0))
         print("Voltage callback configuration, channel 1:", await bricklet.get_voltage_callback_configuration(1))
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks
@@ -94,7 +93,7 @@ async def run_example(bricklet: BrickletIndustrialDualAnalogInV2) -> None:
         # Use all voltages callback
         print("Get all voltages:", await bricklet.get_all_voltages())
 
-        await bricklet.set_all_voltages_callback_configuration(period=1000)
+        await bricklet.set_all_voltages_callback_configuration(period=1)
         print("All voltages callback configuration:", await bricklet.get_all_voltages_callback_configuration())
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks
         print("Disable callback")

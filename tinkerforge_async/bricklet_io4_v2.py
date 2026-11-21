@@ -25,7 +25,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import (
     _FunctionID,
 )
-from .helper import join
+from .helper import join, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -102,7 +102,7 @@ class _EdgeCountTaskConfig(TypedDict):
     queue: asyncio.Queue[Event]
     task: asyncio.Task | None
     lock: asyncio.Lock
-    period: int
+    period: Decimal
     value_has_to_change: bool
 
 
@@ -112,19 +112,19 @@ class GetConfiguration(NamedTuple):
 
 
 class GetInputValueCallbackConfiguration(NamedTuple):
-    period: int
+    period: Decimal
     value_has_to_change: bool
 
 
 class GetMonoflop(NamedTuple):
     value: bool
-    time: int
-    time_remaining: int
+    time: Decimal
+    time_remaining: Decimal
 
 
 class GetEdgeCountConfiguration(NamedTuple):
     edge_type: EdgeType
-    debounce: int
+    debounce: Decimal
 
 
 class GetPWMConfiguration(NamedTuple):
@@ -174,7 +174,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                 "queue": asyncio.Queue(maxsize=1),
                 "task": None,
                 "lock": asyncio.Lock(),
-                "period": 0,
+                "period": Decimal(0),
                 "value_has_to_change": False,
             }
             for channel in range(4)
@@ -306,7 +306,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -341,7 +341,11 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         raise InvalidSidError(f"Invalid sid {sid!r} for {self}.")
 
     async def set_input_value_callback_configuration(
-        self, channel: int, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
+        self,
+        channel: int,
+        period: float | Decimal = 0,
+        value_has_to_change: bool = False,
+        response_expected: bool = True,
     ) -> None:
         """
         This callback can be configured per channel.
@@ -364,7 +368,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload(
                 (
                     channel,
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                 ),
                 "B I !",
@@ -385,10 +389,11 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload((int(channel),), "B"),
             response_expected=True,
         )
-        return SimpleCallbackConfiguration(*unpack_payload(payload, "I !"))
+        period, value_has_to_change = unpack_payload(payload, "I !")
+        return SimpleCallbackConfiguration(ms_to_seconds(period), value_has_to_change)
 
     async def set_all_input_value_callback_configuration(
-        self, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
+        self, period: float | Decimal = 0, value_has_to_change: bool = False, response_expected: bool = True
     ) -> None:
         """
         The period is the period with which the :cb:`All Input Value`
@@ -406,7 +411,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             function_id=FunctionID.SET_ALL_INPUT_VALUE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                 ),
                 "I !",
@@ -422,10 +427,15 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ALL_INPUT_VALUE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return SimpleCallbackConfiguration(*unpack_payload(payload, "I !"))
+        period, value_has_to_change = unpack_payload(payload, "I !")
+        return SimpleCallbackConfiguration(ms_to_seconds(period), value_has_to_change)
 
     async def set_edge_count_callback_configuration(  # pylint: disable=unused-argument
-        self, channel: int, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
+        self,
+        channel: int,
+        period: float | Decimal = 0,
+        value_has_to_change: bool = False,
+        response_expected: bool = True,
     ) -> None:
         """
         Enable an edge counter task. This task will feed a queue to be read by calling __read_edge_counter().
@@ -435,8 +445,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         ----------
         channel: int
             The input channel used for edge counting. Must in range(0,3).
-        period: int
-            Time in ms
+        period: float | Decimal
+            Time in s
         value_has_to_change: bool
             If True, the event will be suppressed if there was no change
         response_expected: bool
@@ -463,7 +473,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                 if not queue.empty():  # The queue has a maximum of 1 element
                     queue.get_nowait()
                     queue.task_done()
-            self.__counter_queue[channel]["period"] = period
+            self.__counter_queue[channel]["period"] = Decimal(str(period))
             self.__counter_queue[channel]["value_has_to_change"] = value_has_to_change
 
     async def get_edge_count_callback_configuration(self, channel: int) -> SimpleCallbackConfiguration:
@@ -471,14 +481,16 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         value_has_to_change = self.__counter_queue[channel]["value_has_to_change"]
         return SimpleCallbackConfiguration(period=period, value_has_to_change=value_has_to_change)
 
-    async def set_monoflop(self, channel: int, value: bool, time: int, response_expected: bool = True) -> None:
+    async def set_monoflop(
+        self, channel: int, value: bool, time: float | Decimal, response_expected: bool = True
+    ) -> None:
         """
         The first parameter is the desired state of the channel (*true* means output *high*
-        and *false* means output *low*). The second parameter indicates the time that
+        and *false* means output *low*). The second parameter indicates the time in s that
         the channel should hold the state.
 
-        If this function is called with the parameters (true, 1500):
-        The channel will turn on and in 1.5s it will turn off again.
+        If this function is called with the parameters (true, 1.5):
+        The channel will turn on and in 1.5 s it will turn off again.
 
         A PWM for the selected channel will be aborted if this function is called.
 
@@ -497,7 +509,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                 (
                     int(channel),
                     bool(value),
-                    int(time),
+                    seconds_to_ms(time),
                 ),
                 "B ! I",
             ),
@@ -520,7 +532,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload((int(channel),), "B"),
             response_expected=True,
         )
-        return GetMonoflop(*unpack_payload(payload, "! I I"))
+        value, time, time_remaining = unpack_payload(payload, "! I I")
+        return GetMonoflop(value, ms_to_seconds(time), ms_to_seconds(time_remaining))
 
     async def get_edge_count(self, channel: int, reset_counter: bool = False) -> int:
         """
@@ -553,7 +566,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         self,
         channel: int,
         edge_type: _EdgeType | int = EdgeType.RISING,
-        debounce: int = 100,
+        debounce: float | Decimal = Decimal("0.1"),
         response_expected: bool = True,
     ) -> None:
         """
@@ -585,7 +598,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                 (
                     int(channel),
                     edge_type.value,
-                    int(debounce),
+                    seconds_to_ms(debounce),
                 ),
                 "B B B",
             ),
@@ -610,7 +623,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         )
         edge_type, debounce = unpack_payload(payload, "B B")
         edge_type = EdgeType(edge_type)
-        return GetEdgeCountConfiguration(edge_type, debounce)
+        return GetEdgeCountConfiguration(edge_type, ms_to_seconds(debounce))
 
     async def set_pwm_configuration(
         self,
@@ -660,14 +673,14 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         frequency, duty_cycle = unpack_payload(payload, "I H")
         return GetPWMConfiguration(Decimal(frequency) / 10, Decimal(duty_cycle) / 10000)
 
-    async def __edge_counter_task(self, channel: int, period: int, value_has_to_change: bool) -> None:
+    async def __edge_counter_task(self, channel: int, period: float | Decimal, value_has_to_change: bool) -> None:
         previous_value: int | None = None
         # Throw away the first value, because we need to reset and sync the internal counter of the IO bricklet.
         try:
-            await asyncio.gather(self.get_edge_count(channel, reset_counter=True), asyncio.sleep(period / 1000))
+            await asyncio.gather(self.get_edge_count(channel, reset_counter=True), asyncio.sleep(float(period)))
             while "not canceled":
                 value, _ = await asyncio.gather(
-                    self.get_edge_count(channel, reset_counter=True), asyncio.sleep(period / 1000)
+                    self.get_edge_count(channel, reset_counter=True), asyncio.sleep(float(period))
                 )
                 queue = self.__counter_queue[channel]["queue"]
                 if not value_has_to_change or previous_value != value:

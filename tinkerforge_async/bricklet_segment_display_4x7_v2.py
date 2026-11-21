@@ -8,10 +8,12 @@ units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, Iterable, NamedTuple
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
+from .helper import seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -205,7 +207,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         return unpack_payload(payload, "!")
 
     async def start_counter(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self, value_from: int, value_to: int, increment: int, length: int, response_expected: bool = True
+        self, value_from: int, value_to: int, increment: int, length: float | Decimal, response_expected: bool = True
     ) -> None:
         """
         Turns one specified segment on or off.
@@ -229,7 +231,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
                     int(value_from),
                     int(value_to),
                     int(increment),
-                    int(length),
+                    seconds_to_ms(length),
                 ),
                 "h h h I",
             ),
