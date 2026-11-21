@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, TypeAlias
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
-from .helper import ms_to_seconds, seconds_to_ms
+from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -101,7 +101,7 @@ class BrickletTemperature(Device):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -140,9 +140,7 @@ class BrickletTemperature(Device):
         )
         return self.__value_to_si(unpack_payload(payload, "h"))
 
-    async def set_temperature_callback_period(
-        self, period: float | Decimal = 0, response_expected: bool = True
-    ) -> None:
+    async def set_temperature_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
         Sets the period in s with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
@@ -219,7 +217,7 @@ class BrickletTemperature(Device):
         return BasicCallbackConfiguration(option, minimum, maximum)
 
     async def set_debounce_period(
-        self, debounce_period: float | Decimal = Decimal("0.1"), response_expected: bool = True
+        self, debounce_period: Duration = Decimal("0.1"), response_expected: bool = True
     ) -> None:
         """
         Sets the period in s with which the threshold callback

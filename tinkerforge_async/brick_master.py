@@ -20,7 +20,7 @@ from .devices import BrickletPort as Port
 from .devices import DeviceIdentifier, DeviceWithMCU, Event, GetSPITFPBaudrateConfig, GetSPITFPErrorCount
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
-from .helper import ms_to_seconds, seconds_to_ms
+from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -1773,7 +1773,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         return unpack_payload(payload, "16s")
 
-    async def set_stack_current_callback_period(self, period: float | Decimal, response_expected: bool = True) -> None:
+    async def set_stack_current_callback_period(self, period: Duration, response_expected: bool = True) -> None:
         """
         Sets the period in s with which the :cb:`Stack Current` callback is triggered periodically. A value of 0 turns
         the callback off.
@@ -1803,7 +1803,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_stack_voltage_callback_period(self, period: float | Decimal, response_expected: bool = True) -> None:
+    async def set_stack_voltage_callback_period(self, period: Duration, response_expected: bool = True) -> None:
         """
         Sets the period in s with which the :cb:`Stack Voltage` callback is triggered periodically. A value of 0 turns
         the callback off.
@@ -1834,7 +1834,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_usb_voltage_callback_period(self, period: float | Decimal, response_expected: bool = True) -> None:
+    async def set_usb_voltage_callback_period(self, period: Duration, response_expected: bool = True) -> None:
         """
         Sets the period in s with which the :cb:`USB Voltage` callback is triggered periodically. A value of 0 turns
         the callback off.
@@ -2044,9 +2044,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             Decimal(maximum) / 1000,
         )
 
-    async def set_debounce_period(
-        self, debounce: float | Decimal = Decimal("0.1"), response_expected: bool = True
-    ) -> None:
+    async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
         Sets the period in s with which the threshold callbacks
 

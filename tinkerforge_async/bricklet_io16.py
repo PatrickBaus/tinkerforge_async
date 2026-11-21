@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 from .devices import AdvancedCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
-from .helper import ms_to_seconds, seconds_to_ms
+from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -274,7 +274,7 @@ class BrickletIO16(Device):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -298,7 +298,7 @@ class BrickletIO16(Device):
         return AdvancedCallbackConfiguration(Decimal(int(bool(value))), False, None, None, None)
 
     async def set_debounce_period(
-        self, debounce_period: float | Decimal = Decimal("0.1"), response_expected: bool = True
+        self, debounce_period: Duration = Decimal("0.1"), response_expected: bool = True
     ) -> None:
         """
         Sets the debounce-period of the :cb:`Interrupt` callback.
@@ -372,7 +372,7 @@ class BrickletIO16(Device):
         port: Port | str,
         selection_mask: int,
         value_mask: int,
-        time: float | Decimal,
+        time: Duration,
         response_expected: bool = True,
     ) -> None:
         """
@@ -494,7 +494,7 @@ class BrickletIO16(Device):
         self,
         pin: int,
         edge_type: EdgeType | int = EdgeType.RISING,
-        debounce: float | Decimal = Decimal("0.1"),
+        debounce: Duration = Decimal("0.1"),
         response_expected: bool = True,
     ) -> None:
         """

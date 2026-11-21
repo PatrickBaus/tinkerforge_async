@@ -26,7 +26,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import (
     _FunctionID,
 )
-from .helper import join, ms_to_seconds, seconds_to_ms
+from .helper import Duration, join, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -301,7 +301,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -338,7 +338,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     async def set_input_value_callback_configuration(
         self,
         channel: int,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         response_expected: bool = True,
     ) -> None:
@@ -390,7 +390,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         return SimpleCallbackConfiguration(ms_to_seconds(period), value_has_to_change)
 
     async def set_all_input_value_callback_configuration(
-        self, period: float | Decimal = 0, value_has_to_change: bool = False, response_expected: bool = True
+        self, period: Duration = 0, value_has_to_change: bool = False, response_expected: bool = True
     ) -> None:
         """
         The period is the period with which the :cb:`All Input Value`
@@ -430,7 +430,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     async def set_edge_count_callback_configuration(  # pylint: disable=unused-argument
         self,
         channel: int,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         response_expected: bool = True,
     ) -> None:
@@ -442,7 +442,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         ----------
         channel: int
             The input channel used for edge counting. Must in range(0,3).
-        period: float | Decimal
+        period: Duration
             Time in s
         value_has_to_change: bool
             If True, the event will be suppressed if there was no change
@@ -479,9 +479,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         value_has_to_change = self.__counter_queue[channel]["value_has_to_change"]
         return SimpleCallbackConfiguration(period=period, value_has_to_change=value_has_to_change)
 
-    async def set_monoflop(
-        self, channel: int, value: bool, time: float | Decimal, response_expected: bool = True
-    ) -> None:
+    async def set_monoflop(self, channel: int, value: bool, time: Duration, response_expected: bool = True) -> None:
         """
         The first parameter is the desired state of the channel (*true* means output *high*
         and *false* means output *low*). The second parameter indicates the time in s that
@@ -567,7 +565,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         self,
         channel: int,
         edge_type: EdgeType | int = EdgeType.RISING,
-        debounce: float | Decimal = Decimal("0.1"),
+        debounce: Duration = Decimal("0.1"),
         response_expected: bool = True,
     ) -> None:
         """
@@ -678,7 +676,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         frequency, duty_cycle = unpack_payload(payload, "I H")
         return GetPWMConfiguration(Decimal(frequency) / 10, Decimal(duty_cycle) / 10000)
 
-    async def __edge_counter_task(self, channel: int, period: float | Decimal, value_has_to_change: bool) -> None:
+    async def __edge_counter_task(self, channel: int, period: Duration, value_has_to_change: bool) -> None:
         previous_value: int | None = None
         # Throw away the first value, because we need to reset and sync the internal counter of the IO bricklet.
         try:

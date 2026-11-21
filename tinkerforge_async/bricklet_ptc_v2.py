@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
-from .helper import ms_to_seconds, seconds_to_ms
+from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -163,7 +163,7 @@ class BrickletPtcV2(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         option: Threshold = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -209,7 +209,7 @@ class BrickletPtcV2(BrickletWithMCU):
 
     async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         option: Threshold = Threshold.OFF,
         minimum: float | Decimal = Decimal("273.15"),
@@ -297,7 +297,7 @@ class BrickletPtcV2(BrickletWithMCU):
 
     async def set_resistance_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         option: Threshold = Threshold.OFF,
         minimum: float | Decimal = 0,

@@ -7,9 +7,13 @@ from collections.abc import AsyncGenerator
 from contextlib import aclosing
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TypeVar, cast
+from typing import TypeAlias, TypeVar, cast
 
 T = TypeVar("T")
+
+# A duration in s, as it is passed to the library. The library returns durations as `Decimal`. The Tinkerforge protocol
+# uses ms, the library converts them. See `seconds_to_ms()` and `ms_to_seconds()`.
+Duration: TypeAlias = float | Decimal
 
 
 @dataclass

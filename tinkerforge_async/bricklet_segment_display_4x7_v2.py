@@ -9,12 +9,11 @@ units.
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Iterable
-from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
-from .helper import seconds_to_ms
+from .helper import Duration, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -214,7 +213,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         return unpack_payload(payload, "!")
 
     async def start_counter(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self, value_from: int, value_to: int, increment: int, length: float | Decimal, response_expected: bool = True
+        self, value_from: int, value_to: int, increment: int, length: Duration, response_expected: bool = True
     ) -> None:
         """
         Turns one specified segment on or off.

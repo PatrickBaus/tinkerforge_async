@@ -8,7 +8,6 @@ the low-level communication with the Tinkerforge ip connection.
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
-from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
@@ -21,7 +20,7 @@ from .devices import (
     SimpleCallbackConfiguration,
     _FunctionID,
 )
-from .helper import ms_to_seconds, seconds_to_ms
+from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -97,7 +96,7 @@ class BrickletIsolator(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
         sid: int,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         response_expected: bool = True,
     ) -> None:
@@ -236,7 +235,7 @@ class BrickletIsolator(BrickletWithMCU):
 
     async def set_statistics_callback_configuration(  # pylint: disable=too-many-arguments
         self,
-        period: float | Decimal = 0,
+        period: Duration = 0,
         value_has_to_change: bool = False,
         response_expected=True,
     ) -> None:
