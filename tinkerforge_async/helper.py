@@ -3,6 +3,7 @@ General helper functions used by multiple modules.
 """
 
 import asyncio
+from decimal import Decimal
 from typing import AsyncGenerator, TypeVar
 
 T = TypeVar("T")
@@ -40,3 +41,18 @@ async def join(*generators: AsyncGenerator[T, None]) -> AsyncGenerator[T, None]:
         await asyncio.wait_for(asyncio.gather(*producers), 0)
     except TimeoutError as exc:
         raise NotImplementedError("Impossible state: expected all tasks to be exhausted") from exc
+
+
+def seconds_to_ms(value: float | Decimal) -> int:
+    """
+    Convert a duration in s to the integer value in ms used by the Tinkerforge protocol. Rounding avoids floating point
+    errors, e.g. 0.29 s * 1000 = 290.00000000000006.
+    """
+    return round(Decimal(str(value)) * 1000)
+
+
+def ms_to_seconds(value: int) -> Decimal:
+    """
+    Convert an integer value in ms, as used by the Tinkerforge protocol, to a duration in s.
+    """
+    return Decimal(value) / 1000

@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -127,7 +128,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -151,8 +152,8 @@ class BrickletAmbientLightV3(BrickletWithMCU):
     async def get_illuminance(self) -> Decimal:
         """
         Returns the illuminance of the ambient light sensor. The measurement range goes up to about 100000lux, but
-        above 64000lux the precision starts to drop. The illuminance is given in lux/100, i.e. a value of 450000 means
-        that an illuminance of 4500lux is measured.
+        above 64000lux the precision starts to drop. The illuminance is given in lux, i.e. a value of 4500 means
+        that an illuminance of 4500 lux is measured.
 
         An illuminance of 0lux indicates that the sensor is saturated and the configuration should be modified, see
         :func:`Set Configuration`.
@@ -169,7 +170,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
     async def set_illuminance_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal = 0,
@@ -214,7 +215,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
             function_id=FunctionID.SET_ILLUMINANCE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_to_value(minimum),
@@ -235,7 +236,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c I I")
         option = Threshold(option)
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_configuration(
         self,
@@ -254,7 +255,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         noise on the data.
 
         If the actual measure illuminance is out-of-range then the current illuminance range maximum +0.01lux is
-        reported by :func:`Get Illuminance` and the :cb:`Illuminance` callback. For example, 800001 for the 0-8000lux
+        reported by :func:`Get Illuminance` and the :cb:`Illuminance` callback. For example, 8000.01 for the 0-8000lux
         range.
 
         With a long integration time the sensor might be saturated before the measured value reaches the maximum of the

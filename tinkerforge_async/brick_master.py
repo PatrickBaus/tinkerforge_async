@@ -19,6 +19,7 @@ from .devices import BrickletPort as Port
 from .devices import DeviceIdentifier, DeviceWithMCU, Event, GetSPITFPBaudrateConfig, GetSPITFPErrorCount
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -783,7 +784,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
     async def get_stack_voltage(self) -> Decimal:
         """
-        Returns the stack voltage in mV. The stack voltage is the
+        Returns the stack voltage in V. The stack voltage is the
         voltage that is supplied via the stack, i.e. it is given by a
         Step-Down or Step-Up Power Supply.
         """
@@ -794,7 +795,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
     async def get_stack_current(self) -> Decimal:
         """
-        Returns the stack current in mA. The stack current is the
+        Returns the stack current in A. The stack current is the
         current that is drawn via the stack, i.e. it is given by a
         Step-Down or Step-Up Power Supply.
         """
@@ -1673,7 +1674,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
     async def get_usb_voltage(self) -> Decimal:
         """
-        Returns the USB voltage in mV. Does not work with hardware version 2.1.
+        Returns the USB voltage in V. Does not work with hardware version 2.1.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_USB_VOLTAGE, response_expected=True
@@ -1761,9 +1762,9 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         return unpack_payload(payload, "16s")
 
-    async def set_stack_current_callback_period(self, period: int, response_expected: bool = True) -> None:
+    async def set_stack_current_callback_period(self, period: float | Decimal, response_expected: bool = True) -> None:
         """
-        Sets the period in ms with which the :cb:`Stack Current` callback is triggered periodically. A value of 0 turns
+        Sets the period in s with which the :cb:`Stack Current` callback is triggered periodically. A value of 0 turns
         the callback off.
 
         The :cb:`Stack Current` callback is only triggered if the current has changed since the last triggering.
@@ -1775,11 +1776,11 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_STACK_CURRENT_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_stack_current_callback_period(self) -> int:
+    async def get_stack_current_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Stack Current Callback Period`.
 
@@ -1789,11 +1790,11 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_STACK_CURRENT_CALLBACK_PERIOD, response_expected=True
         )
 
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_stack_voltage_callback_period(self, period: int, response_expected: bool = True) -> None:
+    async def set_stack_voltage_callback_period(self, period: float | Decimal, response_expected: bool = True) -> None:
         """
-        Sets the period in ms with which the :cb:`Stack Voltage` callback is triggered periodically. A value of 0 turns
+        Sets the period in s with which the :cb:`Stack Voltage` callback is triggered periodically. A value of 0 turns
         the callback off.
 
         The :cb:`Stack Voltage` callback is only triggered if the voltage has changed
@@ -1806,11 +1807,11 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_STACK_VOLTAGE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_stack_voltage_callback_period(self) -> int:
+    async def get_stack_voltage_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Stack Voltage Callback Period`.
 
@@ -1820,11 +1821,11 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_STACK_VOLTAGE_CALLBACK_PERIOD, response_expected=True
         )
 
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_usb_voltage_callback_period(self, period: int, response_expected: bool = True) -> None:
+    async def set_usb_voltage_callback_period(self, period: float | Decimal, response_expected: bool = True) -> None:
         """
-        Sets the period in ms with which the :cb:`USB Voltage` callback is triggered periodically. A value of 0 turns
+        Sets the period in s with which the :cb:`USB Voltage` callback is triggered periodically. A value of 0 turns
         the callback off.
 
         The :cb:`USB Voltage` callback is only triggered if the voltage has changed since the last triggering.
@@ -1836,11 +1837,11 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_USB_VOLTAGE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_usb_voltage_callback_period(self) -> int:
+    async def get_usb_voltage_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set USB Voltage Callback Period`.
 
@@ -1850,7 +1851,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_USB_VOLTAGE_CALLBACK_PERIOD, response_expected=True
         )
 
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_stack_current_callback_threshold(
         self,
@@ -2032,9 +2033,11 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             Decimal(maximum) / 1000,
         )
 
-    async def set_debounce_period(self, debounce: int = 100, response_expected: bool = True) -> None:
+    async def set_debounce_period(
+        self, debounce: float | Decimal = Decimal("0.1"), response_expected: bool = True
+    ) -> None:
         """
-        Sets the period in ms with which the threshold callbacks
+        Sets the period in s with which the threshold callbacks
 
         * :cb:`Stack Current Reached`,
         * :cb:`Stack Voltage Reached`,
@@ -2048,18 +2051,18 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         keep being reached.
 
-        The default value is 100.
+        The default value is 0.1.
 
         .. versionadded:: 2.0.5$nbsp;(Firmware)
         """
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((int(debounce),), "I"),
+            data=pack_payload((seconds_to_ms(debounce),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_debounce_period(self) -> int:
+    async def get_debounce_period(self) -> Decimal:
         """
         Returns the debounce period as set by :func:`Set Debounce Period`.
 
@@ -2069,7 +2072,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_DEBOUNCE_PERIOD, response_expected=True
         )
 
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def is_ethernet_present(self) -> bool:
         """

@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -132,7 +133,7 @@ class BrickletHumidityV2(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: Decimal | float | None = None,
@@ -164,8 +165,8 @@ class BrickletHumidityV2(BrickletWithMCU):
     async def get_humidity(self) -> Decimal:
         """
         Returns the humidity of the sensor. The value
-        has a range of 0 to 1000 and is given in %RH/10 (Relative Humidity),
-        i.e. a value of 421 means that a humidity of 42.1 %RH is measured.
+        has a range of 0 to 100 and is given in %RH (relative humidity),
+        i.e. a value of 42.1 means that a relative humidity of 42.1 %RH is measured.
 
         If you want to get the humidity periodically, it is recommended to use the
         :cb:`Humidity` callback and set the period with
@@ -178,7 +179,7 @@ class BrickletHumidityV2(BrickletWithMCU):
 
     async def set_humidity_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: Decimal | float = 0,
@@ -186,7 +187,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         response_expected: bool = True,
     ) -> None:
         """
-        The period in ms is the period with which the :cb:`Humidity` callback is triggered
+        The period in s is the period with which the :cb:`Humidity` callback is triggered
         periodically. A value of 0 turns the callback off.
 
         If the `value has to change`-parameter is set to true, the callback is only
@@ -228,7 +229,7 @@ class BrickletHumidityV2(BrickletWithMCU):
             function_id=FunctionID.SET_HUMIDITY_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_to_humidity_sensor(minimum),
@@ -249,13 +250,12 @@ class BrickletHumidityV2(BrickletWithMCU):
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c H H")
         option = Threshold(option)
         minimum, maximum = self.__humidity_sensor_to_si(minimum), self.__humidity_sensor_to_si(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def get_temperature(self) -> Decimal:
         """
-        Returns the temperature measured by the sensor. The value
-        has a range of -4000 to 16500 and is given in °C/100,
-        i.e. a value of 3200 means that a temperature of 32.00 °C is measured.
+        Returns the temperature measured by the sensor in K. The value has a range of 233.15 to 438.15 K,
+        i.e. a value of 305.15 K means that a temperature of 305.15 K is measured.
 
 
         If you want to get the value periodically, it is recommended to use the
@@ -269,7 +269,7 @@ class BrickletHumidityV2(BrickletWithMCU):
 
     async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: Decimal | float = Decimal("273.15"),
@@ -277,7 +277,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         response_expected: bool = True,
     ) -> None:
         """
-        The period in ms is the period with which the :cb:`Temperature` callback is triggered
+        The period in s is the period with which the :cb:`Temperature` callback is triggered
         periodically. A value of 0 turns the callback off.
 
         If the `value has to change`-parameter is set to true, the callback is only
@@ -289,7 +289,8 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         It is furthermore possible to constrain the callback with thresholds.
 
-        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback.
+        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback. The
+        thresholds are given in K.
 
         The following options are possible:
 
@@ -306,7 +307,7 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
 
-        The default value is (0, false, 'x', 0, 0).
+        The default value is (0, false, 'x', 273.15, 273.15).
         """
         option = Threshold(option)
         assert period >= 0
@@ -316,7 +317,7 @@ class BrickletHumidityV2(BrickletWithMCU):
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_to_temperature_sensor(minimum),
@@ -337,7 +338,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c h h")
         option = Threshold(option)
         minimum, maximum = self.__temperature_sensor_to_si(minimum), self.__temperature_sensor_to_si(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_heater_configuration(
         self, heater_config: _HeaterConfig | int = HeaterConfig.DISABLED, response_expected: bool = True

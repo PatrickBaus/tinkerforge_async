@@ -34,16 +34,16 @@ async def run_example(bricklet: BrickletAnalogIn) -> None:
         print("Get voltage:", await bricklet.get_voltage(), "V")
         print("Analog value:", await bricklet.get_analog_value())
 
-        print("Set bricklet debounce period to", 1000, "ms")
-        await bricklet.set_debounce_period(1000)
+        print("Set bricklet debounce period to", 1, "s")
+        await bricklet.set_debounce_period(1)
         print("Get bricklet debounce period:", await bricklet.get_debounce_period())
 
         # Use a voltage callback
-        print("Set voltage callback period to", 1000, "ms")
-        await bricklet.set_voltage_callback_period(1000)
+        print("Set voltage callback period to", 1, "s")
+        await bricklet.set_voltage_callback_period(1)
         print("Voltage callback period:", await bricklet.get_voltage_callback_period())
 
-        print("Set voltage threshold to > 1 mV and wait for callbacks")
+        print("Set voltage threshold to > 0.001 V and wait for callbacks")
         # We use a low voltage on purpose, so that the callback will be triggered
         await bricklet.set_voltage_callback_threshold(bricklet.ThresholdOption.GREATER_THAN, 0.001, 0)
         print("Voltage threshold:", await bricklet.get_voltage_callback_threshold())
@@ -54,8 +54,8 @@ async def run_example(bricklet: BrickletAnalogIn) -> None:
         print("Voltage callback period:", await bricklet.get_voltage_callback_period())
 
         # Use an analog value callback
-        print("Set analog value callback period to", 1000, "ms")
-        await bricklet.set_analog_value_callback_period(1000)
+        print("Set analog value callback period to", 1, "s")
+        await bricklet.set_analog_value_callback_period(1)
         print("Analog value callback period:", await bricklet.get_analog_value_callback_period())
 
         print("Set analog value threshold to > 0 and wait for callbacks")

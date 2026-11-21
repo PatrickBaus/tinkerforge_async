@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge Humidity B
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_humidity_v2 import BrickletHumidityV2
 from tinkerforge_async.devices import BrickletWithMCU
@@ -38,7 +37,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -58,11 +57,11 @@ async def run_example(bricklet: BrickletHumidityV2) -> None:
         # Query a value
         print("Get humidity:", await bricklet.get_humidity(), "%rH")
         # Use a humidity callback
-        print("Set callback period to", 1000, "ms")
+        print("Set callback period to", 1, "s")
         print("Set threshold to >10 %rH and wait for callbacks")
         # We use a low humidity value on purpose, so that the callback will be triggered
         await bricklet.set_humidity_callback_configuration(
-            period=1000, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=10, maximum=0
+            period=1, value_has_to_change=False, option=bricklet.ThresholdOption.GREATER_THAN, minimum=10, maximum=0
         )
         print("Humidity callback configuration:", await bricklet.get_humidity_callback_configuration())
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks
@@ -72,10 +71,10 @@ async def run_example(bricklet: BrickletHumidityV2) -> None:
 
         # Use a temperature value callback
         print("Get temperature:", await bricklet.get_temperature(), "K")
-        print("Set callback period to", 1000, "ms")
-        print("Set threshold to >10 °C and wait for callbacks")
+        print("Set callback period to", 1, "s")
+        print("Set threshold to >283.15 K and wait for callbacks")
         await bricklet.set_temperature_callback_configuration(
-            1000, False, bricklet.ThresholdOption.GREATER_THAN, 10 + 273.15
+            1, False, bricklet.ThresholdOption.GREATER_THAN, 10 + 273.15
         )
         print("Temperature callback configuration:", await bricklet.get_temperature_callback_configuration())
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks
@@ -84,8 +83,8 @@ async def run_example(bricklet: BrickletHumidityV2) -> None:
         print("Temperature callback configuration:", await bricklet.get_temperature_callback_configuration())
 
         print("Enable both callbacks at once")
-        await bricklet.set_temperature_callback_configuration(1000, False)
-        await bricklet.set_humidity_callback_configuration(1000, False)
+        await bricklet.set_temperature_callback_configuration(1, False)
+        await bricklet.set_humidity_callback_configuration(1, False)
         print("Enabling heater")
         await bricklet.set_heater_configuration(bricklet.HeaterConfig.ENABLED)
         print("Heater config:", await bricklet.get_heater_configuration())

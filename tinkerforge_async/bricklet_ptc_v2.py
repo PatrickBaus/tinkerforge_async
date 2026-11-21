@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -181,7 +182,7 @@ class BrickletPtcV2(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -214,7 +215,7 @@ class BrickletPtcV2(BrickletWithMCU):
 
     async def get_temperature(self) -> Decimal:
         """
-        Returns the temperature of the connected sensor. The value  has a range of -246 to 849 °C and is given in K,
+        Returns the temperature of the connected sensor in K. The value has a range of 27.15 to 1122.15 K.
 
         If you want to get the value periodically, it is recommended to use the
         :cb:`Temperature` callback. You can set the callback configuration
@@ -227,11 +228,11 @@ class BrickletPtcV2(BrickletWithMCU):
 
     async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold = Threshold.OFF,
-        minimum: float | Decimal = Decimal("275.15"),
-        maximum: float | Decimal = Decimal("275.15"),
+        minimum: float | Decimal = Decimal("273.15"),
+        maximum: float | Decimal = Decimal("273.15"),
         response_expected=True,
     ) -> None:
         """
@@ -245,7 +246,8 @@ class BrickletPtcV2(BrickletWithMCU):
 
         It is furthermore possible to constrain the callback with thresholds.
 
-        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback.
+        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback. The
+        thresholds are given in K.
 
         The following options are possible:
 
@@ -270,7 +272,7 @@ class BrickletPtcV2(BrickletWithMCU):
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_temperature_to_value(minimum),
@@ -291,7 +293,7 @@ class BrickletPtcV2(BrickletWithMCU):
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
         minimum, maximum = self.__value_to_si_temperature(minimum), self.__value_to_si_temperature(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def get_resistance(self) -> Decimal:
         """
@@ -313,7 +315,7 @@ class BrickletPtcV2(BrickletWithMCU):
 
     async def set_resistance_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold = Threshold.OFF,
         minimum: float | Decimal = 0,
@@ -358,7 +360,7 @@ class BrickletPtcV2(BrickletWithMCU):
             function_id=FunctionID.SET_RESISTANCE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_resistance_to_value(minimum),
@@ -379,7 +381,7 @@ class BrickletPtcV2(BrickletWithMCU):
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
         minimum, maximum = self.__value_to_si_resistance(minimum), self.__value_to_si_resistance(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_noise_rejection_filter(
         self, line_filter: _LineFilter = LineFilter.FREQUENCY_50HZ, response_expected: bool = True

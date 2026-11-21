@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, Generator, NamedTuple
 from .devices import AdvancedCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -128,13 +129,13 @@ class GetPortConfiguration(NamedTuple):
 
 class GetPortMonoflop(NamedTuple):
     value: bool
-    time: int
-    time_remaining: int
+    time: Decimal
+    time_remaining: Decimal
 
 
 class GetEdgeCountConfiguration(NamedTuple):
     edge_type: EdgeType
-    debounce: int
+    debounce: Decimal
 
 
 class BrickletIO16(Device):
@@ -281,7 +282,7 @@ class BrickletIO16(Device):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -302,13 +303,15 @@ class BrickletIO16(Device):
         port = Port.A if sid < 8 else Port.B
         interrupt_mask = await self.get_port_interrupt(port)
         value = interrupt_mask & (1 << (sid % 8))
-        return AdvancedCallbackConfiguration(int(bool(value)), False, None, None, None)
+        return AdvancedCallbackConfiguration(Decimal(int(bool(value))), False, None, None, None)
 
-    async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
+    async def set_debounce_period(
+        self, debounce_period: float | Decimal = Decimal("0.1"), response_expected: bool = True
+    ) -> None:
         """
         Sets the debounce-period of the :cb:`Interrupt` callback.
 
-        For example: If you set this value to 100, you will get the interrupt maximal every 100ms. This is necessary
+        For example: If you set this value to 0.1, you will get the interrupt maximal every 0.1 s. This is necessary
         if something that bounces is connected to the IO-16 Bricklet such as a button.
         """
         assert debounce_period >= 0
@@ -316,18 +319,18 @@ class BrickletIO16(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((int(debounce_period),), "I"),
+            data=pack_payload((seconds_to_ms(debounce_period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_debounce_period(self) -> int:
+    async def get_debounce_period(self) -> Decimal:
         """
         Returns the debounce-period as set by :func:`Set Debounce Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DEBOUNCE_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_port_interrupt(self, port: _Port | str, interrupt_mask: int, response_expected: bool = True) -> None:
         """
@@ -365,7 +368,12 @@ class BrickletIO16(Device):
         return unpack_payload(payload, "B")
 
     async def set_port_monoflop(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self, port: _Port | str, selection_mask: int, value_mask: int, time: int, response_expected: bool = True
+        self,
+        port: _Port | str,
+        selection_mask: int,
+        value_mask: int,
+        time: float | Decimal,
+        response_expected: bool = True,
     ) -> None:
         """
         Configures a monoflop of the pins specified by the second parameter as an 8 bit long bitmask. The specified pins
@@ -374,10 +382,10 @@ class BrickletIO16(Device):
         The third parameter is a bitmask with the desired value of the specified output pins. A 1 in the bitmask means
         high and a 0 in the bitmask means low.
 
-        The forth parameter indicates the time that the pins should hold the value.
+        The forth parameter indicates the time in s that the pins should hold the value.
 
-        If this function is called with the parameters ('a', 9, 1, 1500) or ('a', 0b00001001, 0b00000001, 1500): Pin 0
-        will get high and pin 3 will get low on port 'a'. In 1.5s pin 0 will get low and pin 3 will get high again.
+        If this function is called with the parameters ('a', 9, 1, 1.5) or ('a', 0b00001001, 0b00000001, 1.5): Pin 0
+        will get high and pin 3 will get low on port 'a'. In 1.5 s pin 0 will get low and pin 3 will get high again.
 
         A monoflop can be used as a fail-safe mechanism. For example: Lets assume you have a RS485 bus and an IO-16
         Bricklet connected to one of the slave stacks. You can now call this function every second, with a time
@@ -393,7 +401,7 @@ class BrickletIO16(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_PORT_MONOFLOP,
-            data=pack_payload((port.value.encode("ascii"), selection_mask, value_mask, int(time)), "c B B I"),
+            data=pack_payload((port.value.encode("ascii"), selection_mask, value_mask, seconds_to_ms(time)), "c B B I"),
             response_expected=response_expected,
         )
 
@@ -411,7 +419,8 @@ class BrickletIO16(Device):
             data=pack_payload((port.value.encode("ascii"), pin), "c B"),
             response_expected=True,
         )
-        return GetPortMonoflop(*unpack_payload(payload, "B I I"))
+        value, time, time_remaining = unpack_payload(payload, "B I I")
+        return GetPortMonoflop(value, ms_to_seconds(time), ms_to_seconds(time_remaining))
 
     async def set_selected_values(
         self, port: _Port | str, selection_mask: int, value_mask: int, response_expected: bool = True
@@ -464,7 +473,7 @@ class BrickletIO16(Device):
         self,
         pin: int,
         edge_type: _EdgeType | int = EdgeType.RISING,
-        debounce: int = 100,
+        debounce: float | Decimal = Decimal("0.1"),
         response_expected: bool = True,
     ) -> None:
         """
@@ -486,12 +495,13 @@ class BrickletIO16(Device):
         """
         assert isinstance(pin, int) and (0 <= pin <= 1)
         edge_type = EdgeType(edge_type)
-        assert 0 <= debounce <= 255
+        debounce_ms = seconds_to_ms(debounce)
+        assert 0 <= debounce_ms <= 255
 
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_EDGE_COUNT_CONFIG,
-            data=pack_payload((pin, edge_type.value, int(debounce)), "B B B"),
+            data=pack_payload((pin, edge_type.value, debounce_ms), "B B B"),
             response_expected=response_expected,
         )
 
@@ -511,7 +521,7 @@ class BrickletIO16(Device):
         )
         edge_type, debounce_time = unpack_payload(payload, "B B")
         edge_type = EdgeType(edge_type)
-        return GetEdgeCountConfiguration(edge_type, debounce_time)
+        return GetEdgeCountConfiguration(edge_type, ms_to_seconds(debounce_time))
 
     @staticmethod
     def __bits_set(number: int) -> Generator[int, None, None]:

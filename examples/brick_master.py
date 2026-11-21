@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge Master bri
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.brick_master import BrickMaster
 from tinkerforge_async.ip_connection import IPConnectionAsync
@@ -204,7 +203,7 @@ async def run_example(master: BrickMaster) -> None:
         print("Identity:", await master.get_identity())
 
         debounce_period = await master.get_debounce_period()
-        print("Debounce period:", debounce_period, "ms")
+        print("Debounce period:", debounce_period, "s")
         await master.set_debounce_period(debounce_period)
 
         print("Connection type used to control Brick:", await master.get_connection_type())
@@ -212,20 +211,20 @@ async def run_example(master: BrickMaster) -> None:
         print("USB voltage:  ", await master.get_usb_voltage(), "V")
         print("Stack voltage:", await master.get_stack_voltage(), "V")
         print("Stack current:", await master.get_stack_current(), "A")
-        print("Chip temperature:", await master.get_chip_temperature() - Decimal("273.15"), "°C")
+        print("Chip temperature:", await master.get_chip_temperature(), "K")
 
         print("##################\nCallbacks:")
         await asyncio.gather(
-            master.set_usb_voltage_callback_period(100),
-            master.set_stack_voltage_callback_period(110),
-            master.set_stack_current_callback_period(120),
+            master.set_usb_voltage_callback_period(0.1),
+            master.set_stack_voltage_callback_period(0.11),
+            master.set_stack_current_callback_period(0.12),
             master.set_usb_voltage_callback_threshold(master.ThresholdOption.OFF, 0, 0),
             master.set_stack_voltage_callback_threshold(master.ThresholdOption.OFF, 0, 0),
             master.set_stack_current_callback_threshold(master.ThresholdOption.OFF, 0, 0),
         )
-        print("USB voltage callback period:  ", await master.get_usb_voltage_callback_period(), "ms")
-        print("Stack voltage callback period:", await master.get_stack_voltage_callback_period(), "ms")
-        print("Stack current callback period:", await master.get_stack_current_callback_period(), "ms")
+        print("USB voltage callback period:  ", await master.get_usb_voltage_callback_period(), "s")
+        print("Stack voltage callback period:", await master.get_stack_voltage_callback_period(), "s")
+        print("Stack current callback period:", await master.get_stack_current_callback_period(), "s")
         print("USB voltage callback threshold:  ", await master.get_usb_voltage_callback_threshold())
         print("Stack voltage callback threshold:", await master.get_stack_voltage_callback_threshold())
         print("Stack current callback threshold:", await master.get_stack_current_callback_threshold())

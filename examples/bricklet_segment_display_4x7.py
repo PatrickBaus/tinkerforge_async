@@ -45,12 +45,12 @@ async def run_example(bricklet: BrickletSegmentDisplay4x7) -> None:
         await bricklet.set_segments(segments=(DIGITS[0], DIGITS[0], DIGITS[0], DIGITS[0]), brightness=3, colon=True)
         print("Get segments:", await bricklet.get_segments())
         print("Counting from 0 to 5 and back again")
-        await bricklet.start_counter(value_from=0, value_to=5, increment=1, length=1000)
+        await bricklet.start_counter(value_from=0, value_to=5, increment=1, length=1)
         for _ in range(6):
             print("Counter value:", await bricklet.get_counter_value())
             await asyncio.sleep(1)  # Wait for 1 second
 
-        await bricklet.start_counter(value_from=5, value_to=0, increment=-1, length=1000)
+        await bricklet.start_counter(value_from=5, value_to=0, increment=-1, length=1)
         for _ in range(5):
             await asyncio.sleep(1)  # Wait for 1 second
             print("Counter value:", await bricklet.get_counter_value())

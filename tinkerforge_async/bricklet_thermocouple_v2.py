@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -183,7 +184,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -208,8 +209,9 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
     async def get_temperature(self) -> Decimal:
         """
-        Returns the temperature of the thermocouple. The value is given in °C/100,
-        e.g. a value of 4223 means that a temperature of 42.23 °C is measured.
+        Returns the temperature of the thermocouple in K, e.g. a value of 315.38 K means that a temperature of
+        315.38 K is measured. If the thermocouple type is G8 or G32, the value is not a temperature, but the
+        thermocouple input voltage in V, see :func:`Set Configuration`.
 
         If you want to get the temperature periodically, it is recommended
         to use the :cb:`Temperature` callback and set the period with
@@ -226,7 +228,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
     async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: Decimal | int | float = Decimal("273.15"),
@@ -246,7 +248,8 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
         It is furthermore possible to constrain the callback with thresholds.
 
-        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback.
+        The `option`-parameter together with min/max sets a threshold for the :cb:`Temperature` callback. The
+        thresholds are given in K (or in V for the types G8 and G32).
 
         The following options are possible:
 
@@ -271,7 +274,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_to_value(minimum),
@@ -292,7 +295,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_configuration(
         self,
@@ -309,8 +312,8 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
         As thermocouple type you can use B, E, J, K, N, R, S and T. If you have a
         different thermocouple or a custom thermocouple you can also use
-        G8 and G32. With these types the returned value will not be in °C/100,
-        it will be calculated by the following formulas:
+        G8 and G32. With these types the returned value will not be in K, but the thermocouple input voltage in V.
+        The Bricklet calculates the raw value by the following formulas, the library converts it back to Vin:
 
         * G8: ``value = 8 * 1.6 * 2^17 * Vin``
         * G32: ``value = 32 * 1.6 * 2^17 * Vin``

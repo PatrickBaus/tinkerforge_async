@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge Industrial
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_industrial_ptc import BrickletIndustrialPtc
 from tinkerforge_async.devices import BrickletWithMCU
@@ -38,7 +37,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -64,12 +63,12 @@ async def run_example(bricklet: BrickletIndustrialPtc) -> None:
         print("Wire mode:", wire_mode)
         await bricklet.set_wire_mode(wire_mode)
 
-        print("PTC temperature:", await bricklet.get_temperature() - Decimal("273.15"), "°C")
+        print("PTC temperature:", await bricklet.get_temperature(), "K")
         print("PTC resistance:", await bricklet.get_resistance(), "Ω")
 
         # Use a temperature and resistance value callback
-        callback_period = 10000
-        print(f"Set callback period to {callback_period} ms and wait for callbacks")
+        callback_period = 10
+        print(f"Set callback period to {callback_period} s and wait for callbacks")
         await asyncio.gather(
             bricklet.set_temperature_callback_configuration(period=callback_period),
             bricklet.set_resistance_callback_configuration(period=callback_period),

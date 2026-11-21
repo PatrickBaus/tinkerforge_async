@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge Motion Det
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
 from tinkerforge_async.ip_connection import IPConnectionAsync
@@ -37,7 +36,7 @@ async def run_example_generic(bricklet: BrickletMotionDetectorV2) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()

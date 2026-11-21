@@ -22,8 +22,8 @@ async def run_example(bricklet: BrickletTemperature) -> None:
     try:
         print("Identity:", await bricklet.get_identity())
 
-        print("Set callback period to", 1000, "ms")
-        await bricklet.set_temperature_callback_period(1000)
+        print("Set callback period to", 1, "s")
+        await bricklet.set_temperature_callback_period(1)
         print("Get callback period:", await bricklet.get_temperature_callback_period())
         print("Get I²C mode:", await bricklet.get_i2c_mode())
         print("Set I²C mode to", bricklet.I2cOption.SLOW)
@@ -31,12 +31,12 @@ async def run_example(bricklet: BrickletTemperature) -> None:
         print("Get I²C mode:", await bricklet.get_i2c_mode())
         print("Set I²C mode to default")
         await bricklet.set_i2c_mode()
-        print("Set bricklet debounce period to", 1000, "ms")
-        await bricklet.set_debounce_period(1000)
+        print("Set bricklet debounce period to", 1, "s")
+        await bricklet.set_debounce_period(1)
         print("Get bricklet debounce period:", await bricklet.get_debounce_period())
-        print("Set threshold to >10 °C and wait for callbacks")
+        print("Set threshold to >283.15 K and wait for callbacks")
         # We use a low temperature on purpose, so that the callback will be triggered
-        await bricklet.set_temperature_callback_threshold(bricklet.ThresholdOption.GREATER_THAN, 10 + 237.15, 273.15)
+        await bricklet.set_temperature_callback_threshold(bricklet.ThresholdOption.GREATER_THAN, 283.15, 273.15)
         print("Temperature threshold:", await bricklet.get_temperature_callback_threshold())
         await asyncio.sleep(2.1)  # Wait for 2-3 callbacks
         print("Disabling threshold callback")

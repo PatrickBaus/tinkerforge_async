@@ -22,11 +22,11 @@ async def run_example(bricklet: BrickletHumidity) -> None:
     try:
         print("Identity:", await bricklet.get_identity())
 
-        print("Set callback period to", 1000, "ms")
-        await bricklet.set_humidity_callback_period(1000)
+        print("Set callback period to", 1, "s")
+        await bricklet.set_humidity_callback_period(1)
         print("Get callback period:", await bricklet.get_humidity_callback_period())
-        print("Set bricklet debounce period to", 1000, "ms")
-        await bricklet.set_debounce_period(1000)
+        print("Set bricklet debounce period to", 1, "s")
+        await bricklet.set_debounce_period(1)
         print("Get bricklet debounce period:", await bricklet.get_debounce_period())
 
         # Use a humidity callback

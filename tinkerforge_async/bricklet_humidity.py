@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, AsyncGenerator
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -100,7 +101,7 @@ class BrickletHumidity(Device):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -139,8 +140,8 @@ class BrickletHumidity(Device):
     async def get_humidity(self) -> Decimal:
         """
         Returns the humidity of the sensor. The value
-        has a range of 0 to 1000 and is given in %RH/10 (Relative Humidity),
-        i.e. a value of 421 means that a humidity of 42.1 %RH is measured.
+        has a range of 0 to 100 and is given in %RH (relative humidity),
+        i.e. a value of 42.1 means that a relative humidity of 42.1 %RH is measured.
 
         If you want to get the humidity periodically, it is recommended to use the
         :cb:`Humidity` callback and set the period with
@@ -174,9 +175,9 @@ class BrickletHumidity(Device):
         )
         return unpack_payload(payload, "H")
 
-    async def set_humidity_callback_period(self, period: int = 0, response_expected: bool = True) -> None:
+    async def set_humidity_callback_period(self, period: float | Decimal = 0, response_expected: bool = True) -> None:
         """
-        Sets the period in ms with which the :cb:`Humidity` callback is triggered
+        Sets the period in s with which the :cb:`Humidity` callback is triggered
         periodically. A value of 0 turns the callback off.
 
         The :cb:`Humidity` callback is only triggered if the humidity has changed
@@ -189,22 +190,24 @@ class BrickletHumidity(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_HUMIDITY_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_humidity_callback_period(self) -> int:
+    async def get_humidity_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Humidity Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_HUMIDITY_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_analog_value_callback_period(self, period: int = 0, response_expected: bool = True) -> None:
+    async def set_analog_value_callback_period(
+        self, period: float | Decimal = 0, response_expected: bool = True
+    ) -> None:
         """
-        Sets the period in ms with which the :cb:`Analog Value` callback is triggered
+        Sets the period in s with which the :cb:`Analog Value` callback is triggered
         periodically. A value of 0 turns the callback off.
 
         The :cb:`Analog Value` callback is only triggered if the analog value has
@@ -217,18 +220,18 @@ class BrickletHumidity(Device):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_ANALOG_VALUE_CALLBACK_PERIOD,
-            data=pack_payload((int(period),), "I"),
+            data=pack_payload((seconds_to_ms(period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_analog_value_callback_period(self) -> int:
+    async def get_analog_value_callback_period(self) -> Decimal:
         """
         Returns the period as set by :func:`Set Analog Value Callback Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ANALOG_VALUE_CALLBACK_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_humidity_callback_threshold(
         self,
@@ -322,9 +325,11 @@ class BrickletHumidity(Device):
         payload = unpack_payload(payload, "c H H")
         return BasicCallbackConfiguration(Threshold(payload[0]), Decimal(payload[1]), Decimal(payload[2]))
 
-    async def set_debounce_period(self, debounce_period: int = 100, response_expected: bool = True) -> None:
+    async def set_debounce_period(
+        self, debounce_period: float | Decimal = Decimal("0.1"), response_expected: bool = True
+    ) -> None:
         """
-        Sets the period in ms with which the threshold callbacks
+        Sets the period in s with which the threshold callbacks
 
         * :cb:`Humidity Reached`,
         * :cb:`Analog Value Reached`
@@ -336,25 +341,25 @@ class BrickletHumidity(Device):
 
         keep being reached.
 
-        The default value is 100.
+        The default value is 0.1.
         """
         assert debounce_period >= 0
 
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEBOUNCE_PERIOD,
-            data=pack_payload((int(debounce_period),), "I"),
+            data=pack_payload((seconds_to_ms(debounce_period),), "I"),
             response_expected=response_expected,
         )
 
-    async def get_debounce_period(self) -> int:
+    async def get_debounce_period(self) -> Decimal:
         """
         Returns the debounce-period as set by :func:`Set Debounce Period`.
         """
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DEBOUNCE_PERIOD, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return ms_to_seconds(unpack_payload(payload, "I"))
 
     @staticmethod
     def __value_to_si(value: int) -> Decimal:

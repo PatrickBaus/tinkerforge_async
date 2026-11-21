@@ -23,6 +23,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import (
     _FunctionID,
 )
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -153,7 +154,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -199,7 +200,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
     async def set_current_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         channel: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal = 0,
@@ -244,7 +245,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
             data=pack_payload(
                 (
                     int(channel),
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value,
                     self.__si_to_value(minimum),
@@ -269,7 +270,11 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         return AdvancedCallbackConfiguration(
-            period, value_has_to_change, Threshold(option), self.__value_to_si(minimum), self.__value_to_si(maximum)
+            ms_to_seconds(period),
+            value_has_to_change,
+            Threshold(option),
+            self.__value_to_si(minimum),
+            self.__value_to_si(maximum),
         )
 
     async def set_sample_rate(self, rate: _SamplingRate | int, response_expected: bool = True) -> None:

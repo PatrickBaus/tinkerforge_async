@@ -24,6 +24,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import (
     _FunctionID,
 )
+from .helper import ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -154,7 +155,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal | None = None,
@@ -202,7 +203,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
     async def set_voltage_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         channel: int,
-        period: int = 0,
+        period: float | Decimal = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
         minimum: float | Decimal = 0,
@@ -246,7 +247,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             data=pack_payload(
                 (
                     int(channel),
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
                     self.__si_to_value(minimum),
@@ -270,7 +271,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
         minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
-        return AdvancedCallbackConfiguration(period, value_has_to_change, option, minimum, maximum)
+        return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def get_all_voltages(self) -> tuple[Decimal, Decimal]:
         """
@@ -289,7 +290,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         return self.__value_to_si(value1), self.__value_to_si(value2)
 
     async def set_all_voltages_callback_configuration(
-        self, period: int = 0, value_has_to_change: bool = False, response_expected: bool = True
+        self, period: float | Decimal = 0, value_has_to_change: bool = False, response_expected: bool = True
     ) -> None:
         """
         The period is the period with which the :cb:`All Voltages` callback is triggered periodically. A value of 0
@@ -310,7 +311,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             function_id=FunctionID.SET_ALL_VOLTAGES_CALLBACK_CONFIGURATION,
             data=pack_payload(
                 (
-                    int(period),
+                    seconds_to_ms(period),
                     bool(value_has_to_change),
                 ),
                 "I !",
@@ -327,7 +328,8 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ALL_VOLTAGES_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return SimpleCallbackConfiguration(*unpack_payload(payload, "I !"))
+        period, value_has_to_change = unpack_payload(payload, "I !")
+        return SimpleCallbackConfiguration(ms_to_seconds(period), value_has_to_change)
 
     async def set_sample_rate(self, rate: _SamplingRate | int, response_expected: bool = True) -> None:
         """
@@ -447,14 +449,14 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         For each channel you can choose between threshold and intensity mode.
 
         In threshold mode you can define a positive or a negative threshold. For a positive threshold set the "min"
-        parameter to the threshold value in mV above which the LED should turn on and set the "max" parameter to 0.
+        parameter to the threshold value in V above which the LED should turn on and set the "max" parameter to 0.
         Example: If you set a positive threshold of 10V, the LED will turn on as soon as the voltage exceeds 10V and
         turn off again if it goes below 10V. For a negative threshold set the "max" parameter to the threshold value in
-        mV below which the LED should turn on and set the "min" parameter to 0. Example: If you set a negative threshold
+        V below which the LED should turn on and set the "min" parameter to 0. Example: If you set a negative threshold
         of 10V, the LED will turn on as soon as the voltage goes below 10V and the LED will turn off when the voltage
         exceeds 10V.
 
-        In intensity mode you can define a range in mV that is used to scale the brightness of the LED. Example with
+        In intensity mode you can define a range in V that is used to scale the brightness of the LED. Example with
         min=4V, max=20V: The LED is off at 4V, on at 20V and the brightness is linearly scaled between the values
         4V and 20V. If the min value is greater than the max value, the LED brightness is scaled the other way around.
         """

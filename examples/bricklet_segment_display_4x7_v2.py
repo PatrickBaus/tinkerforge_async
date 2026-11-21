@@ -5,7 +5,6 @@ An example to demonstrate most of the capabilities of the Tinkerforge Segment Di
 """
 import asyncio
 import warnings
-from decimal import Decimal
 
 from tinkerforge_async.bricklet_segment_display_4x7_v2 import BrickletSegmentDisplay4x7V2
 from tinkerforge_async.devices import BrickletWithMCU
@@ -57,7 +56,7 @@ async def run_example_generic(bricklet: BrickletWithMCU) -> None:
     await bricklet.set_status_led_config(bricklet.LedConfig.SHOW_STATUS)
     print("Current status:", await bricklet.get_status_led_config())
 
-    print("Get Chip temperature:", await bricklet.get_chip_temperature() - Decimal("273.15"), "°C")
+    print("Get Chip temperature:", await bricklet.get_chip_temperature(), "K")
 
     print("Reset Bricklet")
     await bricklet.reset()
@@ -108,12 +107,12 @@ async def run_example(bricklet: BrickletSegmentDisplay4x7V2) -> None:
             await asyncio.sleep(0.5)
 
         print("Counting from 0 to 5 and back again")
-        await bricklet.start_counter(value_from=0, value_to=5, increment=1, length=1000)
+        await bricklet.start_counter(value_from=0, value_to=5, increment=1, length=1)
         for _ in range(6):
             print("Counter value:", await bricklet.get_counter_value())
             await asyncio.sleep(1)  # Wait for 1 second
 
-        await bricklet.start_counter(value_from=5, value_to=0, increment=-1, length=1000)
+        await bricklet.start_counter(value_from=5, value_to=0, increment=-1, length=1)
         for _ in range(5):
             await asyncio.sleep(1)  # Wait for 1 second
             print("Counter value:", await bricklet.get_counter_value())

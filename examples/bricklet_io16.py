@@ -37,8 +37,8 @@ async def run_example(bricklet: BrickletIO16) -> None:  # pylint: disable=too-ma
             "B", 0b11111111, bricklet.Direction.OUT, bricklet.OutputConfiguration.LOW
         )  # Set all pins to output LOW
 
-        print("Set bricklet debounce period to", 10, "ms")
-        await bricklet.set_debounce_period(10)
+        print("Set bricklet debounce period to", 0.01, "s")
+        await bricklet.set_debounce_period(0.01)
         print("Get bricklet debounce period:", await bricklet.get_debounce_period())
 
         port_a = await bricklet.get_port_interrupt("A")
@@ -56,7 +56,7 @@ async def run_example(bricklet: BrickletIO16) -> None:  # pylint: disable=too-ma
             "Enabling monoflop on B0 and B3. A0 will be high and B3 low until the time runs out, then B0 will go low"
             " and B3 high. Like a dead man's switch."
         )
-        await bricklet.set_port_monoflop("B", 0b00001001, 0b00000001, 3000)
+        await bricklet.set_port_monoflop("B", 0b00001001, 0b00000001, 3)
         print("Monoflop state:")
         for i in range(3):
             print(f"B0: {await bricklet.get_port_monoflop('B', 0)}, B3: {bricklet.get_port_monoflop('B', 3)}")
@@ -70,7 +70,7 @@ async def run_example(bricklet: BrickletIO16) -> None:  # pylint: disable=too-ma
         await bricklet.set_selected_values(
             "B", 0b10000000, 0b10000000
         )  # Set B7 to high, because toggling starts by going low.
-        await bricklet.set_edge_count_config(0, bricklet.EdgeType.BOTH, debounce=5)
+        await bricklet.set_edge_count_config(0, bricklet.EdgeType.BOTH, debounce=0.005)
         print("Edge count config A0:", await bricklet.get_edge_count_config(0))
         print("Edge count config A1:", await bricklet.get_edge_count_config(1))
 

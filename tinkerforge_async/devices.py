@@ -265,7 +265,7 @@ class DeviceWithMCU(Device):
 
     async def get_chip_temperature(self) -> Decimal:
         """
-        Returns the temperature in °C as measured inside the microcontroller. The value returned is not the
+        Returns the temperature in K as measured inside the microcontroller. The value returned is not the
         ambient temperature!
 
         The temperature is only proportional to the real temperature, and it has bad accuracy. Practically it is only
@@ -521,12 +521,12 @@ class BasicCallbackConfiguration(NamedTuple):
 
 
 class SimpleCallbackConfiguration(NamedTuple):
-    period: int
+    period: Decimal
     value_has_to_change: bool
 
 
 class AdvancedCallbackConfiguration(NamedTuple):
-    period: int
+    period: Decimal
     value_has_to_change: bool
     option: ThresholdOption | None
     minimum: Decimal | None

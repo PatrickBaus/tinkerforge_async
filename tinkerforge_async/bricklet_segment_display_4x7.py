@@ -7,10 +7,12 @@ units.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
 
 from .devices import Device, DeviceIdentifier, Event, _FunctionID
+from .helper import seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -124,15 +126,20 @@ class BrickletSegmentDisplay4x7(Device):
         return GetSegments(*unpack_payload(payload, "4B B !"))
 
     async def start_counter(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self, value_from: int, value_to: int, increment: int = 1, length: int = 1000, response_expected: bool = True
+        self,
+        value_from: int,
+        value_to: int,
+        increment: int = 1,
+        length: float | Decimal = Decimal(1),
+        response_expected: bool = True,
     ) -> None:
         """
         Starts a counter with the *from* value that counts to the *to*
         value each step incremented with by *increment*.
-        *length* is the pause between each increment.
+        *length* is the pause in s between each increment.
 
         Example: If you set *from* to 0, *to* to 100, *increment* to 1 and
-        *length* to 1000, a counter that goes from 0 to 100 with one second
+        *length* to 1, a counter that goes from 0 to 100 with one second
         pause between each increment will be started.
 
         Using a negative increment allows to count backwards.
@@ -142,7 +149,7 @@ class BrickletSegmentDisplay4x7(Device):
         assert -999 <= value_from <= 9999
         assert -999 <= value_to <= 9999
         assert -999 <= increment <= 9999
-        assert 0 <= length <= 2**32 - 1
+        assert 0 <= seconds_to_ms(length) <= 2**32 - 1
 
         await self.ipcon.send_request(
             device=self,
@@ -152,7 +159,7 @@ class BrickletSegmentDisplay4x7(Device):
                     int(value_from),
                     int(value_to),
                     int(increment),
-                    int(length),
+                    seconds_to_ms(length),
                 ),
                 "h h h I",
             ),
