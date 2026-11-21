@@ -82,7 +82,7 @@ class BrickletMoisture(Device):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> int:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         return await self.get_moisture_value()
 
@@ -99,7 +99,7 @@ class BrickletMoisture(Device):
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         await asyncio.gather(
             self.set_moisture_callback_period(period, response_expected),
@@ -107,7 +107,7 @@ class BrickletMoisture(Device):
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         period, config = await asyncio.gather(
             self.get_moisture_callback_period(), self.get_moisture_callback_threshold()

@@ -90,7 +90,7 @@ class BrickletIsolator(BrickletWithMCU):
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> GetStatistics:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         return await self.get_statistics()
 
@@ -101,12 +101,12 @@ class BrickletIsolator(BrickletWithMCU):
         value_has_to_change: bool = False,
         response_expected: bool = True,
     ) -> None:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         await self.set_statistics_callback_configuration(period, value_has_to_change, response_expected)
 
     async def get_callback_configuration(self, sid: int) -> SimpleCallbackConfiguration:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         return await self.get_statistics_callback_configuration()
 

@@ -146,7 +146,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> Decimal:
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         return await self.get_current(sid)
 
@@ -163,14 +163,14 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         await self.set_current_callback_configuration(
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         return await self.get_current_callback_configuration(sid)
 

@@ -23,6 +23,13 @@ class UnknownFunctionError(Exception):
     """
 
 
+class InvalidSidError(ValueError):
+    """
+    Raised when a secondary id (sid) does not exist on the Brick/Bricklet or does not support the requested
+    function, e.g. a sid without a callback configuration. Inherits from ValueError for backwards compatibility.
+    """
+
+
 @unique
 class ThresholdOption(Enum):
     """
@@ -175,6 +182,27 @@ class Device:
         self.__uid = uid if uid <= 0xFFFFFFFF else uid64_to_uid32(uid)
         self.__ipcon = ipcon
         self.api_version = (0, 0, 0)
+
+    def _validate_sid(self, sid: int, valid_sids: Iterable[int]) -> None:
+        """
+        Check that the secondary id (sid) is supported by this device. Unlike an assert statement, this check is
+        also performed when Python runs with optimizations enabled (-O or -OO).
+
+        Parameters
+        ----------
+        sid: int
+            The secondary id to check
+        valid_sids: Iterable of int
+            The secondary ids supported by the function called
+
+        Raises
+        ------
+        InvalidSidError
+            If `sid` is not in `valid_sids`
+        """
+        valid_sids = tuple(valid_sids)
+        if sid not in valid_sids:
+            raise InvalidSidError(f"Invalid sid {sid!r} for {self}. Valid sids: {valid_sids}.")
 
     def get_api_version(self) -> tuple[int, int, int]:
         """

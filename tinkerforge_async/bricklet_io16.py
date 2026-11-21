@@ -288,6 +288,8 @@ class BrickletIO16(Device):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
+        self._validate_sid(sid, range(16))
+
         port = Port.A if sid < 8 else Port.B
         interrupt_mask = await self.get_port_interrupt(port)
         interrupt_mask &= ~(1 << (sid % 8))  # Reset the bit a position sid
@@ -295,6 +297,8 @@ class BrickletIO16(Device):
         await self.set_port_interrupt(port, interrupt_mask)
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
+        self._validate_sid(sid, range(16))
+
         port = Port.A if sid < 8 else Port.B
         interrupt_mask = await self.get_port_interrupt(port)
         value = interrupt_mask & (1 << (sid % 8))
@@ -533,8 +537,7 @@ class BrickletIO16(Device):
                 registered_events.add(self.CallbackID(event))
         if sids is not None:
             for sid in sids:
-                if sid > 15 or sid < 0:
-                    raise ValueError("Invalid secondary id. All sids must be in range(16).")
+                self._validate_sid(sid, range(16))
                 for callback in self.SID_TO_CALLBACK.get(sid, []):
                     registered_events.add(callback)
 

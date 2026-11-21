@@ -127,7 +127,7 @@ class BrickletAmbientLightV2(Device):
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> Decimal:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         return await self.get_illuminance()
 
@@ -144,7 +144,7 @@ class BrickletAmbientLightV2(Device):
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         await asyncio.gather(
             self.set_illuminance_callback_period(period, response_expected),
@@ -152,7 +152,7 @@ class BrickletAmbientLightV2(Device):
         )
 
     async def get_callback_configuration(self, sid) -> AdvancedCallbackConfiguration:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         period, config = await asyncio.gather(
             self.get_illuminance_callback_period(), self.get_illuminance_callback_threshold()

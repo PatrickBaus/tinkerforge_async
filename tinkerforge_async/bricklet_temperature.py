@@ -98,7 +98,7 @@ class BrickletTemperature(Device):
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> Decimal:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         return await self.get_temperature()
 
@@ -115,7 +115,7 @@ class BrickletTemperature(Device):
         minimum = Decimal("273.15") if minimum is None else minimum
         maximum = Decimal("273.15") if maximum is None else maximum
 
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         await asyncio.gather(
             self.set_temperature_callback_period(period, response_expected),
@@ -123,7 +123,7 @@ class BrickletTemperature(Device):
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        assert sid == 0
+        self._validate_sid(sid, (0,))
 
         period, config = await asyncio.gather(
             self.get_temperature_callback_period(), self.get_temperature_callback_threshold()

@@ -101,7 +101,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> Decimal:
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             return await self.get_air_pressure()
@@ -120,7 +120,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         minimum = 0 if minimum is None else minimum
         maximum = 0 if maximum is None else maximum
 
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             await asyncio.gather(
@@ -134,7 +134,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
             )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        assert sid in (0, 1)
+        self._validate_sid(sid, (0, 1))
 
         if sid == 0:
             period, config = await asyncio.gather(
