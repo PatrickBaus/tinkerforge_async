@@ -8,9 +8,10 @@ units to SI units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -187,7 +188,8 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         If you want to get the value periodically, it is recommended to use the :cb:`Current` callback. You can set the
         callback configuration with :func:`Set Current Callback Configuration`.
         """
-        assert channel in (0, 1)
+        if channel not in (0, 1):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -235,9 +237,11 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
 
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
-        assert channel in (0, 1)
+        if channel not in (0, 1):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1), got channel={channel!r}")
         option = Threshold(option)
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -260,7 +264,8 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         """
         Returns the callback configuration as set by :func:`Set Current Callback Configuration`.
         """
-        assert channel in (0, 1)
+        if channel not in (0, 1):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -346,7 +351,8 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
 
         By default, all channel LEDs are configured as "Channel Status".
         """
-        assert channel in (0, 1)
+        if channel not in (0, 1):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1), got channel={channel!r}")
         config = LedConfig(config)
 
         await self.ipcon.send_request(
@@ -360,7 +366,8 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         """
         Returns the channel LED configuration as set by :func:`Set Channel LED Config`.
         """
-        assert channel in (0, 1)
+        if channel not in (0, 1):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -398,7 +405,8 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         scaled between the values 4mA and 20mA. If the min value is greater than the max value, the LED brightness is
         scaled the other way around.
         """
-        assert channel in (0, 1)
+        if channel not in (0, 1):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1), got channel={channel!r}")
         config = ChannelLedStatusConfig(config)
 
         await self.ipcon.send_request(
@@ -420,7 +428,8 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         """
         Returns the channel LED status configuration as set by :func:`Set Channel LED Status Config`.
         """
-        assert channel in (0, 1)
+        if channel not in (0, 1):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,

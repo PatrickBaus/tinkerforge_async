@@ -101,7 +101,7 @@ def test_io16_edge_count_debounce_is_in_seconds():
     device = BrickletIO16(1, ipcon)
     asyncio.run(device.set_edge_count_config(0))
     assert struct.unpack("<BBB", sent_payload(ipcon)) == (0, 0, 100)
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         asyncio.run(device.set_edge_count_config(0, debounce=0.3))
 
     ipcon = fake_ipcon(struct.pack("<BB", 0, 5))

@@ -8,9 +8,10 @@ units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator, Iterable
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, Iterable, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
 from .helper import seconds_to_ms
@@ -101,8 +102,14 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
            :alt: Indices of segments
            :align: center
         """
-        assert len(segments) == 4 and all(0 <= segment <= 255 for segment in segments)
-        assert len(colon) == 2
+        if not (len(segments) == 4 and all(0 <= segment <= 255 for segment in segments)):
+            raise ValueError(
+                "Invalid argument: expected len(segments) == 4 and all(0 <= segment <= 255 for segment in "
+                "segments), "
+                f"got segments={segments!r}"
+            )
+        if len(colon) != 2:
+            raise ValueError(f"Invalid argument: expected len(colon) == 2, got colon={colon!r}")
         tick = bool(tick)
 
         await self.ipcon.send_request(
@@ -127,7 +134,8 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
         The default value is 7.
         """
-        assert 0 <= brightness <= 7
+        if not 0 <= brightness <= 7:
+            raise ValueError(f"Invalid argument: expected 0 <= brightness <= 7, got brightness={brightness!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -182,7 +190,8 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
            :alt: Indices of selected segments
            :align: center
         """
-        assert 0 <= segment <= 34
+        if not 0 <= segment <= 34:
+            raise ValueError(f"Invalid argument: expected 0 <= segment <= 34, got segment={segment!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -195,7 +204,8 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         """
         Returns the value of a single segment.
         """
-        assert 0 <= segment <= 34
+        if not 0 <= segment <= 34:
+            raise ValueError(f"Invalid argument: expected 0 <= segment <= 34, got segment={segment!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -219,9 +229,12 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
            :alt: Indices of selected segments
            :align: center
         """
-        assert -999 <= value_from <= 9999
-        assert -999 <= value_to <= 9999
-        assert -999 <= increment <= 9999
+        if not -999 <= value_from <= 9999:
+            raise ValueError(f"Invalid argument: expected -999 <= value_from <= 9999, got value_from={value_from!r}")
+        if not -999 <= value_to <= 9999:
+            raise ValueError(f"Invalid argument: expected -999 <= value_to <= 9999, got value_to={value_to!r}")
+        if not -999 <= increment <= 9999:
+            raise ValueError(f"Invalid argument: expected -999 <= increment <= 9999, got increment={increment!r}")
 
         await self.ipcon.send_request(
             device=self,

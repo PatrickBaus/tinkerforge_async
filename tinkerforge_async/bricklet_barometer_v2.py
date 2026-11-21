@@ -7,9 +7,10 @@ low-level communication with the Tinkerforge ip connection and also handles conv
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -241,9 +242,12 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
         option = Threshold(option)
-        assert period >= 0
-        assert minimum >= 0
-        assert maximum >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
+        if minimum < 0:
+            raise ValueError(f"Invalid argument: expected minimum >= 0, got minimum={minimum!r}")
+        if maximum < 0:
+            raise ValueError(f"Invalid argument: expected maximum >= 0, got maximum={maximum!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -325,7 +329,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
         option = Threshold(option)
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -410,7 +415,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         If the option is set to 'x' (threshold turned off) the callback is triggered with the fixed period.
         """
         option = Threshold(option)
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -454,8 +460,16 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
         If you want to do long term measurements the longest moving average will give the cleanest results.
         """
-        assert moving_average_length_air_pressure >= 1
-        assert moving_average_length_temperature >= 1
+        if moving_average_length_air_pressure < 1:
+            raise ValueError(
+                "Invalid argument: expected moving_average_length_air_pressure >= 1, "
+                f"got moving_average_length_air_pressure={moving_average_length_air_pressure!r}"
+            )
+        if moving_average_length_temperature < 1:
+            raise ValueError(
+                "Invalid argument: expected moving_average_length_temperature >= 1, "
+                f"got moving_average_length_temperature={moving_average_length_temperature!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,

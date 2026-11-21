@@ -8,8 +8,9 @@ of raw units to SI units.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -210,7 +211,8 @@ class BrickletRS232V2(BrickletWithMCU):
         See :func:`Set Configuration` for configuration possibilities
         regarding baud rate, parity and so on.
         """
-        assert len(data) <= 60
+        if len(data) > 60:
+            raise ValueError(f"Invalid argument: expected len(data) <= 60, got data={data!r}")
         msg = bytearray(data)
         length = len(msg)
         msg.extend([0] * (60 - length))  # always send 60 bytes
@@ -274,7 +276,8 @@ class BrickletRS232V2(BrickletWithMCU):
         """
         Sets the configuration for the RS232 communication.
         """
-        assert 100 <= baudrate <= 2000000
+        if not 100 <= baudrate <= 2000000:
+            raise ValueError(f"Invalid argument: expected 100 <= baudrate <= 2000000, got baudrate={baudrate!r}")
         parity = Parity(parity)
         stopbits = StopBits(stopbits)
         wordlength = WordLength(wordlength)
@@ -327,9 +330,21 @@ class BrickletRS232V2(BrickletWithMCU):
         received through RS232 but could not yet be send to the
         user, either by :func:`Read` or through :cb:`Read` callback.
         """
-        assert 1024 <= send_buffer_size <= 9216
-        assert 1024 <= receive_buffer_size <= 9216
-        assert send_buffer_size + receive_buffer_size <= 10240
+        if not 1024 <= send_buffer_size <= 9216:
+            raise ValueError(
+                "Invalid argument: expected 1024 <= send_buffer_size <= 9216, "
+                f"got send_buffer_size={send_buffer_size!r}"
+            )
+        if not 1024 <= receive_buffer_size <= 9216:
+            raise ValueError(
+                "Invalid argument: expected 1024 <= receive_buffer_size <= 9216, "
+                f"got receive_buffer_size={receive_buffer_size!r}"
+            )
+        if send_buffer_size + receive_buffer_size > 10240:
+            raise ValueError(
+                "Invalid argument: expected send_buffer_size + receive_buffer_size <= 10240, "
+                f"got receive_buffer_size={receive_buffer_size!r}, send_buffer_size={send_buffer_size!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -382,7 +397,8 @@ class BrickletRS232V2(BrickletWithMCU):
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
-        assert 0 <= frame_size <= 9216
+        if not 0 <= frame_size <= 9216:
+            raise ValueError(f"Invalid argument: expected 0 <= frame_size <= 9216, got frame_size={frame_size!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -450,7 +466,7 @@ class BrickletRS232V2(BrickletWithMCU):
             if offset == 0:
                 return offset, data
 
-        assert False, "unreachable"
+        raise AssertionError("unreachable")
 
     async def read(self, length: int) -> bytes:
         """

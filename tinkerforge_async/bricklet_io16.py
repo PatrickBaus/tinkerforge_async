@@ -7,9 +7,10 @@ handles conversion of raw units to SI units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator, Generator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, Generator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import AdvancedCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -186,7 +187,11 @@ class BrickletIO16(Device):
         """
         if not isinstance(port, Port):
             port = Port(port.lower())
-        assert isinstance(value_mask, int) and (0 <= value_mask <= 255)
+        if not (isinstance(value_mask, int) and (0 <= value_mask <= 255)):
+            raise ValueError(
+                "Invalid argument: expected isinstance(value_mask, int) and (0 <= value_mask <= 255), "
+                f"got value_mask={value_mask!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -239,7 +244,12 @@ class BrickletIO16(Device):
         """
         if not isinstance(port, Port):
             port = Port(port.lower())
-        assert isinstance(selection_mask, int) and (0 <= selection_mask <= 255)
+        if not (isinstance(selection_mask, int) and (0 <= selection_mask <= 255)):
+            raise ValueError(
+                "Invalid argument: expected isinstance(selection_mask, int) and (0 <= selection_mask <= "
+                "255), "
+                f"got selection_mask={selection_mask!r}"
+            )
         if not isinstance(direction, Direction):
             direction = Direction(direction)
 
@@ -314,7 +324,10 @@ class BrickletIO16(Device):
         For example: If you set this value to 0.1, you will get the interrupt maximal every 0.1 s. This is necessary
         if something that bounces is connected to the IO-16 Bricklet such as a button.
         """
-        assert debounce_period >= 0
+        if debounce_period < 0:
+            raise ValueError(
+                f"Invalid argument: expected debounce_period >= 0, got debounce_period={debounce_period!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -343,7 +356,12 @@ class BrickletIO16(Device):
         """
         if not isinstance(port, Port):
             port = Port(port.lower())
-        assert isinstance(interrupt_mask, int) and (0 <= interrupt_mask <= 255)
+        if not (isinstance(interrupt_mask, int) and (0 <= interrupt_mask <= 255)):
+            raise ValueError(
+                "Invalid argument: expected isinstance(interrupt_mask, int) and (0 <= interrupt_mask <= "
+                "255), "
+                f"got interrupt_mask={interrupt_mask!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -394,9 +412,19 @@ class BrickletIO16(Device):
         """
         if not isinstance(port, Port):
             port = Port(port.lower())
-        assert isinstance(selection_mask, int) and (0 <= selection_mask <= 255)
-        assert isinstance(value_mask, int) and (0 <= value_mask <= 255)
-        assert time >= 0
+        if not (isinstance(selection_mask, int) and (0 <= selection_mask <= 255)):
+            raise ValueError(
+                "Invalid argument: expected isinstance(selection_mask, int) and (0 <= selection_mask <= "
+                "255), "
+                f"got selection_mask={selection_mask!r}"
+            )
+        if not (isinstance(value_mask, int) and (0 <= value_mask <= 255)):
+            raise ValueError(
+                "Invalid argument: expected isinstance(value_mask, int) and (0 <= value_mask <= 255), "
+                f"got value_mask={value_mask!r}"
+            )
+        if time < 0:
+            raise ValueError(f"Invalid argument: expected time >= 0, got time={time!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -411,7 +439,8 @@ class BrickletIO16(Device):
         """
         if not isinstance(port, Port):
             port = Port(port.lower())
-        assert isinstance(pin, int) and (0 <= pin <= 7)
+        if not (isinstance(pin, int) and (0 <= pin <= 7)):
+            raise ValueError(f"Invalid argument: expected isinstance(pin, int) and (0 <= pin <= 7), got pin={pin!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -440,8 +469,17 @@ class BrickletIO16(Device):
         """
         if not isinstance(port, Port):
             port = Port(port.lower())
-        assert isinstance(selection_mask, int) and (0 <= selection_mask <= 255)
-        assert isinstance(value_mask, int) and (0 <= value_mask <= 255)
+        if not (isinstance(selection_mask, int) and (0 <= selection_mask <= 255)):
+            raise ValueError(
+                "Invalid argument: expected isinstance(selection_mask, int) and (0 <= selection_mask <= "
+                "255), "
+                f"got selection_mask={selection_mask!r}"
+            )
+        if not (isinstance(value_mask, int) and (0 <= value_mask <= 255)):
+            raise ValueError(
+                "Invalid argument: expected isinstance(value_mask, int) and (0 <= value_mask <= 255), "
+                f"got value_mask={value_mask!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -459,7 +497,8 @@ class BrickletIO16(Device):
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
-        assert isinstance(pin, int) and (0 <= pin <= 1)
+        if not (isinstance(pin, int) and (0 <= pin <= 1)):
+            raise ValueError(f"Invalid argument: expected isinstance(pin, int) and (0 <= pin <= 1), got pin={pin!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -493,10 +532,12 @@ class BrickletIO16(Device):
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
-        assert isinstance(pin, int) and (0 <= pin <= 1)
+        if not (isinstance(pin, int) and (0 <= pin <= 1)):
+            raise ValueError(f"Invalid argument: expected isinstance(pin, int) and (0 <= pin <= 1), got pin={pin!r}")
         edge_type = EdgeType(edge_type)
         debounce_ms = seconds_to_ms(debounce)
-        assert 0 <= debounce_ms <= 255
+        if not 0 <= debounce_ms <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= debounce_ms <= 255, got debounce_ms={debounce_ms!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -511,7 +552,8 @@ class BrickletIO16(Device):
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
-        assert isinstance(pin, int) and (0 <= pin <= 1)
+        if not (isinstance(pin, int) and (0 <= pin <= 1)):
+            raise ValueError(f"Invalid argument: expected isinstance(pin, int) and (0 <= pin <= 1), got pin={pin!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -539,7 +581,10 @@ class BrickletIO16(Device):
         events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
-        assert events is None or sids is None
+        if not (events is None or sids is None):
+            raise ValueError(
+                f"Invalid argument: expected events is None or sids is None, got events={events!r}, sids={sids!r}"
+            )
 
         registered_events = set()
         if events is not None:

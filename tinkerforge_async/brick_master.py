@@ -10,9 +10,10 @@ from __future__ import annotations
 import asyncio
 import re
 import warnings
+from collections.abc import AsyncGenerator, Iterable
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, Iterable, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import BasicCallbackConfiguration
 from .devices import BrickletPort as Port
@@ -868,7 +869,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         saved in the EEPROM of the Chibi Extension, it does not
         have to be set on every startup.
         """
-        assert 1 <= address <= 255
+        if not 1 <= address <= 255:
+            raise ValueError(f"Invalid argument: expected 1 <= address <= 255, got address={address!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -895,7 +897,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         saved in the EEPROM of the Chibi Extension, it does not
         have to be set on every startup.
         """
-        assert 1 <= address <= 255
+        if not 1 <= address <= 255:
+            raise ValueError(f"Invalid argument: expected 1 <= address <= 255, got address={address!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -931,8 +934,10 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         The slave addresses will be saved in the EEPROM of the Chibi Extension, they
         don't have to be set on every startup.
         """
-        assert 0 <= num <= 255
-        assert 0 <= address <= 255
+        if not 0 <= num <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= num <= 255, got num={num!r}")
+        if not 0 <= address <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= address <= 255, got address={address!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -954,13 +959,17 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         The slave addresses will be saved in the EEPROM of the Chibi Extension, they
         don't have to be set on every startup.
         """
-        assert isinstance(addresses, (tuple, list))
+        if not isinstance(addresses, (tuple, list)):
+            raise ValueError(
+                f"Invalid argument: expected isinstance(addresses, (tuple, list)), got addresses={addresses!r}"
+            )
         addresses = list(addresses)
         if addresses[-1] != 0:
             addresses += [
                 0,
             ]  # add a trailing [0], because it is the delimiter
-        assert len(addresses) <= 255
+        if len(addresses) > 255:
+            raise ValueError(f"Invalid argument: expected len(addresses) <= 255, got addresses={addresses!r}")
 
         coros = [
             self.__set_chibi_slave_address(index, address, response_expected) for index, address in enumerate(addresses)
@@ -1102,7 +1111,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         It is possible to set the address with the Brick Viewer, and it will be saved in the EEPROM of the RS485
         Extension, it does not have to be set on every startup.
         """
-        assert 0 <= address <= 255
+        if not 0 <= address <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= address <= 255, got address={address!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -1135,8 +1145,10 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         The slave addresses will be saved in the EEPROM of the Chibi Extension, they don't have to be set on every
         startup.
         """
-        assert 0 <= num <= 255
-        assert 0 <= address <= 255
+        if not 0 <= num <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= num <= 255, got num={num!r}")
+        if not 0 <= address <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= address <= 255, got address={address!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -1154,13 +1166,17 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         The slave addresses will be saved in the EEPROM of the Chibi Extension, they don't have to be set on every
         startup.
         """
-        assert isinstance(addresses, (tuple, list))
+        if not isinstance(addresses, (tuple, list)):
+            raise ValueError(
+                f"Invalid argument: expected isinstance(addresses, (tuple, list)), got addresses={addresses!r}"
+            )
         addresses = list(addresses)
         if addresses[-1] != 0:
             addresses += [
                 0,
             ]  # add a trailing [0], because it is the delimiter
-        assert len(addresses) < 255
+        if len(addresses) >= 255:
+            raise ValueError(f"Invalid argument: expected len(addresses) < 255, got addresses={addresses!r}")
 
         coros = [
             self.__set_rs485_slave_address(index, address, response_expected) for index, address in enumerate(addresses)
@@ -1222,7 +1238,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         The values are stored in the EEPROM and only applied on startup. That means
         you have to restart the Master Brick after configuration.
         """
-        assert stopbits in (1, 2)
+        if stopbits not in (1, 2):
+            raise ValueError(f"Invalid argument: expected stopbits in (1, 2), got stopbits={stopbits!r}")
         if not isinstance(parity, Rs485Parity):
             parity = Rs485Parity(parity)
 
@@ -1294,13 +1311,29 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(connection, WifiConnection):
             connection = WifiConnection(connection)
-        assert isinstance(ip_address, (tuple, list)) and len(ip_address) == 4
-        assert isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4
-        assert isinstance(gateway, (tuple, list)) and len(gateway) == 4
-        assert 1 <= port <= 65535
+        if not (isinstance(ip_address, (tuple, list)) and len(ip_address) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(ip_address, (tuple, list)) and len(ip_address) == "
+                "4, "
+                f"got ip_address={ip_address!r}"
+            )
+        if not (isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) "
+                "== 4, "
+                f"got subnet_mask={subnet_mask!r}"
+            )
+        if not (isinstance(gateway, (tuple, list)) and len(gateway) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(gateway, (tuple, list)) and len(gateway) == 4, "
+                f"got gateway={gateway!r}"
+            )
+        if not 1 <= port <= 65535:
+            raise ValueError(f"Invalid argument: expected 1 <= port <= 65535, got port={port!r}")
         if not isinstance(ssid, bytes):
             ssid = ssid.encode("utf-8")
-        assert len(ssid) <= 32
+        if len(ssid) > 32:
+            raise ValueError(f"Invalid argument: expected len(ssid) <= 32, got ssid={ssid!r}")
 
         # TODO: Do some more sanity checking like DHCP -> IP, etc.
         # TODO: Change documentation for the IP parameters (they are reversed and in correct order now)
@@ -1393,8 +1426,13 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             EapOptions(eap_options)
         if not isinstance(encryption, WifiEncryptionMode):
             encryption = WifiEncryptionMode(encryption)
-        assert 1 <= key_index <= 4
-        assert isinstance(eap_options, EapOptions)  # This is always true and only done for the typechecker
+        if not 1 <= key_index <= 4:
+            raise ValueError(f"Invalid argument: expected 1 <= key_index <= 4, got key_index={key_index!r}")
+        if not isinstance(eap_options, EapOptions):
+            raise ValueError(
+                "Invalid argument: expected isinstance(eap_options, EapOptions), "
+                f"got EapOptions={EapOptions!r}, eap_options={eap_options!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -1500,7 +1538,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(username, bytes):
             username = username.encode("utf-8")
-        assert len(username) <= 32
+        if len(username) > 32:
+            raise ValueError(f"Invalid argument: expected len(username) <= 32, got username={username!r}")
 
         data = list(username) + [0] * (32 - len(username))  # pad with null bytes
 
@@ -1521,7 +1560,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(password, bytes):
             password = password.encode("utf-8")
-        assert len(password) <= 32
+        if len(password) > 32:
+            raise ValueError(f"Invalid argument: expected len(password) <= 32, got password={password!r}")
 
         data = list(password) + [0] * (32 - len(password))  # pad with null bytes
 
@@ -1694,7 +1734,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(key, bytes):
             key = key.encode("utf-8")
-        assert 8 <= len(key) <= 63
+        if not 8 <= len(key) <= 63:
+            raise ValueError(f"Invalid argument: expected 8 <= len(key) <= 63, got key={key!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -2125,10 +2166,25 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(connection, EthernetConnection):
             connection = EthernetConnection(connection)
-        assert isinstance(ip_address, (tuple, list)) and len(ip_address) == 4
-        assert isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4
-        assert isinstance(gateway, (tuple, list)) and len(gateway) == 4
-        assert 1 <= port <= 65535
+        if not (isinstance(ip_address, (tuple, list)) and len(ip_address) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(ip_address, (tuple, list)) and len(ip_address) == "
+                "4, "
+                f"got ip_address={ip_address!r}"
+            )
+        if not (isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) "
+                "== 4, "
+                f"got subnet_mask={subnet_mask!r}"
+            )
+        if not (isinstance(gateway, (tuple, list)) and len(gateway) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(gateway, (tuple, list)) and len(gateway) == 4, "
+                f"got gateway={gateway!r}"
+            )
+        if not 1 <= port <= 65535:
+            raise ValueError(f"Invalid argument: expected 1 <= port <= 65535, got port={port!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -2223,7 +2279,12 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         .. versionadded:: 2.1.0$nbsp;(Firmware)
         """
-        assert isinstance(mac_address, (tuple, list)) and len(mac_address) == 6
+        if not (isinstance(mac_address, (tuple, list)) and len(mac_address) == 6):
+            raise ValueError(
+                "Invalid argument: expected isinstance(mac_address, (tuple, list)) and len(mac_address) "
+                "== 6, "
+                f"got mac_address={mac_address!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -2253,8 +2314,10 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         .. versionadded:: 2.2.0$nbsp;(Firmware)
         """
-        assert 0 <= sockets <= 7
-        assert 1 <= port <= 65535
+        if not 0 <= sockets <= 7:
+            raise ValueError(f"Invalid argument: expected 0 <= sockets <= 7, got sockets={sockets!r}")
+        if not 1 <= port <= 65535:
+            raise ValueError(f"Invalid argument: expected 1 <= port <= 65535, got port={port!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -2300,7 +2363,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(secret, bytes):
             secret = secret.encode("utf-8")
-        assert len(secret) <= 64
+        if len(secret) > 64:
+            raise ValueError(f"Invalid argument: expected len(secret) <= 64, got secret={secret!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -2341,7 +2405,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(secret, bytes):
             secret = secret.encode("utf-8")
-        assert len(secret) <= 64
+        if len(secret) > 64:
+            raise ValueError(f"Invalid argument: expected len(secret) <= 64, got secret={secret!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -2432,7 +2497,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             data = data.encode("utf-8")
 
         data = bytearray(data)
-        assert len(data) <= 60
+        if len(data) > 60:
+            raise ValueError(f"Invalid argument: expected len(data) <= 60, got data={data!r}")
 
         length = len(data)
 
@@ -2462,7 +2528,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert 0 <= length <= 60
+        if not 0 <= length <= 60:
+            raise ValueError(f"Invalid argument: expected 0 <= length <= 60, got length={length!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -2491,7 +2558,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(secret, bytes):
             secret = secret.encode("utf-8")
-        assert len(secret) <= 64
+        if len(secret) > 64:
+            raise ValueError(f"Invalid argument: expected len(secret) <= 64, got secret={secret!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -2556,11 +2624,20 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert 1 <= port <= 65535
-        assert 1 <= websocket_port <= 65535
-        assert 1 <= website_port <= 65535
-        assert 0 <= sleep_mode <= 255
-        assert 0 <= int(website) <= 255
+        if not 1 <= port <= 65535:
+            raise ValueError(f"Invalid argument: expected 1 <= port <= 65535, got port={port!r}")
+        if not 1 <= websocket_port <= 65535:
+            raise ValueError(
+                f"Invalid argument: expected 1 <= websocket_port <= 65535, got websocket_port={websocket_port!r}"
+            )
+        if not 1 <= website_port <= 65535:
+            raise ValueError(
+                f"Invalid argument: expected 1 <= website_port <= 65535, got website_port={website_port!r}"
+            )
+        if not 0 <= sleep_mode <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= sleep_mode <= 255, got sleep_mode={sleep_mode!r}")
+        if not 0 <= int(website) <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= int(website) <= 255, got website={website!r}")
         if not isinstance(phy_mode, PhyMode):
             phy_mode = PhyMode(PhyMode)
 
@@ -2681,15 +2758,39 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert isinstance(ip_address, (tuple, list)) and len(ip_address) == 4
-        assert isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4
-        assert isinstance(gateway, (tuple, list)) and len(gateway) == 4
-        assert isinstance(mac_address, (tuple, list)) and len(mac_address) == 6
-        assert isinstance(bssid, (tuple, list)) and len(bssid) == 6
+        if not (isinstance(ip_address, (tuple, list)) and len(ip_address) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(ip_address, (tuple, list)) and len(ip_address) == "
+                "4, "
+                f"got ip_address={ip_address!r}"
+            )
+        if not (isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) "
+                "== 4, "
+                f"got subnet_mask={subnet_mask!r}"
+            )
+        if not (isinstance(gateway, (tuple, list)) and len(gateway) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(gateway, (tuple, list)) and len(gateway) == 4, "
+                f"got gateway={gateway!r}"
+            )
+        if not (isinstance(mac_address, (tuple, list)) and len(mac_address) == 6):
+            raise ValueError(
+                "Invalid argument: expected isinstance(mac_address, (tuple, list)) and len(mac_address) "
+                "== 6, "
+                f"got mac_address={mac_address!r}"
+            )
+        if not (isinstance(bssid, (tuple, list)) and len(bssid) == 6):
+            raise ValueError(
+                "Invalid argument: expected isinstance(bssid, (tuple, list)) and len(bssid) == 6, "
+                f"got bssid={bssid!r}"
+            )
 
         if not isinstance(ssid, bytes):
             ssid = ssid.encode("utf-8")
-        assert len(ssid) <= 32
+        if len(ssid) > 32:
+            raise ValueError(f"Invalid argument: expected len(ssid) <= 32, got ssid={ssid!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -2784,7 +2885,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(password, bytes):
             password = password.encode("utf-8")
-        assert 8 <= len(password) <= 63
+        if not 8 <= len(password) <= 63:
+            raise ValueError(f"Invalid argument: expected 8 <= len(password) <= 63, got password={password!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -2861,16 +2963,37 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         .. versionadded:: 2.4.0$nbsp;(Firmware)
         """
-        assert isinstance(ip_address, (tuple, list)) and len(ip_address) == 4
-        assert isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4
-        assert isinstance(gateway, (tuple, list)) and len(gateway) == 4
-        assert isinstance(mac_address, (tuple, list)) and len(mac_address) == 6
+        if not (isinstance(ip_address, (tuple, list)) and len(ip_address) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(ip_address, (tuple, list)) and len(ip_address) == "
+                "4, "
+                f"got ip_address={ip_address!r}"
+            )
+        if not (isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(subnet_mask, (tuple, list)) and len(subnet_mask) "
+                "== 4, "
+                f"got subnet_mask={subnet_mask!r}"
+            )
+        if not (isinstance(gateway, (tuple, list)) and len(gateway) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(gateway, (tuple, list)) and len(gateway) == 4, "
+                f"got gateway={gateway!r}"
+            )
+        if not (isinstance(mac_address, (tuple, list)) and len(mac_address) == 6):
+            raise ValueError(
+                "Invalid argument: expected isinstance(mac_address, (tuple, list)) and len(mac_address) "
+                "== 6, "
+                f"got mac_address={mac_address!r}"
+            )
         if not isinstance(encryption, WifiApEncryption):
             encryption = WifiApEncryption(encryption)
-        assert 1 <= channel <= 13
+        if not 1 <= channel <= 13:
+            raise ValueError(f"Invalid argument: expected 1 <= channel <= 13, got channel={channel!r}")
         if not isinstance(ssid, bytes):
             ssid = ssid.encode("utf-8")
-        assert len(ssid) <= 32
+        if len(ssid) > 32:
+            raise ValueError(f"Invalid argument: expected len(ssid) <= 32, got ssid={ssid!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -2933,7 +3056,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(password, bytes):
             password = password.encode("utf-8")
-        assert 8 <= len(password) <= 63
+        if not 8 <= len(password) <= 63:
+            raise ValueError(f"Invalid argument: expected 8 <= len(password) <= 63, got password={password!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -3077,17 +3201,57 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         .. versionadded:: 2.4.2$nbsp;(Firmware)
         """
-        assert isinstance(root_ip, (tuple, list)) and len(root_ip) == 4
-        assert isinstance(root_subnet_mask, (tuple, list)) and len(root_subnet_mask) == 4
-        assert isinstance(root_gateway, (tuple, list)) and len(root_gateway) == 4
-        assert isinstance(gateway_ip, (tuple, list)) and len(gateway_ip) == 4
-        assert isinstance(root_gateway, (tuple, list)) and len(root_gateway) == 4
-        assert isinstance(router_bssid, (tuple, list)) and len(router_bssid) == 6
-        assert isinstance(group_id, (tuple, list)) and len(group_id) == 6
-        assert 1 <= gateway_port <= 65535
+        if not (isinstance(root_ip, (tuple, list)) and len(root_ip) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(root_ip, (tuple, list)) and len(root_ip) == 4, "
+                f"got root_ip={root_ip!r}"
+            )
+        if not (isinstance(root_subnet_mask, (tuple, list)) and len(root_subnet_mask) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(root_subnet_mask, (tuple, list)) and "
+                "len(root_subnet_mask) == 4, "
+                f"got root_subnet_mask={root_subnet_mask!r}"
+            )
+        if not (isinstance(root_gateway, (tuple, list)) and len(root_gateway) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(root_gateway, (tuple, list)) and len(root_gateway) "
+                "== 4, "
+                f"got root_gateway={root_gateway!r}"
+            )
+        if not (isinstance(gateway_ip, (tuple, list)) and len(gateway_ip) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(gateway_ip, (tuple, list)) and len(gateway_ip) == "
+                "4, "
+                f"got gateway_ip={gateway_ip!r}"
+            )
+        if not (isinstance(root_gateway, (tuple, list)) and len(root_gateway) == 4):
+            raise ValueError(
+                "Invalid argument: expected isinstance(root_gateway, (tuple, list)) and len(root_gateway) "
+                "== 4, "
+                f"got root_gateway={root_gateway!r}"
+            )
+        if not (isinstance(router_bssid, (tuple, list)) and len(router_bssid) == 6):
+            raise ValueError(
+                "Invalid argument: expected isinstance(router_bssid, (tuple, list)) and len(router_bssid) "
+                "== 6, "
+                f"got router_bssid={router_bssid!r}"
+            )
+        if not (isinstance(group_id, (tuple, list)) and len(group_id) == 6):
+            raise ValueError(
+                "Invalid argument: expected isinstance(group_id, (tuple, list)) and len(group_id) == 6, "
+                f"got group_id={group_id!r}"
+            )
+        if not 1 <= gateway_port <= 65535:
+            raise ValueError(
+                f"Invalid argument: expected 1 <= gateway_port <= 65535, got gateway_port={gateway_port!r}"
+            )
         if not isinstance(group_ssid_prefix, bytes):
             group_ssid_prefix = group_ssid_prefix.encode("utf-8")
-        assert len(group_ssid_prefix) <= 16
+        if len(group_ssid_prefix) > 16:
+            raise ValueError(
+                "Invalid argument: expected len(group_ssid_prefix) <= 16, "
+                f"got group_ssid_prefix={group_ssid_prefix!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -3165,7 +3329,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(ssid, bytes):
             ssid = ssid.encode("utf-8")
-        assert len(ssid) <= 32
+        if len(ssid) > 32:
+            raise ValueError(f"Invalid argument: expected len(ssid) <= 32, got ssid={ssid!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -3204,7 +3369,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         """
         if not isinstance(password, bytes):
             password = password.encode("utf-8")
-        assert 8 <= len(password) <= 63
+        if not 8 <= len(password) <= 63:
+            raise ValueError(f"Invalid argument: expected 8 <= len(password) <= 63, got password={password!r}")
 
         await self.ipcon.send_request(
             device=self,

@@ -5,10 +5,11 @@ This file contains all base classes used by Bricks and bricklets
 from __future__ import annotations
 
 import time
+from collections.abc import AsyncGenerator, Iterable
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Iterable, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from .ip_connection_helper import base58decode, pack_payload, uid64_to_uid32, unpack_payload
 
@@ -391,7 +392,8 @@ class BrickletWithMCU(DeviceWithMCU):
         This function is used by Brick Viewer during flashing. It should not be
         necessary to call it in a normal user program.
         """
-        assert pointer >= 0
+        if pointer < 0:
+            raise ValueError(f"Invalid argument: expected pointer >= 0, got pointer={pointer!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -455,7 +457,8 @@ class BrickletWithMCU(DeviceWithMCU):
 
         We recommend that you use Brick Viewer to change the UID.
         """
-        assert uid >= 0
+        if uid < 0:
+            raise ValueError(f"Invalid argument: expected uid >= 0, got uid={uid!r}")
 
         await self.ipcon.send_request(
             device=self,

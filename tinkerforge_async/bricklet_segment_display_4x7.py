@@ -7,9 +7,10 @@ units.
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import Device, DeviceIdentifier, Event, _FunctionID
 from .helper import seconds_to_ms
@@ -98,8 +99,13 @@ class BrickletSegmentDisplay4x7(Device):
         The brightness can be set between 0 (dark) and 7 (bright). The colon
         parameter turns the colon of the display on or off.
         """
-        assert all(0 <= segment <= 127 for segment in segments)
-        assert 0 <= brightness <= 7
+        if not all(0 <= segment <= 127 for segment in segments):
+            raise ValueError(
+                "Invalid argument: expected all(0 <= segment <= 127 for segment in segments), "
+                f"got segments={segments!r}"
+            )
+        if not 0 <= brightness <= 7:
+            raise ValueError(f"Invalid argument: expected 0 <= brightness <= 7, got brightness={brightness!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -146,10 +152,17 @@ class BrickletSegmentDisplay4x7(Device):
 
         You can stop the counter at every time by calling :func:`Set Segments`.
         """
-        assert -999 <= value_from <= 9999
-        assert -999 <= value_to <= 9999
-        assert -999 <= increment <= 9999
-        assert 0 <= seconds_to_ms(length) <= 2**32 - 1
+        if not -999 <= value_from <= 9999:
+            raise ValueError(f"Invalid argument: expected -999 <= value_from <= 9999, got value_from={value_from!r}")
+        if not -999 <= value_to <= 9999:
+            raise ValueError(f"Invalid argument: expected -999 <= value_to <= 9999, got value_to={value_to!r}")
+        if not -999 <= increment <= 9999:
+            raise ValueError(f"Invalid argument: expected -999 <= increment <= 9999, got increment={increment!r}")
+        if not 0 <= seconds_to_ms(length) <= 2**32 - 1:
+            raise ValueError(
+                "Invalid argument: expected 0 <= seconds_to_ms(length) <= 2**32 - 1, "
+                f"got length={length!r}, seconds_to_ms={seconds_to_ms!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,

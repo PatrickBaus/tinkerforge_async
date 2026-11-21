@@ -7,8 +7,9 @@ low-level communication with the Tinkerforge ip connection and also handles conv
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -108,7 +109,8 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
 
         So you will have to find a good sensitivity for your application by trial and error.
         """
-        assert 0 <= sensitivity <= 100
+        if not 0 <= sensitivity <= 100:
+            raise ValueError(f"Invalid argument: expected 0 <= sensitivity <= 100, got sensitivity={sensitivity!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -134,9 +136,12 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         can be controlled with an 8-bit value (0-255). A value of 0 turns the LED off and a value of 255 turns the LED
         to full brightness.
         """
-        assert 0 <= top_left <= 255
-        assert 0 <= top_right <= 255
-        assert 0 <= bottom <= 255
+        if not 0 <= top_left <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= top_left <= 255, got top_left={top_left!r}")
+        if not 0 <= top_right <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= top_right <= 255, got top_right={top_right!r}")
+        if not 0 <= bottom <= 255:
+            raise ValueError(f"Invalid argument: expected 0 <= bottom <= 255, got bottom={bottom!r}")
 
         await self.ipcon.send_request(
             device=self,
