@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -29,9 +29,6 @@ class CallbackID(Enum):
     """
 
     TEMPERATURE = 4
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -57,9 +54,6 @@ class HeaterConfig(Enum):
     ENABLED = 1
 
 
-_HeaterConfig = HeaterConfig  # We need the alias for MyPy type hinting
-
-
 class BrickletTemperatureV2(BrickletWithMCU):
     """
     Measures ambient temperature with 0.2 K accuracy
@@ -69,10 +63,10 @@ class BrickletTemperatureV2(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "Temperature Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
-    HeaterConfig = HeaterConfig
+    HeaterConfig: TypeAlias = HeaterConfig
 
     CALLBACK_FORMATS = {
         CallbackID.TEMPERATURE: "h",
@@ -210,7 +204,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
         return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_heater_configuration(
-        self, heater_config: _HeaterConfig | int = HeaterConfig.DISABLED, response_expected: bool = True
+        self, heater_config: HeaterConfig | int = HeaterConfig.DISABLED, response_expected: bool = True
     ) -> None:
         """
         Enables/disables the heater. The heater can be used to test the sensor.
@@ -225,7 +219,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_heater_configuration(self) -> _HeaterConfig:
+    async def get_heater_configuration(self) -> HeaterConfig:
         """
         Returns the heater configuration as set by :func:`Set Heater Configuration`.
         """
@@ -248,7 +242,7 @@ class BrickletTemperatureV2(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

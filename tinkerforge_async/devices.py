@@ -9,7 +9,7 @@ from collections.abc import AsyncGenerator, Iterable
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .ip_connection_helper import base58decode, pack_payload, uid64_to_uid32, unpack_payload
 
@@ -304,9 +304,6 @@ class BootloaderMode(Enum):
     FIRMWARE_WAIT_FOR_ERASE_AND_REBOOT = 4
 
 
-_BootloaderMode = BootloaderMode  # We need the alias for MyPy type hinting
-
-
 @unique
 class BootloaderStatus(Enum):
     """
@@ -322,9 +319,6 @@ class BootloaderStatus(Enum):
     CRC_MISMATCH = 5
 
 
-_BootloaderStatus = BootloaderStatus  # We need the alias for MyPy type hinting
-
-
 @unique
 class LedConfig(Enum):
     """
@@ -338,9 +332,6 @@ class LedConfig(Enum):
     SHOW_STATUS = 3
 
 
-_LedConfig = LedConfig  # We need the alias for MyPy type hinting
-
-
 class BrickletWithMCU(DeviceWithMCU):
     """
     The new Bricklets feature a microcontroller and this base class implements
@@ -348,11 +339,11 @@ class BrickletWithMCU(DeviceWithMCU):
     """
 
     # Convenience imports, so that the user does not need to additionally import them
-    BootloaderStatus = BootloaderStatus
-    LedConfig = LedConfig
-    BootloaderMode = BootloaderMode
+    BootloaderStatus: TypeAlias = BootloaderStatus
+    LedConfig: TypeAlias = LedConfig
+    BootloaderMode: TypeAlias = BootloaderMode
 
-    async def set_bootloader_mode(self, mode: _BootloaderMode) -> _BootloaderStatus:
+    async def set_bootloader_mode(self, mode: BootloaderMode) -> BootloaderStatus:
         """
         Sets the bootloader mode and returns the status after the requested
         mode change was instigated.
@@ -374,7 +365,7 @@ class BrickletWithMCU(DeviceWithMCU):
         )
         return BootloaderStatus(unpack_payload(payload, "B"))
 
-    async def get_bootloader_mode(self) -> _BootloaderMode:
+    async def get_bootloader_mode(self) -> BootloaderMode:
         """
         Returns the current bootloader mode, see :func:`Set Bootloader Mode`.
         """
@@ -422,7 +413,7 @@ class BrickletWithMCU(DeviceWithMCU):
         return unpack_payload(payload, "B")
 
     async def set_status_led_config(
-        self, config: _LedConfig | int = LedConfig.SHOW_STATUS, response_expected: bool = False
+        self, config: LedConfig | int = LedConfig.SHOW_STATUS, response_expected: bool = False
     ) -> None:
         """
         Sets the status LED configuration. By default, the LED shows communication traffic between Brick and Bricklet,
@@ -441,7 +432,7 @@ class BrickletWithMCU(DeviceWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_status_led_config(self) -> _LedConfig:
+    async def get_status_led_config(self) -> LedConfig:
         """
         Returns the configuration as set by :func:`Set Status LED Config`
         """

@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -38,9 +38,6 @@ class CallbackID(Enum):
     """
 
     CURRENT = 4
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -72,9 +69,6 @@ class ChannelLedStatusConfig(Enum):
     INTENSITY = 1
 
 
-_ChannelLedStatusConfig = ChannelLedStatusConfig  # We need the alias for MyPy type hinting
-
-
 @unique
 class SamplingRate(Enum):
     """
@@ -88,9 +82,6 @@ class SamplingRate(Enum):
     RATE_4_SPS = 3
 
 
-_SamplingRate = SamplingRate  # We need the alias for MyPy type hinting
-
-
 @unique
 class Gain(Enum):
     """
@@ -101,9 +92,6 @@ class Gain(Enum):
     GAIN_2X = 1
     GAIN_4X = 2
     GAIN_8X = 3
-
-
-_Gain = Gain  # We need the alias for MyPy type hinting
 
 
 class GetChannelLEDStatusConfig(NamedTuple):
@@ -122,13 +110,13 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "Industrial Dual 0-20mA Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
     ChannelLedConfig = LedConfig
-    ChannelLedStatusConfig = ChannelLedStatusConfig
-    SamplingRate = SamplingRate
-    Gain = Gain
+    ChannelLedStatusConfig: TypeAlias = ChannelLedStatusConfig
+    SamplingRate: TypeAlias = SamplingRate
+    Gain: TypeAlias = Gain
 
     CALLBACK_FORMATS = {
         CallbackID.CURRENT: "B i",
@@ -282,7 +270,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
             self.__value_to_si(maximum),
         )
 
-    async def set_sample_rate(self, rate: _SamplingRate | int, response_expected: bool = True) -> None:
+    async def set_sample_rate(self, rate: SamplingRate | int, response_expected: bool = True) -> None:
         """
         Sets the sample rate to either 240, 60, 15 or 4 samples per second. The resolution for the rates is 12, 14, 16
         and 18 bit respectively.
@@ -305,7 +293,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_sample_rate(self) -> _SamplingRate:
+    async def get_sample_rate(self) -> SamplingRate:
         """
         Returns the sample rate as set by :func:`Set Sample Rate`.
         """
@@ -315,7 +303,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
 
         return SamplingRate(unpack_payload(payload, "B"))
 
-    async def set_gain(self, gain: _Gain | int, response_expected: bool = True) -> None:
+    async def set_gain(self, gain: Gain | int, response_expected: bool = True) -> None:
         """
         Sets a gain between 1x and 8x. If you want to measure a very small current, you can increase the gain to get
         some more resolution.
@@ -331,7 +319,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_gain(self) -> _Gain:
+    async def get_gain(self) -> Gain:
         """
         Returns the gain as set by :func:`Set Gain`.
         """
@@ -383,7 +371,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         channel: int,
         minimum: float | Decimal,
         maximum: float | Decimal,
-        config: _ChannelLedStatusConfig | int,
+        config: ChannelLedStatusConfig | int,
         response_expected: bool = True,
     ) -> None:
         """
@@ -460,7 +448,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

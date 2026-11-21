@@ -13,7 +13,7 @@ import warnings
 from collections.abc import AsyncGenerator, Iterable
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import BasicCallbackConfiguration
 from .devices import BrickletPort as Port
@@ -295,9 +295,6 @@ class CallbackID(Enum):
     USB_VOLTAGE_REACHED = 64
 
 
-_CallbackID = CallbackID
-
-
 @unique
 class FunctionID(_FunctionID):
     """
@@ -437,9 +434,6 @@ class ExtensionPosition(Enum):
     TOP = 1
 
 
-_ExtensionPosition = ExtensionPosition
-
-
 @unique
 class ExtensionType(Enum):
     """
@@ -451,9 +445,6 @@ class ExtensionType(Enum):
     WIFI = 3
     ETHERNET = 4
     WIFI2 = 5
-
-
-_ExtensionType = ExtensionType  # We need the alias for MyPy type hinting
 
 
 @unique
@@ -472,9 +463,6 @@ class ConnectionType(Enum):
     WIFI_V2 = 7
 
 
-_ConnectionType = ConnectionType  # We need the alias for MyPy type hinting
-
-
 @unique
 class ChibiFrequency(Enum):
     """
@@ -487,9 +475,6 @@ class ChibiFrequency(Enum):
     BPSK40_915_MHZ = 3
 
 
-_ChibiFrequency = ChibiFrequency  # We need the alias for MyPy type hinting
-
-
 @unique
 class Rs485Parity(Enum):
     """
@@ -499,9 +484,6 @@ class Rs485Parity(Enum):
     NONE = "n"
     EVEN = "e"
     ODD = "o"
-
-
-_Rs485Parity = Rs485Parity
 
 
 @unique
@@ -516,9 +498,6 @@ class WifiConnection(Enum):
     ACCESS_POINT_STATIC_IP = 3
     AD_HOC_DHCP = 4
     AD_HOC_STATIC_IP = 5
-
-
-_WifiConnection = WifiConnection  # We need the alias for MyPy type hinting
 
 
 @unique
@@ -672,9 +651,6 @@ class EthernetConnection(Enum):
     STATIC_IP = 1
 
 
-_EthernetConnection = EthernetConnection  # We need the alias for MyPy type hinting
-
-
 class PhyMode(Enum):
     """
     Configures the Wi-Fi mode of the Wi-Fi 2.0 Extension
@@ -683,9 +659,6 @@ class PhyMode(Enum):
     WIFI_B = 0
     WIFI_G = 1
     WIFI_N = 2
-
-
-_PhyMode = PhyMode  # We need the alias for MyPy type hinting
 
 
 @unique
@@ -716,9 +689,6 @@ class WifiApEncryption(Enum):
     WPA_WPA2_PSK = 4
 
 
-_WifiApEncryption = WifiApEncryption  # We need the alias for MyPy type hinting
-
-
 @unique
 class WifiMeshStatus(Enum):
     """
@@ -743,19 +713,19 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
     DEVICE_IDENTIFIER = DeviceIdentifier.BRICK_MASTER
     DEVICE_DISPLAY_NAME = "Master Brick"
 
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
-    ExtensionPosition = ExtensionPosition
-    ExtensionType = ExtensionType
+    ExtensionPosition: TypeAlias = ExtensionPosition
+    ExtensionType: TypeAlias = ExtensionType
     BrickletPort = Port
-    ConnectionType = ConnectionType
-    ChibiFrequency = ChibiFrequency
-    Rs485Parity = Rs485Parity
-    WifiConnection = WifiConnection
-    EthernetConnection = EthernetConnection
-    PhyMode = PhyMode
+    ConnectionType: TypeAlias = ConnectionType
+    ChibiFrequency: TypeAlias = ChibiFrequency
+    Rs485Parity: TypeAlias = Rs485Parity
+    WifiConnection: TypeAlias = WifiConnection
+    EthernetConnection: TypeAlias = EthernetConnection
+    PhyMode: TypeAlias = PhyMode
     WifiClientStatus = WifiClientStatus
-    WifiApEncryption = WifiApEncryption
+    WifiApEncryption: TypeAlias = WifiApEncryption
     WifiMeshStatus = WifiMeshStatus
     ThresholdOption = Threshold
 
@@ -806,7 +776,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         return self.__sensor_to_si(unpack_payload(payload, "H"))
 
     async def set_extension_type(
-        self, extension: _ExtensionPosition, exttype: _ExtensionType | int, response_expected: bool = True
+        self, extension: ExtensionPosition, exttype: ExtensionType | int, response_expected: bool = True
     ) -> None:
         """
         Writes the extension type to the EEPROM of a specified extension.
@@ -840,7 +810,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             response_expected=response_expected,
         )
 
-    async def get_extension_type(self, extension: int) -> _ExtensionType:
+    async def get_extension_type(self, extension: int) -> ExtensionType:
         """
         Returns the type for a given extension as set by :func:`Set Extension Type`.
         """
@@ -1024,7 +994,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         )
         return GetChibiErrorLog(*unpack_payload(payload, "H H H H"))
 
-    async def set_chibi_frequency(self, frequency: _ChibiFrequency | int, response_expected: bool = True) -> None:
+    async def set_chibi_frequency(self, frequency: ChibiFrequency | int, response_expected: bool = True) -> None:
         """
         Sets the Chibi frequency range for the Chibi Extension. Possible values are:
 
@@ -1050,7 +1020,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             response_expected=response_expected,
         )
 
-    async def get_chibi_frequency(self) -> _ChibiFrequency:
+    async def get_chibi_frequency(self) -> ChibiFrequency:
         """
         Returns the frequency value as set by :func:`Set Chibi Frequency`.
         """
@@ -1222,7 +1192,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         return unpack_payload(payload, "H")
 
     async def set_rs485_configuration(
-        self, speed: int, parity: _Rs485Parity, stopbits: int, response_expected: bool = True
+        self, speed: int, parity: Rs485Parity, stopbits: int, response_expected: bool = True
     ) -> None:
         """
         Sets the configuration of the RS485 Extension. Speed is given in baud. The
@@ -1273,7 +1243,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
     async def set_wifi_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         ssid: str | bytes,
-        connection: _WifiConnection | int,
+        connection: WifiConnection | int,
         ip_address: tuple[int, int, int, int] | list[int] = (0, 0, 0, 0),
         subnet_mask: tuple[int, int, int, int] | list[int] = (0, 0, 0, 0),
         gateway: tuple[int, int, int, int] | list[int] = (0, 0, 0, 0),
@@ -2130,7 +2100,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
     async def set_ethernet_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        connection: _EthernetConnection,
+        connection: EthernetConnection,
         ip_address: tuple[int, int, int, int] = (0, 0, 0, 0),
         subnet_mask: tuple[int, int, int, int] = (0, 0, 0, 0),
         gateway: tuple[int, int, int, int] = (0, 0, 0, 0),
@@ -2428,7 +2398,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
         return unpack_payload(payload, "64s")
 
-    async def get_connection_type(self) -> _ConnectionType:
+    async def get_connection_type(self) -> ConnectionType:
         """
         Returns the type of the connection over which this function was called.
 
@@ -2586,7 +2556,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         port: int = 4223,
         websocket_port: int = 4280,
         website_port: int = 80,
-        phy_mode: _PhyMode = PhyMode.WIFI_G,
+        phy_mode: PhyMode = PhyMode.WIFI_G,
         sleep_mode: int = 0,
         website: bool = False,
         response_expected=True,
@@ -2921,7 +2891,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         ip_address: tuple[int, int, int, int] = (0, 0, 0, 0),
         subnet_mask: tuple[int, int, int, int] = (0, 0, 0, 0),
         gateway: tuple[int, int, int, int] = (0, 0, 0, 0),
-        encryption: _WifiApEncryption = WifiApEncryption.WPA2_PSK,
+        encryption: WifiApEncryption = WifiApEncryption.WPA2_PSK,
         hidden: bool = False,
         channel: int = 1,
         mac_address: tuple[int, int, int, int, int, int] = (0, 0, 0, 0, 0, 0),
@@ -3504,7 +3474,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         )
         return GetSPITFPBaudrateConfig(*unpack_payload(payload, "! I"))
 
-    async def get_send_timeout_count(self, communication_method: _ConnectionType | int) -> int:
+    async def get_send_timeout_count(self, communication_method: ConnectionType | int) -> int:
         """
         Returns the timeout count for the different communication methods.
 
@@ -3695,7 +3665,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

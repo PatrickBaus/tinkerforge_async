@@ -11,7 +11,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -33,9 +33,6 @@ class CallbackID(Enum):
     ANALOG_VALUE = 14
     VOLTAGE_REACHED = 15
     ANALOG_VALUE_REACHED = 16
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -76,9 +73,6 @@ class Range(Enum):
     UP_TO_3V = 5
 
 
-_Range = Range  # We need the alias for MyPy type hinting
-
-
 class GetAnalogValueCallbackThreshold(NamedTuple):
     option: Threshold
     minimum: int
@@ -94,9 +88,9 @@ class BrickletAnalogIn(Device):
     DEVICE_DISPLAY_NAME = "Analog In Bricklet"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
-    Range = Range
+    Range: TypeAlias = Range
     ThresholdOption = Threshold
 
     CALLBACK_FORMATS = {
@@ -376,7 +370,7 @@ class BrickletAnalogIn(Device):
         )
         return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_range(self, value: _Range | int = Range.AUTOMATIC, response_expected: bool = True):
+    async def set_range(self, value: Range | int = Range.AUTOMATIC, response_expected: bool = True):
         """
         Sets the measurement range. Possible ranges:
 
@@ -399,7 +393,7 @@ class BrickletAnalogIn(Device):
             response_expected=response_expected,
         )
 
-    async def get_range(self) -> _Range:
+    async def get_range(self) -> Range:
         """
         Returns the measurement range as set by :func:`Set Range`.
 
@@ -453,7 +447,7 @@ class BrickletAnalogIn(Device):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

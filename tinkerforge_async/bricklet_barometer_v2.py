@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -31,9 +31,6 @@ class CallbackID(Enum):
     AIR_PRESSURE = 4
     ALTITUDE = 8
     TEMPERATURE = 12
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -75,9 +72,6 @@ class DataRate(Enum):
     RATE_75HZ = 5
 
 
-_DataRate = DataRate  # We need the alias for MyPy type hinting
-
-
 @unique
 class LowPassFilter(Enum):
     """
@@ -87,9 +81,6 @@ class LowPassFilter(Enum):
     FILTER_OFF = 0
     FILTER_9TH = 1
     FILTER_20TH = 2
-
-
-_LowPassFilter = LowPassFilter  # We need the alias for MyPy type hinting
 
 
 class GetMovingAverageConfiguration(NamedTuple):
@@ -116,11 +107,11 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
     DEVICE_DISPLAY_NAME = "Barometer Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
-    DataRate = DataRate
-    LowPassFilter = LowPassFilter
+    DataRate: TypeAlias = DataRate
+    LowPassFilter: TypeAlias = LowPassFilter
 
     CALLBACK_FORMATS = {
         CallbackID.AIR_PRESSURE: "i",
@@ -570,8 +561,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
     async def set_sensor_configuration(
         self,
-        data_rate: _DataRate | int = DataRate.RATE_50HZ,
-        air_pressure_low_pass_filter: _LowPassFilter | int = LowPassFilter.FILTER_9TH,
+        data_rate: DataRate | int = DataRate.RATE_50HZ,
+        air_pressure_low_pass_filter: LowPassFilter | int = LowPassFilter.FILTER_9TH,
         response_expected: bool = True,
     ):
         """
@@ -658,7 +649,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -30,9 +30,6 @@ class CallbackID(Enum):
 
     HUMIDITY = 4
     TEMPERATURE = 8
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -65,9 +62,6 @@ class HeaterConfig(Enum):
     ENABLED = 1
 
 
-_HeaterConfig = HeaterConfig  # We need the alias for MyPy type hinting
-
-
 @unique
 class SamplesPerSecond(Enum):
     """
@@ -80,9 +74,6 @@ class SamplesPerSecond(Enum):
     SPS_1 = 3
     SPS_02 = 4
     SPS_01 = 5
-
-
-_SamplesPerSecond = SamplesPerSecond  # We need the alias for MyPy type hinting
 
 
 class GetMovingAverageConfiguration(NamedTuple):
@@ -99,11 +90,11 @@ class BrickletHumidityV2(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "Humidity Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
-    HeaterConfig = HeaterConfig
-    SamplesPerSecond = SamplesPerSecond
+    HeaterConfig: TypeAlias = HeaterConfig
+    SamplesPerSecond: TypeAlias = SamplesPerSecond
 
     CALLBACK_FORMATS = {
         CallbackID.HUMIDITY: "H",
@@ -346,7 +337,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_heater_configuration(
-        self, heater_config: _HeaterConfig | int = HeaterConfig.DISABLED, response_expected: bool = True
+        self, heater_config: HeaterConfig | int = HeaterConfig.DISABLED, response_expected: bool = True
     ) -> None:
         """
         Enables/disables the heater. The heater can be used to dry the sensor in
@@ -364,7 +355,7 @@ class BrickletHumidityV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_heater_configuration(self) -> _HeaterConfig:
+    async def get_heater_configuration(self) -> HeaterConfig:
         """
         Returns the heater configuration as set by :func:`Set Heater Configuration`.
         """
@@ -435,7 +426,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         return GetMovingAverageConfiguration(*unpack_payload(payload, "H H"))
 
     async def set_samples_per_second(
-        self, sps: _SamplesPerSecond | int = SamplesPerSecond.SPS_1, response_expected: bool = True
+        self, sps: SamplesPerSecond | int = SamplesPerSecond.SPS_1, response_expected: bool = True
     ) -> None:
         """
         Sets the samples per second that are gathered by the humidity/temperature sensor HDC1080.
@@ -456,7 +447,7 @@ class BrickletHumidityV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_samples_per_second(self) -> _SamplesPerSecond:
+    async def get_samples_per_second(self) -> SamplesPerSecond:
         """
         Sets the samples per second that are gathered by the humidity/temperature sensor HDC1080.
         We added this function since we found out that a high measurement frequency can lead to
@@ -496,7 +487,7 @@ class BrickletHumidityV2(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

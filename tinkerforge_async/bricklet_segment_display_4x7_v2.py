@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator, Iterable
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
 from .helper import seconds_to_ms
@@ -28,9 +28,6 @@ class CallbackID(Enum):
     """
 
     COUNTER_FINISHED = 10
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -65,7 +62,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "Segment Display 4x7 Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
 
     CALLBACK_FORMATS = {
@@ -264,7 +261,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

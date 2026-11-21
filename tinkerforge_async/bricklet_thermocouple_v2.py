@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -30,11 +30,6 @@ class CallbackID(Enum):
 
     TEMPERATURE = 4
     ERROR_STATE = 8
-
-
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_CallbackID = CallbackID
 
 
 @unique
@@ -64,11 +59,6 @@ class Averaging(Enum):
     AVERAGING_16 = 16
 
 
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_Averaging = Averaging
-
-
 @unique
 class SensorType(Enum):
     """
@@ -87,11 +77,6 @@ class SensorType(Enum):
     TYPE_G32 = 9
 
 
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_SensorType = SensorType
-
-
 class LineFilter(Enum):
     """
     Selects the notch filter to filter out the mains frequency hum
@@ -99,11 +84,6 @@ class LineFilter(Enum):
 
     FREQUENCY_50HZ = 0
     FREQUENCY_60HZ = 1
-
-
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_LineFilter = LineFilter
 
 
 class GetConfiguration(NamedTuple):
@@ -131,12 +111,12 @@ class BrickletThermocoupleV2(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "Thermocouple Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
-    Averaging = Averaging
-    SensorType = SensorType
-    LineFilter = LineFilter
+    Averaging: TypeAlias = Averaging
+    SensorType: TypeAlias = SensorType
+    LineFilter: TypeAlias = LineFilter
 
     CALLBACK_FORMATS = {CallbackID.TEMPERATURE: "i", CallbackID.ERROR_STATE: "! !"}
 
@@ -146,20 +126,20 @@ class BrickletThermocoupleV2(BrickletWithMCU):
     }
 
     @property
-    def sensor_type(self) -> _SensorType:
+    def sensor_type(self) -> SensorType:
         """
         Return the type of sensor. Either PT100 oder PT1000 as a SensorType enum.
         """
         return self.__sensor_type
 
     @sensor_type.setter
-    def sensor_type(self, value: _SensorType):
+    def sensor_type(self, value: SensorType):
         if not isinstance(value, SensorType):
             self.__sensor_type: SensorType = SensorType(value)
         else:
             self.__sensor_type = value
 
-    def __init__(self, uid, ipcon: IPConnectionAsync, sensor_type: _SensorType = SensorType.TYPE_K) -> None:
+    def __init__(self, uid, ipcon: IPConnectionAsync, sensor_type: SensorType = SensorType.TYPE_K) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -301,9 +281,9 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
     async def set_configuration(
         self,
-        averaging: _Averaging = Averaging.AVERAGING_16,
-        sensor_type: _SensorType = SensorType.TYPE_K,
-        line_filter: _LineFilter = LineFilter.FREQUENCY_50HZ,
+        averaging: Averaging = Averaging.AVERAGING_16,
+        sensor_type: SensorType = SensorType.TYPE_K,
+        line_filter: LineFilter = LineFilter.FREQUENCY_50HZ,
         response_expected: bool = True,
     ) -> None:
         """
@@ -394,7 +374,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

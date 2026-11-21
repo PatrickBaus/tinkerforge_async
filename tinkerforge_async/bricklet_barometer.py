@@ -11,7 +11,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -33,9 +33,6 @@ class CallbackID(Enum):
     ALTITUDE = 16
     AIR_PRESSURE_REACHED = 17
     ALTITUDE_REACHED = 18
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -78,7 +75,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
     DEVICE_DISPLAY_NAME = "Barometer Bricklet"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
 
@@ -506,7 +503,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

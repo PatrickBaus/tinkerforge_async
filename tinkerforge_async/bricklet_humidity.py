@@ -11,7 +11,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -33,9 +33,6 @@ class CallbackID(Enum):
     ANALOG_VALUE = 14
     HUMIDITY_REACHED = 15
     ANALOG_VALUE_REACHED = 16
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -67,7 +64,7 @@ class BrickletHumidity(Device):
     DEVICE_DISPLAY_NAME = "Humidity Bricklet"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
 
@@ -380,7 +377,7 @@ class BrickletHumidity(Device):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

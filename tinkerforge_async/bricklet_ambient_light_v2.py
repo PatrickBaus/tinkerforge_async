@@ -11,7 +11,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -31,9 +31,6 @@ class CallbackID(Enum):
 
     ILLUMINANCE = 10
     ILLUMINANCE_REACHED = 11
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -69,9 +66,6 @@ class IlluminanceRange(Enum):
     RANGE_600LUX = 5
 
 
-_IlluminanceRange = IlluminanceRange  # We need the alias for MyPy type hinting
-
-
 @unique
 class IntegrationTime(Enum):
     """
@@ -88,9 +82,6 @@ class IntegrationTime(Enum):
     TIME_400MS = 7
 
 
-_IntegrationTime = IntegrationTime  # We need the alias for MyPy type hinting
-
-
 class GetConfiguration(NamedTuple):
     illuminance_range: IlluminanceRange
     integration_time: IntegrationTime
@@ -105,10 +96,10 @@ class BrickletAmbientLightV2(Device):
     DEVICE_DISPLAY_NAME = "Ambient Light Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
-    IlluminanceRange = IlluminanceRange
-    IntegrationTime = IntegrationTime
+    IlluminanceRange: TypeAlias = IlluminanceRange
+    IntegrationTime: TypeAlias = IntegrationTime
     ThresholdOption = Threshold
 
     CALLBACK_FORMATS = {
@@ -291,8 +282,8 @@ class BrickletAmbientLightV2(Device):
 
     async def set_configuration(
         self,
-        illuminance_range: _IlluminanceRange | int,
-        integration_time: _IntegrationTime | int,
+        illuminance_range: IlluminanceRange | int,
+        integration_time: IntegrationTime | int,
         response_expected: bool = True,
     ) -> None:
         """
@@ -354,7 +345,7 @@ class BrickletAmbientLightV2(Device):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

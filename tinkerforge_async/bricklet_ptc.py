@@ -11,7 +11,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -34,11 +34,6 @@ class CallbackID(Enum):
     RESISTANCE = 15
     RESISTANCE_REACHED = 16
     SENSOR_CONNECTED = 24
-
-
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_CallbackID = CallbackID
 
 
 @unique
@@ -78,11 +73,6 @@ class LineFilter(Enum):
     FREQUENCY_60HZ = 1
 
 
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_LineFilter = LineFilter
-
-
 @unique
 class WireMode(Enum):
     """
@@ -96,11 +86,6 @@ class WireMode(Enum):
     WIRE_4 = 4
 
 
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_WireMode = WireMode
-
-
 @unique
 class SensorType(Enum):
     """
@@ -109,11 +94,6 @@ class SensorType(Enum):
 
     PT_100 = 0
     PT_1000 = 1
-
-
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_SensorType = SensorType
 
 
 class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
@@ -125,12 +105,12 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
     DEVICE_DISPLAY_NAME = "PTC Bricklet"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
-    LineFilter = LineFilter
-    WireMode = WireMode
-    SensorType = SensorType
+    LineFilter: TypeAlias = LineFilter
+    WireMode: TypeAlias = WireMode
+    SensorType: TypeAlias = SensorType
 
     CALLBACK_FORMATS = {
         CallbackID.TEMPERATURE: "i",
@@ -147,7 +127,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
     }
 
     @property
-    def sensor_type(self) -> _SensorType:
+    def sensor_type(self) -> SensorType:
         """
         Return the type of sensor. Either PT100 oder PT1000 as a SensorType
         enum.
@@ -155,10 +135,10 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         return self.__sensor_type
 
     @sensor_type.setter
-    def sensor_type(self, value: _SensorType | int):
+    def sensor_type(self, value: SensorType | int):
         self.__sensor_type = SensorType(value)
 
-    def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: _SensorType | int = SensorType.PT_100) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: SensorType | int = SensorType.PT_100) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -458,7 +438,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         return ms_to_seconds(unpack_payload(payload, "I"))
 
     async def set_noise_rejection_filter(
-        self, line_filter: _LineFilter | int = LineFilter.FREQUENCY_50HZ, response_expected: bool = True
+        self, line_filter: LineFilter | int = LineFilter.FREQUENCY_50HZ, response_expected: bool = True
     ) -> None:
         """
         Sets the noise rejection filter to either 50Hz (0) or 60Hz (1).
@@ -477,7 +457,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
             response_expected=response_expected,
         )
 
-    async def get_noise_rejection_filter(self) -> _LineFilter:
+    async def get_noise_rejection_filter(self) -> LineFilter:
         """
         Returns the noise rejection filter option as set by
         :func:`Set Noise Rejection Filter`
@@ -500,7 +480,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         )
         return unpack_payload(payload, "!")
 
-    async def set_wire_mode(self, mode: _WireMode | int = WireMode.WIRE_2, response_expected: bool = True) -> None:
+    async def set_wire_mode(self, mode: WireMode | int = WireMode.WIRE_2, response_expected: bool = True) -> None:
         """
         Sets the wire mode of the sensor. Possible values are 2, 3 and 4 which
         correspond to 2-, 3- and 4-wire sensors. The value has to match the jumper
@@ -517,7 +497,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
             response_expected=response_expected,
         )
 
-    async def get_wire_mode(self) -> _WireMode:
+    async def get_wire_mode(self) -> WireMode:
         """
         Returns the wire mode as set by :func:`Set Wire Mode`
         """
@@ -580,7 +560,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

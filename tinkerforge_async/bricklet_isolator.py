@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import (
     BrickletWithMCU,
@@ -35,9 +35,6 @@ class CallbackID(Enum):
     """
 
     STATISTICS = 9
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -72,7 +69,7 @@ class BrickletIsolator(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "Isolator Bricklet"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
 
     CALLBACK_FORMATS = {
@@ -287,7 +284,7 @@ class BrickletIsolator(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

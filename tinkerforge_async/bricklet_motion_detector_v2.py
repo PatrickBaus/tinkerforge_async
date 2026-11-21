@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -26,9 +26,6 @@ class CallbackID(Enum):
 
     MOTION_DETECTED = 6
     DETECTION_CYCLE_ENDED = 7
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -59,7 +56,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "Motion Detector Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
 
     CALLBACK_FORMATS = {
@@ -169,7 +166,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

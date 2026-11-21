@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -40,9 +40,6 @@ class CallbackID(Enum):
 
     VOLTAGE = 4
     ALL_VOLTAGES = 17
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -78,9 +75,6 @@ class ChannelLedStatusConfig(Enum):
     INTENSITY = 1
 
 
-_ChannelLedStatusConfig = ChannelLedStatusConfig  # We need the alias for MyPy type hinting
-
-
 @unique
 class SamplingRate(Enum):
     """
@@ -95,9 +89,6 @@ class SamplingRate(Enum):
     RATE_4_SPS = 5
     RATE_2_SPS = 6
     RATE_1_SPS = 7
-
-
-_SamplingRate = SamplingRate  # We need the alias for MyPy type hinting
 
 
 class GetCalibration(NamedTuple):
@@ -120,12 +111,12 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "Industrial Dual Analog In Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
     ChannelLedConfig = LedConfig
-    ChannelLedStatusConfig = ChannelLedStatusConfig
-    SamplingRate = SamplingRate
+    ChannelLedStatusConfig: TypeAlias = ChannelLedStatusConfig
+    SamplingRate: TypeAlias = SamplingRate
 
     CALLBACK_FORMATS = {
         CallbackID.VOLTAGE: "B i",
@@ -336,7 +327,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         period, value_has_to_change = unpack_payload(payload, "I !")
         return SimpleCallbackConfiguration(ms_to_seconds(period), value_has_to_change)
 
-    async def set_sample_rate(self, rate: _SamplingRate | int, response_expected: bool = True) -> None:
+    async def set_sample_rate(self, rate: SamplingRate | int, response_expected: bool = True) -> None:
         """
         Sets the sample rate. The sample rate can be between 1 sample per second and 976 samples per second. Decreasing
         the sample rate will also decrease the noise on the data.
@@ -350,7 +341,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_sample_rate(self) -> _SamplingRate:
+    async def get_sample_rate(self) -> SamplingRate:
         """
         Returns the sample rate as set by :func:`Set Sample Rate`.
         """
@@ -446,7 +437,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         channel: int,
         minimum: float | Decimal,
         maximum: float | Decimal,
-        config: _ChannelLedStatusConfig | int,
+        config: ChannelLedStatusConfig | int,
         response_expected: bool = True,
     ) -> None:
         """
@@ -518,7 +509,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()
