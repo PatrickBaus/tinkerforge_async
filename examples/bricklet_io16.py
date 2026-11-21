@@ -3,6 +3,7 @@
 """
 An example to demonstrate most of the capabilities of the Tinkerforge IO-16 Bricklet.
 """
+
 import asyncio
 import warnings
 

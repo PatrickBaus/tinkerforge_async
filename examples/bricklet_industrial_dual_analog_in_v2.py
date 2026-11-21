@@ -3,6 +3,7 @@
 """
 An example to demonstrate most of the capabilities of the Tinkerforge Industrial Dual Analog In Bricklet 2.0.
 """
+
 import asyncio
 import warnings
 

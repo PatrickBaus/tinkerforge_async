@@ -3,6 +3,7 @@
 """
 An example to demonstrate most of the capabilities of the Tinkerforge Ambient Light Bricklet 3.0.
 """
+
 import asyncio
 import warnings
 
