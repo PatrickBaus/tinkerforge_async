@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -29,9 +29,6 @@ class CallbackID(Enum):
     """
 
     ILLUMINANCE = 4
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -63,9 +60,6 @@ class IlluminanceRange(Enum):
     LUX600 = 5
 
 
-_IlluminanceRange = IlluminanceRange  # We need the alias for MyPy type hinting
-
-
 @unique
 class IntegrationTime(Enum):
     """
@@ -82,9 +76,6 @@ class IntegrationTime(Enum):
     T400MS = 7
 
 
-_IntegrationTime = IntegrationTime  # We need the alias for MyPy type hinting
-
-
 class GetConfiguration(NamedTuple):
     illuminance_range: IlluminanceRange
     integration_time: IntegrationTime
@@ -99,11 +90,11 @@ class BrickletAmbientLightV3(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "Ambient Light Bricklet 3.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
-    IlluminanceRange = IlluminanceRange
-    IntegrationTime = IntegrationTime
+    IlluminanceRange: TypeAlias = IlluminanceRange
+    IntegrationTime: TypeAlias = IntegrationTime
 
     CALLBACK_FORMATS = {
         CallbackID.ILLUMINANCE: "I",
@@ -244,8 +235,8 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
     async def set_configuration(
         self,
-        illuminance_range: _IlluminanceRange | int = IlluminanceRange.LUX8000,
-        integration_time: _IntegrationTime | int = IntegrationTime.T150MS,
+        illuminance_range: IlluminanceRange | int = IlluminanceRange.LUX8000,
+        integration_time: IntegrationTime | int = IntegrationTime.T150MS,
         response_expected: bool = True,
     ) -> None:
         """
@@ -307,7 +298,7 @@ class BrickletAmbientLightV3(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

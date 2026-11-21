@@ -11,6 +11,7 @@ import asyncio
 import typing
 from decimal import Decimal
 from enum import Enum, unique
+from typing import TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -30,9 +31,6 @@ class CallbackID(Enum):
 
     MOISTURE = 8
     MOISTURE_REACHED = 9
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -61,7 +59,7 @@ class BrickletMoisture(Device):
     DEVICE_DISPLAY_NAME = "Moisture Bricklet"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
 
@@ -269,7 +267,7 @@ class BrickletMoisture(Device):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> typing.AsyncGenerator[Event, None]:
         registered_events = set()

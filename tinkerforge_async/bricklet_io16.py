@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator, Generator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -30,9 +30,6 @@ class CallbackID(Enum):
 
     INTERRUPT = 9
     MONOFLOP_DONE = 12
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -67,9 +64,6 @@ class Port(Enum):
     B = "b"
 
 
-_Port = Port  # We need the alias for MyPy type hinting
-
-
 @unique
 class Direction(Enum):
     """
@@ -78,9 +72,6 @@ class Direction(Enum):
 
     IN = "i"
     OUT = "o"
-
-
-_Direction = Direction  # We need the alias for MyPy type hinting
 
 
 @unique
@@ -93,9 +84,6 @@ class InputConfiguration(Enum):
     FLOATING = False
 
 
-_InputConfiguration = InputConfiguration
-
-
 @unique
 class OutputConfiguration(Enum):
     """
@@ -104,9 +92,6 @@ class OutputConfiguration(Enum):
 
     HIGH = True
     LOW = False
-
-
-_OutputConfiguration = OutputConfiguration
 
 
 @unique
@@ -118,9 +103,6 @@ class EdgeType(Enum):
     RISING = 0
     FALLING = 1
     BOTH = 2
-
-
-_EdgeType = EdgeType  # We need the alias for MyPy type hinting
 
 
 class GetPortConfiguration(NamedTuple):
@@ -148,13 +130,13 @@ class BrickletIO16(Device):
     DEVICE_DISPLAY_NAME = "IO-16 Bricklet"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
-    Port = Port
-    Direction = Direction
-    InputConfiguration = InputConfiguration
-    OutputConfiguration = OutputConfiguration
-    EdgeType = EdgeType
+    Port: TypeAlias = Port
+    Direction: TypeAlias = Direction
+    InputConfiguration: TypeAlias = InputConfiguration
+    OutputConfiguration: TypeAlias = OutputConfiguration
+    EdgeType: TypeAlias = EdgeType
 
     CALLBACK_FORMATS = {
         CallbackID.INTERRUPT: "c B B",
@@ -172,7 +154,7 @@ class BrickletIO16(Device):
 
         self.api_version = (2, 0, 1)
 
-    async def set_port(self, port: _Port | str, value_mask: int, response_expected: bool = True) -> None:
+    async def set_port(self, port: Port | str, value_mask: int, response_expected: bool = True) -> None:
         """
         Sets the output value (high or low) for a port ("a" or "b") with a bitmask (8bit). A 1 in the bitmask means high
          and a 0 in the bitmask means low.
@@ -200,7 +182,7 @@ class BrickletIO16(Device):
             response_expected=response_expected,
         )
 
-    async def get_port(self, port: _Port | str) -> int:
+    async def get_port(self, port: Port | str) -> int:
         """
         Returns a bitmask of the values that are currently measured on the specified port. This function works if the
         pin is configured to input as well as if it is configured to output.
@@ -218,10 +200,10 @@ class BrickletIO16(Device):
 
     async def set_port_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        port: _Port | str,
+        port: Port | str,
         selection_mask: int,
-        direction: _Direction | str,
-        value: _InputConfiguration | _OutputConfiguration | bool = False,
+        direction: Direction | str,
+        value: InputConfiguration | OutputConfiguration | bool = False,
         response_expected: bool = True,
     ) -> None:
         """
@@ -266,7 +248,7 @@ class BrickletIO16(Device):
             response_expected=response_expected,
         )
 
-    async def get_port_configuration(self, port: _Port | str) -> GetPortConfiguration:
+    async def get_port_configuration(self, port: Port | str) -> GetPortConfiguration:
         """
         Returns a direction bitmask and a value bitmask for the specified port. A 1 in the direction bitmask means
         input and a 0 in the bitmask means output.
@@ -345,7 +327,7 @@ class BrickletIO16(Device):
         )
         return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_port_interrupt(self, port: _Port | str, interrupt_mask: int, response_expected: bool = True) -> None:
+    async def set_port_interrupt(self, port: Port | str, interrupt_mask: int, response_expected: bool = True) -> None:
         """
         Sets the pins on which an interrupt is activated with a bitmask. Interrupts are triggered on changes of the
         voltage level of the pin, i.e. changes from high to low and low to high.
@@ -370,7 +352,7 @@ class BrickletIO16(Device):
             response_expected=response_expected,
         )
 
-    async def get_port_interrupt(self, port: _Port | str) -> int:
+    async def get_port_interrupt(self, port: Port | str) -> int:
         """
         Returns the interrupt bitmask for the specified port as set by :func:`Set Port Interrupt`.
         """
@@ -387,7 +369,7 @@ class BrickletIO16(Device):
 
     async def set_port_monoflop(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        port: _Port | str,
+        port: Port | str,
         selection_mask: int,
         value_mask: int,
         time: float | Decimal,
@@ -433,7 +415,7 @@ class BrickletIO16(Device):
             response_expected=response_expected,
         )
 
-    async def get_port_monoflop(self, port: _Port | str, pin: int) -> GetPortMonoflop:
+    async def get_port_monoflop(self, port: Port | str, pin: int) -> GetPortMonoflop:
         """
         Returns the interrupt bitmask for the specified port as set by :func:`Set Port Interrupt`.
         """
@@ -452,7 +434,7 @@ class BrickletIO16(Device):
         return GetPortMonoflop(value, ms_to_seconds(time), ms_to_seconds(time_remaining))
 
     async def set_selected_values(
-        self, port: _Port | str, selection_mask: int, value_mask: int, response_expected: bool = True
+        self, port: Port | str, selection_mask: int, value_mask: int, response_expected: bool = True
     ) -> None:
         """
         Sets the output value (high or low) for a port ("a" or "b" with a bitmask, according to the selection mask. The
@@ -511,7 +493,7 @@ class BrickletIO16(Device):
     async def set_edge_count_config(
         self,
         pin: int,
-        edge_type: _EdgeType | int = EdgeType.RISING,
+        edge_type: EdgeType | int = EdgeType.RISING,
         debounce: float | Decimal = Decimal("0.1"),
         response_expected: bool = True,
     ) -> None:
@@ -578,7 +560,7 @@ class BrickletIO16(Device):
 
     async def read_events(  # pylint: disable=too-many-branches
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         if not (events is None or sids is None):

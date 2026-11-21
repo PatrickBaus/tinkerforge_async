@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -34,9 +34,6 @@ class CallbackID(Enum):
     READ = 12
     ERROR_COUNT = 13
     FRAME_READABLE = 16
-
-
-_CallbackID = CallbackID
 
 
 @unique
@@ -71,9 +68,6 @@ class Parity(Enum):
     EVEN = 2
 
 
-_Parity = Parity  # We need the alias for MyPy type hinting
-
-
 @unique
 class StopBits(Enum):
     """
@@ -83,9 +77,6 @@ class StopBits(Enum):
 
     ONE = 1
     TWO = 2
-
-
-_StopBits = StopBits  # We need the alias for MyPy type hinting
 
 
 @unique
@@ -100,9 +91,6 @@ class WordLength(Enum):
     LENGTH_8 = 8
 
 
-_WordLength = WordLength
-
-
 @unique
 class FlowControl(Enum):
     """
@@ -112,9 +100,6 @@ class FlowControl(Enum):
     OFF = 0
     SOFTWARE = 1
     HARDWARE = 2
-
-
-_FlowControl = FlowControl
 
 
 class GetConfiguration(NamedTuple):
@@ -148,12 +133,12 @@ class BrickletRS232V2(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "RS232 Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
-    Parity = Parity
-    StopBits = StopBits
-    WordLength = WordLength
-    FlowControl = FlowControl
+    Parity: TypeAlias = Parity
+    StopBits: TypeAlias = StopBits
+    WordLength: TypeAlias = WordLength
+    FlowControl: TypeAlias = FlowControl
 
     CALLBACK_FORMATS = {
         CallbackID.READ: "H H 60B",
@@ -267,10 +252,10 @@ class BrickletRS232V2(BrickletWithMCU):
     async def set_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         baudrate: int = 115200,
-        parity: _Parity | int = Parity.NONE,
-        stopbits: _StopBits | int = StopBits.ONE,
-        wordlength: _WordLength | int = WordLength.LENGTH_8,
-        flowcontrol: _FlowControl | int = FlowControl.OFF,
+        parity: Parity | int = Parity.NONE,
+        stopbits: StopBits | int = StopBits.ONE,
+        wordlength: WordLength | int = WordLength.LENGTH_8,
+        flowcontrol: FlowControl | int = FlowControl.OFF,
         response_expected: bool = True,
     ) -> None:
         """
@@ -509,7 +494,7 @@ class BrickletRS232V2(BrickletWithMCU):
 
     async def read_events(  # pylint: disable=too-many-branches
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()

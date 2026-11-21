@@ -45,9 +45,6 @@ class CallbackID(Enum):
     EDGE_COUNT = 20
 
 
-_CallbackID: TypeAlias = CallbackID  # pylint: disable=invalid-name
-
-
 @unique
 class FunctionID(_FunctionID):
     """
@@ -82,9 +79,6 @@ class Direction(Enum):
     OUT = "o"
 
 
-_Direction = Direction
-
-
 @unique
 class EdgeType(Enum):
     """
@@ -94,9 +88,6 @@ class EdgeType(Enum):
     RISING = 0
     FALLING = 1
     BOTH = 2
-
-
-_EdgeType = EdgeType
 
 
 class _EdgeCountTaskConfig(TypedDict):
@@ -142,10 +133,10 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     DEVICE_DISPLAY_NAME = "IO-4 Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
-    Direction = Direction
-    EdgeType = EdgeType
+    Direction: TypeAlias = Direction
+    EdgeType: TypeAlias = EdgeType
 
     CALLBACK_FORMATS = {
         CallbackID.INPUT_VALUE: "B ! !",
@@ -247,7 +238,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     async def set_configuration(
         self,
         channel: int,
-        direction: _Direction | str = Direction.IN,
+        direction: Direction | str = Direction.IN,
         value: bool = True,
         response_expected: bool = True,
     ) -> None:
@@ -575,7 +566,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     async def set_edge_count_configuration(
         self,
         channel: int,
-        edge_type: _EdgeType | int = EdgeType.RISING,
+        edge_type: EdgeType | int = EdgeType.RISING,
         debounce: float | Decimal = Decimal("0.1"),
         response_expected: bool = True,
     ) -> None:
@@ -717,7 +708,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
 
     async def __read_callback_events(
         self,
-        events: set[_CallbackID],
+        events: set[CallbackID],
         sids: tuple[int, ...] | list[int],
     ) -> AsyncGenerator[Event, None]:
         """
@@ -769,7 +760,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         if not (events is None or sids is None):
@@ -780,7 +771,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         sids = tuple() if sids is None else sids
 
         registered_edge_count_sids = tuple(sid for sid in sids if sid in range(5, 5 + 4))
-        registered_callback_events: set[_CallbackID] = set()
+        registered_callback_events: set[CallbackID] = set()
 
         if events:
             for event in events:

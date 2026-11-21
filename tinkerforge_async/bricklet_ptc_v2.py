@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -31,11 +31,6 @@ class CallbackID(Enum):
     TEMPERATURE = 4
     RESISTANCE = 8
     SENSOR_CONNECTED = 18
-
-
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_CallbackID = CallbackID
 
 
 @unique
@@ -72,11 +67,6 @@ class LineFilter(Enum):
     FREQUENCY_60HZ = 1
 
 
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_LineFilter = LineFilter
-
-
 @unique
 class WireMode(Enum):
     """
@@ -89,11 +79,6 @@ class WireMode(Enum):
     WIRE_4 = 4
 
 
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_WireMode = WireMode  # We need the alias for MyPy type hinting
-
-
 @unique
 class SensorType(Enum):
     """
@@ -102,11 +87,6 @@ class SensorType(Enum):
 
     PT_100 = 0
     PT_1000 = 1
-
-
-# We need the alias for MyPy type hinting
-# See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
-_SensorType = SensorType
 
 
 class GetMovingAverageConfiguration(NamedTuple):
@@ -123,12 +103,12 @@ class BrickletPtcV2(BrickletWithMCU):
     DEVICE_DISPLAY_NAME = "PTC Bricklet 2.0"
 
     # Convenience imports, so that the user does not need to additionally import them
-    CallbackID = CallbackID
+    CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
-    LineFilter = LineFilter
-    WireMode = WireMode
-    SensorType = SensorType
+    LineFilter: TypeAlias = LineFilter
+    WireMode: TypeAlias = WireMode
+    SensorType: TypeAlias = SensorType
 
     CALLBACK_FORMATS = {
         CallbackID.TEMPERATURE: "i",
@@ -143,20 +123,20 @@ class BrickletPtcV2(BrickletWithMCU):
     }
 
     @property
-    def sensor_type(self) -> _SensorType:
+    def sensor_type(self) -> SensorType:
         """
         Return the type of sensor. Either PT100 oder PT1000 as a SensorType enum.
         """
         return self.__sensor_type
 
     @sensor_type.setter
-    def sensor_type(self, value: _SensorType):
+    def sensor_type(self, value: SensorType):
         if not isinstance(value, SensorType):
             self.__sensor_type: SensorType = SensorType(value)
         else:
             self.__sensor_type = value
 
-    def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: _SensorType = SensorType.PT_100) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: SensorType = SensorType.PT_100) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to the IP connection *ipcon*.
         """
@@ -389,7 +369,7 @@ class BrickletPtcV2(BrickletWithMCU):
         return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_noise_rejection_filter(
-        self, line_filter: _LineFilter = LineFilter.FREQUENCY_50HZ, response_expected: bool = True
+        self, line_filter: LineFilter = LineFilter.FREQUENCY_50HZ, response_expected: bool = True
     ):
         """
         Sets the noise rejection filter to either 50Hz (0) or 60Hz (1). Noise from 50Hz or 60Hz power sources (including
@@ -407,7 +387,7 @@ class BrickletPtcV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_noise_rejection_filter(self) -> _LineFilter:
+    async def get_noise_rejection_filter(self) -> LineFilter:
         """
         Returns the noise rejection filter option as set by :func:`Set Noise Rejection Filter`
         """
@@ -431,7 +411,7 @@ class BrickletPtcV2(BrickletWithMCU):
         )
         return unpack_payload(payload, "!")
 
-    async def set_wire_mode(self, mode: _WireMode | int = WireMode.WIRE_2, response_expected: bool = True) -> None:
+    async def set_wire_mode(self, mode: WireMode | int = WireMode.WIRE_2, response_expected: bool = True) -> None:
         """
         Sets the wire mode of the sensor. Possible values are 2, 3 and 4 which correspond to 2-, 3- and 4-wire sensors.
         The value has to match the jumper configuration on the Bricklet.
@@ -448,7 +428,7 @@ class BrickletPtcV2(BrickletWithMCU):
             response_expected=response_expected,
         )
 
-    async def get_wire_mode(self) -> _WireMode:
+    async def get_wire_mode(self) -> WireMode:
         """
         Returns the wire mode as set by :func:`Set Wire Mode`
         """
@@ -568,7 +548,7 @@ class BrickletPtcV2(BrickletWithMCU):
 
     async def read_events(
         self,
-        events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
+        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
         registered_events = set()
