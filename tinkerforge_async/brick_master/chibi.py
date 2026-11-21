@@ -153,7 +153,7 @@ class ChibiExtension(Device):
                 f"Invalid argument: expected isinstance(addresses, (tuple, list)), got addresses={addresses!r}"
             )
         addresses = list(addresses)
-        if addresses[-1] != 0:
+        if not addresses or addresses[-1] != 0:
             addresses += [
                 0,
             ]  # add a trailing [0], because it is the delimiter

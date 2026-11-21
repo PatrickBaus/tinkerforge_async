@@ -267,7 +267,7 @@ class BrickletHumidity(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_HUMIDITY_CALLBACK_THRESHOLD, response_expected=True
         )
-        option, minimum, maximum = unpack_payload(payload, "c h h")
+        option, minimum, maximum = unpack_payload(payload, "c H H")
         option = Threshold(option)
         minimum, maximum = HUMIDITY.to_si(minimum), HUMIDITY.to_si(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)

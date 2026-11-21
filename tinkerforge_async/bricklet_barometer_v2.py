@@ -472,7 +472,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         return GetMovingAverageConfiguration(*unpack_payload(payload, "H H"))
 
     async def set_reference_air_pressure(
-        self, air_pressure: float | Decimal = Decimal("1013.250"), response_expected: bool = True
+        self, air_pressure: float | Decimal = 101325, response_expected: bool = True
     ) -> None:
         """
         Sets the reference air pressure for the altitude calculation. Setting the reference to the current air pressure

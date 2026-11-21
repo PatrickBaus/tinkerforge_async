@@ -409,7 +409,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         if not 0 <= int(website) <= 255:
             raise ValueError(f"Invalid argument: expected 0 <= int(website) <= 255, got website={website!r}")
         if not isinstance(phy_mode, PhyMode):
-            phy_mode = PhyMode(PhyMode)
+            phy_mode = PhyMode(phy_mode)
 
         await self.ipcon.send_request(
             device=self,

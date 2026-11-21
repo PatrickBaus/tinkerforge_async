@@ -433,10 +433,10 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
             raise ValueError(
                 f"Invalid argument: expected 0 <= average_pressure <= 10, got average_pressure={average_pressure!r}"
             )
-        if not 0 <= moving_average_pressure <= 255:
+        if not 0 <= average_temperature <= 255:
             raise ValueError(
-                "Invalid argument: expected 0 <= moving_average_pressure <= 255, "
-                f"got moving_average_pressure={moving_average_pressure!r}"
+                "Invalid argument: expected 0 <= average_temperature <= 255, "
+                f"got average_temperature={average_temperature!r}"
             )
 
         await self.ipcon.send_request(

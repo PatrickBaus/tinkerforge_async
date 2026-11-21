@@ -175,8 +175,8 @@ class BrickletMoisture(Device):
         option = Threshold(option)
         if minimum < 0:
             raise ValueError(f"Invalid argument: expected minimum >= 0, got minimum={minimum!r}")
-        if minimum < 0:
-            raise ValueError(f"Invalid argument: expected minimum >= 0, got minimum={minimum!r}")
+        if maximum < 0:
+            raise ValueError(f"Invalid argument: expected maximum >= 0, got maximum={maximum!r}")
 
         await self.ipcon.send_request(
             device=self,

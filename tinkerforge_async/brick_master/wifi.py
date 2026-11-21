@@ -151,7 +151,7 @@ class EapOptions:
     """
 
     def __repr__(self) -> str:
-        return f"{self.__outer_auth}, {self.__inner_auth}, {self.__cert_type})"
+        return f"EapOptions({self.__outer_auth}, {self.__inner_auth}, {self.__cert_type})"
 
     def __init__(self, value: int) -> None:
         self.__outer_auth = WifiEapOuterAuth(value & 0b11)
@@ -407,16 +407,11 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
         if eap_options is None:
             eap_options = EapOptions(0)
         elif not isinstance(eap_options, EapOptions):
-            EapOptions(eap_options)
+            eap_options = EapOptions(eap_options)
         if not isinstance(encryption, WifiEncryptionMode):
             encryption = WifiEncryptionMode(encryption)
         if not 1 <= key_index <= 4:
             raise ValueError(f"Invalid argument: expected 1 <= key_index <= 4, got key_index={key_index!r}")
-        if not isinstance(eap_options, EapOptions):
-            raise ValueError(
-                "Invalid argument: expected isinstance(eap_options, EapOptions), "
-                f"got EapOptions={EapOptions!r}, eap_options={eap_options!r}"
-            )
 
         await self.ipcon.send_request(
             device=self,
@@ -527,7 +522,7 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
 
         data = list(username) + [0] * (32 - len(username))  # pad with null bytes
 
-        return await self.set_wifi_certificate(0xFFFF, data, len(data), response_expected)
+        return await self.set_wifi_certificate(0xFFFF, data, len(username), response_expected)
 
     async def get_wpa_enterprise_username(self) -> bytes:
         """
@@ -549,7 +544,7 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
 
         data = list(password) + [0] * (32 - len(password))  # pad with null bytes
 
-        return await self.set_wifi_certificate(0xFFFE, data, len(data), response_expected)
+        return await self.set_wifi_certificate(0xFFFE, data, len(password), response_expected)
 
     async def get_wpa_enterprise_password(self) -> bytes:
         """
@@ -748,11 +743,11 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
         # Test if the hostname is valid
         # Check for hostnames as per RFC 1123. This allows labels that start with
         # a digit or hyphen, which was not allowed in RFC 952 originally
-        # The bricks only allow 32 characters as opposed to 63 as per RFC.
+        # The Wi-Fi extension only allows 16 characters as opposed to 63 as per RFC.
         # Allow 0 characters to reset the hostname (this is TF specific)
         hostname = hostname.lower()
         if len(hostname) != 0:
-            allowed = re.compile(rb"^(?!-)[a-z0-9-]{2,32}(?<!-)$")
+            allowed = re.compile(rb"^(?!-)[a-z0-9-]{2,16}(?<!-)$")
             if not bool(allowed.match(hostname)):
                 raise ValueError("Invalid hostname")
 

@@ -152,7 +152,11 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         1: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
         2: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
         3: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
-        4: (CallbackID.EDGE_COUNT,),
+        4: (CallbackID.ALL_INPUT_VALUE,),
+        5: (CallbackID.EDGE_COUNT,),
+        6: (CallbackID.EDGE_COUNT,),
+        7: (CallbackID.EDGE_COUNT,),
+        8: (CallbackID.EDGE_COUNT,),
     }
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
@@ -752,11 +756,11 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                     continue
             else:
                 changed_sids, values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if function_id in events:
+                if function_id in events or 4 in sids:
                     # Use a special sid for the CallbackID.ALL_INPUT_VALUE, because it returns a tuple
                     yield Event(self, 4, function_id, values, changed_sids)
-                else:
-                    for sid in sids:
+                for sid in sids:
+                    if sid != 4:
                         yield Event(self, sid, function_id, values[sid], changed_sids[sid])
 
     async def read_events(
