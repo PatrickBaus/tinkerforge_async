@@ -7,9 +7,10 @@ low-level communication with the Tinkerforge ip connection and also handles conv
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -220,9 +221,12 @@ class BrickletHumidityV2(BrickletWithMCU):
         """
         option = Threshold(option)
 
-        assert period >= 0
-        assert minimum >= 0
-        assert maximum >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
+        if minimum < 0:
+            raise ValueError(f"Invalid argument: expected minimum >= 0, got minimum={minimum!r}")
+        if maximum < 0:
+            raise ValueError(f"Invalid argument: expected maximum >= 0, got maximum={maximum!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -310,7 +314,8 @@ class BrickletHumidityV2(BrickletWithMCU):
         The default value is (0, false, 'x', 273.15, 273.15).
         """
         option = Threshold(option)
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -395,8 +400,16 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         The default value is 5.
         """
-        assert moving_average_length_humidity >= 1
-        assert moving_average_length_temperature >= 1
+        if moving_average_length_humidity < 1:
+            raise ValueError(
+                "Invalid argument: expected moving_average_length_humidity >= 1, "
+                f"got moving_average_length_humidity={moving_average_length_humidity!r}"
+            )
+        if moving_average_length_temperature < 1:
+            raise ValueError(
+                "Invalid argument: expected moving_average_length_temperature >= 1, "
+                f"got moving_average_length_temperature={moving_average_length_temperature!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,

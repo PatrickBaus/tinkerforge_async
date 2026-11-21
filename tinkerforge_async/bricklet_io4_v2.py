@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import CancelledError
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple, TypeAlias, TypedDict
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias, TypedDict
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -227,7 +228,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
          This function does nothing for channels that are configured as input. Pull-up
          resistors can be switched on with :func:`Set Configuration`.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -269,7 +271,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         A running monoflop timer or PWM for the specific channel will be aborted if this
         function is called.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
         if not isinstance(direction, Direction):
             direction = Direction(direction)
 
@@ -291,7 +294,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         """
         Returns the channel configuration as set by :func:`Set Configuration`.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -360,7 +364,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         If it is set to false, the callback is continuously triggered with the period,
         independent of the value.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -381,7 +386,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         Returns the callback configuration for the given channel as set by
         :func:`Set Input Value Callback Configuration`.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -452,7 +458,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         response_expected: bool
             No effect. Parameter is used for compatibility with other callback configuration functions only.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         async with self.__counter_queue[channel]["lock"]:
             task = self.__counter_queue[channel]["task"]
@@ -500,7 +507,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         of two seconds. The channel will be *high* all the time. If now the RS485
         connection is lost, the channel will turn *low* in at most two seconds.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -524,7 +532,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         If the timer is not running currently, the remaining time will be returned
         as 0.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -546,7 +555,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         .. note::
          Calling this function is only allowed for channels configured as input.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -587,7 +597,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         .. note::
          Calling this function is only allowed for channels configured as input.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
         if not isinstance(edge_type, EdgeType):
             edge_type = EdgeType(edge_type)
 
@@ -613,7 +624,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         .. note::
          Calling this function is only allowed for channels configured as input.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -642,7 +654,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         A running monoflop timer for the given channel will be aborted if this function
         is called.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -662,7 +675,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         """
         Returns the PWM configuration as set by :func:`Set PWM Configuration`.
         """
-        assert channel in (0, 1, 2, 3)
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
 
         _, payload = await self.ipcon.send_request(
             device=self,
@@ -758,7 +772,10 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         events: tuple[int | _CallbackID, ...] | list[int | _CallbackID] | None = None,
         sids: tuple[int, ...] | list[int] | None = None,
     ) -> AsyncGenerator[Event, None]:
-        assert events is None or sids is None
+        if not (events is None or sids is None):
+            raise ValueError(
+                f"Invalid argument: expected events is None or sids is None, got events={events!r}, sids={sids!r}"
+            )
 
         sids = tuple() if sids is None else sids
 

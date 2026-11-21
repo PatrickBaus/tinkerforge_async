@@ -8,9 +8,10 @@ handles conversion of raw units to SI units.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -202,7 +203,8 @@ class BrickletAnalogIn(Device):
 
         The :cb:`Voltage` callback is only triggered if the voltage has changed since the last triggering.
         """
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -229,7 +231,8 @@ class BrickletAnalogIn(Device):
 
         The :cb:`Analog Value` callback is only triggered if the analog value has changed since the last triggering.
         """
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -352,7 +355,10 @@ class BrickletAnalogIn(Device):
 
         keep being reached.
         """
-        assert debounce_period >= 0
+        if debounce_period < 0:
+            raise ValueError(
+                f"Invalid argument: expected debounce_period >= 0, got debounce_period={debounce_period!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -413,7 +419,8 @@ class BrickletAnalogIn(Device):
 
         .. versionadded:: 2.0.3$nbsp;(Plugin)
         """
-        assert average >= 0
+        if average < 0:
+            raise ValueError(f"Invalid argument: expected average >= 0, got average={average!r}")
 
         await self.ipcon.send_request(
             device=self,

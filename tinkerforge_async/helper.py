@@ -3,44 +3,59 @@ General helper functions used by multiple modules.
 """
 
 import asyncio
+from collections.abc import AsyncGenerator
+from contextlib import aclosing
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import AsyncGenerator, TypeVar
+from typing import TypeVar, cast
 
 T = TypeVar("T")
 
 
-async def _read_into_queue(
-    gen: AsyncGenerator[T, None],
-    queue: asyncio.Queue[T],
-    done: asyncio.Semaphore,
-) -> None:
-    try:
-        async for item in gen:
-            await queue.put(item)
-    finally:
-        # Once done, notify the semaphore
-        await done.acquire()
+@dataclass
+class _Failure:
+    """Wraps an exception of a producer, so it can be passed to the consumer of `join()`."""
+
+    exception: BaseException
 
 
 async def join(*generators: AsyncGenerator[T, None]) -> AsyncGenerator[T, None]:
-    queue: asyncio.Queue[T] = asyncio.Queue(maxsize=1)
-    done_semaphore = asyncio.Semaphore(len(generators))
+    """
+    Merge the items of all `generators` into a single stream, in the order they arrive. The stream ends when all
+    generators are exhausted. If one generator raises an exception, it is raised by the stream, and all generators are
+    closed. Leaving the loop early (e.g. with `break`) closes all generators, too.
 
-    # Read from each given generator into the shared queue.
-    producers = [asyncio.create_task(_read_into_queue(gen, queue, done_semaphore)) for gen in generators]
+    Note: This is not implemented with a `TaskGroup`, because task groups must not be used in async generators. They
+    can not handle the `GeneratorExit` exception, that is thrown into the generator when it is closed.
+    """
+    done = object()  # Every producer puts this sentinel into the queue when it is finished
+    queue: asyncio.Queue[object] = asyncio.Queue(maxsize=1)
 
-    # Read items off the queue until it is empty and the semaphore value is down to zero.
-    while not done_semaphore.locked() or not queue.empty():
+    async def pump(generator: AsyncGenerator[T, None]) -> None:
         try:
-            yield await asyncio.wait_for(queue.get(), 0.001)
-        except TimeoutError:
-            continue
+            async with aclosing(generator):
+                async for item in generator:
+                    await queue.put(item)
+        except Exception as exc:  # pylint: disable=broad-exception-caught  # Forwarded to the consumer
+            await queue.put(_Failure(exc))
+        else:
+            await queue.put(done)
 
-    # Not strictly needed, but usually a good idea to await tasks, they are already finished here.
+    producers = [asyncio.create_task(pump(generator)) for generator in generators]
     try:
-        await asyncio.wait_for(asyncio.gather(*producers), 0)
-    except TimeoutError as exc:
-        raise NotImplementedError("Impossible state: expected all tasks to be exhausted") from exc
+        remaining = len(producers)
+        while remaining:
+            item = await queue.get()
+            if item is done:
+                remaining -= 1
+            elif isinstance(item, _Failure):
+                raise item.exception
+            else:
+                yield cast(T, item)
+    finally:
+        for producer in producers:
+            producer.cancel()
+        await asyncio.gather(*producers, return_exceptions=True)
 
 
 def seconds_to_ms(value: float | Decimal) -> int:

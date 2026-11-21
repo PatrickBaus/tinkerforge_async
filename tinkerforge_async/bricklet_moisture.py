@@ -135,7 +135,8 @@ class BrickletMoisture(Device):
 
         The :cb:`Moisture` callback is only triggered if the moisture value has changed since the last triggering.
         """
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -176,8 +177,10 @@ class BrickletMoisture(Device):
          "'>'",    "Callback is triggered when the moisture value is greater than the min value (max is ignored)"
         """
         option = Threshold(option)
-        assert minimum >= 0
-        assert minimum >= 0
+        if minimum < 0:
+            raise ValueError(f"Invalid argument: expected minimum >= 0, got minimum={minimum!r}")
+        if minimum < 0:
+            raise ValueError(f"Invalid argument: expected minimum >= 0, got minimum={minimum!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -217,7 +220,10 @@ class BrickletMoisture(Device):
 
         keep being reached.
         """
-        assert debounce_period >= 0
+        if debounce_period < 0:
+            raise ValueError(
+                f"Invalid argument: expected debounce_period >= 0, got debounce_period={debounce_period!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -242,7 +248,8 @@ class BrickletMoisture(Device):
         Setting the length to 0 will turn the averaging completely off. With less averaging, there is more noise on the
         data.
         """
-        assert average >= 0
+        if average < 0:
+            raise ValueError(f"Invalid argument: expected average >= 0, got average={average!r}")
 
         await self.ipcon.send_request(
             device=self,

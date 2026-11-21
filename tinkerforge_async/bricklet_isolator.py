@@ -7,9 +7,10 @@ the low-level communication with the Tinkerforge ip connection.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import (
     BrickletWithMCU,
@@ -255,7 +256,8 @@ class BrickletIsolator(BrickletWithMCU):
 
         .. versionadded:: 2.0.2$nbsp;(Plugin)
         """
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,

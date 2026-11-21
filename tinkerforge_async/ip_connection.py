@@ -13,10 +13,11 @@ import logging
 import os
 import struct
 from asyncio import StreamReader, StreamWriter
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from enum import Enum, Flag, unique
 from types import TracebackType
-from typing import AsyncGenerator, Literal, Type, cast, overload
+from typing import Literal, cast, overload
 
 from .device_factory import device_factory
 
@@ -175,6 +176,8 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         self.__next_nonce: int = 0
 
         self.__running_tasks: set[asyncio.Task] = set()
+        # Hold a reference to the disconnect tasks, because the event loop only keeps weak references to tasks.
+        self.__disconnect_tasks: set[asyncio.Task] = set()
 
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.WARNING)  # Only log really important messages
@@ -207,7 +210,7 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         return self
 
     async def __aexit__(
-        self, exc_type: Type[BaseException] | None, exc: BaseException | None, traceback: TracebackType | None
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, traceback: TracebackType | None
     ) -> None:
         await self.disconnect()
 
@@ -415,11 +418,10 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
                 # The future will be resolved by the main_loop() and __process_packet()
                 self.__pending_requests[sequence_number] = asyncio.Future()
                 try:
-                    result_header, payload = await asyncio.wait_for(
-                        self.__pending_requests[sequence_number], self.__timeout
-                    )
-                except asyncio.TimeoutError:
-                    asyncio.create_task(self.disconnect())
+                    async with asyncio.timeout(self.__timeout):
+                        result_header, payload = await self.__pending_requests[sequence_number]
+                except TimeoutError:
+                    self.__schedule_disconnect()
                     raise
                 finally:
                     # Cleanup. Note: The sequence number, might not be in the dict anymore, because
@@ -513,6 +515,15 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
                 # If the Ethernet or Wi-Fi extension goes offline, the connection is typically severed unexpectedly
                 raise NotConnectedError("Tinkerforge IP Connection not connected.") from exc
 
+    def __schedule_disconnect(self) -> None:
+        """
+        Disconnect in the background. This must not be awaited by the tasks that are canceled by `disconnect()`, e.g.
+        the main loop, so the disconnect task is kept separate from `self.__running_tasks`.
+        """
+        task = asyncio.create_task(self.disconnect())
+        self.__disconnect_tasks.add(task)
+        task.add_done_callback(self.__disconnect_tasks.discard)
+
     async def __main_loop(self) -> None:
         """
         The main loop, that is responsible for processing incoming packets.
@@ -522,15 +533,15 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
                 try:
                     # Read packets from the socket and process them.
                     await self.__process_packet(header, payload)
-                except (InvalidDataError, asyncio.TimeoutError):
+                except (InvalidDataError, TimeoutError):
                     # May be raised by __read_packet()
                     # Either no data or invalid data.
                     pass
         except NotConnectedError:
-            asyncio.create_task(self.disconnect())
+            self.__schedule_disconnect()
         except Exception:  # pylint: disable=broad-except  # Catch-all, since we process data from external inputs
             self.__logger.exception("Error reading packet from host %s:%i", self.__host, self.__port)
-            asyncio.create_task(self.disconnect())
+            self.__schedule_disconnect()
 
     async def __get_client_nonce(self) -> bytes:
         """
@@ -586,14 +597,11 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         `self.__lock`.
         """
         try:
-            self.__reader, self.__writer = await asyncio.wait_for(
-                asyncio.open_connection(self.__host, self.__port), self.__timeout
-            )
-        except asyncio.TimeoutError:
-            # Catch and reraise the timeout, because we want to get rid of
-            # the CancelledError raised by asyncio.wait_for() and also add
-            # our own message.
-            raise asyncio.TimeoutError(f"Timeout during connection attempt to '{self.__host}:{self.__port}'") from None
+            async with asyncio.timeout(self.__timeout):
+                self.__reader, self.__writer = await asyncio.open_connection(self.__host, self.__port)
+        except TimeoutError:
+            # Catch and reraise the timeout, because we want to add our own message.
+            raise TimeoutError(f"Timeout during connection attempt to '{self.__host}:{self.__port}'") from None
 
         # If we are connected, start the listening task
         self.__running_tasks.add(asyncio.create_task(self.__main_loop()))

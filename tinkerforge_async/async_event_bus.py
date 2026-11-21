@@ -4,7 +4,8 @@ generators to deliver messages.
 """
 
 import asyncio
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 
 class EventBus:

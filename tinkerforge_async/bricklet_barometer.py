@@ -8,9 +8,10 @@ handles conversion of raw units to SI units.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, AsyncGenerator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -183,7 +184,8 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         The :cb:`Air Pressure` callback is only triggered if the air pressure has
         changed since the last triggering.
         """
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -209,7 +211,8 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         The :cb:`Altitude` callback is only triggered if the altitude has changed since
         the last triggering.
         """
-        assert period >= 0
+        if period < 0:
+            raise ValueError(f"Invalid argument: expected period >= 0, got period={period!r}")
 
         await self.ipcon.send_request(
             device=self,
@@ -345,7 +348,10 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
 
         keep being reached.
         """
-        assert debounce_period >= 0
+        if debounce_period < 0:
+            raise ValueError(
+                f"Invalid argument: expected debounce_period >= 0, got debounce_period={debounce_period!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -388,7 +394,11 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         `QFE <https://en.wikipedia.org/wiki/Mean_sea_level_pressure#Mean_sea_level_pressure>`__
         used in aviation.
         """
-        assert (air_pressure == 0) or (1000 <= air_pressure <= 120000)
+        if not ((air_pressure == 0) or (1000 <= air_pressure <= 120000)):
+            raise ValueError(
+                "Invalid argument: expected (air_pressure == 0) or (1000 <= air_pressure <= 120000), "
+                f"got air_pressure={air_pressure!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
@@ -425,9 +435,20 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
 
         .. versionadded:: 2.0.1$nbsp;(Plugin)
         """
-        assert 0 <= moving_average_pressure <= 25
-        assert 0 <= average_pressure <= 10
-        assert 0 <= moving_average_pressure <= 255
+        if not 0 <= moving_average_pressure <= 25:
+            raise ValueError(
+                "Invalid argument: expected 0 <= moving_average_pressure <= 25, "
+                f"got moving_average_pressure={moving_average_pressure!r}"
+            )
+        if not 0 <= average_pressure <= 10:
+            raise ValueError(
+                f"Invalid argument: expected 0 <= average_pressure <= 10, got average_pressure={average_pressure!r}"
+            )
+        if not 0 <= moving_average_pressure <= 255:
+            raise ValueError(
+                "Invalid argument: expected 0 <= moving_average_pressure <= 255, "
+                f"got moving_average_pressure={moving_average_pressure!r}"
+            )
 
         await self.ipcon.send_request(
             device=self,
