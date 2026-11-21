@@ -18,6 +18,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -53,6 +54,9 @@ class FunctionID(_FunctionID):
     GET_ANALOG_VALUE_CALLBACK_THRESHOLD = 10
     SET_DEBOUNCE_PERIOD = 11
     GET_DEBOUNCE_PERIOD = 12
+
+
+HUMIDITY = Quantity(10)  # raw: 1/10 %RH
 
 
 class BrickletHumidity(Device):
@@ -148,7 +152,7 @@ class BrickletHumidity(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_HUMIDITY, response_expected=True
         )
-        return self.__value_to_si(unpack_payload(payload, "H"))
+        return HUMIDITY.to_si(unpack_payload(payload, "H"))
 
     async def get_analog_value(self) -> int:
         """
@@ -262,7 +266,7 @@ class BrickletHumidity(Device):
             device=self,
             function_id=FunctionID.SET_HUMIDITY_CALLBACK_THRESHOLD,
             data=pack_payload(
-                (option.value.encode("ascii"), self.__si_to_value(minimum), self.__si_to_value(maximum)), "c H H"
+                (option.value.encode("ascii"), HUMIDITY.from_si(minimum), HUMIDITY.from_si(maximum)), "c H H"
             ),
             response_expected=response_expected,
         )
@@ -276,7 +280,7 @@ class BrickletHumidity(Device):
         )
         option, minimum, maximum = unpack_payload(payload, "c h h")
         option = Threshold(option)
-        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
+        minimum, maximum = HUMIDITY.to_si(minimum), HUMIDITY.to_si(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
     async def set_analog_value_callback_threshold(
@@ -362,17 +366,6 @@ class BrickletHumidity(Device):
         )
         return ms_to_seconds(unpack_payload(payload, "I"))
 
-    @staticmethod
-    def __value_to_si(value: int) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value) / 10
-
-    @staticmethod
-    def __si_to_value(value: float | Decimal) -> int:
-        return round(value * 10)
-
     async def read_events(
         self,
         events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
@@ -399,6 +392,6 @@ class BrickletHumidity(Device):
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in (CallbackID.HUMIDITY, CallbackID.HUMIDITY_REACHED):
-                    yield Event(self, 0, function_id, self.__value_to_si(value))
+                    yield Event(self, 0, function_id, HUMIDITY.to_si(value))
                 else:
                     yield Event(self, 1, function_id, value)

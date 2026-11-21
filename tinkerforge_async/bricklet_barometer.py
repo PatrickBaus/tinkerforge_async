@@ -18,6 +18,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import TEMPERATURE, Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -64,6 +65,10 @@ class GetAveraging(NamedTuple):
     moving_average_pressure: int
     average_pressure: int
     average_temperature: int
+
+
+ALTITUDE = Quantity(100)  # raw: cm
+AIR_PRESSURE = Quantity(10)  # raw: 1/10 Pa
 
 
 class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
@@ -155,7 +160,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_AIR_PRESSURE, response_expected=True
         )
-        return self.__value_to_si_pressure(unpack_payload(payload, "i"))
+        return AIR_PRESSURE.to_si(unpack_payload(payload, "i"))
 
     async def get_altitude(self) -> Decimal:
         """
@@ -169,7 +174,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ALTITUDE, response_expected=True
         )
-        return self.__value_to_si_altitude(unpack_payload(payload, "i"))
+        return ALTITUDE.to_si(unpack_payload(payload, "i"))
 
     async def set_air_pressure_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -256,8 +261,8 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
             data=pack_payload(
                 (
                     option.value.encode("ascii"),
-                    self.__si_pressure_to_value(minimum),
-                    self.__si_pressure_to_value(maximum),
+                    AIR_PRESSURE.from_si(minimum),
+                    AIR_PRESSURE.from_si(maximum),
                 ),
                 "c i i",
             ),
@@ -273,7 +278,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         )
         option, minimum, maximum = unpack_payload(payload, "c i i")
         option = Threshold(option)
-        minimum, maximum = self.__value_to_si_pressure(minimum), self.__value_to_si_pressure(maximum)
+        minimum, maximum = AIR_PRESSURE.to_si(minimum), AIR_PRESSURE.to_si(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
     async def set_altitude_callback_threshold(
@@ -307,8 +312,8 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
             data=pack_payload(
                 (
                     option.value.encode("ascii"),
-                    self.__si_altitude_to_value(minimum),
-                    self.__si_altitude_to_value(maximum),
+                    ALTITUDE.from_si(minimum),
+                    ALTITUDE.from_si(maximum),
                 ),
                 "c i i",
             ),
@@ -324,7 +329,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         )
         option, minimum, maximum = unpack_payload(payload, "c i i")
         option = Threshold(option)
-        minimum, maximum = self.__value_to_si_altitude(minimum), self.__value_to_si_altitude(maximum)
+        minimum, maximum = ALTITUDE.to_si(minimum), ALTITUDE.to_si(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
     async def set_debounce_period(
@@ -374,7 +379,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CHIP_TEMPERATURE, response_expected=True
         )
-        return self.__value_to_si_temperature(unpack_payload(payload, "h"))
+        return TEMPERATURE.to_si(unpack_payload(payload, "h"))
 
     async def set_reference_air_pressure(
         self, air_pressure: float | Decimal = 101325, response_expected: bool = True
@@ -398,7 +403,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_REFERENCE_AIR_PRESSURE,
-            data=pack_payload((self.__si_pressure_to_value(air_pressure),), "i"),
+            data=pack_payload((AIR_PRESSURE.from_si(air_pressure),), "i"),
             response_expected=response_expected,
         )
 
@@ -409,7 +414,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_REFERENCE_AIR_PRESSURE, response_expected=True
         )
-        return self.__value_to_si_pressure(unpack_payload(payload, "i"))
+        return AIR_PRESSURE.to_si(unpack_payload(payload, "i"))
 
     async def set_averaging(
         self,
@@ -470,35 +475,6 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         )
         return GetAveraging(*unpack_payload(payload, "B B B"))
 
-    @staticmethod
-    def __value_to_si_altitude(value: int) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value) / 100
-
-    @staticmethod
-    def __si_altitude_to_value(value: float | Decimal) -> int:
-        return round(value * 100)
-
-    @staticmethod
-    def __value_to_si_pressure(value: int) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value) / 10
-
-    @staticmethod
-    def __si_pressure_to_value(value: float | Decimal) -> int:
-        return round(value * 10)
-
-    @staticmethod
-    def __value_to_si_temperature(value: int) -> Decimal:
-        """
-        Convert the sensor value (centi-degrees Celsius) to SI units (K)
-        """
-        return Decimal(value + 27315) / 100
-
     async def read_events(
         self,
         events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
@@ -525,6 +501,6 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in (CallbackID.AIR_PRESSURE, CallbackID.AIR_PRESSURE_REACHED):
-                    yield Event(self, 0, function_id, self.__value_to_si_pressure(value))
+                    yield Event(self, 0, function_id, AIR_PRESSURE.to_si(value))
                 else:
-                    yield Event(self, 1, function_id, self.__value_to_si_altitude(value))
+                    yield Event(self, 1, function_id, ALTITUDE.to_si(value))

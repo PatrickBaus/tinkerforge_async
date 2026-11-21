@@ -18,6 +18,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -77,6 +78,9 @@ class GetAnalogValueCallbackThreshold(NamedTuple):
     option: Threshold
     minimum: int
     maximum: int
+
+
+VOLTAGE = Quantity(1000)  # raw: mV
 
 
 class BrickletAnalogIn(Device):
@@ -171,7 +175,7 @@ class BrickletAnalogIn(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE, response_expected=True
         )
-        return self.__value_to_si(unpack_payload(payload, "H"))
+        return VOLTAGE.to_si(unpack_payload(payload, "H"))
 
     async def get_analog_value(self) -> int:
         """
@@ -271,7 +275,7 @@ class BrickletAnalogIn(Device):
             device=self,
             function_id=FunctionID.SET_VOLTAGE_CALLBACK_THRESHOLD,
             data=pack_payload(
-                (option.value.encode("ascii"), self.__si_to_value(minimum), self.__si_to_value(maximum)), "c H H"
+                (option.value.encode("ascii"), VOLTAGE.from_si(minimum), VOLTAGE.from_si(maximum)), "c H H"
             ),
             response_expected=response_expected,
         )
@@ -285,7 +289,7 @@ class BrickletAnalogIn(Device):
         )
         option, minimum, maximum = unpack_payload(payload, "c H H")
         option = Threshold(option)
-        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
+        minimum, maximum = VOLTAGE.to_si(minimum), VOLTAGE.to_si(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
     async def set_analog_value_callback_threshold(
@@ -432,17 +436,6 @@ class BrickletAnalogIn(Device):
         )
         return unpack_payload(payload, "B")
 
-    @staticmethod
-    def __value_to_si(value: int) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value) / 1000
-
-    @staticmethod
-    def __si_to_value(value):
-        return round(value * 1000)
-
     async def read_events(
         self,
         events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
@@ -469,7 +462,7 @@ class BrickletAnalogIn(Device):
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in (CallbackID.VOLTAGE, CallbackID.VOLTAGE_REACHED):
-                    yield Event(self, 0, function_id, self.__value_to_si(value))
+                    yield Event(self, 0, function_id, VOLTAGE.to_si(value))
                 else:
                     # If it is not a voltage callback there is no need for conversion
                     yield Event(self, 1, function_id, value)

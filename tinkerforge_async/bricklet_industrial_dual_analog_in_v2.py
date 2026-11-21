@@ -25,6 +25,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -98,6 +99,9 @@ class GetChannelLEDStatusConfig(NamedTuple):
     minimum: Decimal
     maximum: Decimal
     config: ChannelLedStatusConfig
+
+
+VOLTAGE = Quantity(1000)  # raw: mV
 
 
 class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
@@ -189,7 +193,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             data=pack_payload((int(channel),), "B"),
             response_expected=True,
         )
-        return self.__value_to_si(unpack_payload(payload, "i"))
+        return VOLTAGE.to_si(unpack_payload(payload, "i"))
 
     async def set_voltage_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -243,8 +247,8 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
                     seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
-                    self.__si_to_value(minimum),
-                    self.__si_to_value(maximum),
+                    VOLTAGE.from_si(minimum),
+                    VOLTAGE.from_si(maximum),
                 ),
                 "B I ! c i i",
             ),
@@ -263,7 +267,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
-        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
+        minimum, maximum = VOLTAGE.to_si(minimum), VOLTAGE.to_si(maximum)
         return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def get_all_voltages(self) -> tuple[Decimal, Decimal]:
@@ -280,7 +284,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_ALL_VOLTAGES, response_expected=True
         )
         value1, value2 = unpack_payload(payload, "2i")
-        return self.__value_to_si(value1), self.__value_to_si(value2)
+        return VOLTAGE.to_si(value1), VOLTAGE.to_si(value2)
 
     async def set_all_voltages_callback_configuration(
         self, period: Duration = 0, value_has_to_change: bool = False, response_expected: bool = True
@@ -466,8 +470,8 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             data=pack_payload(
                 (
                     int(channel),
-                    self.__si_to_value(minimum),
-                    self.__si_to_value(maximum),
+                    VOLTAGE.from_si(minimum),
+                    VOLTAGE.from_si(maximum),
                     config.value,
                 ),
                 "B i i B",
@@ -491,19 +495,8 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
 
         minimum, maximum, config = unpack_payload(payload, "i i B")
         config = ChannelLedStatusConfig(config)
-        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
+        minimum, maximum = VOLTAGE.to_si(minimum), VOLTAGE.to_si(maximum)
         return GetChannelLEDStatusConfig(minimum, maximum, config)
-
-    @staticmethod
-    def __value_to_si(value: int) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value) / 1000
-
-    @staticmethod
-    def __si_to_value(value: float | Decimal) -> int:
-        return round(value * 1000)
 
     async def read_events(
         self,
@@ -536,8 +529,8 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
                         # another callback running on that other channel, so we
                         # ignore the value
                         continue
-                    yield Event(self, channel, function_id, self.__value_to_si(value))
+                    yield Event(self, channel, function_id, VOLTAGE.to_si(value))
 
                 elif function_id is CallbackID.ALL_VOLTAGES:
                     values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                    yield Event(self, 2, function_id, tuple(self.__value_to_si(value) for value in values))
+                    yield Event(self, 2, function_id, tuple(VOLTAGE.to_si(value) for value in values))

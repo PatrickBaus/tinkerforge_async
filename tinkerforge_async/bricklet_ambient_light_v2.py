@@ -18,6 +18,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -85,6 +86,9 @@ class IntegrationTime(Enum):
 class GetConfiguration(NamedTuple):
     illuminance_range: IlluminanceRange
     integration_time: IntegrationTime
+
+
+ILLUMINANCE = Quantity(100)  # raw: 1/100 lux
 
 
 class BrickletAmbientLightV2(Device):
@@ -167,7 +171,7 @@ class BrickletAmbientLightV2(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ILLUMINANCE, response_expected=True
         )
-        return self.__value_to_si(unpack_payload(payload, "I"))
+        return ILLUMINANCE.to_si(unpack_payload(payload, "I"))
 
     async def set_illuminance_callback_period(self, period: Duration = 0, response_expected=True) -> None:
         """
@@ -228,7 +232,7 @@ class BrickletAmbientLightV2(Device):
             device=self,
             function_id=FunctionID.SET_ILLUMINANCE_CALLBACK_THRESHOLD,
             data=pack_payload(
-                (option.value.encode("ascii"), self.__si_to_value(minimum), self.__si_to_value(maximum)), "c I I"
+                (option.value.encode("ascii"), ILLUMINANCE.from_si(minimum), ILLUMINANCE.from_si(maximum)), "c I I"
             ),
             response_expected=response_expected,
         )
@@ -242,7 +246,7 @@ class BrickletAmbientLightV2(Device):
         )
         option, minimum, maximum = unpack_payload(payload, "c I I")
         option = Threshold(option)
-        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
+        minimum, maximum = ILLUMINANCE.to_si(minimum), ILLUMINANCE.to_si(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
     async def set_debounce_period(
@@ -332,17 +336,6 @@ class BrickletAmbientLightV2(Device):
         illuminance_range, integration_time = unpack_payload(payload, "B B")
         return GetConfiguration(IlluminanceRange(illuminance_range), IntegrationTime(integration_time))
 
-    @staticmethod
-    def __value_to_si(value) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value) / 100
-
-    @staticmethod
-    def __si_to_value(value) -> int:
-        return round(value * 100)
-
     async def read_events(
         self,
         events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
@@ -368,4 +361,4 @@ class BrickletAmbientLightV2(Device):
                 continue
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                yield Event(self, 0, function_id, self.__value_to_si(value))
+                yield Event(self, 0, function_id, ILLUMINANCE.to_si(value))

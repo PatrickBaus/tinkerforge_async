@@ -26,6 +26,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, join, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import HeaderPayload, IPConnectionAsync
@@ -120,6 +121,10 @@ class GetEdgeCountConfiguration(NamedTuple):
 class GetPWMConfiguration(NamedTuple):
     frequency: Decimal
     duty_cycle: Decimal
+
+
+FREQUENCY = Quantity(10)  # raw: 1/10 Hz
+DUTY_CYCLE = Quantity(10_000)  # raw: 1/100 %, the SI value is the ratio, i.e. 1 is 100 %
 
 
 class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
@@ -650,8 +655,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload(
                 (
                     int(channel),
-                    round(frequency * 10),  # in 1/10 Hz
-                    round(duty_cycle * 10000),  # in 1/100 %
+                    FREQUENCY.from_si(frequency),
+                    DUTY_CYCLE.from_si(duty_cycle),
                 ),
                 "B I H",
             ),
@@ -672,7 +677,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             response_expected=True,
         )
         frequency, duty_cycle = unpack_payload(payload, "I H")
-        return GetPWMConfiguration(Decimal(frequency) / 10, Decimal(duty_cycle) / 10000)
+        return GetPWMConfiguration(FREQUENCY.to_si(frequency), DUTY_CYCLE.to_si(duty_cycle))
 
     async def __edge_counter_task(self, channel: int, period: Duration, value_has_to_change: bool) -> None:
         previous_value: int | None = None
