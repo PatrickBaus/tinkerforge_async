@@ -630,8 +630,6 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         is called.
         """
         assert channel in (0, 1, 2, 3)
-        frequency *= 10
-        duty_cycle *= 10000
 
         await self.ipcon.send_request(
             device=self,
@@ -639,8 +637,8 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload(
                 (
                     int(channel),
-                    int(frequency),
-                    int(duty_cycle),
+                    round(frequency * 10),  # in 1/10 Hz
+                    round(duty_cycle * 10000),  # in 1/100 %
                 ),
                 "B I H",
             ),
