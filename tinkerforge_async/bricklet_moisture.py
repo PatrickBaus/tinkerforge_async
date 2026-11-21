@@ -7,13 +7,19 @@ handles conversion of raw units to SI units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
-import asyncio
 import typing
 from decimal import Decimal
 from enum import Enum, unique
 from typing import TypeAlias
 
-from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier
+from .devices import (
+    AdvancedCallbackConfiguration,
+    BasicCallbackConfiguration,
+    Channel,
+    ChannelConfiguration,
+    Device,
+    DeviceIdentifier,
+)
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
@@ -68,9 +74,14 @@ class BrickletMoisture(Device):
         CallbackID.MOISTURE_REACHED: "H",
     }
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.MOISTURE, CallbackID.MOISTURE_REACHED),
-    }
+    CHANNELS = (
+        Channel(
+            0,
+            getter="get_moisture_value",
+            callbacks=(CallbackID.MOISTURE, CallbackID.MOISTURE_REACHED),
+            configuration=ChannelConfiguration("moisture", split=True),
+        ),
+    )
 
     def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
         """
@@ -81,11 +92,9 @@ class BrickletMoisture(Device):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> int:
-        self._validate_sid(sid, (0,))
+        return await self._get_value(sid)
 
-        return await self.get_moisture_value()
-
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: Duration = 0,
@@ -95,23 +104,12 @@ class BrickletMoisture(Device):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ):
-        minimum = 0 if minimum is None else minimum
-        maximum = 0 if maximum is None else maximum
-
-        self._validate_sid(sid, (0,))
-
-        await asyncio.gather(
-            self.set_moisture_callback_period(period, response_expected),
-            self.set_moisture_callback_threshold(option, minimum, maximum, response_expected),
+        await self._set_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        self._validate_sid(sid, (0,))
-
-        period, config = await asyncio.gather(
-            self.get_moisture_callback_period(), self.get_moisture_callback_threshold()
-        )
-        return AdvancedCallbackConfiguration(period, True, *config)
+        return await self._get_callback_configuration(sid)
 
     async def get_moisture_value(self) -> int:
         """

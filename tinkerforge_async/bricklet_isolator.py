@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import (
     BrickletWithMCU,
+    Channel,
+    ChannelConfiguration,
     DeviceIdentifier,
     GetSPITFPBaudrateConfig,
     GetSPITFPErrorCount,
@@ -73,9 +75,14 @@ class BrickletIsolator(BrickletWithMCU):
         CallbackID.STATISTICS: "I I H 8s",
     }
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.STATISTICS,),
-    }
+    CHANNELS = (
+        Channel(
+            0,
+            getter="get_statistics",
+            callbacks=(CallbackID.STATISTICS,),
+            configuration=ChannelConfiguration("statistics", thresholds=False),
+        ),
+    )
 
     def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
         """
@@ -87,9 +94,7 @@ class BrickletIsolator(BrickletWithMCU):
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> GetStatistics:
-        self._validate_sid(sid, (0,))
-
-        return await self.get_statistics()
+        return await self._get_value(sid)
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
@@ -98,14 +103,10 @@ class BrickletIsolator(BrickletWithMCU):
         value_has_to_change: bool = False,
         response_expected: bool = True,
     ) -> None:
-        self._validate_sid(sid, (0,))
-
-        await self.set_statistics_callback_configuration(period, value_has_to_change, response_expected)
+        await self._set_callback_configuration(sid, period, value_has_to_change, response_expected=response_expected)
 
     async def get_callback_configuration(self, sid: int) -> SimpleCallbackConfiguration:
-        self._validate_sid(sid, (0,))
-
-        return await self.get_statistics_callback_configuration()
+        return await self._get_callback_configuration(sid)
 
     async def get_statistics(self) -> GetStatistics:
         """

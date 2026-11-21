@@ -16,6 +16,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 from .devices import (
     AdvancedCallbackConfiguration,
     BrickletWithMCU,
+    Channel,
+    ChannelConfiguration,
     DeviceIdentifier,
     Event,
     LedConfig,
@@ -125,11 +127,28 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         CallbackID.ALL_VOLTAGES: "2i",
     }
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.VOLTAGE,),
-        1: (CallbackID.VOLTAGE,),
-        2: (CallbackID.ALL_VOLTAGES,),
-    }
+    CHANNELS = (
+        Channel(
+            0,
+            getter="get_voltage",
+            callbacks=(CallbackID.VOLTAGE,),
+            configuration=ChannelConfiguration("voltage"),
+            index=0,
+        ),
+        Channel(
+            1,
+            getter="get_voltage",
+            callbacks=(CallbackID.VOLTAGE,),
+            configuration=ChannelConfiguration("voltage"),
+            index=1,
+        ),
+        Channel(
+            2,
+            getter="get_all_voltages",
+            callbacks=(CallbackID.ALL_VOLTAGES,),
+            configuration=ChannelConfiguration("all_voltages", thresholds=False, wrap_advanced=True),
+        ),
+    )
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
@@ -140,11 +159,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> Decimal | tuple[Decimal, Decimal]:
-        self._validate_sid(sid, (0, 1, 2))
-
-        if sid in (0, 1):
-            return await self.get_voltage(sid)
-        return await self.get_all_voltages()
+        return await self._get_value(sid)
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -156,25 +171,12 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        minimum = 0 if minimum is None else minimum
-        maximum = 0 if maximum is None else maximum
-
-        self._validate_sid(sid, (0, 1, 2))
-
-        if sid in (0, 1):
-            await self.set_voltage_callback_configuration(
-                sid, period, value_has_to_change, option, minimum, maximum, response_expected
-            )
-        else:
-            await self.set_all_voltages_callback_configuration(period, value_has_to_change, response_expected)
+        await self._set_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
+        )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        self._validate_sid(sid, (0, 1, 2))
-        if sid in (0, 1):
-            return await self.get_voltage_callback_configuration(sid)
-        return AdvancedCallbackConfiguration(
-            *(await self.get_all_voltages_callback_configuration()), option=None, minimum=None, maximum=None
-        )
+        return await self._get_callback_configuration(sid)
 
     async def get_voltage(self, channel: int) -> Decimal:
         """

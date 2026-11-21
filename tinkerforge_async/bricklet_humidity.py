@@ -7,12 +7,18 @@ handles conversion of raw units to SI units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
-import asyncio
 from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, TypeAlias
 
-from .devices import AdvancedCallbackConfiguration, BasicCallbackConfiguration, Device, DeviceIdentifier
+from .devices import (
+    AdvancedCallbackConfiguration,
+    BasicCallbackConfiguration,
+    Channel,
+    ChannelConfiguration,
+    Device,
+    DeviceIdentifier,
+)
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
@@ -78,10 +84,20 @@ class BrickletHumidity(Device):
         CallbackID.ANALOG_VALUE_REACHED: "H",
     }
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.HUMIDITY, CallbackID.HUMIDITY_REACHED),
-        1: (CallbackID.ANALOG_VALUE, CallbackID.ANALOG_VALUE_REACHED),
-    }
+    CHANNELS = (
+        Channel(
+            0,
+            getter="get_humidity",
+            callbacks=(CallbackID.HUMIDITY, CallbackID.HUMIDITY_REACHED),
+            configuration=ChannelConfiguration("humidity", split=True),
+        ),
+        Channel(
+            1,
+            getter="get_analog_value",
+            callbacks=(CallbackID.ANALOG_VALUE, CallbackID.ANALOG_VALUE_REACHED),
+            configuration=ChannelConfiguration("analog_value", split=True),
+        ),
+    )
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
@@ -93,13 +109,9 @@ class BrickletHumidity(Device):
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> int | Decimal:
-        self._validate_sid(sid, (0, 1))
+        return await self._get_value(sid)
 
-        if sid == 0:
-            return await self.get_humidity()
-        return await self.get_analog_value()
-
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: Duration = 0,
@@ -109,34 +121,12 @@ class BrickletHumidity(Device):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        minimum = 0 if minimum is None else minimum
-        maximum = 0 if maximum is None else maximum
-
-        self._validate_sid(sid, (0, 1))
-
-        if sid == 0:
-            await asyncio.gather(
-                self.set_humidity_callback_period(period, response_expected),
-                self.set_humidity_callback_threshold(option, minimum, maximum, response_expected),
-            )
-        else:
-            await asyncio.gather(
-                self.set_analog_value_callback_period(period, response_expected),
-                self.set_analog_value_callback_threshold(option, minimum, maximum, response_expected),
-            )
+        await self._set_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
+        )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        self._validate_sid(sid, (0, 1))
-
-        if sid == 0:
-            period, config = await asyncio.gather(
-                self.get_humidity_callback_period(), self.get_humidity_callback_threshold()
-            )
-        else:
-            period, config = await asyncio.gather(
-                self.get_analog_value_callback_period(), self.get_analog_value_callback_threshold()
-            )
-        return AdvancedCallbackConfiguration(period, True, *config)
+        return await self._get_callback_configuration(sid)
 
     async def get_humidity(self) -> Decimal:
         """

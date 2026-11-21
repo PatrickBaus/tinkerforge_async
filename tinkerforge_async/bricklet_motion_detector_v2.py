@@ -10,7 +10,7 @@ from __future__ import annotations
 from enum import Enum, unique
 from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
-from .devices import BrickletWithMCU, DeviceIdentifier, _FunctionID
+from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -63,10 +63,10 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         CallbackID.DETECTION_CYCLE_ENDED: "",
     }
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.MOTION_DETECTED,),
-        1: (CallbackID.DETECTION_CYCLE_ENDED,),
-    }
+    CHANNELS = (
+        Channel(0, getter="get_motion_detected", callbacks=(CallbackID.MOTION_DETECTED,)),
+        Channel(1, callbacks=(CallbackID.DETECTION_CYCLE_ENDED,)),
+    )
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
@@ -77,9 +77,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> bool:
-        self._validate_sid(sid, (0,))
-
-        return await self.get_motion_detected()
+        return await self._get_value(sid)
 
     async def get_motion_detected(self) -> bool:
         """

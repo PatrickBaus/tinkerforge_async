@@ -11,7 +11,7 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
-from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier
+from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
@@ -120,10 +120,15 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
     CALLBACK_FORMATS = {CallbackID.TEMPERATURE: "i", CallbackID.ERROR_STATE: "! !"}
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.TEMPERATURE,),
-        1: (CallbackID.ERROR_STATE,),
-    }
+    CHANNELS = (
+        Channel(
+            0,
+            getter="get_temperature",
+            callbacks=(CallbackID.TEMPERATURE,),
+            configuration=ChannelConfiguration("temperature", default=CELSIUS_ZERO),
+        ),
+        Channel(1, getter="get_error_state", callbacks=(CallbackID.ERROR_STATE,)),
+    )
 
     @property
     def sensor_type(self) -> SensorType:
@@ -156,11 +161,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         )
 
     async def get_value(self, sid: int) -> Decimal | GetErrorState:
-        self._validate_sid(sid, (0, 1))
-
-        if sid == 0:
-            return await self.get_temperature()
-        return await self.get_error_state()
+        return await self._get_value(sid)
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -172,21 +173,13 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        minimum = CELSIUS_ZERO if minimum is None else minimum
-        maximum = CELSIUS_ZERO if maximum is None else maximum
-
-        # Only the temperature (sid 0) has a callback configuration. The error state is always reported.
-        self._validate_sid(sid, (0,))
-
-        await self.set_temperature_callback_configuration(
-            period, value_has_to_change, option, minimum, maximum, response_expected
+        await self._set_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         # Only the temperature (sid 0) has a callback configuration. The error state is always reported.
-        self._validate_sid(sid, (0,))
-
-        return await self.get_temperature_callback_configuration()
+        return await self._get_callback_configuration(sid)
 
     async def get_temperature(self) -> Decimal:
         """

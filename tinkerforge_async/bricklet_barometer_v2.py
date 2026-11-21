@@ -11,7 +11,7 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
-from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier
+from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
@@ -123,11 +123,23 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         CallbackID.TEMPERATURE: "i",
     }
 
-    SID_TO_CALLBACK = {
-        0: (CallbackID.AIR_PRESSURE,),
-        1: (CallbackID.ALTITUDE,),
-        2: (CallbackID.TEMPERATURE,),
-    }
+    CHANNELS = (
+        Channel(
+            0,
+            getter="get_air_pressure",
+            callbacks=(CallbackID.AIR_PRESSURE,),
+            configuration=ChannelConfiguration("air_pressure"),
+        ),
+        Channel(
+            1, getter="get_altitude", callbacks=(CallbackID.ALTITUDE,), configuration=ChannelConfiguration("altitude")
+        ),
+        Channel(
+            2,
+            getter="get_temperature",
+            callbacks=(CallbackID.TEMPERATURE,),
+            configuration=ChannelConfiguration("temperature", default=CELSIUS_ZERO),
+        ),
+    )
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
@@ -138,13 +150,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> Decimal:
-        self._validate_sid(sid, (0, 1, 2))
-
-        if sid == 0:
-            return await self.get_air_pressure()
-        if sid == 1:
-            return await self.get_altitude()
-        return await self.get_temperature()
+        return await self._get_value(sid)
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -156,36 +162,12 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ):
-        self._validate_sid(sid, (0, 1, 2))
-
-        if sid == 0:
-            minimum = 0 if minimum is None else minimum
-            maximum = 0 if maximum is None else maximum
-            await self.set_air_pressure_callback_configuration(
-                period, value_has_to_change, option, minimum, maximum, response_expected
-            )
-        elif sid == 1:
-            minimum = 0 if minimum is None else minimum
-            maximum = 0 if maximum is None else maximum
-            await self.set_altitude_callback_configuration(
-                period, value_has_to_change, option, minimum, maximum, response_expected
-            )
-        else:
-            # The temperature is given in K, so the default value of the device (0) is 273.15 K
-            minimum = CELSIUS_ZERO if minimum is None else minimum
-            maximum = CELSIUS_ZERO if maximum is None else maximum
-            await self.set_temperature_callback_configuration(
-                period, value_has_to_change, option, minimum, maximum, response_expected
-            )
+        await self._set_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
+        )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        self._validate_sid(sid, (0, 1, 2))
-
-        if sid == 0:
-            return await self.get_air_pressure_callback_configuration()
-        if sid == 1:
-            return await self.get_altitude_callback_configuration()
-        return await self.get_temperature_callback_configuration()
+        return await self._get_callback_configuration(sid)
 
     async def get_air_pressure(self) -> Decimal:
         """
