@@ -43,7 +43,7 @@ doc = [
 ]
 
 test = [
-    "mypy", "pylint", "pytest", "setuptools"
+    "mypy", "pylint", "pytest", "pytest-cov", "setuptools"
 ]
 
 [tool.pylint.'MESSAGES CONTROL']
@@ -67,6 +67,21 @@ line-length = 120
 markers = [
     # conftest.py reorders tests moving slow ones to the end of the list
     "slow",
+]
+
+[tool.coverage.run]
+# Measure from the root of the repository, so the paths in the report are relative to it and the lines can be mapped
+# to the files of the checkout. Only the library is of interest, not the tests, the examples or the documentation.
+source = ["."]
+omit = ["tests/*", "examples/*", "doc/*", "setup.py", "tinkerforge_async/_version.py"]
+branch = true
+relative_files = true
+
+[tool.coverage.report]
+exclude_also = [
+    # Only evaluated by the type checker
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
 ]
 
 [build-system]
