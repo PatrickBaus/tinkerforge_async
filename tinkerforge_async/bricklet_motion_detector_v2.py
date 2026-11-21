@@ -1,14 +1,15 @@
 """
-Module for the Tinkerforge Barometer Bricklet 2.0
-(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html) implemented using Python asyncio. It does the
-low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI units.
+Module for the Tinkerforge Motion Detector Bricklet 2.0
+(https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Motion_Detector_V2.html) implemented using Python asyncio. It
+does the low-level communication with the Tinkerforge ip connection and also handles conversion of raw units to SI
+units.
 """
 
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -160,3 +161,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         )
 
         return GetIndicator(*unpack_payload(payload, "B B B"))
+
+    def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
+        # The callbacks have no payload. The sid tells them apart.
+        return (0 if callback_id is CallbackID.MOTION_DETECTED else 1), value

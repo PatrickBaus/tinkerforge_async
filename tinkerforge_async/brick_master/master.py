@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 class GetProtocol1BrickletName(NamedTuple):
     protocol_version: int
     firmware_version: tuple[int, int, int]
-    name: bytes
+    name: str
 
 
 @unique

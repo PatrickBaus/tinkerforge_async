@@ -434,7 +434,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_SAMPLES_PER_SECOND,
-            data=pack_payload((sps,), "B"),
+            data=pack_payload((sps.value,), "B"),
             response_expected=response_expected,
         )
 

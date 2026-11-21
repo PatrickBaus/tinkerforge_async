@@ -19,7 +19,6 @@ from .devices import (
     BrickletWithMCU,
     DeviceIdentifier,
     Event,
-    InvalidSidError,
     SimpleCallbackConfiguration,
 )
 from .devices import ThresholdOption as Threshold
@@ -152,7 +151,11 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         1: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
         2: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
         3: (CallbackID.INPUT_VALUE, CallbackID.MONOFLOP_DONE),
-        4: (CallbackID.EDGE_COUNT,),
+        4: (CallbackID.ALL_INPUT_VALUE,),
+        5: (CallbackID.EDGE_COUNT,),
+        6: (CallbackID.EDGE_COUNT,),
+        7: (CallbackID.EDGE_COUNT,),
+        8: (CallbackID.EDGE_COUNT,),
     }
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
@@ -317,7 +320,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             await self.set_input_value_callback_configuration(sid, period, value_has_to_change, response_expected)
         elif sid == 4:
             await self.set_all_input_value_callback_configuration(period, value_has_to_change, response_expected)
-        elif sid in range(5, 5 + 4):
+        else:  # The sids 5 to 8 are the edge counters of the channels
             await self.set_edge_count_callback_configuration(sid - 5, period, value_has_to_change, response_expected)
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
@@ -331,12 +334,10 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             return AdvancedCallbackConfiguration(
                 *(await self.get_all_input_value_callback_configuration()), option=None, minimum=None, maximum=None
             )
-        if sid in range(5, 5 + 4):
-            return AdvancedCallbackConfiguration(
-                *(await self.get_edge_count_callback_configuration(sid - 5)), option=None, minimum=None, maximum=None
-            )
-
-        raise InvalidSidError(f"Invalid sid {sid!r} for {self}.")
+        # The sids 5 to 8 are the edge counters of the channels
+        return AdvancedCallbackConfiguration(
+            *(await self.get_edge_count_callback_configuration(sid - 5)), option=None, minimum=None, maximum=None
+        )
 
     async def set_input_value_callback_configuration(
         self,
@@ -752,11 +753,11 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                     continue
             else:
                 changed_sids, values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if function_id in events:
+                if function_id in events or 4 in sids:
                     # Use a special sid for the CallbackID.ALL_INPUT_VALUE, because it returns a tuple
                     yield Event(self, 4, function_id, values, changed_sids)
-                else:
-                    for sid in sids:
+                for sid in sids:
+                    if sid != 4:
                         yield Event(self, sid, function_id, values[sid], changed_sids[sid])
 
     async def read_events(

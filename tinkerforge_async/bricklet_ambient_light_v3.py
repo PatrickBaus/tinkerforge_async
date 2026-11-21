@@ -156,7 +156,6 @@ class BrickletAmbientLightV3(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ILLUMINANCE, response_expected=True
         )
-        print(unpack_payload(payload, "I"))
         return ILLUMINANCE.to_si(unpack_payload(payload, "I"))
 
     async def set_illuminance_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments

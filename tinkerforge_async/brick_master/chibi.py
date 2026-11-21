@@ -123,8 +123,6 @@ class ChibiExtension(Device):
         The slave addresses will be saved in the EEPROM of the Chibi Extension, they
         don't have to be set on every startup.
         """
-        if not 0 <= num <= 255:
-            raise ValueError(f"Invalid argument: expected 0 <= num <= 255, got num={num!r}")
         if not 0 <= address <= 255:
             raise ValueError(f"Invalid argument: expected 0 <= address <= 255, got address={address!r}")
 
@@ -153,7 +151,7 @@ class ChibiExtension(Device):
                 f"Invalid argument: expected isinstance(addresses, (tuple, list)), got addresses={addresses!r}"
             )
         addresses = list(addresses)
-        if addresses[-1] != 0:
+        if not addresses or addresses[-1] != 0:
             addresses += [
                 0,
             ]  # add a trailing [0], because it is the delimiter

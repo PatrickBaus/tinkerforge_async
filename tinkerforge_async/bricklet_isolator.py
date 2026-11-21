@@ -281,4 +281,5 @@ class BrickletIsolator(BrickletWithMCU):
         return SimpleCallbackConfiguration(ms_to_seconds(period), value_has_to_change)
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
-        return 0, GetStatistics(*value)
+        messages_from_brick, messages_from_bricklet, device_identifier, uid = value
+        return 0, GetStatistics(messages_from_brick, messages_from_bricklet, device_identifier, base58decode(uid))
