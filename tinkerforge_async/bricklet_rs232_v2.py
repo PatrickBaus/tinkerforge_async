@@ -196,9 +196,7 @@ class BrickletRS232V2(BrickletWithMCU):
         See :func:`Set Configuration` for configuration possibilities
         regarding baud rate, parity and so on.
         """
-        if len(data) > 60:
-            raise ValueError(f"Invalid argument: expected len(data) <= 60, got data={data!r}")
-        msg = bytearray(data)
+        msg = bytearray(data)  # write() passes chunks of at most 60 bytes
         length = len(msg)
         msg.extend([0] * (60 - length))  # always send 60 bytes
 
@@ -419,14 +417,8 @@ class BrickletRS232V2(BrickletWithMCU):
         if len(message) > 65535:
             raise RuntimeError("Message length must not exceed 65535 bytes.")
 
-        # Split the message in chunks of 60 bytes
-        try:
-            chunks = [message[i : i + 60] for i in range(0, len(message), 60)]
-        except ValueError:
-            # Raised if the length is 0
-            chunks = [
-                b"",
-            ]
+        # Split the message in chunks of 60 bytes. There is nothing to send, if the message is empty.
+        chunks = [message[i : i + 60] for i in range(0, len(message), 60)]
 
         if self.__lock is None:
             self.__lock = asyncio.Lock()

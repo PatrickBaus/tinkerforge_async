@@ -107,11 +107,11 @@ class EdgeType(Enum):
 
 class GetPortConfiguration(NamedTuple):
     direction_mask: int
-    value_mask: bool
+    value_mask: int
 
 
 class GetPortMonoflop(NamedTuple):
-    value: bool
+    value: int
     time: Decimal
     time_remaining: Decimal
 

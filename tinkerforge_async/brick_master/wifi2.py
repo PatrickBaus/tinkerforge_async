@@ -19,52 +19,7 @@ if TYPE_CHECKING:
 
 
 class ReadWifi2SerialPort(NamedTuple):
-    data: tuple[
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-    ]
+    data: tuple[int, ...]
     result: int
 
 
@@ -99,7 +54,7 @@ class GetWifi2Status(NamedTuple):
 
 class GetWifi2ClientConfiguration(NamedTuple):
     enable: bool
-    ssid: bytes
+    ssid: str
     ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
@@ -109,7 +64,7 @@ class GetWifi2ClientConfiguration(NamedTuple):
 
 class GetWifi2APConfiguration(NamedTuple):
     enable: bool
-    ssid: bytes
+    ssid: str
     ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
@@ -126,7 +81,7 @@ class GetWifi2MeshConfiguration(NamedTuple):
     root_gateway: tuple[int, int, int, int]
     router_bssid: tuple[int, int, int, int, int, int]
     group_id: tuple[int, int, int, int, int, int]
-    group_ssid_prefix: bytes
+    group_ssid_prefix: str
     gateway_ip: tuple[int, int, int, int]
     gateway_port: int
 
@@ -141,7 +96,7 @@ class GetWifi2MeshCommonStatus(NamedTuple):
 
 
 class GetWifi2MeshClientStatus(NamedTuple):
-    hostname: bytes
+    hostname: str
     ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
@@ -149,7 +104,7 @@ class GetWifi2MeshClientStatus(NamedTuple):
 
 
 class GetWifi2MeshAPStatus(NamedTuple):
-    ssid: bytes
+    ssid: str
     ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
     gateway: tuple[int, int, int, int]
@@ -338,7 +293,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
             response_expected=response_expected,
         )
 
-    async def get_wifi2_authentication_secret(self) -> bytes:
+    async def get_wifi2_authentication_secret(self) -> str:
         """
         Returns the Wi-Fi authentication secret as set by
         :func:`Set Wifi2 Authentication Secret`.
@@ -630,7 +585,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
             response_expected=response_expected,
         )
 
-    async def get_wifi2_client_hostname(self) -> bytes:
+    async def get_wifi2_client_hostname(self) -> str:
         """
         Returns the client hostname as set by :func:`Set Wifi2 Client Hostname`.
 
@@ -665,7 +620,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
             response_expected=response_expected,
         )
 
-    async def get_wifi2_client_password(self) -> bytes:
+    async def get_wifi2_client_password(self) -> str:
         """
         Returns the client password as set by :func:`Set Wifi2 Client Password`.
 
@@ -836,7 +791,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
             response_expected=response_expected,
         )
 
-    async def get_wifi2_ap_password(self) -> bytes:
+    async def get_wifi2_ap_password(self) -> str:
         """
         Returns the access point password as set by :func:`Set Wifi2 AP Password`.
 
@@ -994,12 +949,6 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
                 "4, "
                 f"got gateway_ip={gateway_ip!r}"
             )
-        if not (isinstance(root_gateway, (tuple, list)) and len(root_gateway) == 4):
-            raise ValueError(
-                "Invalid argument: expected isinstance(root_gateway, (tuple, list)) and len(root_gateway) "
-                "== 4, "
-                f"got root_gateway={root_gateway!r}"
-            )
         if not (isinstance(router_bssid, (tuple, list)) and len(router_bssid) == 6):
             raise ValueError(
                 "Invalid argument: expected isinstance(router_bssid, (tuple, list)) and len(router_bssid) "
@@ -1109,7 +1058,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
             response_expected=response_expected,
         )
 
-    async def get_wifi2_mesh_router_ssid(self) -> bytes:
+    async def get_wifi2_mesh_router_ssid(self) -> str:
         """
         Requires Wi-Fi Extension 2.0 firmware 2.1.0.
 
@@ -1149,7 +1098,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
             response_expected=response_expected,
         )
 
-    async def get_wifi2_mesh_router_password(self) -> bytes:
+    async def get_wifi2_mesh_router_password(self) -> str:
         """
         Requires Wi-Fi Extension 2.0 firmware 2.1.0.
 

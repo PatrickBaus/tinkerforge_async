@@ -17,16 +17,10 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from enum import Enum, Flag, unique
 from types import TracebackType
-from typing import Literal, cast, overload
-
-from .device_factory import device_factory
-
-try:
-    from typing import Self  # type: ignore # Python 3.11
-except ImportError:
-    from typing_extensions import Self
+from typing import Literal, Self, cast, overload
 
 from .async_event_bus import EventBus
+from .device_factory import device_factory
 from .devices import Device, DeviceIdentifier, _FunctionID
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
@@ -314,12 +308,14 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
 
     async def read_events(self, uid: int) -> AsyncGenerator[tuple[HeaderPayload, bytes], None]:
         data: tuple[HeaderPayload, bytes]
-        async for data in self.__event_bus.register(f"/events/{uid}"):
+        # The event bus never runs out of events, so the loop is only left when the generator is closed
+        async for data in self.__event_bus.register(f"/events/{uid}"):  # pragma: no branch
             yield data
 
     async def read_enumeration(self, uid: int | None = None) -> AsyncGenerator[tuple[EnumerationType, Device], None]:
         data: EnumerationPayload
-        async for data in self.__event_bus.register("/enumerations"):
+        # The event bus never runs out of events, so the loop is only left when the generator is closed
+        async for data in self.__event_bus.register("/enumerations"):  # pragma: no branch
             if uid is None or uid == data.uid:
                 try:
                     yield data.enumeration_type, device_factory.get(self, data.device_id, data.uid)  # type: ignore
@@ -529,14 +525,10 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         The main loop, that is responsible for processing incoming packets.
         """
         try:
-            async for header, payload in self.__read_packets():
-                try:
-                    # Read packets from the socket and process them.
-                    await self.__process_packet(header, payload)
-                except (InvalidDataError, TimeoutError):
-                    # May be raised by __read_packet()
-                    # Either no data or invalid data.
-                    pass
+            # Read packets from the socket and process them. The loop is only left by an exception, either an error
+            # or the cancellation by disconnect().
+            async for header, payload in self.__read_packets():  # pragma: no branch
+                await self.__process_packet(header, payload)
         except NotConnectedError:
             self.__schedule_disconnect()
         except Exception:  # pylint: disable=broad-except  # Catch-all, since we process data from external inputs

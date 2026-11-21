@@ -32,7 +32,7 @@ class GetEthernetStatus(NamedTuple):
     gateway: tuple[int, int, int, int]
     rx_count: int
     tx_count: int
-    hostname: bytes
+    hostname: str
 
 
 class GetEthernetWebsocketConfiguration(NamedTuple):
@@ -323,7 +323,7 @@ class EthernetExtension(Device):
             response_expected=response_expected,
         )
 
-    async def get_ethernet_authentication_secret(self) -> bytes:
+    async def get_ethernet_authentication_secret(self) -> str:
         """
         Returns the authentication secret as set by
         :func:`Set Ethernet Authentication Secret`.

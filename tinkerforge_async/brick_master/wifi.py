@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class GetWifiConfiguration(NamedTuple):
-    ssid: bytes
+    ssid: str
     connection: WifiConnection
     ip_address: tuple[int, int, int, int]
     subnet_mask: tuple[int, int, int, int]
@@ -29,7 +29,7 @@ class GetWifiConfiguration(NamedTuple):
 
 class GetWifiEncryption(NamedTuple):
     encryption: WifiEncryptionMode
-    key_index: bytes
+    key_index: int
     eap_options: EapOptions
     ca_certificate_length: int
     client_certificate_length: int
@@ -50,32 +50,7 @@ class GetWifiStatus(NamedTuple):
 
 
 class GetWifiCertificate(NamedTuple):
-    data: tuple[
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-        int,
-    ]
+    data: tuple[int, ...]
     data_length: int
 
 
@@ -713,7 +688,7 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
             response_expected=response_expected,
         )
 
-    async def get_long_wifi_key(self) -> bytes:
+    async def get_long_wifi_key(self) -> str:
         """
         Returns the encryption key as set by :func:`Set Long Wifi Key`.
 
@@ -758,7 +733,7 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
             response_expected=response_expected,
         )
 
-    async def get_wifi_hostname(self) -> bytes:
+    async def get_wifi_hostname(self) -> str:
         """
         Returns the hostname as set by :func:`Set Wifi Hostname`.
 
@@ -801,7 +776,7 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
             response_expected=response_expected,
         )
 
-    async def get_wifi_authentication_secret(self) -> bytes:
+    async def get_wifi_authentication_secret(self) -> str:
         """
         Returns the authentication secret as set by
         :func:`Set Wifi Authentication Secret`.

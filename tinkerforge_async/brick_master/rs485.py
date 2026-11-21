@@ -92,8 +92,6 @@ class Rs485Extension(Device):
         The slave addresses will be saved in the EEPROM of the Chibi Extension, they don't have to be set on every
         startup.
         """
-        if not 0 <= num <= 255:
-            raise ValueError(f"Invalid argument: expected 0 <= num <= 255, got num={num!r}")
         if not 0 <= address <= 255:
             raise ValueError(f"Invalid argument: expected 0 <= address <= 255, got address={address!r}")
 

@@ -93,8 +93,8 @@ class SamplingRate(Enum):
 
 
 class GetCalibration(NamedTuple):
-    offset: int
-    gain: int
+    offset: tuple[int, int]
+    gain: tuple[int, int]
 
 
 class GetChannelLEDStatusConfig(NamedTuple):
@@ -508,6 +508,5 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
                 # channel, so we ignore the value
                 return ()
             return (Event(self, channel, callback_id, VOLTAGE.to_si(voltage)),)
-        if callback_id is CallbackID.ALL_VOLTAGES:
-            return (Event(self, 2, callback_id, tuple(VOLTAGE.to_si(voltage) for voltage in value)),)
-        return ()
+        # The only other callback is CallbackID.ALL_VOLTAGES
+        return (Event(self, 2, callback_id, tuple(VOLTAGE.to_si(voltage) for voltage in value)),)
