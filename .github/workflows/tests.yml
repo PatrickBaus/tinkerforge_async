@@ -1,0 +1,49 @@
+name: Tests
+
+# Run on pushes to the default branch and on pull requests
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+# A new push to a pull request makes the running tests obsolete
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# The jobs ask for the permissions they need
+permissions: {}
+
+jobs:
+  test:
+    name: Run pytest (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    strategy:
+      # Do not abort the other versions, if one fails, so that all failures are visible at once
+      fail-fast: false
+      matrix:
+        # The supported versions, like in the pylint workflow
+        python-version: [ "3.11", "3.12", "3.13", "3.14", "3.15" ]
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install dependencies for testing
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --editable ".[test]"
+      - name: Run tests
+        run: pytest
