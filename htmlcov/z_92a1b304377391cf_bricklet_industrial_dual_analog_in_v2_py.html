@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for tinkerforge_async/bricklet_industrial_dual_analog_in_v2.py: 52%</title>
+    <title>Coverage for tinkerforge_async/bricklet_industrial_dual_analog_in_v2.py: 54%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_4667309f.css" type="text/css">
     <script src="coverage_html_cb_54cfdca1.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>tinkerforge_async<span class="sep">/</span>bricklet_industrial_dual_analog_in_v2.py</b>:
-            <span class="pc_cov">52%</span>
+            <span class="pc_cov">54%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,9 +55,9 @@
             </div>
         </aside>
         <h2>
-            <span class="text">150 statements &nbsp;</span>
+            <span class="text">148 statements &nbsp;</span>
             <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">90<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">60<span class="text"> missing</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">58<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">3<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">0<span class="text"> partial</span></button>
         </h2>
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_industrial_ptc_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-21 22:03 +0000
+            created at 2026-11-21 23:23 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -177,8 +177,8 @@
     <p class="pln"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t"><span class="key">class</span> <span class="nam">GetCalibration</span><span class="op">(</span><span class="nam">NamedTuple</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">    <span class="nam">offset</span><span class="op">:</span> <span class="nam">int</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">    <span class="nam">gain</span><span class="op">:</span> <span class="nam">int</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">    <span class="nam">offset</span><span class="op">:</span> <span class="nam">tuple</span><span class="op">[</span><span class="nam">int</span><span class="op">,</span> <span class="nam">int</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">    <span class="nam">gain</span><span class="op">:</span> <span class="nam">tuple</span><span class="op">[</span><span class="nam">int</span><span class="op">,</span> <span class="nam">int</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t"><span class="key">class</span> <span class="nam">GetChannelLEDStatusConfig</span><span class="op">(</span><span class="nam">NamedTuple</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -592,9 +592,8 @@
     <p class="pln"><span class="n"><a id="t508" href="#t508">508</a></span><span class="t">                <span class="com"># channel, so we ignore the value</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t509" href="#t509">509</a></span><span class="t">                <span class="key">return</span> <span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t510" href="#t510">510</a></span><span class="t">            <span class="key">return</span> <span class="op">(</span><span class="nam">Event</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">channel</span><span class="op">,</span> <span class="nam">callback_id</span><span class="op">,</span> <span class="nam">VOLTAGE</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">voltage</span><span class="op">)</span><span class="op">)</span><span class="op">,</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t511" href="#t511">511</a></span><span class="t">        <span class="key">if</span> <span class="nam">callback_id</span> <span class="key">is</span> <span class="nam">CallbackID</span><span class="op">.</span><span class="nam">ALL_VOLTAGES</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t512" href="#t512">512</a></span><span class="t">            <span class="key">return</span> <span class="op">(</span><span class="nam">Event</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="num">2</span><span class="op">,</span> <span class="nam">callback_id</span><span class="op">,</span> <span class="nam">tuple</span><span class="op">(</span><span class="nam">VOLTAGE</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">voltage</span><span class="op">)</span> <span class="key">for</span> <span class="nam">voltage</span> <span class="key">in</span> <span class="nam">value</span><span class="op">)</span><span class="op">)</span><span class="op">,</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t513" href="#t513">513</a></span><span class="t">        <span class="key">return</span> <span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t511" href="#t511">511</a></span><span class="t">        <span class="com"># The only other callback is CallbackID.ALL_VOLTAGES</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t512" href="#t512">512</a></span><span class="t">        <span class="key">return</span> <span class="op">(</span><span class="nam">Event</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="num">2</span><span class="op">,</span> <span class="nam">callback_id</span><span class="op">,</span> <span class="nam">tuple</span><span class="op">(</span><span class="nam">VOLTAGE</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">voltage</span><span class="op">)</span> <span class="key">for</span> <span class="nam">voltage</span> <span class="key">in</span> <span class="nam">value</span><span class="op">)</span><span class="op">)</span><span class="op">,</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -604,7 +603,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_industrial_ptc_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-21 22:03 +0000
+            created at 2026-11-21 23:23 +0000
         </p>
     </div>
 </footer>
