@@ -7,10 +7,10 @@ handles conversion of raw units to SI units.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator, Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import AdvancedCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -558,46 +558,26 @@ class BrickletIO16(Device):
             yield bit.bit_length() - 1
             number ^= bit
 
-    async def read_events(  # pylint: disable=too-many-branches
-        self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
-    ) -> AsyncGenerator[Event, None]:
+    def _get_registered_events(self, events: Sequence[Any] | None, sids: Sequence[int] | None) -> set[Any]:
         if not (events is None or sids is None):
             raise ValueError(
                 f"Invalid argument: expected events is None or sids is None, got events={events!r}, sids={sids!r}"
             )
+        for sid in sids or ():
+            self._validate_sid(sid, range(16))
+        return super()._get_registered_events(events, sids)
 
-        registered_events = set()
-        if events is not None:
-            for event in events:
-                registered_events.add(self.CallbackID(event))
+    def _to_events(self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None) -> Iterable[Event]:
+        port, interrupt_mask, value_mask = value
+        port = Port(port)
+        if port is Port.B:
+            interrupt_mask, value_mask = interrupt_mask << 8, value_mask << 8
+
         if sids is not None:
-            for sid in sids:
-                self._validate_sid(sid, range(16))
-                for callback in self.SID_TO_CALLBACK.get(sid, []):
-                    registered_events.add(callback)
-
-        if events is None and sids is None:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
-
-        async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
-                continue
-
-            if function_id in registered_events:
-                port, interrupt_mask, value_mask = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                port = Port(port)
-                if port is Port.B:
-                    interrupt_mask, value_mask = interrupt_mask << 8, value_mask << 8
-
-                if sids is not None:
-                    for sid in self.__bits_set(interrupt_mask):
-                        if sid in sids:
-                            yield Event(self, sid, function_id, bool(value_mask & (1 << sid)))
-                else:
-                    # Use a special sid if all channels are returned, because it returns a tuple
-                    yield Event(self, 16, function_id, value_mask, interrupt_mask)
+            return tuple(
+                Event(self, sid, callback_id, bool(value_mask & (1 << sid)))
+                for sid in self.__bits_set(interrupt_mask)
+                if sid in sids
+            )
+        # Use a special sid if all channels are returned, because it returns a tuple
+        return (Event(self, 16, callback_id, value_mask, interrupt_mask),)

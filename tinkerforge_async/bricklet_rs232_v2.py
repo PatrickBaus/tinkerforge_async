@@ -8,9 +8,9 @@ of raw units to SI units.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import Iterable, Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -492,45 +492,20 @@ class BrickletRS232V2(BrickletWithMCU):
                 result.extend(data)
             return bytes(result)
 
-    async def read_events(  # pylint: disable=too-many-branches
-        self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
-    ) -> AsyncGenerator[Event, None]:
-        registered_events = set()
-        if events:
-            for event in events:
-                registered_events.add(self.CallbackID(event))
-        if sids is not None:
-            for sid in sids:
-                for callback in self.SID_TO_CALLBACK.get(sid, []):
-                    registered_events.add(callback)
+    def _to_events(self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None) -> Iterable[Event]:
+        if callback_id is not CallbackID.READ:
+            return (Event(self, 1, callback_id, value),)
 
-        if events is None and sids is None:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
-
-        async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
-                continue
-            if function_id in registered_events:
-                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if function_id is CallbackID.READ:
-                    final_size, offset, data = value
-                    if final_size > offset + 60:
-                        # There is at least one more chunk to read, so we just read the full length and append it
-                        self.__callback_read_buffer.extend(data)
-                    else:
-                        # Read the last chunk, which does not have the full length
-                        self.__callback_read_buffer.extend(data[: final_size - offset])
-                    if len(self.__callback_read_buffer) == final_size:
-                        # If we are done reading, flush the buffer and yield the result
-                        result = bytes(self.__callback_read_buffer)
-                        self.__callback_read_buffer = bytearray()
-                        yield Event(self, 0, function_id, result)
-                    else:
-                        continue
-                else:
-                    yield Event(self, 1, function_id, value)
+        final_size, offset, data = value
+        if final_size > offset + 60:
+            # There is at least one more chunk to read, so we just read the full length and append it
+            self.__callback_read_buffer.extend(data)
+        else:
+            # Read the last chunk, which does not have the full length
+            self.__callback_read_buffer.extend(data[: final_size - offset])
+        if len(self.__callback_read_buffer) != final_size:
+            return ()
+        # If we are done reading, flush the buffer and yield the result
+        result = bytes(self.__callback_read_buffer)
+        self.__callback_read_buffer = bytearray()
+        return (Event(self, 0, callback_id, result),)

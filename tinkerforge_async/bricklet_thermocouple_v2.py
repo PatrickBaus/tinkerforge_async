@@ -7,12 +7,11 @@ the low-level communication with the Tinkerforge ip connection and also handles 
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
-from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier, Event
+from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
@@ -373,32 +372,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
             return round(float(value) * 32 * 1.6 * 2**17)
         return TEMPERATURE.from_si(value)
 
-    async def read_events(
-        self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
-    ) -> AsyncGenerator[Event, None]:
-        registered_events = set()
-        if events:
-            for event in events:
-                registered_events.add(self.CallbackID(event))
-        if sids is not None:
-            for sid in sids:
-                for callback in self.SID_TO_CALLBACK.get(sid, []):
-                    registered_events.add(callback)
-
-        if events is None and sids is None:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
-
-        async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
-                continue
-            if function_id in registered_events:
-                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if function_id is CallbackID.TEMPERATURE:
-                    yield Event(self, 0, function_id, self.__value_to_si(value))
-                else:
-                    yield Event(self, 1, function_id, value)
+    def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
+        if callback_id is CallbackID.TEMPERATURE:
+            return 0, self.__value_to_si(value)
+        return 1, value

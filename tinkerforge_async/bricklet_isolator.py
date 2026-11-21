@@ -7,14 +7,12 @@ the low-level communication with the Tinkerforge ip connection.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import (
     BrickletWithMCU,
     DeviceIdentifier,
-    Event,
     GetSPITFPBaudrateConfig,
     GetSPITFPErrorCount,
     SimpleCallbackConfiguration,
@@ -281,29 +279,5 @@ class BrickletIsolator(BrickletWithMCU):
         period, value_has_to_change = unpack_payload(payload, "I !")
         return SimpleCallbackConfiguration(ms_to_seconds(period), value_has_to_change)
 
-    async def read_events(
-        self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
-    ) -> AsyncGenerator[Event, None]:
-        registered_events = set()
-        if events:
-            for event in events:
-                registered_events.add(self.CallbackID(event))
-        if sids is not None:
-            for sid in sids:
-                for callback in self.SID_TO_CALLBACK.get(sid, []):
-                    registered_events.add(callback)
-
-        if events is None and sids is None:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
-
-        async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
-                continue
-            if function_id in registered_events:
-                values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                yield Event(self, 0, function_id, GetStatistics(*values))
+    def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
+        return 0, GetStatistics(*value)

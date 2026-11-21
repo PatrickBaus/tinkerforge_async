@@ -5,11 +5,11 @@ This file contains all base classes used by Bricks and bricklets
 from __future__ import annotations
 
 import time
-from collections.abc import AsyncGenerator, Iterable
+from collections.abc import AsyncGenerator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, TypeAlias
 
 from .ip_connection_helper import base58decode, pack_payload, uid64_to_uid32, unpack_payload
 from .quantities import CELSIUS_ZERO
@@ -154,6 +154,11 @@ class Device:
     RESPONSE_EXPECTED_TRUE = 2  # setter
     RESPONSE_EXPECTED_FALSE = 3  # setter, default
 
+    # The following attributes are defined by every device with callbacks. See `read_events()`.
+    CallbackID: ClassVar[Any]
+    CALLBACK_FORMATS: ClassVar[Mapping[Any, str]]
+    SID_TO_CALLBACK: ClassVar[Mapping[int, Sequence[Any]]]
+
     def __str__(self) -> str:
         return f"{self.__display_name} with uid {self.uid} connected at {self.__ipcon}"
 
@@ -245,6 +250,124 @@ class Device:
     async def _read_events(self) -> AsyncGenerator[tuple[HeaderPayload, bytes], None]:
         async for event in self.ipcon.read_events(self.uid):
             yield event
+
+    def _get_registered_events(self, events: Sequence[Any] | None, sids: Sequence[int] | None) -> set[Any]:
+        """
+        Translate the filters of `read_events()` into the set of callbacks that are forwarded.
+
+        Parameters
+        ----------
+        events: sequence of CallbackID or int, optional
+            The callbacks to register.
+        sids: sequence of int, optional
+            The secondary ids to register. All callbacks of these sids are registered. Unknown sids are ignored.
+
+        Returns
+        -------
+        set of CallbackID
+            All callbacks if neither `events` nor `sids` are given. Otherwise the union of the callbacks in `events`
+            and the callbacks belonging to `sids`.
+
+        Raises
+        ------
+        ValueError
+            If an entry in `events` is not a valid callback id.
+        """
+        if events is None and sids is None:
+            return set(self.CALLBACK_FORMATS)
+
+        registered_events = set()
+        for event in events or ():
+            registered_events.add(self.CallbackID(event))
+        for sid in sids or ():
+            registered_events.update(self.SID_TO_CALLBACK.get(sid, ()))
+        return registered_events
+
+    def _convert_callback(self, callback_id: Any, value: Any) -> tuple[int, Any]:  # pylint: disable=unused-argument
+        """
+        Convert the unpacked payload of a callback to the value of an `Event`. The default is a device with a single
+        sid 0 that returns the raw value. Devices override this method (or `_to_events()` if a payload does not map to
+        exactly one event).
+
+        Parameters
+        ----------
+        callback_id: CallbackID
+            The callback that was received.
+        value: Any
+            The payload of the callback unpacked with the format in `CALLBACK_FORMATS`.
+
+        Returns
+        -------
+        tuple of int and Any
+            The sid and the payload of the event.
+        """
+        return 0, value
+
+    def _to_events(  # pylint: disable=unused-argument
+        self, callback_id: Any, value: Any, sids: Sequence[int] | None
+    ) -> Iterable[Event]:
+        """
+        Convert the unpacked payload of a callback to events. The default implementation creates one event from
+        `_convert_callback()`. Override it if a payload results in no or several events, e.g. because the channel is
+        part of the payload or the payload spans several packets.
+
+        Parameters
+        ----------
+        callback_id: CallbackID
+            The callback that was received.
+        value: Any
+            The payload of the callback unpacked with the format in `CALLBACK_FORMATS`.
+        sids: sequence of int, optional
+            The sids that were passed to `read_events()`, or `None` if the caller did not filter by sid.
+
+        Returns
+        -------
+        iterable of Event
+            The events to yield.
+        """
+        sid, payload = self._convert_callback(callback_id, value)
+        return (Event(self, sid, callback_id, payload),)
+
+    async def read_events(
+        self,
+        events: Sequence[Any] | None = None,
+        sids: Sequence[int] | None = None,
+    ) -> AsyncGenerator[Event, None]:
+        """
+        Get the callback events of the device.
+
+        Parameters
+        ----------
+        events: sequence of CallbackID, optional
+            Only yield events of these callbacks.
+        sids: sequence of int, optional
+            Only yield events of the callbacks that belong to these sids.
+
+        If both `events` and `sids` are given, events matching either filter are yielded. If neither is given, all
+        events are yielded. An empty sequence selects nothing.
+
+        Yields
+        ------
+        Event
+            The events matching the filters.
+
+        Raises
+        ------
+        ValueError
+            If an entry in `events` is not a valid callback id.
+        """
+        registered_events = self._get_registered_events(events, sids)
+
+        async for header, payload in self._read_events():
+            try:
+                callback_id = self.CallbackID(header.function_id)
+            except ValueError:
+                # Invalid header. Drop the packet.
+                continue
+            if callback_id in registered_events:
+                value = unpack_payload(payload, self.CALLBACK_FORMATS[callback_id])
+                for event in self._to_events(callback_id, value, sids):
+                    yield event
 
     async def connect(self) -> None:
         """

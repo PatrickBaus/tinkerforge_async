@@ -10,14 +10,14 @@ from __future__ import annotations
 import asyncio
 import re
 import warnings
-from collections.abc import AsyncGenerator, Iterable
+from collections.abc import Iterable
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import BasicCallbackConfiguration
 from .devices import BrickletPort as Port
-from .devices import DeviceIdentifier, DeviceWithMCU, Event, GetSPITFPBaudrateConfig, GetSPITFPErrorCount
+from .devices import DeviceIdentifier, DeviceWithMCU, GetSPITFPBaudrateConfig, GetSPITFPErrorCount
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
@@ -3649,35 +3649,9 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         result = unpack_payload(payload, "h")
         return Decimal(result) / 10 + CELSIUS_ZERO
 
-    # pylint: disable=duplicate-code
-    async def read_events(
-        self,
-        events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
-        sids: tuple[int, ...] | list[int] | None = None,
-    ) -> AsyncGenerator[Event, None]:
-        registered_events = set()
-        if events:
-            for event in events:
-                registered_events.add(self.CallbackID(event))
-        if sids is not None:
-            for sid in sids:
-                for callback in self.SID_TO_CALLBACK.get(sid, []):
-                    registered_events.add(callback)
-
-        if events is None and sids is None:
-            registered_events = set(self.CALLBACK_FORMATS.keys())
-
-        async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
-                continue
-            if function_id in registered_events:
-                value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                if function_id in (CallbackID.USB_VOLTAGE, CallbackID.USB_VOLTAGE_REACHED):
-                    yield Event(self, 0, function_id, VOLTAGE.to_si(value))
-                elif function_id in (CallbackID.STACK_VOLTAGE, CallbackID.STACK_VOLTAGE_REACHED):
-                    yield Event(self, 1, function_id, VOLTAGE.to_si(value))
-                else:
-                    yield Event(self, 2, function_id, CURRENT.to_si(value))
+    def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
+        if callback_id in (CallbackID.USB_VOLTAGE, CallbackID.USB_VOLTAGE_REACHED):
+            return 0, VOLTAGE.to_si(value)
+        if callback_id in (CallbackID.STACK_VOLTAGE, CallbackID.STACK_VOLTAGE_REACHED):
+            return 1, VOLTAGE.to_si(value)
+        return 2, CURRENT.to_si(value)
