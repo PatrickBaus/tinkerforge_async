@@ -3,6 +3,7 @@
 """
 An example to demonstrate most of the capabilities of the Tinkerforge Motion Detector Bricklet 2.0.
 """
+
 import asyncio
 import warnings
 

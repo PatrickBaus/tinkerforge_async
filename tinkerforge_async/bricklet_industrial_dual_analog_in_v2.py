@@ -22,9 +22,7 @@ from .devices import (
     SimpleCallbackConfiguration,
 )
 from .devices import ThresholdOption as Threshold
-from .devices import (
-    _FunctionID,
-)
+from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 

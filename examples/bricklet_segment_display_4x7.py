@@ -3,6 +3,7 @@
 """
 An example to demonstrate most of the capabilities of the Tinkerforge Segment Display 4x7 Bricklet.
 """
+
 import asyncio
 import warnings
 

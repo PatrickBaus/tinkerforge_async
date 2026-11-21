@@ -3,6 +3,7 @@
 """
 An example to demonstrate most of the capabilities of the Tinkerforge Analog In Bricklet.
 """
+
 import asyncio
 import warnings
 

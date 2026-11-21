@@ -3,6 +3,7 @@
 """
 A simple example, that reads a value from a temperature bricklet.
 """
+
 import asyncio
 
 from tinkerforge_async import base58decode  # pylint: disable=unused-import # uncomment below to use base58 encoded uids
