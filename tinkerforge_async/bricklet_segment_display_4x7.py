@@ -13,7 +13,7 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, NamedTuple, TypeAlias
 
 from .devices import Device, DeviceIdentifier, Event, _FunctionID
-from .helper import seconds_to_ms
+from .helper import Duration, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -133,7 +133,7 @@ class BrickletSegmentDisplay4x7(Device):
         value_from: int,
         value_to: int,
         increment: int = 1,
-        length: float | Decimal = Decimal(1),
+        length: Duration = Decimal(1),
         response_expected: bool = True,
     ) -> None:
         """
