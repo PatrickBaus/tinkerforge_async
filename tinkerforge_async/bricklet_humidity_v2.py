@@ -17,6 +17,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import CELSIUS_ZERO, TEMPERATURE, Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -81,6 +82,9 @@ class GetMovingAverageConfiguration(NamedTuple):
     moving_average_length_temperature: int
 
 
+HUMIDITY = Quantity(100)  # raw: 1/100 %RH
+
+
 class BrickletHumidityV2(BrickletWithMCU):
     """
     Measures relative humidity
@@ -141,8 +145,8 @@ class BrickletHumidityV2(BrickletWithMCU):
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
         else:
-            minimum = Decimal("273.15") if minimum is None else minimum
-            maximum = Decimal("273.15") if maximum is None else maximum
+            minimum = CELSIUS_ZERO if minimum is None else minimum
+            maximum = CELSIUS_ZERO if maximum is None else maximum
             await self.set_temperature_callback_configuration(
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
@@ -167,7 +171,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_HUMIDITY, response_expected=True
         )
-        return self.__humidity_sensor_to_si(unpack_payload(payload, "H"))
+        return HUMIDITY.to_si(unpack_payload(payload, "H"))
 
     async def set_humidity_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -227,8 +231,8 @@ class BrickletHumidityV2(BrickletWithMCU):
                     seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
-                    self.__si_to_humidity_sensor(minimum),
-                    self.__si_to_humidity_sensor(maximum),
+                    HUMIDITY.from_si(minimum),
+                    HUMIDITY.from_si(maximum),
                 ),
                 "I ! c H H",
             ),
@@ -244,7 +248,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c H H")
         option = Threshold(option)
-        minimum, maximum = self.__humidity_sensor_to_si(minimum), self.__humidity_sensor_to_si(maximum)
+        minimum, maximum = HUMIDITY.to_si(minimum), HUMIDITY.to_si(maximum)
         return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def get_temperature(self) -> Decimal:
@@ -260,15 +264,15 @@ class BrickletHumidityV2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TEMPERATURE, response_expected=True
         )
-        return self.__temperature_sensor_to_si(unpack_payload(payload, "h"))
+        return TEMPERATURE.to_si(unpack_payload(payload, "h"))
 
     async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: Duration = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
-        minimum: Decimal | float = Decimal("273.15"),
-        maximum: Decimal | float = Decimal("273.15"),
+        minimum: Decimal | float = CELSIUS_ZERO,
+        maximum: Decimal | float = CELSIUS_ZERO,
         response_expected: bool = True,
     ) -> None:
         """
@@ -316,8 +320,8 @@ class BrickletHumidityV2(BrickletWithMCU):
                     seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
-                    self.__si_to_temperature_sensor(minimum),
-                    self.__si_to_temperature_sensor(maximum),
+                    TEMPERATURE.from_si(minimum),
+                    TEMPERATURE.from_si(maximum),
                 ),
                 "I ! c h h",
             ),
@@ -333,7 +337,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c h h")
         option = Threshold(option)
-        minimum, maximum = self.__temperature_sensor_to_si(minimum), self.__temperature_sensor_to_si(maximum)
+        minimum, maximum = TEMPERATURE.to_si(minimum), TEMPERATURE.to_si(maximum)
         return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_heater_configuration(
@@ -463,28 +467,6 @@ class BrickletHumidityV2(BrickletWithMCU):
 
         return SamplesPerSecond(unpack_payload(payload, "B"))
 
-    @staticmethod
-    def __humidity_sensor_to_si(value: int) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value) / 100
-
-    @staticmethod
-    def __si_to_humidity_sensor(value: Decimal | float) -> int:
-        return round(value * 100)
-
-    @staticmethod
-    def __temperature_sensor_to_si(value: int) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value + 27315) / 100
-
-    @staticmethod
-    def __si_to_temperature_sensor(value: Decimal | float) -> int:
-        return round(value * 100) - 27315
-
     async def read_events(
         self,
         events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
@@ -511,6 +493,6 @@ class BrickletHumidityV2(BrickletWithMCU):
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id is CallbackID.HUMIDITY:
-                    yield Event(self, 0, function_id, self.__humidity_sensor_to_si(value))
+                    yield Event(self, 0, function_id, HUMIDITY.to_si(value))
                 else:
-                    yield Event(self, 1, function_id, self.__temperature_sensor_to_si(value))
+                    yield Event(self, 1, function_id, TEMPERATURE.to_si(value))

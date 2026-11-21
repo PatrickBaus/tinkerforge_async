@@ -17,6 +17,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import CELSIUS_ZERO, TEMPERATURE, Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -98,6 +99,10 @@ class GetSensorConfiguration(NamedTuple):
     air_pressure_low_pass_filter: LowPassFilter
 
 
+AIR_PRESSURE = Quantity(10)  # raw: 1/10 Pa
+ALTITUDE = Quantity(1000)  # raw: mm
+
+
 class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     """
     Measures air pressure and altitude changes
@@ -168,8 +173,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
             )
         else:
             # The temperature is given in K, so the default value of the device (0) is 273.15 K
-            minimum = Decimal("273.15") if minimum is None else minimum
-            maximum = Decimal("273.15") if maximum is None else maximum
+            minimum = CELSIUS_ZERO if minimum is None else minimum
+            maximum = CELSIUS_ZERO if maximum is None else maximum
             await self.set_temperature_callback_configuration(
                 period, value_has_to_change, option, minimum, maximum, response_expected
             )
@@ -194,7 +199,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_AIR_PRESSURE, response_expected=True
         )
-        return self.__air_pressure_sensor_to_si(unpack_payload(payload, "i"))
+        return AIR_PRESSURE.to_si(unpack_payload(payload, "i"))
 
     async def set_air_pressure_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -248,8 +253,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
                     seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
-                    self.__si_to_air_pressure_sensor(minimum),
-                    self.__si_to_air_pressure_sensor(maximum),
+                    AIR_PRESSURE.from_si(minimum),
+                    AIR_PRESSURE.from_si(maximum),
                 ),
                 "I ! c i i",
             ),
@@ -265,7 +270,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
-        minimum, maximum = self.__air_pressure_sensor_to_si(minimum), self.__air_pressure_sensor_to_si(maximum)
+        minimum, maximum = AIR_PRESSURE.to_si(minimum), AIR_PRESSURE.to_si(maximum)
         return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def get_altitude(self) -> Decimal:
@@ -281,7 +286,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ALTITUDE, response_expected=True
         )
-        return self.__altitude_sensor_to_si(unpack_payload(payload, "i"))
+        return ALTITUDE.to_si(unpack_payload(payload, "i"))
 
     async def set_altitude_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -331,8 +336,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
                     seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
-                    self.__si_to_altitude_sensor(minimum),
-                    self.__si_to_altitude_sensor(maximum),
+                    ALTITUDE.from_si(minimum),
+                    ALTITUDE.from_si(maximum),
                 ),
                 "I ! c i i",
             ),
@@ -348,7 +353,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
-        minimum, maximum = self.__altitude_sensor_to_si(minimum), self.__altitude_sensor_to_si(maximum)
+        minimum, maximum = ALTITUDE.to_si(minimum), ALTITUDE.to_si(maximum)
         return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def get_temperature(self) -> Decimal:
@@ -366,15 +371,15 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TEMPERATURE, response_expected=True
         )
-        return self.__temperature_sensor_to_si(unpack_payload(payload, "i"))
+        return TEMPERATURE.to_si(unpack_payload(payload, "i"))
 
     async def set_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         period: Duration = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
-        minimum: float | Decimal = Decimal("273.15"),
-        maximum: float | Decimal = Decimal("273.15"),
+        minimum: float | Decimal = CELSIUS_ZERO,
+        maximum: float | Decimal = CELSIUS_ZERO,
         response_expected: bool = True,
     ) -> None:
         """
@@ -417,8 +422,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
                     seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value.encode("ascii"),
-                    self.__si_to_temperature_sensor(minimum),
-                    self.__si_to_temperature_sensor(maximum),
+                    TEMPERATURE.from_si(minimum),
+                    TEMPERATURE.from_si(maximum),
                 ),
                 "I ! c i i",
             ),
@@ -434,7 +439,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         option = Threshold(option)
-        minimum, maximum = self.__temperature_sensor_to_si(minimum), self.__temperature_sensor_to_si(maximum)
+        minimum, maximum = TEMPERATURE.to_si(minimum), TEMPERATURE.to_si(maximum)
         return AdvancedCallbackConfiguration(ms_to_seconds(period), value_has_to_change, option, minimum, maximum)
 
     async def set_moving_average_configuration(
@@ -499,7 +504,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_REFERENCE_AIR_PRESSURE,
-            data=pack_payload((self.__si_to_air_pressure_sensor(air_pressure),), "i"),
+            data=pack_payload((AIR_PRESSURE.from_si(air_pressure),), "i"),
             response_expected=response_expected,
         )
 
@@ -511,7 +516,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
             device=self, function_id=FunctionID.GET_REFERENCE_AIR_PRESSURE, response_expected=True
         )
 
-        return self.__air_pressure_sensor_to_si(unpack_payload(payload, "i"))
+        return AIR_PRESSURE.to_si(unpack_payload(payload, "i"))
 
     async def set_calibration(
         self,
@@ -537,8 +542,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
             function_id=FunctionID.SET_CALIBRATION,
             data=pack_payload(
                 (
-                    self.__si_to_air_pressure_sensor(measured_air_pressure),
-                    self.__si_to_air_pressure_sensor(actual_air_pressure),
+                    AIR_PRESSURE.from_si(measured_air_pressure),
+                    AIR_PRESSURE.from_si(actual_air_pressure),
                 ),
                 "i i",
             ),
@@ -553,9 +558,9 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
             device=self, function_id=FunctionID.GET_CALIBRATION, response_expected=True
         )
         measured_air_pressure, actual_air_pressure = unpack_payload(payload, "i i")
-        measured_air_pressure, actual_air_pressure = self.__air_pressure_sensor_to_si(
-            measured_air_pressure
-        ), self.__air_pressure_sensor_to_si(actual_air_pressure)
+        measured_air_pressure, actual_air_pressure = AIR_PRESSURE.to_si(measured_air_pressure), AIR_PRESSURE.to_si(
+            actual_air_pressure
+        )
 
         return GetCalibration(measured_air_pressure, actual_air_pressure)
 
@@ -605,48 +610,6 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
         return GetSensorConfiguration(data_rate, air_pressure_low_pass_filter)
 
-    @staticmethod
-    def __air_pressure_sensor_to_si(value: int) -> Decimal:
-        """
-        Convert the sensor value to SI units
-        """
-        return Decimal(value) / 10
-
-    @staticmethod
-    def __si_to_air_pressure_sensor(value: float | Decimal) -> int:
-        """
-        Convert SI units to raw values
-        """
-        return round(value * 10)
-
-    @staticmethod
-    def __altitude_sensor_to_si(value: int) -> Decimal:
-        """
-        Convert the sensor value to SI units
-        """
-        return Decimal(value) / 1000
-
-    @staticmethod
-    def __si_to_altitude_sensor(value: float | Decimal) -> int:
-        """
-        Convert SI units to raw values
-        """
-        return round(value * 1000)
-
-    @staticmethod
-    def __temperature_sensor_to_si(value: int) -> Decimal:
-        """
-        Convert the sensor value (centi-degrees Celsius) to SI units (K)
-        """
-        return Decimal(value + 27315) / 100
-
-    @staticmethod
-    def __si_to_temperature_sensor(value: float | Decimal) -> int:
-        """
-        Convert SI units (K) to raw values (centi-degrees Celsius)
-        """
-        return round(value * 100) - 27315
-
     async def read_events(
         self,
         events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
@@ -673,8 +636,8 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id is CallbackID.AIR_PRESSURE:
-                    yield Event(self, 0, function_id, self.__air_pressure_sensor_to_si(value))
+                    yield Event(self, 0, function_id, AIR_PRESSURE.to_si(value))
                 elif function_id is CallbackID.ALTITUDE:
-                    yield Event(self, 1, function_id, self.__altitude_sensor_to_si(value))
+                    yield Event(self, 1, function_id, ALTITUDE.to_si(value))
                 else:
-                    yield Event(self, 2, function_id, self.__temperature_sensor_to_si(value))
+                    yield Event(self, 2, function_id, TEMPERATURE.to_si(value))

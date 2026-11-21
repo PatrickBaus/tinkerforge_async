@@ -22,6 +22,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import CELSIUS_ZERO, Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -705,6 +706,10 @@ class WifiMeshStatus(Enum):
     LEAF_AVAILABLE = 7
 
 
+VOLTAGE = Quantity(1000)  # raw: mV
+CURRENT = Quantity(1000)  # raw: mA
+
+
 class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
     """
     Basis to build stacks and has 4 Bricklet ports
@@ -762,7 +767,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STACK_VOLTAGE, response_expected=True
         )
-        return self.__sensor_to_si(unpack_payload(payload, "H"))
+        return VOLTAGE.to_si(unpack_payload(payload, "H"))
 
     async def get_stack_current(self) -> Decimal:
         """
@@ -773,7 +778,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STACK_CURRENT, response_expected=True
         )
-        return self.__sensor_to_si(unpack_payload(payload, "H"))
+        return CURRENT.to_si(unpack_payload(payload, "H"))
 
     async def set_extension_type(
         self, extension: ExtensionPosition, exttype: ExtensionType | int, response_expected: bool = True
@@ -1690,7 +1695,7 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_USB_VOLTAGE, response_expected=True
         )
 
-        return self.__sensor_to_si(unpack_payload(payload, "H"))
+        return VOLTAGE.to_si(unpack_payload(payload, "H"))
 
     async def set_long_wifi_key(self, key: bytes | str, response_expected: bool = True) -> None:
         """
@@ -1899,8 +1904,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload(
                 (
                     option.value,
-                    self.__si_to_sensor(minimum),
-                    self.__si_to_sensor(maximum),
+                    CURRENT.from_si(minimum),
+                    CURRENT.from_si(maximum),
                 ),
                 "c H H",
             ),
@@ -1920,8 +1925,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         option, minimum, maximum = unpack_payload(payload, "c H H")
         return BasicCallbackConfiguration(
             Threshold(option),
-            Decimal(minimum) / 1000,
-            Decimal(maximum) / 1000,
+            CURRENT.to_si(minimum),
+            CURRENT.to_si(maximum),
         )
 
     async def set_stack_voltage_callback_threshold(
@@ -1959,8 +1964,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload(
                 (
                     option.value,
-                    self.__si_to_sensor(minimum),
-                    self.__si_to_sensor(maximum),
+                    VOLTAGE.from_si(minimum),
+                    VOLTAGE.from_si(maximum),
                 ),
                 "c H H",
             ),
@@ -1980,8 +1985,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         option, minimum, maximum = unpack_payload(payload, "c H H")
         return BasicCallbackConfiguration(
             Threshold(option),
-            Decimal(minimum) / 1000,
-            Decimal(maximum) / 1000,
+            VOLTAGE.to_si(minimum),
+            VOLTAGE.to_si(maximum),
         )
 
     async def set_usb_voltage_callback_threshold(
@@ -2019,8 +2024,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload(
                 (
                     option.value,
-                    self.__si_to_sensor(minimum),
-                    self.__si_to_sensor(maximum),
+                    VOLTAGE.from_si(minimum),
+                    VOLTAGE.from_si(maximum),
                 ),
                 "c H H",
             ),
@@ -2040,8 +2045,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         option, minimum, maximum = unpack_payload(payload, "c H H")
         return BasicCallbackConfiguration(
             Threshold(option),
-            Decimal(minimum) / 1000,
-            Decimal(maximum) / 1000,
+            VOLTAGE.to_si(minimum),
+            VOLTAGE.to_si(maximum),
         )
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
@@ -3642,23 +3647,9 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_CHIP_TEMPERATURE, response_expected=True
         )
         result = unpack_payload(payload, "h")
-        return Decimal(result) / 10 + Decimal("273.15")
+        return Decimal(result) / 10 + CELSIUS_ZERO
 
     # pylint: disable=duplicate-code
-    @staticmethod
-    def __sensor_to_si(value: int) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value) / 1000
-
-    @staticmethod
-    def __si_to_sensor(value: Decimal | float) -> int:
-        """
-        Convert to the sensor value to SI units
-        """
-        return round(value * 1000)
-
     async def read_events(
         self,
         events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
@@ -3685,8 +3676,8 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in (CallbackID.USB_VOLTAGE, CallbackID.USB_VOLTAGE_REACHED):
-                    yield Event(self, 0, function_id, self.__sensor_to_si(value))
+                    yield Event(self, 0, function_id, VOLTAGE.to_si(value))
                 elif function_id in (CallbackID.STACK_VOLTAGE, CallbackID.STACK_VOLTAGE_REACHED):
-                    yield Event(self, 1, function_id, self.__sensor_to_si(value))
+                    yield Event(self, 1, function_id, VOLTAGE.to_si(value))
                 else:
-                    yield Event(self, 2, function_id, self.__sensor_to_si(value))
+                    yield Event(self, 2, function_id, CURRENT.to_si(value))

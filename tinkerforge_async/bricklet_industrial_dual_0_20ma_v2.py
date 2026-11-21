@@ -24,6 +24,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import Quantity
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -96,6 +97,9 @@ class GetChannelLEDStatusConfig(NamedTuple):
     minimum: Decimal
     maximum: Decimal
     config: ChannelLedStatusConfig
+
+
+CURRENT = Quantity(1_000_000_000)  # raw: nA
 
 
 class BrickletIndustrialDual020mAV2(BrickletWithMCU):
@@ -183,7 +187,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
             data=pack_payload((int(channel),), "B"),
             response_expected=True,
         )
-        return self.__value_to_si(unpack_payload(payload, "i"))
+        return CURRENT.to_si(unpack_payload(payload, "i"))
 
     async def set_current_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -238,8 +242,8 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
                     seconds_to_ms(period),
                     bool(value_has_to_change),
                     option.value,
-                    self.__si_to_value(minimum),
-                    self.__si_to_value(maximum),
+                    CURRENT.from_si(minimum),
+                    CURRENT.from_si(maximum),
                 ),
                 "B I ! c i i",
             ),
@@ -264,8 +268,8 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            self.__value_to_si(minimum),
-            self.__value_to_si(maximum),
+            CURRENT.to_si(minimum),
+            CURRENT.to_si(maximum),
         )
 
     async def set_sample_rate(self, rate: SamplingRate | int, response_expected: bool = True) -> None:
@@ -401,8 +405,8 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
             data=pack_payload(
                 (
                     int(channel),
-                    self.__si_to_value(minimum),
-                    self.__si_to_value(maximum),
+                    CURRENT.from_si(minimum),
+                    CURRENT.from_si(maximum),
                     config.value,
                 ),
                 "B i i B",
@@ -425,24 +429,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         )
 
         minimum, maximum, config = unpack_payload(payload, "i i B")
-        return GetChannelLEDStatusConfig(
-            self.__value_to_si(minimum), self.__value_to_si(maximum), ChannelLedStatusConfig(config)
-        )
-
-    @staticmethod
-    def __value_to_si(value: int) -> Decimal:
-        """
-        Convert the sensor value (nA) to SI units (A)
-        """
-        return Decimal(value) / 1_000_000_000
-
-    @staticmethod
-    def __si_to_value(value: float | Decimal) -> int:
-        """
-        Convert SI units (A) to the sensor value (nA). Rounding avoids floating point errors, e.g. 0.0029 A * 1e9
-        would otherwise result in 2899999 nA.
-        """
-        return round(Decimal(value) * 1_000_000_000)
+        return GetChannelLEDStatusConfig(CURRENT.to_si(minimum), CURRENT.to_si(maximum), ChannelLedStatusConfig(config))
 
     async def read_events(
         self,
@@ -473,4 +460,4 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
                     # We got a reply from the wrong channel, maybe there is another callback running on that other
                     # channel, so we ignore the value
                     continue
-                yield Event(self, channel, function_id, self.__value_to_si(value))
+                yield Event(self, channel, function_id, CURRENT.to_si(value))

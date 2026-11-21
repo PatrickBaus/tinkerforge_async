@@ -18,6 +18,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import CELSIUS_ZERO, TEMPERATURE
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -108,8 +109,8 @@ class BrickletTemperature(Device):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        minimum = Decimal("273.15") if minimum is None else minimum
-        maximum = Decimal("273.15") if maximum is None else maximum
+        minimum = CELSIUS_ZERO if minimum is None else minimum
+        maximum = CELSIUS_ZERO if maximum is None else maximum
 
         self._validate_sid(sid, (0,))
 
@@ -138,7 +139,7 @@ class BrickletTemperature(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TEMPERATURE, response_expected=True
         )
-        return self.__value_to_si(unpack_payload(payload, "h"))
+        return TEMPERATURE.to_si(unpack_payload(payload, "h"))
 
     async def set_temperature_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -172,8 +173,8 @@ class BrickletTemperature(Device):
     async def set_temperature_callback_threshold(
         self,
         option: Threshold | int = Threshold.OFF,
-        minimum: float | Decimal = Decimal("273.15"),
-        maximum: float | Decimal = Decimal("273.15"),
+        minimum: float | Decimal = CELSIUS_ZERO,
+        maximum: float | Decimal = CELSIUS_ZERO,
         response_expected: bool = True,
     ) -> None:
         """
@@ -199,7 +200,7 @@ class BrickletTemperature(Device):
             device=self,
             function_id=FunctionID.SET_TEMPERATURE_CALLBACK_THRESHOLD,
             data=pack_payload(
-                (option.value.encode("ascii"), self.__si_to_value(minimum), self.__si_to_value(maximum)), "c h h"
+                (option.value.encode("ascii"), TEMPERATURE.from_si(minimum), TEMPERATURE.from_si(maximum)), "c h h"
             ),
             response_expected=response_expected,
         )
@@ -213,7 +214,7 @@ class BrickletTemperature(Device):
         )
         option, minimum, maximum = unpack_payload(payload, "c h h")
         option = Threshold(option)
-        minimum, maximum = self.__value_to_si(minimum), self.__value_to_si(maximum)
+        minimum, maximum = TEMPERATURE.to_si(minimum), TEMPERATURE.to_si(maximum)
         return BasicCallbackConfiguration(option, minimum, maximum)
 
     async def set_debounce_period(
@@ -289,18 +290,6 @@ class BrickletTemperature(Device):
         )
         return I2cOption(unpack_payload(payload, "B"))
 
-    # pylint: disable=duplicate-code
-    @staticmethod
-    def __value_to_si(value: int) -> Decimal:
-        """
-        Convert to the sensor value to SI units
-        """
-        return Decimal(value + 27315) / 100
-
-    @staticmethod
-    def __si_to_value(value: float | Decimal) -> int:
-        return round(value * 100) - 27315
-
     async def read_events(
         self,
         events: tuple[int | CallbackID, ...] | list[int | CallbackID] | None = None,
@@ -326,4 +315,4 @@ class BrickletTemperature(Device):
                 continue
             if function_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
-                yield Event(self, 0, function_id, self.__value_to_si(value))
+                yield Event(self, 0, function_id, TEMPERATURE.to_si(value))

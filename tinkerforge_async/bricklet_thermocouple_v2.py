@@ -17,6 +17,7 @@ from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import CELSIUS_ZERO, TEMPERATURE
 
 if TYPE_CHECKING:
     from .ip_connection import IPConnectionAsync
@@ -172,8 +173,8 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        minimum = Decimal("273.15") if minimum is None else minimum
-        maximum = Decimal("273.15") if maximum is None else maximum
+        minimum = CELSIUS_ZERO if minimum is None else minimum
+        maximum = CELSIUS_ZERO if maximum is None else maximum
 
         # Only the temperature (sid 0) has a callback configuration. The error state is always reported.
         self._validate_sid(sid, (0,))
@@ -212,8 +213,8 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         period: Duration = 0,
         value_has_to_change: bool = False,
         option: Threshold | int = Threshold.OFF,
-        minimum: Decimal | int | float = Decimal("273.15"),
-        maximum: Decimal | int | float = Decimal("273.15"),
+        minimum: Decimal | int | float = CELSIUS_ZERO,
+        maximum: Decimal | int | float = CELSIUS_ZERO,
         response_expected=True,
     ) -> None:
         """
@@ -363,14 +364,14 @@ class BrickletThermocoupleV2(BrickletWithMCU):
             return Decimal(value / 8 / 1.6 / 2**17)
         if self.__sensor_type is SensorType.TYPE_G32:
             return Decimal(value / 32 / 1.6 / 2**17)
-        return Decimal(value + 27315) / 100
+        return TEMPERATURE.to_si(value)
 
     def __si_to_value(self, value: float | Decimal) -> int:
         if self.__sensor_type is SensorType.TYPE_G8:
             return round(float(value) * 8 * 1.6 * 2**17)
         if self.__sensor_type is SensorType.TYPE_G32:
             return round(float(value) * 32 * 1.6 * 2**17)
-        return round(value * 100) - 27315
+        return TEMPERATURE.from_si(value)
 
     async def read_events(
         self,

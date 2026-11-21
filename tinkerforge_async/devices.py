@@ -12,6 +12,7 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .ip_connection_helper import base58decode, pack_payload, uid64_to_uid32, unpack_payload
+from .quantities import CELSIUS_ZERO
 
 if TYPE_CHECKING:
     from .ip_connection import HeaderPayload, IPConnectionAsync
@@ -276,7 +277,7 @@ class DeviceWithMCU(Device):
             device=self, function_id=FunctionID.GET_CHIP_TEMPERATURE, response_expected=True
         )
         result = unpack_payload(payload, "h")
-        return result + Decimal("273.15")
+        return result + CELSIUS_ZERO
 
     async def reset(self) -> None:
         """
