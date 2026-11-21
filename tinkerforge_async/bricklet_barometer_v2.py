@@ -634,7 +634,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         """
         Convert SI units to raw values
         """
-        return int(value * 100)
+        return round(value * 100)
 
     async def read_events(
         self,
