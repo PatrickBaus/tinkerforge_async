@@ -82,6 +82,8 @@ exclude_also = [
     # Only evaluated by the type checker
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
+    # Marks code after an endless loop, that only exists to tell mypy that the function does not return there
+    "raise AssertionError",
 ]
 
 [build-system]
