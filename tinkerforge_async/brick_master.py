@@ -2464,13 +2464,11 @@ class BrickMaster(DeviceWithMCU):  # pylint: disable=too-many-public-methods
         if not isinstance(data, bytes):
             data = data.encode("utf-8")
 
-        data = bytearray(data)
         if len(data) > 60:
             raise ValueError(f"Invalid argument: expected len(data) <= 60, got data={data!r}")
 
         length = len(data)
-
-        data.extend([0] * (60 - length))  # always send 60 bytes
+        data = data.ljust(60, b"\x00")  # always send 60 bytes, fill with b"\x00"
 
         _, payload = await self.ipcon.send_request(
             device=self,
