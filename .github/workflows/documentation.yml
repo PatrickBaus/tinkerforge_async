@@ -17,16 +17,18 @@ jobs:
 
     steps:
     - name: Checkout source repository
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
+        persist-credentials: false
         path: master
     - name: Checkout gh-pages repository
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
         ref: gh-pages
         path: gh-pages
+        # The credentials are needed to push the documentation
     - name: Set up python ${{ matrix.python-version }}
-      uses: actions/setup-python@v7
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies for testing
