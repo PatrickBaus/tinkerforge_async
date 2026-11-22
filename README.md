@@ -12,36 +12,145 @@ This is a reimplementation of the Tinkerforge Python bindings ([original Python 
 The library is fully type-hinted.
 
 # Supported Bricks/Bricklets
-|Brick|Supported|Tested|Comments|
-|--|--|--|--|
-|[Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)|:heavy_check_mark:|:heavy_check_mark:|  |
 
-| Bricklet                                                                                                                 |Supported|Tested|
-|--------------------------------------------------------------------------------------------------------------------------|--|--|
-| [Ambient Light 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V2.html)                         |:heavy_check_mark:|:heavy_check_mark:|
-| [Ambient Light 3.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)                         |:heavy_check_mark:|:heavy_check_mark:|
-| [Analog In](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)                                        |:heavy_check_mark:|:heavy_check_mark:|
-| [Barometer](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)                                        |:heavy_check_mark:|:heavy_check_mark:|
-| [Barometer 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html)                                 |:heavy_check_mark:|:heavy_check_mark:|
-| [Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)                                          |:heavy_check_mark:|:heavy_check_mark:|
-| [Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)                                   |:heavy_check_mark:|:heavy_check_mark:|
-| [Industrial Dual 0-20mA 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_020mA_V2.html)        |:heavy_check_mark:|:heavy_check_mark:|
-| [Industrial Dual Analog In 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html) |:heavy_check_mark:|:heavy_check_mark:|
-| [Industrial PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_PTC.html)                              |:heavy_check_mark:|:heavy_check_mark:|
-| [IO-4 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/IO4_V2.html)                                            |:heavy_check_mark:|:heavy_check_mark:|
-| [IO-16](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)                                                 |:heavy_check_mark:|:heavy_check_mark:|
-| [Isolator](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Isolator.html)                                          |:heavy_check_mark:|:heavy_check_mark:|
-| [Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)                                          |:heavy_check_mark:|:heavy_check_mark:|
-| [Motion Detector 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Motion_Detector_V2.html)                     |:heavy_check_mark:|:heavy_check_mark:|
-| [PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)                                                    |:heavy_check_mark:|:heavy_check_mark:|
-| [PTC 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)                                             |:heavy_check_mark:|:heavy_check_mark:|
-| [RS232 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/RS232_V2.html)                                         |:heavy_check_mark:|:heavy_check_mark:|
-| [Segment Display 4x7](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html)                    |:heavy_check_mark:|:heavy_check_mark:|
-| [Segment Display 4x7 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)             |:heavy_check_mark:|:heavy_check_mark:|
-| [Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)                                    |:heavy_check_mark:|:heavy_check_mark:|
-| [Temperature 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html)                             |:heavy_check_mark:|:heavy_check_mark:|
-| [Thermocouple 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Thermocouple_V2.html)                           |:heavy_check_mark:|:heavy_check_mark:|
+| Brick                                                                                                | Supported          | Tested             |
+|------------------------------------------------------------------------------------------------------|--------------------|--------------------|
+| [ESP32](https://www.tinkerforge.com/en/doc/Software/Bricks/ESP32_Brick_Python.html)                  | :heavy_check_mark: |                    |
+| [ESP32 Ethernet](https://www.tinkerforge.com/en/doc/Software/Bricks/ESP32Ethernet_Brick_Python.html) | :heavy_check_mark: |                    |
+| [HAT](https://www.tinkerforge.com/en/doc/Software/Bricks/HAT_Brick_Python.html)                      | :heavy_check_mark: |                    |
+| [HAT Zero](https://www.tinkerforge.com/en/doc/Software/Bricks/HATZero_Brick_Python.html)             | :heavy_check_mark: |                    |
+| [IMU 2.0](https://www.tinkerforge.com/en/doc/Software/Bricks/IMUV2_Brick_Python.html)                | :heavy_check_mark: |                    |
+| [Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)                       | :heavy_check_mark: | :heavy_check_mark: |
+| [RED](https://www.tinkerforge.com/en/doc/Software/Bricks/RED_Brick_Python.html)                      | :heavy_check_mark: |                    |
+| [Silent Stepper](https://www.tinkerforge.com/en/doc/Software/Bricks/SilentStepper_Brick_Python.html) | :heavy_check_mark: |                    |
 
+| Bricklet                                                                                                                           | Supported          | Tested             |
+|------------------------------------------------------------------------------------------------------------------------------------|--------------------|--------------------|
+| [Accelerometer 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/AccelerometerV2_Bricklet_Python.html)                    | :heavy_check_mark: |                    |
+| [Air Quality](https://www.tinkerforge.com/en/doc/Software/Bricklets/AirQuality_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
+| [Ambient Light 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V2.html)                                   | :heavy_check_mark: | :heavy_check_mark: |
+| [Ambient Light 3.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)                                   | :heavy_check_mark: | :heavy_check_mark: |
+| [Analog In](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)                                                  | :heavy_check_mark: | :heavy_check_mark: |
+| [Analog In 3.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/AnalogInV3_Bricklet_Python.html)                             | :heavy_check_mark: |                    |
+| [Analog Out 3.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/AnalogOutV3_Bricklet_Python.html)                           | :heavy_check_mark: |                    |
+| [Barometer](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)                                                  | :heavy_check_mark: | :heavy_check_mark: |
+| [Barometer 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html)                                           | :heavy_check_mark: | :heavy_check_mark: |
+| [CAN](https://www.tinkerforge.com/en/doc/Software/Bricklets/CAN_Bricklet_Python.html)                                              | :heavy_check_mark: |                    |
+| [CAN 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/CANV2_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
+| [CO2 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/CO2V2_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
+| [Color](https://www.tinkerforge.com/en/doc/Software/Bricklets/Color_Bricklet_Python.html)                                          | :heavy_check_mark: |                    |
+| [Color 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/ColorV2_Bricklet_Python.html)                                    | :heavy_check_mark: |                    |
+| [Compass](https://www.tinkerforge.com/en/doc/Software/Bricklets/Compass_Bricklet_Python.html)                                      | :heavy_check_mark: |                    |
+| [DC 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/DCV2_Bricklet_Python.html)                                          | :heavy_check_mark: |                    |
+| [Distance IR](https://www.tinkerforge.com/en/doc/Software/Bricklets/DistanceIR_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
+| [Distance IR 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/DistanceIRV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [Distance US 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/DistanceUSV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [DMX](https://www.tinkerforge.com/en/doc/Software/Bricklets/DMX_Bricklet_Python.html)                                              | :heavy_check_mark: |                    |
+| [Dual Button 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/DualButtonV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [Dust Detector](https://www.tinkerforge.com/en/doc/Software/Bricklets/DustDetector_Bricklet_Python.html)                           | :heavy_check_mark: |                    |
+| [E-Paper 296x128](https://www.tinkerforge.com/en/doc/Software/Bricklets/EPaper296x128_Bricklet_Python.html)                        | :heavy_check_mark: |                    |
+| [Energy Monitor](https://www.tinkerforge.com/en/doc/Software/Bricklets/EnergyMonitor_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [GPS 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/GPSV2_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
+| [GPS 3.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/GPSV3_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
+| [Hall Effect](https://www.tinkerforge.com/en/doc/Software/Bricklets/HallEffect_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
+| [Hall Effect 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/HallEffectV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)                                                    | :heavy_check_mark: | :heavy_check_mark: |
+| [Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)                                             | :heavy_check_mark: | :heavy_check_mark: |
+| [IMU 3.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IMUV3_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
+| [Industrial Analog Out 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialAnalogOutV2_Bricklet_Python.html)      | :heavy_check_mark: |                    |
+| [Industrial Counter](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialCounter_Bricklet_Python.html)                 | :heavy_check_mark: |                    |
+| [Industrial Digital In 4 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDigitalIn4V2_Bricklet_Python.html)   | :heavy_check_mark: |                    |
+| [Industrial Digital Out 4](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDigitalOut4_Bricklet_Python.html)       | :heavy_check_mark: |                    |
+| [Industrial Digital Out 4 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDigitalOut4V2_Bricklet_Python.html) | :heavy_check_mark: |                    |
+| [Industrial Dual 0-20mA](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDual020mA_Bricklet_Python.html)           | :heavy_check_mark: |                    |
+| [Industrial Dual 0-20mA 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_020mA_V2.html)                  | :heavy_check_mark: | :heavy_check_mark: |
+| [Industrial Dual AC In](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDualACIn_Bricklet_Python.html)             | :heavy_check_mark: |                    |
+| [Industrial Dual AC Relay](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDualACRelay_Bricklet_Python.html)       | :heavy_check_mark: |                    |
+| [Industrial Dual Analog In 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)           | :heavy_check_mark: | :heavy_check_mark: |
+| [Industrial Dual Relay](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDualRelay_Bricklet_Python.html)            | :heavy_check_mark: |                    |
+| [Industrial PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_PTC.html)                                        | :heavy_check_mark: | :heavy_check_mark: |
+| [Industrial Quad Relay 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialQuadRelayV2_Bricklet_Python.html)      | :heavy_check_mark: |                    |
+| [IO-16](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)                                                           | :heavy_check_mark: | :heavy_check_mark: |
+| [IO-16 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IO16V2_Bricklet_Python.html)                                     | :heavy_check_mark: |                    |
+| [IO-4 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/IO4_V2.html)                                                      | :heavy_check_mark: | :heavy_check_mark: |
+| [Isolator](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Isolator.html)                                                    | :heavy_check_mark: | :heavy_check_mark: |
+| [Joystick](https://www.tinkerforge.com/en/doc/Software/Bricklets/Joystick_Bricklet_Python.html)                                    | :heavy_check_mark: |                    |
+| [Joystick 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/JoystickV2_Bricklet_Python.html)                              | :heavy_check_mark: |                    |
+| [Laser Range Finder 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/LaserRangeFinderV2_Bricklet_Python.html)            | :heavy_check_mark: |                    |
+| [LCD 128x64](https://www.tinkerforge.com/en/doc/Software/Bricklets/LCD128x64_Bricklet_Python.html)                                 | :heavy_check_mark: |                    |
+| [LCD 20x4](https://www.tinkerforge.com/en/doc/Software/Bricklets/LCD20x4_Bricklet_Python.html)                                     | :heavy_check_mark: |                    |
+| [LED Strip 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/LEDStripV2_Bricklet_Python.html)                             | :heavy_check_mark: |                    |
+| [Line](https://www.tinkerforge.com/en/doc/Software/Bricklets/Line_Bricklet_Python.html)                                            | :heavy_check_mark: |                    |
+| [Linear Poti](https://www.tinkerforge.com/en/doc/Software/Bricklets/LinearPoti_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
+| [Linear Poti 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/LinearPotiV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [Load Cell 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/LoadCellV2_Bricklet_Python.html)                             | :heavy_check_mark: |                    |
+| [Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)                                                    | :heavy_check_mark: | :heavy_check_mark: |
+| [Motion Detector 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Motion_Detector_V2.html)                               | :heavy_check_mark: | :heavy_check_mark: |
+| [Motorized Linear Poti](https://www.tinkerforge.com/en/doc/Software/Bricklets/MotorizedLinearPoti_Bricklet_Python.html)            | :heavy_check_mark: |                    |
+| [Multi Touch](https://www.tinkerforge.com/en/doc/Software/Bricklets/MultiTouch_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
+| [Multi Touch 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/MultiTouchV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [NFC](https://www.tinkerforge.com/en/doc/Software/Bricklets/NFC_Bricklet_Python.html)                                              | :heavy_check_mark: |                    |
+| [OLED 128x64 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/OLED128x64V2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [OLED 64x48](https://www.tinkerforge.com/en/doc/Software/Bricklets/OLED64x48_Bricklet_Python.html)                                 | :heavy_check_mark: |                    |
+| [One Wire](https://www.tinkerforge.com/en/doc/Software/Bricklets/OneWire_Bricklet_Python.html)                                     | :heavy_check_mark: |                    |
+| [Outdoor Weather](https://www.tinkerforge.com/en/doc/Software/Bricklets/OutdoorWeather_Bricklet_Python.html)                       | :heavy_check_mark: |                    |
+| [Particulate Matter](https://www.tinkerforge.com/en/doc/Software/Bricklets/ParticulateMatter_Bricklet_Python.html)                 | :heavy_check_mark: |                    |
+| [Performance DC](https://www.tinkerforge.com/en/doc/Software/Bricklets/PerformanceDC_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [Piezo Speaker](https://www.tinkerforge.com/en/doc/Software/Bricklets/PiezoSpeaker_Bricklet_Python.html)                           | :heavy_check_mark: |                    |
+| [Piezo Speaker 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/PiezoSpeakerV2_Bricklet_Python.html)                     | :heavy_check_mark: |                    |
+| [PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)                                                              | :heavy_check_mark: | :heavy_check_mark: |
+| [PTC 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)                                                       | :heavy_check_mark: | :heavy_check_mark: |
+| [Real-Time Clock](https://www.tinkerforge.com/en/doc/Software/Bricklets/RealTimeClock_Bricklet_Python.html)                        | :heavy_check_mark: |                    |
+| [Real-Time Clock 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RealTimeClockV2_Bricklet_Python.html)                  | :heavy_check_mark: |                    |
+| [Remote Switch 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RemoteSwitchV2_Bricklet_Python.html)                     | :heavy_check_mark: |                    |
+| [RGB LED 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RGBLEDV2_Bricklet_Python.html)                                 | :heavy_check_mark: |                    |
+| [RGB LED Button](https://www.tinkerforge.com/en/doc/Software/Bricklets/RGBLEDButton_Bricklet_Python.html)                          | :heavy_check_mark: |                    |
+| [Rotary Encoder 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RotaryEncoderV2_Bricklet_Python.html)                   | :heavy_check_mark: |                    |
+| [Rotary Poti](https://www.tinkerforge.com/en/doc/Software/Bricklets/RotaryPoti_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
+| [Rotary Poti 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RotaryPotiV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [RS232](https://www.tinkerforge.com/en/doc/Software/Bricklets/RS232_Bricklet_Python.html)                                          | :heavy_check_mark: |                    |
+| [RS232 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/RS232_V2.html)                                                   | :heavy_check_mark: | :heavy_check_mark: |
+| [RS485](https://www.tinkerforge.com/en/doc/Software/Bricklets/RS485_Bricklet_Python.html)                                          | :heavy_check_mark: |                    |
+| [Segment Display 4x7](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7.html)                              | :heavy_check_mark: | :heavy_check_mark: |
+| [Segment Display 4x7 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)                       | :heavy_check_mark: | :heavy_check_mark: |
+| [Servo 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/ServoV2_Bricklet_Python.html)                                    | :heavy_check_mark: |                    |
+| [Silent Stepper 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/SilentStepperV2_Bricklet_Python.html)                   | :heavy_check_mark: |                    |
+| [Solid State Relay 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/SolidStateRelayV2_Bricklet_Python.html)              | :heavy_check_mark: |                    |
+| [Sound Intensity](https://www.tinkerforge.com/en/doc/Software/Bricklets/SoundIntensity_Bricklet_Python.html)                       | :heavy_check_mark: |                    |
+| [Sound Pressure Level](https://www.tinkerforge.com/en/doc/Software/Bricklets/SoundPressureLevel_Bricklet_Python.html)              | :heavy_check_mark: |                    |
+| [Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)                                              | :heavy_check_mark: | :heavy_check_mark: |
+| [Temperature 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html)                                       | :heavy_check_mark: | :heavy_check_mark: |
+| [Temperature IR 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/TemperatureIRV2_Bricklet_Python.html)                   | :heavy_check_mark: |                    |
+| [Thermal Imaging](https://www.tinkerforge.com/en/doc/Software/Bricklets/ThermalImaging_Bricklet_Python.html)                       | :heavy_check_mark: |                    |
+| [Thermocouple 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Thermocouple_V2.html)                                     | :heavy_check_mark: | :heavy_check_mark: |
+| [Tilt](https://www.tinkerforge.com/en/doc/Software/Bricklets/Tilt_Bricklet_Python.html)                                            | :heavy_check_mark: |                    |
+| [UV Light 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/UVLightV2_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
+| [Voltage/Current 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/VoltageCurrentV2_Bricklet_Python.html)                 | :heavy_check_mark: |                    |
+| [XMC1400 Breakout](https://www.tinkerforge.com/en/doc/Software/Bricklets/XMC1400Breakout_Bricklet_Python.html)                     | :heavy_check_mark: |                    |
+
+*Tested* means tested with the hardware. The other devices are tested against the protocol only, see below.
+
+## Generated Bricks and Bricklets
+The modules of the Bricks and Bricklets without a check mark in the *Tested* column were generated from the
+[Tinkerforge API definitions](https://github.com/Tinkerforge/generators) (CC0 licensed) and follow the same
+conventions as the hand-written modules:
+
+- All values are converted to SI units and returned as `Decimal`, e.g. V, A, W, m, s, K, Pa, kg, T and m/s².
+  Energy is returned in J, speeds in m/s and accelerations given in g are converted to m/s². Angles stay in
+  degrees, percentages in percent and dimensionless values (ppm, dB, UV index) as they are. Counts (bytes, steps,
+  baud) are returned as `int`.
+- Every function documents the units of its parameters and results in a *Units* line of its docstring. The rest
+  of the docstrings is taken from the official documentation, so numbers in the descriptions can refer to raw
+  values.
+- Constants are `Enum`s, invalid arguments raise a `ValueError` before anything is sent.
+- Functions, that transfer more data than fits into a single packet (e.g. `write_pixels()` of the LCD 128x64
+  Bricklet or `write()` of the RS485 Bricklet), have a high-level version, that splits the data into chunks. The
+  `*_low_level()` functions are available, too. Streamed callbacks are reassembled before they are yielded by
+  `read_events()`.
+- `get_value()`, `set_callback_configuration()` and `get_callback_configuration()` work with the secondary ids
+  (sids) listed in the `CHANNELS` table of each device.
+
+The function ids and payload formats are checked against the official Python bindings by the tests.
 ## Documentation
 The documentation is currently work in progress. The full documentation will be moved to
 [https://patrickbaus.github.io/tinkerforge_async/](https://patrickbaus.github.io/tinkerforge_async/). Below you can

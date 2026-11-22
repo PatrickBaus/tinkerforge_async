@@ -3,7 +3,7 @@ General helper functions used by multiple modules.
 """
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Sized
 from contextlib import aclosing
 from dataclasses import dataclass
 from decimal import Decimal
@@ -75,3 +75,47 @@ def ms_to_seconds(value: int) -> Decimal:
     Convert an integer value in ms, as used by the Tinkerforge protocol, to a duration in s.
     """
     return Decimal(value) / 1000
+
+
+def check_range(name: str, raw: int | float, minimum: int | float, maximum: int | float, value: object = None) -> None:
+    """
+    Check that the raw value of an argument, that is sent to a device, is valid. Unlike an assert statement, this check
+    is also performed when Python runs with optimizations enabled (-O or -OO).
+
+    Parameters
+    ----------
+    name: str
+        The name of the argument
+    raw: int or float
+        The raw value as sent to the device
+    minimum: int or float
+        The smallest valid raw value
+    maximum: int or float
+        The largest valid raw value
+    value: object, optional
+        The value passed by the user, if it is not the raw value. It is used for the error message.
+
+    Raises
+    ------
+    ValueError
+        If the raw value is out of range.
+    """
+    if not minimum <= raw <= maximum:
+        shown = raw if value is None else value
+        raise ValueError(
+            f"Invalid argument: {name}={shown!r} is out of range. "
+            f"The raw value {raw!r} must be in [{minimum}, {maximum}]."
+        )
+
+
+def check_length(name: str, value: Sized, length: int) -> None:
+    """
+    Check that an argument, that is sent to a device as an array, has the length of the array.
+
+    Raises
+    ------
+    ValueError
+        If the length of `value` is not `length`.
+    """
+    if len(value) != length:
+        raise ValueError(f"Invalid argument: expected {length} items for {name}, got {len(value)} items")
