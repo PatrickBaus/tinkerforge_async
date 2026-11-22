@@ -102,11 +102,13 @@ CALLS: list[Call] = [
 REJECTED: list[tuple[str, tuple[Any, ...]]] = [
     ("write_line", (4, 3, "abc")),
     ("write_line", (3, 20, "abc")),
+    ("write_line", (3, 3, "aaaaaaaaaaaaaaaaaaaaa")),
     ("is_button_pressed", (4,)),
     ("set_custom_character", (8, [i % 256 for i in range(8)])),
     ("set_custom_character", (3, ([i % 256 for i in range(8)])[:-1])),
     ("get_custom_character", (8,)),
     ("set_default_text", (4, "abc")),
+    ("set_default_text", (3, "aaaaaaaaaaaaaaaaaaaaa")),
     ("get_default_text", (4,)),
     ("set_default_text_counter", (Decimal("2147483.648"),)),
 ]

@@ -10,6 +10,7 @@ import pytest
 
 from tinkerforge_async.bricklet_io4_v2 import (
     BrickletIO4V2,
+    GetCaptureInputCallbackConfiguration,
     GetConfiguration,
     GetEdgeCountConfiguration,
     GetMonoflop,
@@ -171,6 +172,28 @@ CALLS = [
     ),
 ]
 
+CALLS += [
+    Call(
+        "set_capture_input_callback_configuration",
+        FunctionID.SET_CAPTURE_INPUT_CALLBACK_CONFIGURATION,
+        (True,),
+        sent=("! H", (True, 50)),
+    ),
+    Call(
+        "set_capture_input_callback_configuration",
+        FunctionID.SET_CAPTURE_INPUT_CALLBACK_CONFIGURATION,
+        (False, 0.00002, False),
+        sent=("! H", (False, 20)),
+        response_expected=False,
+    ),
+    Call(
+        "get_capture_input_callback_configuration",
+        FunctionID.GET_CAPTURE_INPUT_CALLBACK_CONFIGURATION,
+        reply=("! H", (True, 50)),
+        result=GetCaptureInputCallbackConfiguration(True, Decimal("0.00005")),
+    ),
+]
+
 REJECTED = [
     ("set_selected_value", (4, True)),
     ("set_configuration", (4,)),
@@ -187,7 +210,12 @@ REJECTED = [
     ("get_edge_count_configuration", (4,)),
     ("set_pwm_configuration", (4,)),
     ("get_pwm_configuration", (4,)),
-    # The sids are the channels 0 to 3, 4 for all channels, and 5 to 8 for the edge counters of the channels
+    ("get_edge_count_callback_configuration", (4,)),
+    # The time between two captures is 20 µs to 65535 µs
+    ("set_capture_input_callback_configuration", (True, Decimal("0.000019"))),
+    ("set_capture_input_callback_configuration", (True, Decimal("0.065536"))),
+    # The sids are the channels 0 to 3, 4 for all channels, and 5 to 8 for the edge counters of the channels. The
+    # captured inputs (sid 9) are not configured by a period.
     ("set_callback_configuration", (9,)),
     ("get_callback_configuration", (9,)),
 ]
@@ -237,6 +265,19 @@ def test_events_filtered_by_sid(bricklet, connection):
         (3, CallbackID.ALL_INPUT_VALUE, False),
     ]
     assert summary(read_events(bricklet, sids=(4,))) == [(4, CallbackID.ALL_INPUT_VALUE, (True, False, True, False))]
+
+
+def test_captured_inputs_are_events_of_sid_9(bricklet, connection):
+    """The captured inputs are a stream of bitmasks. They are not split into the channels."""
+    callbacks(connection)
+    connection.callback(CallbackID.CAPTURE_INPUT, "64B", list(range(64)))
+    connection.callback(CallbackID.EDGE_COUNT)  # Emulated by the library, so a packet with this id is dropped
+    expected = [(9, CallbackID.CAPTURE_INPUT, bytes(range(64)))]
+    assert summary(read_events(bricklet, sids=(9,))) == expected
+    assert summary(read_events(bricklet, events=(CallbackID.CAPTURE_INPUT,))) == expected
+    assert (9, CallbackID.CAPTURE_INPUT, bytes(range(64))) not in summary(read_events(bricklet, sids=(0, 4)))
+    # The callback of all inputs is still split into the channels, if both are read
+    assert summary(read_events(bricklet, sids=(2, 9))) == [(2, CallbackID.ALL_INPUT_VALUE, True)] + expected
 
 
 def test_invalid_event_filters_are_rejected(bricklet):

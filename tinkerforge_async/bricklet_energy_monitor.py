@@ -90,14 +90,14 @@ class GetTransformerCalibration(NamedTuple):
     phase_shift: int
 
 
-APPARENT_POWER = LinearQuantity(1, 100)  # raw: 1/100 Volt Ampere, returned in VA
-CURRENT = LinearQuantity(1, 100)  # raw: 1/100 Ampere, returned in A
-ENERGY = LinearQuantity(36)  # raw: 1/100 Watt Hour, returned in J
-FREQUENCY = LinearQuantity(1, 100)  # raw: 1/100 Hertz, returned in Hz
-POWER_FACTOR = LinearQuantity(1, 1000)  # raw: 1/1000, dimensionless
-REACTIVE_POWER = LinearQuantity(1, 100)  # raw: 1/100 Volt Ampere Reactive, returned in var
-REAL_POWER = LinearQuantity(1, 100)  # raw: 1/100 Watt, returned in W
-VOLTAGE = LinearQuantity(1, 100)  # raw: 1/100 Volt, returned in V
+CENTI_AMPERE = LinearQuantity(1, 100)  # raw: 1/100 Ampere, returned in A
+CENTI_HERTZ = LinearQuantity(1, 100)  # raw: 1/100 Hertz, returned in Hz
+CENTI_VOLT = LinearQuantity(1, 100)  # raw: 1/100 Volt, returned in V
+CENTI_VOLT_AMPERE = LinearQuantity(1, 100)  # raw: 1/100 Volt Ampere, returned in VA
+CENTI_VOLT_AMPERE_REACTIVE = LinearQuantity(1, 100)  # raw: 1/100 Volt Ampere Reactive, returned in var
+CENTI_WATT = LinearQuantity(1, 100)  # raw: 1/100 Watt, returned in W
+CENTI_WATT_HOUR = LinearQuantity(36)  # raw: 1/100 Watt Hour, returned in J
+RATIO_1_1000 = LinearQuantity(1, 1000)  # raw: 1/1000, dimensionless
 
 
 class BrickletEnergyMonitor(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -141,7 +141,7 @@ class BrickletEnergyMonitor(BrickletWithMCU):  # pylint: disable=too-many-public
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -193,14 +193,14 @@ class BrickletEnergyMonitor(BrickletWithMCU):  # pylint: disable=too-many-public
             payload, "i i i i i i H H"
         )
         return GetEnergyData(
-            VOLTAGE.to_si(voltage),
-            CURRENT.to_si(current),
-            ENERGY.to_si(energy),
-            REAL_POWER.to_si(real_power),
-            APPARENT_POWER.to_si(apparent_power),
-            REACTIVE_POWER.to_si(reactive_power),
-            POWER_FACTOR.to_si(power_factor),
-            FREQUENCY.to_si(frequency),
+            CENTI_VOLT.to_si(voltage),
+            CENTI_AMPERE.to_si(current),
+            CENTI_WATT_HOUR.to_si(energy),
+            CENTI_WATT.to_si(real_power),
+            CENTI_VOLT_AMPERE.to_si(apparent_power),
+            CENTI_VOLT_AMPERE_REACTIVE.to_si(reactive_power),
+            RATIO_1_1000.to_si(power_factor),
+            CENTI_HERTZ.to_si(frequency),
         )
 
     async def reset_energy(self, response_expected: bool = True) -> None:
@@ -361,12 +361,12 @@ class BrickletEnergyMonitor(BrickletWithMCU):  # pylint: disable=too-many-public
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         voltage, current, energy, real_power, apparent_power, reactive_power, power_factor, frequency = value
         return 0, GetEnergyData(
-            VOLTAGE.to_si(voltage),
-            CURRENT.to_si(current),
-            ENERGY.to_si(energy),
-            REAL_POWER.to_si(real_power),
-            APPARENT_POWER.to_si(apparent_power),
-            REACTIVE_POWER.to_si(reactive_power),
-            POWER_FACTOR.to_si(power_factor),
-            FREQUENCY.to_si(frequency),
+            CENTI_VOLT.to_si(voltage),
+            CENTI_AMPERE.to_si(current),
+            CENTI_WATT_HOUR.to_si(energy),
+            CENTI_WATT.to_si(real_power),
+            CENTI_VOLT_AMPERE.to_si(apparent_power),
+            CENTI_VOLT_AMPERE_REACTIVE.to_si(reactive_power),
+            RATIO_1_1000.to_si(power_factor),
+            CENTI_HERTZ.to_si(frequency),
         )

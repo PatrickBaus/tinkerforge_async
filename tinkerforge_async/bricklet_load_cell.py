@@ -95,8 +95,7 @@ class GetConfiguration(NamedTuple):
     gain: Gain
 
 
-VALUE = LinearQuantity(1, 1000)  # raw: 1/1 Gram, returned in kg
-WEIGHT = LinearQuantity(1, 1000)  # raw: 1/1 Gram, returned in kg
+GRAM = LinearQuantity(1, 1000)  # raw: 1/1 Gram, returned in kg
 
 
 class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -151,7 +150,7 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -183,7 +182,7 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_WEIGHT, response_expected=True
         )
-        return WEIGHT.to_si(unpack_payload(payload, "i"))
+        return GRAM.to_si(unpack_payload(payload, "i"))
 
     async def set_weight_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -235,9 +234,9 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
 
         Units: minimum in kg, maximum in kg.
         """
-        minimum_raw = VALUE.from_si(minimum)
+        minimum_raw = GRAM.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = VALUE.from_si(maximum)
+        maximum_raw = GRAM.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -256,7 +255,7 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
             device=self, function_id=FunctionID.GET_WEIGHT_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c i i")
-        return BasicCallbackConfiguration(Threshold(option), VALUE.to_si(minimum), VALUE.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), GRAM.to_si(minimum), GRAM.to_si(maximum))
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
@@ -354,7 +353,7 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
 
         Units: weight in kg.
         """
-        weight_raw = WEIGHT.from_si(weight)
+        weight_raw = GRAM.from_si(weight)
         check_range("weight", weight_raw, 0, 4294967295, weight)
         await self.ipcon.send_request(
             device=self,
@@ -411,5 +410,5 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.WEIGHT:
-            return 0, WEIGHT.to_si(value)
-        return 0, WEIGHT.to_si(value)
+            return 0, GRAM.to_si(value)
+        return 0, GRAM.to_si(value)

@@ -125,7 +125,7 @@ class GetConfig(NamedTuple):
     integration_time: IntegrationTime
 
 
-COLOR_TEMPERATURE = LinearQuantity(1)  # raw: 1/1 Kelvin, returned in K
+KELVIN = LinearQuantity(1)  # raw: 1/1 Kelvin, returned in K
 
 
 class BrickletColor(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -427,7 +427,7 @@ class BrickletColor(Device):  # pylint: disable=too-many-public-methods,too-few-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_COLOR_TEMPERATURE, response_expected=True
         )
-        return COLOR_TEMPERATURE.to_si(unpack_payload(payload, "H"))
+        return KELVIN.to_si(unpack_payload(payload, "H"))
 
     async def set_illuminance_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -490,4 +490,4 @@ class BrickletColor(Device):  # pylint: disable=too-many-public-methods,too-few-
             return 1, GetColor(r, g, b, c)
         if callback_id is CallbackID.ILLUMINANCE:
             return 2, value
-        return 3, COLOR_TEMPERATURE.to_si(value)
+        return 3, KELVIN.to_si(value)

@@ -111,9 +111,9 @@ class GetIAQIndex(NamedTuple):
     iaq_index_accuracy: Accuracy
 
 
-AIR_PRESSURE = LinearQuantity(1)  # raw: 1/100 Hectopascal, returned in Pa
-HUMIDITY = LinearQuantity(1, 100)  # raw: 1/100 Percent Relative Humidity, returned in %RH
-PRESSURE = LinearQuantity(1)  # raw: 1/100 Hectopascal, returned in Pa
+CENTI_DEGREE_CELSIUS_DIFFERENCE = LinearQuantity(1, 100)  # raw: 1/100 Degree Celsius, returned in K
+CENTI_HECTOPASCAL = LinearQuantity(1)  # raw: 1/100 Hectopascal, returned in Pa
+CENTI_PERCENT_RELATIVE_HUMIDITY = LinearQuantity(1, 100)  # raw: 1/100 Percent Relative Humidity, returned in %RH
 
 
 class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -187,7 +187,7 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -229,8 +229,8 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
             iaq_index,
             Accuracy(iaq_index_accuracy),
             TEMPERATURE.to_si(temperature),
-            HUMIDITY.to_si(humidity),
-            AIR_PRESSURE.to_si(air_pressure),
+            CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(humidity),
+            CENTI_HECTOPASCAL.to_si(air_pressure),
         )
 
     async def set_temperature_offset(self, offset: float | Decimal, response_expected: bool = True) -> None:
@@ -252,7 +252,7 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
 
         Units: offset in K.
         """
-        offset_raw = TEMPERATURE.from_si(offset)
+        offset_raw = CENTI_DEGREE_CELSIUS_DIFFERENCE.from_si(offset)
         check_range("offset", offset_raw, -2147483648, 2147483647, offset)
         await self.ipcon.send_request(
             device=self,
@@ -271,7 +271,7 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TEMPERATURE_OFFSET, response_expected=True
         )
-        return TEMPERATURE.to_si(unpack_payload(payload, "i"))
+        return CENTI_DEGREE_CELSIUS_DIFFERENCE.to_si(unpack_payload(payload, "i"))
 
     async def set_all_values_callback_configuration(
         self, period: Duration = 0, value_has_to_change: bool = False, response_expected: bool = True
@@ -454,7 +454,7 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_HUMIDITY, response_expected=True
         )
-        return HUMIDITY.to_si(unpack_payload(payload, "i"))
+        return CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(unpack_payload(payload, "i"))
 
     async def set_humidity_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -498,9 +498,9 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = HUMIDITY.from_si(minimum)
+        minimum_raw = CENTI_PERCENT_RELATIVE_HUMIDITY.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = HUMIDITY.from_si(maximum)
+        maximum_raw = CENTI_PERCENT_RELATIVE_HUMIDITY.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -525,8 +525,8 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            HUMIDITY.to_si(minimum),
-            HUMIDITY.to_si(maximum),
+            CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(minimum),
+            CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(maximum),
         )
 
     async def get_air_pressure(self) -> Decimal:
@@ -538,7 +538,7 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_AIR_PRESSURE, response_expected=True
         )
-        return AIR_PRESSURE.to_si(unpack_payload(payload, "i"))
+        return CENTI_HECTOPASCAL.to_si(unpack_payload(payload, "i"))
 
     async def set_air_pressure_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -582,9 +582,9 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = PRESSURE.from_si(minimum)
+        minimum_raw = CENTI_HECTOPASCAL.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = PRESSURE.from_si(maximum)
+        maximum_raw = CENTI_HECTOPASCAL.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -609,8 +609,8 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            PRESSURE.to_si(minimum),
-            PRESSURE.to_si(maximum),
+            CENTI_HECTOPASCAL.to_si(minimum),
+            CENTI_HECTOPASCAL.to_si(maximum),
         )
 
     async def remove_calibration(self, response_expected: bool = True) -> None:
@@ -685,8 +685,8 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
                 iaq_index,
                 Accuracy(iaq_index_accuracy),
                 TEMPERATURE.to_si(temperature),
-                HUMIDITY.to_si(humidity),
-                AIR_PRESSURE.to_si(air_pressure),
+                CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(humidity),
+                CENTI_HECTOPASCAL.to_si(air_pressure),
             )
         if callback_id is CallbackID.IAQ_INDEX:
             iaq_index, iaq_index_accuracy = value
@@ -694,5 +694,5 @@ class BrickletAirQuality(BrickletWithMCU):  # pylint: disable=too-many-public-me
         if callback_id is CallbackID.TEMPERATURE:
             return 2, TEMPERATURE.to_si(value)
         if callback_id is CallbackID.HUMIDITY:
-            return 3, HUMIDITY.to_si(value)
-        return 4, AIR_PRESSURE.to_si(value)
+            return 3, CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(value)
+        return 4, CENTI_HECTOPASCAL.to_si(value)

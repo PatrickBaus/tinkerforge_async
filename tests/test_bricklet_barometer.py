@@ -13,6 +13,7 @@ from .fake_connection import Call, read_events, request, run, summary
 
 DEVICE = BrickletBarometer
 FunctionID = BrickletBarometer.FunctionID
+I2CMode = BrickletBarometer.I2CMode
 CallbackID = BrickletBarometer.CallbackID
 
 CALLS = [
@@ -101,9 +102,14 @@ CALLS = [
     Call("set_averaging", FunctionID.SET_AVERAGING, sent=("B B B", (25, 10, 10))),
     Call("set_averaging", FunctionID.SET_AVERAGING, (0, 0, 255), sent=("B B B", (0, 0, 255))),
     Call("get_averaging", FunctionID.GET_AVERAGING, reply=("B B B", (25, 10, 255)), result=GetAveraging(25, 10, 255)),
+    Call("set_i2c_mode", FunctionID.SET_I2C_MODE, sent=("B", (0,))),
+    Call("set_i2c_mode", FunctionID.SET_I2C_MODE, (I2CMode.SLOW,), sent=("B", (1,))),
+    Call("set_i2c_mode", FunctionID.SET_I2C_MODE, (1, False), sent=("B", (1,)), response_expected=False),
+    Call("get_i2c_mode", FunctionID.GET_I2C_MODE, reply=("B", (1,)), result=I2CMode.SLOW),
 ]
 
 REJECTED = [
+    ("set_i2c_mode", (2,)),
     ("set_air_pressure_callback_period", (-1,)),
     ("set_altitude_callback_period", (-1,)),
     ("set_air_pressure_callback_threshold", ("?",)),

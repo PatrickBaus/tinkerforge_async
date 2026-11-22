@@ -18,7 +18,7 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
-from .helper import check_length, check_range
+from .helper import check_length, check_range, encode_string
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -732,7 +732,7 @@ class BrickRED(Device):  # pylint: disable=too-many-public-methods,too-few-publi
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.ALLOCATE_STRING,
-            data=pack_payload((length_to_reserve, str(buffer).encode("latin-1"), session_id), "I 58s H"),
+            data=pack_payload((length_to_reserve, encode_string("buffer", buffer, 58), session_id), "I 58s H"),
             response_expected=True,
         )
         error_code, string_id = unpack_payload(payload, "B H")
@@ -783,7 +783,7 @@ class BrickRED(Device):  # pylint: disable=too-many-public-methods,too-few-publi
         _, payload = await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_STRING_CHUNK,
-            data=pack_payload((string_id, offset, str(buffer).encode("latin-1")), "H I 58s"),
+            data=pack_payload((string_id, offset, encode_string("buffer", buffer, 58)), "H I 58s"),
             response_expected=True,
         )
         return ErrorCode(unpack_payload(payload, "B"))

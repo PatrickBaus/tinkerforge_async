@@ -105,9 +105,9 @@ class GetCalibration(NamedTuple):
     current_divisor: int
 
 
-CURRENT = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-POWER = LinearQuantity(1, 1000)  # raw: 1/1000 Watt, returned in W
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_AMPERE = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_WATT = LinearQuantity(1, 1000)  # raw: 1/1000 Watt, returned in W
 
 
 class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -161,7 +161,7 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -189,7 +189,7 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT, response_expected=True
         )
-        return CURRENT.to_si(unpack_payload(payload, "i"))
+        return MILLI_AMPERE.to_si(unpack_payload(payload, "i"))
 
     async def set_current_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -233,9 +233,9 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = CURRENT.from_si(minimum)
+        minimum_raw = MILLI_AMPERE.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = CURRENT.from_si(maximum)
+        maximum_raw = MILLI_AMPERE.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -260,8 +260,8 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            CURRENT.to_si(minimum),
-            CURRENT.to_si(maximum),
+            MILLI_AMPERE.to_si(minimum),
+            MILLI_AMPERE.to_si(maximum),
         )
 
     async def get_voltage(self) -> Decimal:
@@ -273,7 +273,7 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "i"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "i"))
 
     async def set_voltage_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -317,9 +317,9 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = VOLTAGE.from_si(minimum)
+        minimum_raw = MILLI_VOLT.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = VOLTAGE.from_si(maximum)
+        maximum_raw = MILLI_VOLT.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -344,8 +344,8 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            VOLTAGE.to_si(minimum),
-            VOLTAGE.to_si(maximum),
+            MILLI_VOLT.to_si(minimum),
+            MILLI_VOLT.to_si(maximum),
         )
 
     async def get_power(self) -> Decimal:
@@ -357,7 +357,7 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_POWER, response_expected=True
         )
-        return POWER.to_si(unpack_payload(payload, "i"))
+        return MILLI_WATT.to_si(unpack_payload(payload, "i"))
 
     async def set_power_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -401,9 +401,9 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = POWER.from_si(minimum)
+        minimum_raw = MILLI_WATT.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = POWER.from_si(maximum)
+        maximum_raw = MILLI_WATT.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -425,7 +425,11 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         return AdvancedCallbackConfiguration(
-            ms_to_seconds(period), value_has_to_change, Threshold(option), POWER.to_si(minimum), POWER.to_si(maximum)
+            ms_to_seconds(period),
+            value_has_to_change,
+            Threshold(option),
+            MILLI_WATT.to_si(minimum),
+            MILLI_WATT.to_si(maximum),
         )
 
     async def set_configuration(
@@ -514,7 +518,7 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.CURRENT:
-            return 0, CURRENT.to_si(value)
+            return 0, MILLI_AMPERE.to_si(value)
         if callback_id is CallbackID.VOLTAGE:
-            return 1, VOLTAGE.to_si(value)
-        return 2, POWER.to_si(value)
+            return 1, MILLI_VOLT.to_si(value)
+        return 2, MILLI_WATT.to_si(value)

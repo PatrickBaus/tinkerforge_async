@@ -40,7 +40,8 @@ class CallbackID(Enum):
     INPUT_VALUE = 17
     ALL_INPUT_VALUE = 18
     MONOFLOP_DONE = 19
-    EDGE_COUNT = 20
+    EDGE_COUNT = 20  # Not a callback of the Bricklet. It is emulated by polling the edge counter.
+    CAPTURE_INPUT = 22
 
 
 @unique
@@ -65,6 +66,8 @@ class FunctionID(_FunctionID):
     GET_EDGE_COUNT_CONFIGURATION = 14
     SET_PWM_CONFIGURATION = 15
     GET_PWM_CONFIGURATION = 16
+    SET_CAPTURE_INPUT_CALLBACK_CONFIGURATION = 20
+    GET_CAPTURE_INPUT_CALLBACK_CONFIGURATION = 21
 
 
 @unique
@@ -122,8 +125,14 @@ class GetPWMConfiguration(NamedTuple):
     duty_cycle: Decimal
 
 
+class GetCaptureInputCallbackConfiguration(NamedTuple):
+    enable: bool
+    time_between_capture: Decimal
+
+
 FREQUENCY = Quantity(10)  # raw: 1/10 Hz
 DUTY_CYCLE = Quantity(10_000)  # raw: 1/100 %, the SI value is the ratio, i.e. 1 is 100 %
+TIME_BETWEEN_CAPTURE = Quantity(1_000_000)  # raw: µs
 
 
 class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
@@ -144,6 +153,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         CallbackID.INPUT_VALUE: "B ! !",
         CallbackID.ALL_INPUT_VALUE: "4! 4!",
         CallbackID.MONOFLOP_DONE: "B !",
+        CallbackID.CAPTURE_INPUT: "64B",
     }
 
     SID_TO_CALLBACK = {
@@ -156,6 +166,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         6: (CallbackID.EDGE_COUNT,),
         7: (CallbackID.EDGE_COUNT,),
         8: (CallbackID.EDGE_COUNT,),
+        9: (CallbackID.CAPTURE_INPUT,),
     }
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
@@ -309,7 +320,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -479,6 +490,12 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             self.__counter_queue[channel]["value_has_to_change"] = value_has_to_change
 
     async def get_edge_count_callback_configuration(self, channel: int) -> SimpleCallbackConfiguration:
+        """
+        Returns the callback configuration as set by :func:`set_edge_count_callback_configuration`.
+        """
+        if channel not in (0, 1, 2, 3):
+            raise ValueError(f"Invalid argument: expected channel in (0, 1, 2, 3), got channel={channel!r}")
+
         period = self.__counter_queue[channel]["period"]
         value_has_to_change = self.__counter_queue[channel]["value_has_to_change"]
         return SimpleCallbackConfiguration(period=period, value_has_to_change=value_has_to_change)
@@ -680,6 +697,48 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         frequency, duty_cycle = unpack_payload(payload, "I H")
         return GetPWMConfiguration(FREQUENCY.to_si(frequency), DUTY_CYCLE.to_si(duty_cycle))
 
+    async def set_capture_input_callback_configuration(
+        self, enable: bool, time_between_capture: Duration = Decimal("0.00005"), response_expected: bool = True
+    ) -> None:
+        """
+        If `enable` is set to true, the :cb:`Capture Input` callback is started. The time between two samples is given
+        by `time_between_capture` in s. It can be set from 20 µs to 65.535 ms in steps of 1 µs. For example: A time
+        between capture of 50 µs corresponds to a sampling frequency of 20 kHz. The maximum sampling frequency is
+        50 kHz.
+
+        The events of the callback have the sid 9. Their payload are 64 bytes, see :cb:`Capture Input`.
+
+        Note: When the :cb:`Capture Input` callback is activated, all other functions of the IO-4 Bricklet 2.0 stop
+        working.
+
+        .. versionadded:: 2.0.5$nbsp;(Plugin)
+        """
+        time_between_capture_raw = TIME_BETWEEN_CAPTURE.from_si(time_between_capture)
+        if not 20 <= time_between_capture_raw <= 65535:
+            raise ValueError(
+                "Invalid argument: expected 20e-6 <= time_between_capture <= 65535e-6, "
+                f"got time_between_capture={time_between_capture!r}"
+            )
+
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_CAPTURE_INPUT_CALLBACK_CONFIGURATION,
+            data=pack_payload((bool(enable), time_between_capture_raw), "! H"),
+            response_expected=response_expected,
+        )
+
+    async def get_capture_input_callback_configuration(self) -> GetCaptureInputCallbackConfiguration:
+        """
+        Returns the callback configuration as set by :func:`Set Capture Input Callback Configuration`.
+
+        .. versionadded:: 2.0.5$nbsp;(Plugin)
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_CAPTURE_INPUT_CALLBACK_CONFIGURATION, response_expected=True
+        )
+        enable, time_between_capture = unpack_payload(payload, "! H")
+        return GetCaptureInputCallbackConfiguration(enable, TIME_BETWEEN_CAPTURE.to_si(time_between_capture))
+
     async def __edge_counter_task(self, channel: int, period: Duration, value_has_to_change: bool) -> None:
         previous_value: int | None = None
         # Throw away the first value, because we need to reset and sync the internal counter of the IO bricklet.
@@ -751,13 +810,19 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                 if function_id in events or sid in sids:
                     yield Event(self, sid, function_id, value)
                     continue
-            else:
+            elif function_id is CallbackID.CAPTURE_INPUT:
+                # A stream of the inputs encoded as bitmasks. There are two samples per byte (128 samples per callback)
+                if function_id in events or 9 in sids:
+                    yield Event(
+                        self, 9, function_id, bytes(unpack_payload(payload, self.CALLBACK_FORMATS[function_id]))
+                    )
+            elif function_id is CallbackID.ALL_INPUT_VALUE:
                 changed_sids, values = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
                 if function_id in events or 4 in sids:
                     # Use a special sid for the CallbackID.ALL_INPUT_VALUE, because it returns a tuple
                     yield Event(self, 4, function_id, values, changed_sids)
                 for sid in sids:
-                    if sid != 4:
+                    if sid in range(4):
                         yield Event(self, sid, function_id, values[sid], changed_sids[sid])
 
     async def read_events(
@@ -783,7 +848,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                     registered_callback_events.add(event)
                 else:
                     registered_edge_count_sids = tuple(range(5, 5 + 4))
-        registered_callback_sids = tuple(sid for sid in sids if sid in range(5))
+        registered_callback_sids = tuple(sid for sid in sids if sid in (0, 1, 2, 3, 4, 9))
 
         # register all callback events if no specific filter is given
         if not events and not sids:

@@ -81,7 +81,7 @@ class SensorType(Enum):
     SENSOR_TYPE_2Y0A02 = 2
 
 
-DISTANCE = LinearQuantity(1, 1000)  # raw: 1/1000 Meter, returned in m
+MILLI_METER = LinearQuantity(1, 1000)  # raw: 1/1000 Meter, returned in m
 
 
 class BrickletDistanceIRV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -136,7 +136,7 @@ class BrickletDistanceIRV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -166,7 +166,7 @@ class BrickletDistanceIRV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DISTANCE, response_expected=True
         )
-        return DISTANCE.to_si(unpack_payload(payload, "H"))
+        return MILLI_METER.to_si(unpack_payload(payload, "H"))
 
     async def set_distance_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -210,9 +210,9 @@ class BrickletDistanceIRV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = DISTANCE.from_si(minimum)
+        minimum_raw = MILLI_METER.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = DISTANCE.from_si(maximum)
+        maximum_raw = MILLI_METER.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -237,8 +237,8 @@ class BrickletDistanceIRV2(BrickletWithMCU):  # pylint: disable=too-many-public-
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            DISTANCE.to_si(minimum),
-            DISTANCE.to_si(maximum),
+            MILLI_METER.to_si(minimum),
+            MILLI_METER.to_si(maximum),
         )
 
     async def get_analog_value(self) -> int:
@@ -406,5 +406,5 @@ class BrickletDistanceIRV2(BrickletWithMCU):  # pylint: disable=too-many-public-
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.DISTANCE:
-            return 0, DISTANCE.to_si(value)
+            return 0, MILLI_METER.to_si(value)
         return 1, value

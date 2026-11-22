@@ -165,13 +165,10 @@ class NewStateEvent(NamedTuple):
     state_previous: State
 
 
-CURRENT = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-CURRENT_CONSUMPTION = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-EXTERNAL_VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
-STACK_VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
-TEMPERATURE_2 = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
-TIME_BASE = LinearQuantity(1)  # raw: 1/1 Second, returned in s
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+DECI_DEGREE_CELSIUS = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
+MILLI_AMPERE = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+SECOND = LinearQuantity(1)  # raw: 1/1 Second, returned in s
 
 
 class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -461,7 +458,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STACK_INPUT_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def get_external_input_voltage(self) -> Decimal:
         """
@@ -483,7 +480,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_EXTERNAL_INPUT_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def get_current_consumption(self) -> Decimal:
         """
@@ -494,7 +491,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT_CONSUMPTION, response_expected=True
         )
-        return CURRENT.to_si(unpack_payload(payload, "H"))
+        return MILLI_AMPERE.to_si(unpack_payload(payload, "H"))
 
     async def set_motor_current(
         self, current: float | Decimal = Decimal("0.8"), response_expected: bool = True
@@ -508,7 +505,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
 
         Units: current in A (0.1 to 2.291 A).
         """
-        current_raw = CURRENT.from_si(current)
+        current_raw = MILLI_AMPERE.from_si(current)
         check_range("current", current_raw, 100, 2291, current)
         await self.ipcon.send_request(
             device=self,
@@ -526,7 +523,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MOTOR_CURRENT, response_expected=True
         )
-        return CURRENT.to_si(unpack_payload(payload, "H"))
+        return MILLI_AMPERE.to_si(unpack_payload(payload, "H"))
 
     async def enable(self, response_expected: bool = True) -> None:
         """
@@ -615,7 +612,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
 
         Units: voltage in V.
         """
-        voltage_raw = VOLTAGE.from_si(voltage)
+        voltage_raw = MILLI_VOLT.from_si(voltage)
         check_range("voltage", voltage_raw, 0, 65535, voltage)
         await self.ipcon.send_request(
             device=self,
@@ -633,7 +630,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MINIMUM_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def set_sync_rect(self, sync_rect: bool = False, response_expected: bool = True) -> None:
         """
@@ -684,7 +681,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
 
         .. versionadded:: 1.1.6 (Firmware)
         """
-        time_base_raw = TIME_BASE.from_si(time_base)
+        time_base_raw = SECOND.from_si(time_base)
         check_range("time_base", time_base_raw, 0, 4294967295, time_base)
         await self.ipcon.send_request(
             device=self,
@@ -704,7 +701,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TIME_BASE, response_expected=True
         )
-        return TIME_BASE.to_si(unpack_payload(payload, "I"))
+        return SECOND.to_si(unpack_payload(payload, "I"))
 
     async def get_all_data(self) -> GetAllData:
         """
@@ -728,9 +725,9 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
             current_velocity,
             current_position,
             remaining_steps,
-            STACK_VOLTAGE.to_si(stack_voltage),
-            EXTERNAL_VOLTAGE.to_si(external_voltage),
-            CURRENT_CONSUMPTION.to_si(current_consumption),
+            MILLI_VOLT.to_si(stack_voltage),
+            MILLI_VOLT.to_si(external_voltage),
+            MILLI_AMPERE.to_si(current_consumption),
         )
 
     async def set_all_data_period(self, period: Duration = 0, response_expected: bool = True) -> None:
@@ -906,7 +903,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CHIP_TEMPERATURE, response_expected=True
         )
-        return TEMPERATURE_2.to_si(unpack_payload(payload, "h"))
+        return DECI_DEGREE_CELSIUS.to_si(unpack_payload(payload, "h"))
 
     async def write_bricklet_plugin(
         self, port: Port | str, offset: int, chunk: bytes | Sequence[int], response_expected: bool = True
@@ -948,7 +945,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.UNDER_VOLTAGE:
-            return 0, VOLTAGE.to_si(value)
+            return 0, MILLI_VOLT.to_si(value)
         if callback_id is CallbackID.POSITION_REACHED:
             return 1, value
         if callback_id is CallbackID.ALL_DATA:
@@ -964,9 +961,9 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
                 current_velocity,
                 current_position,
                 remaining_steps,
-                STACK_VOLTAGE.to_si(stack_voltage),
-                EXTERNAL_VOLTAGE.to_si(external_voltage),
-                CURRENT_CONSUMPTION.to_si(current_consumption),
+                MILLI_VOLT.to_si(stack_voltage),
+                MILLI_VOLT.to_si(external_voltage),
+                MILLI_AMPERE.to_si(current_consumption),
             )
         state_new, state_previous = value
         return 3, NewStateEvent(State(state_new), State(state_previous))

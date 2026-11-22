@@ -69,8 +69,8 @@ class FunctionID(_FunctionID):
     GET_DEBOUNCE_PERIOD = 14
 
 
-DISTANCE = LinearQuantity(1, 1000)  # raw: 1/1000 Meter, returned in m
-DISTANCE_2 = LinearQuantity(1, 10000)  # raw: 1/10000 Meter, returned in m
+METER_1_10000 = LinearQuantity(1, 10000)  # raw: 1/10000 Meter, returned in m
+MILLI_METER = LinearQuantity(1, 1000)  # raw: 1/1000 Meter, returned in m
 
 
 class BrickletDistanceIR(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -134,7 +134,7 @@ class BrickletDistanceIR(Device):  # pylint: disable=too-many-public-methods,too
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -168,7 +168,7 @@ class BrickletDistanceIR(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DISTANCE, response_expected=True
         )
-        return DISTANCE.to_si(unpack_payload(payload, "H"))
+        return MILLI_METER.to_si(unpack_payload(payload, "H"))
 
     async def get_analog_value(self) -> int:
         """
@@ -216,7 +216,7 @@ class BrickletDistanceIR(Device):  # pylint: disable=too-many-public-methods,too
         """
         position = int(position)
         check_range("position", position, 0, 127)
-        distance_raw = DISTANCE_2.from_si(distance)
+        distance_raw = METER_1_10000.from_si(distance)
         check_range("distance", distance_raw, 0, 65535, distance)
         await self.ipcon.send_request(
             device=self,
@@ -240,7 +240,7 @@ class BrickletDistanceIR(Device):  # pylint: disable=too-many-public-methods,too
             data=pack_payload((position,), "B"),
             response_expected=True,
         )
-        return DISTANCE_2.to_si(unpack_payload(payload, "H"))
+        return METER_1_10000.to_si(unpack_payload(payload, "H"))
 
     async def set_distance_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -318,9 +318,9 @@ class BrickletDistanceIR(Device):  # pylint: disable=too-many-public-methods,too
 
         Units: minimum in m, maximum in m.
         """
-        minimum_raw = DISTANCE.from_si(minimum)
+        minimum_raw = MILLI_METER.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = DISTANCE.from_si(maximum)
+        maximum_raw = MILLI_METER.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -339,7 +339,7 @@ class BrickletDistanceIR(Device):  # pylint: disable=too-many-public-methods,too
             device=self, function_id=FunctionID.GET_DISTANCE_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return BasicCallbackConfiguration(Threshold(option), DISTANCE.to_si(minimum), DISTANCE.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), MILLI_METER.to_si(minimum), MILLI_METER.to_si(maximum))
 
     async def set_analog_value_callback_threshold(
         self,
@@ -422,9 +422,9 @@ class BrickletDistanceIR(Device):  # pylint: disable=too-many-public-methods,too
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.DISTANCE:
-            return 0, DISTANCE.to_si(value)
+            return 0, MILLI_METER.to_si(value)
         if callback_id is CallbackID.ANALOG_VALUE:
             return 1, value
         if callback_id is CallbackID.DISTANCE_REACHED:
-            return 0, DISTANCE.to_si(value)
+            return 0, MILLI_METER.to_si(value)
         return 1, value

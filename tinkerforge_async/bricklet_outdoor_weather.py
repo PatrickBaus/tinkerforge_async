@@ -125,12 +125,11 @@ class SensorDataEvent(NamedTuple):
     humidity: Decimal
 
 
-GUST_SPEED = LinearQuantity(1, 10)  # raw: 1/10 Meter Per Second, returned in m/s
-HUMIDITY = LinearQuantity(1)  # raw: 1/1 Percent Relative Humidity, returned in %RH
-LAST_CHANGE = LinearQuantity(1)  # raw: 1/1 Second, returned in s
-RAIN = LinearQuantity(1, 10000)  # raw: 1/10 Millimeter, returned in m
-TEMPERATURE_2 = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
-WIND_SPEED = LinearQuantity(1, 10)  # raw: 1/10 Meter Per Second, returned in m/s
+DECI_DEGREE_CELSIUS = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
+DECI_METER_PER_SECOND = LinearQuantity(1, 10)  # raw: 1/10 Meter Per Second, returned in m/s
+DECI_MILLIMETER = LinearQuantity(1, 10000)  # raw: 1/10 Millimeter, returned in m
+PERCENT_RELATIVE_HUMIDITY = LinearQuantity(1)  # raw: 1/1 Percent Relative Humidity, returned in %RH
+SECOND = LinearQuantity(1)  # raw: 1/1 Second, returned in s
 
 
 class BrickletOutdoorWeather(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -282,14 +281,14 @@ class BrickletOutdoorWeather(BrickletWithMCU):  # pylint: disable=too-many-publi
             payload, "h B I I I B ! H"
         )
         return GetStationData(
-            TEMPERATURE_2.to_si(temperature),
-            HUMIDITY.to_si(humidity),
-            WIND_SPEED.to_si(wind_speed),
-            GUST_SPEED.to_si(gust_speed),
-            RAIN.to_si(rain),
+            DECI_DEGREE_CELSIUS.to_si(temperature),
+            PERCENT_RELATIVE_HUMIDITY.to_si(humidity),
+            DECI_METER_PER_SECOND.to_si(wind_speed),
+            DECI_METER_PER_SECOND.to_si(gust_speed),
+            DECI_MILLIMETER.to_si(rain),
             WindDirection(wind_direction),
             battery_low,
-            LAST_CHANGE.to_si(last_change),
+            SECOND.to_si(last_change),
         )
 
     async def get_sensor_data(self, identifier: int) -> GetSensorData:
@@ -314,7 +313,9 @@ class BrickletOutdoorWeather(BrickletWithMCU):  # pylint: disable=too-many-publi
             response_expected=True,
         )
         temperature, humidity, last_change = unpack_payload(payload, "h B H")
-        return GetSensorData(TEMPERATURE_2.to_si(temperature), HUMIDITY.to_si(humidity), LAST_CHANGE.to_si(last_change))
+        return GetSensorData(
+            DECI_DEGREE_CELSIUS.to_si(temperature), PERCENT_RELATIVE_HUMIDITY.to_si(humidity), SECOND.to_si(last_change)
+        )
 
     async def set_station_callback_configuration(
         self, enable_callback: bool = False, response_expected: bool = True
@@ -365,13 +366,15 @@ class BrickletOutdoorWeather(BrickletWithMCU):  # pylint: disable=too-many-publi
             identifier, temperature, humidity, wind_speed, gust_speed, rain, wind_direction, battery_low = value
             return 0, StationDataEvent(
                 identifier,
-                TEMPERATURE_2.to_si(temperature),
-                HUMIDITY.to_si(humidity),
-                WIND_SPEED.to_si(wind_speed),
-                GUST_SPEED.to_si(gust_speed),
-                RAIN.to_si(rain),
+                DECI_DEGREE_CELSIUS.to_si(temperature),
+                PERCENT_RELATIVE_HUMIDITY.to_si(humidity),
+                DECI_METER_PER_SECOND.to_si(wind_speed),
+                DECI_METER_PER_SECOND.to_si(gust_speed),
+                DECI_MILLIMETER.to_si(rain),
                 WindDirection(wind_direction),
                 battery_low,
             )
         identifier, temperature, humidity = value
-        return 1, SensorDataEvent(identifier, TEMPERATURE_2.to_si(temperature), HUMIDITY.to_si(humidity))
+        return 1, SensorDataEvent(
+            identifier, DECI_DEGREE_CELSIUS.to_si(temperature), PERCENT_RELATIVE_HUMIDITY.to_si(humidity)
+        )

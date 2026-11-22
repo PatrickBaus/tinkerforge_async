@@ -179,9 +179,9 @@ class GetCounterConfiguration(NamedTuple):
     frequency_integration_time: FrequencyIntegrationTime
 
 
-DUTY_CYCLE = LinearQuantity(1, 100)  # raw: 1/100 Percent, returned in %
-FREQUENCY = LinearQuantity(1, 1000)  # raw: 1/1000 Hertz, returned in Hz
-PERIOD = LinearQuantity(1, 1000000000)  # raw: 1/1000000000 Second, returned in s
+CENTI_PERCENT = LinearQuantity(1, 100)  # raw: 1/100 Percent, returned in %
+MILLI_HERTZ = LinearQuantity(1, 1000)  # raw: 1/1000 Hertz, returned in Hz
+NANO_SECOND = LinearQuantity(1, 1000000000)  # raw: 1/1000000000 Second, returned in s
 
 
 class BrickletIndustrialCounter(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -242,7 +242,7 @@ class BrickletIndustrialCounter(BrickletWithMCU):  # pylint: disable=too-many-pu
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -325,7 +325,9 @@ class BrickletIndustrialCounter(BrickletWithMCU):  # pylint: disable=too-many-pu
             response_expected=True,
         )
         duty_cycle, period, frequency, value = unpack_payload(payload, "H Q I !")
-        return GetSignalData(DUTY_CYCLE.to_si(duty_cycle), PERIOD.to_si(period), FREQUENCY.to_si(frequency), value)
+        return GetSignalData(
+            CENTI_PERCENT.to_si(duty_cycle), NANO_SECOND.to_si(period), MILLI_HERTZ.to_si(frequency), value
+        )
 
     async def get_all_signal_data(self) -> GetAllSignalData:
         """
@@ -339,9 +341,9 @@ class BrickletIndustrialCounter(BrickletWithMCU):  # pylint: disable=too-many-pu
         )
         duty_cycle, period, frequency, value = unpack_payload(payload, "4H 4Q 4I 4!")
         return GetAllSignalData(
-            tuple(DUTY_CYCLE.to_si(item) for item in duty_cycle),
-            tuple(PERIOD.to_si(item) for item in period),
-            tuple(FREQUENCY.to_si(item) for item in frequency),
+            tuple(CENTI_PERCENT.to_si(item) for item in duty_cycle),
+            tuple(NANO_SECOND.to_si(item) for item in period),
+            tuple(MILLI_HERTZ.to_si(item) for item in frequency),
             tuple(value),
         )
 
@@ -572,8 +574,8 @@ class BrickletIndustrialCounter(BrickletWithMCU):  # pylint: disable=too-many-pu
             return 0, tuple(value)
         duty_cycle, period, frequency, value = value
         return 1, GetAllSignalData(
-            tuple(DUTY_CYCLE.to_si(item) for item in duty_cycle),
-            tuple(PERIOD.to_si(item) for item in period),
-            tuple(FREQUENCY.to_si(item) for item in frequency),
+            tuple(CENTI_PERCENT.to_si(item) for item in duty_cycle),
+            tuple(NANO_SECOND.to_si(item) for item in period),
+            tuple(MILLI_HERTZ.to_si(item) for item in frequency),
             tuple(value),
         )

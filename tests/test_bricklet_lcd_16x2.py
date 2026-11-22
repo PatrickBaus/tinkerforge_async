@@ -76,6 +76,7 @@ CALLS: list[Call] = [
 REJECTED: list[tuple[str, tuple[Any, ...]]] = [
     ("write_line", (2, 3, "abc")),
     ("write_line", (1, 16, "abc")),
+    ("write_line", (1, 3, "aaaaaaaaaaaaaaaaa")),
     ("is_button_pressed", (3,)),
     ("set_custom_character", (8, [i % 256 for i in range(8)])),
     ("set_custom_character", (3, ([i % 256 for i in range(8)])[:-1])),

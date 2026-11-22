@@ -42,6 +42,7 @@ CALLS: list[Call] = [
 REJECTED: list[tuple[str, tuple[Any, ...]]] = [
     ("beep", (12345, Decimal("585"))),
     ("beep", (DEVICE.BeepDuration.INFINITE, Decimal("7101"))),
+    ("morse_code", ("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", Decimal("585"))),
     ("morse_code", ("abc", Decimal("7101"))),
 ]
 

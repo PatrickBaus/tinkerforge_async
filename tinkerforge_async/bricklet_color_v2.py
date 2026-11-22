@@ -104,8 +104,7 @@ class GetConfiguration(NamedTuple):
     integration_time: IntegrationTime
 
 
-COLOR_TEMPERATURE = LinearQuantity(1)  # raw: 1/1 Kelvin, returned in K
-TEMPERATURE_2 = LinearQuantity(1)  # raw: 1/1 Kelvin, returned in K
+KELVIN = LinearQuantity(1)  # raw: 1/1 Kelvin, returned in K
 
 
 class BrickletColorV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -169,7 +168,7 @@ class BrickletColorV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -342,7 +341,7 @@ class BrickletColorV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_COLOR_TEMPERATURE, response_expected=True
         )
-        return COLOR_TEMPERATURE.to_si(unpack_payload(payload, "H"))
+        return KELVIN.to_si(unpack_payload(payload, "H"))
 
     async def set_color_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -387,9 +386,9 @@ class BrickletColorV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = TEMPERATURE_2.from_si(minimum)
+        minimum_raw = KELVIN.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = TEMPERATURE_2.from_si(maximum)
+        maximum_raw = KELVIN.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -411,11 +410,7 @@ class BrickletColorV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c H H")
         return AdvancedCallbackConfiguration(
-            ms_to_seconds(period),
-            value_has_to_change,
-            Threshold(option),
-            TEMPERATURE_2.to_si(minimum),
-            TEMPERATURE_2.to_si(maximum),
+            ms_to_seconds(period), value_has_to_change, Threshold(option), KELVIN.to_si(minimum), KELVIN.to_si(maximum)
         )
 
     async def set_light(self, enable: bool = False, response_expected: bool = True) -> None:
@@ -494,4 +489,4 @@ class BrickletColorV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
             return 0, GetColor(r, g, b, c)
         if callback_id is CallbackID.ILLUMINANCE:
             return 1, value
-        return 2, COLOR_TEMPERATURE.to_si(value)
+        return 2, KELVIN.to_si(value)

@@ -62,8 +62,7 @@ class FunctionID(_FunctionID):
     GET_MOVING_AVERAGE = 11
 
 
-DUST_DENSITY = LinearQuantity(1, 1000000000)  # raw: 1/1000000 Gram Per Cubic Meter, returned in kg/m³
-VALUE = LinearQuantity(1, 1000000000)  # raw: 1/1000000 Gram Per Cubic Meter, returned in kg/m³
+MICRO_GRAM_PER_CUBIC_METER = LinearQuantity(1, 1000000000)  # raw: 1/1000000 Gram Per Cubic Meter, returned in kg/m³
 
 
 class BrickletDustDetector(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -116,7 +115,7 @@ class BrickletDustDetector(Device):  # pylint: disable=too-many-public-methods,t
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -148,7 +147,7 @@ class BrickletDustDetector(Device):  # pylint: disable=too-many-public-methods,t
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DUST_DENSITY, response_expected=True
         )
-        return DUST_DENSITY.to_si(unpack_payload(payload, "H"))
+        return MICRO_GRAM_PER_CUBIC_METER.to_si(unpack_payload(payload, "H"))
 
     async def set_dust_density_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -200,9 +199,9 @@ class BrickletDustDetector(Device):  # pylint: disable=too-many-public-methods,t
 
         Units: minimum in kg/m³, maximum in kg/m³.
         """
-        minimum_raw = VALUE.from_si(minimum)
+        minimum_raw = MICRO_GRAM_PER_CUBIC_METER.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = VALUE.from_si(maximum)
+        maximum_raw = MICRO_GRAM_PER_CUBIC_METER.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -221,7 +220,9 @@ class BrickletDustDetector(Device):  # pylint: disable=too-many-public-methods,t
             device=self, function_id=FunctionID.GET_DUST_DENSITY_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return BasicCallbackConfiguration(Threshold(option), VALUE.to_si(minimum), VALUE.to_si(maximum))
+        return BasicCallbackConfiguration(
+            Threshold(option), MICRO_GRAM_PER_CUBIC_METER.to_si(minimum), MICRO_GRAM_PER_CUBIC_METER.to_si(maximum)
+        )
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
@@ -285,5 +286,5 @@ class BrickletDustDetector(Device):  # pylint: disable=too-many-public-methods,t
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.DUST_DENSITY:
-            return 0, DUST_DENSITY.to_si(value)
-        return 0, DUST_DENSITY.to_si(value)
+            return 0, MICRO_GRAM_PER_CUBIC_METER.to_si(value)
+        return 0, MICRO_GRAM_PER_CUBIC_METER.to_si(value)

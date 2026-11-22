@@ -248,6 +248,7 @@ class BrickletPort(Enum):
     F = "f"
     G = "g"
     H = "h"
+    I = "i"  # Not a port: a HAT Brick and a HAT Zero Brick report this as their own position
     Z = "z"  # Bricklets connected to an Isolator Bricklet are always at position 'z'
 
 
@@ -442,7 +443,7 @@ class Device:
         sid: int,
         period: float | Decimal = 0,
         value_has_to_change: bool = False,
-        option: ThresholdOption | int = ThresholdOption.OFF,
+        option: ThresholdOption | str = ThresholdOption.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,

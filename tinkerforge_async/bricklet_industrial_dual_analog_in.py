@@ -87,7 +87,7 @@ class GetCalibration(NamedTuple):
     gain: tuple[int, ...]
 
 
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
 
 
 class BrickletIndustrialDualAnalogIn(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -152,7 +152,7 @@ class BrickletIndustrialDualAnalogIn(Device):  # pylint: disable=too-many-public
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -186,7 +186,7 @@ class BrickletIndustrialDualAnalogIn(Device):  # pylint: disable=too-many-public
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE, data=pack_payload((channel,), "B"), response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "i"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "i"))
 
     async def set_voltage_callback_period(
         self, channel: int, period: Duration = 0, response_expected: bool = True
@@ -251,9 +251,9 @@ class BrickletIndustrialDualAnalogIn(Device):  # pylint: disable=too-many-public
         """
         channel = int(channel)
         check_range("channel", channel, 0, 1)
-        minimum_raw = VOLTAGE.from_si(minimum)
+        minimum_raw = MILLI_VOLT.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = VOLTAGE.from_si(maximum)
+        maximum_raw = MILLI_VOLT.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -277,7 +277,7 @@ class BrickletIndustrialDualAnalogIn(Device):  # pylint: disable=too-many-public
             response_expected=True,
         )
         option, minimum, maximum = unpack_payload(payload, "c i i")
-        return BasicCallbackConfiguration(Threshold(option), VOLTAGE.to_si(minimum), VOLTAGE.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), MILLI_VOLT.to_si(minimum), MILLI_VOLT.to_si(maximum))
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
@@ -377,6 +377,6 @@ class BrickletIndustrialDualAnalogIn(Device):  # pylint: disable=too-many-public
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.VOLTAGE:
             channel, voltage = value
-            return channel, VOLTAGE.to_si(voltage)
+            return channel, MILLI_VOLT.to_si(voltage)
         channel, voltage = value
-        return channel, VOLTAGE.to_si(voltage)
+        return channel, MILLI_VOLT.to_si(voltage)

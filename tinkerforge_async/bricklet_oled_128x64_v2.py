@@ -19,7 +19,7 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import BrickletWithMCU, DeviceIdentifier, _FunctionID
-from .helper import check_length, check_range
+from .helper import check_length, check_range, encode_string
 from .ip_connection_helper import pack_payload, unpack_payload
 from .streams import Chunk, read_stream, write_stream
 
@@ -334,7 +334,7 @@ class BrickletOLED128x64V2(BrickletWithMCU):  # pylint: disable=too-many-public-
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.WRITE_LINE,
-            data=pack_payload((line, position, str(text).encode("latin-1")), "B B 22s"),
+            data=pack_payload((line, position, encode_string("text", text, 22)), "B B 22s"),
             response_expected=response_expected,
         )
 
@@ -394,6 +394,6 @@ class BrickletOLED128x64V2(BrickletWithMCU):  # pylint: disable=too-many-public-
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.WRITE_LINE_2,
-            data=pack_payload((line, position, letter_spacing, str(text).encode("latin-1")), "B B B 26s"),
+            data=pack_payload((line, position, letter_spacing, encode_string("text", text, 26)), "B B B 26s"),
             response_expected=response_expected,
         )

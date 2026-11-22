@@ -210,7 +210,7 @@ pip install tinkerforge-async
 # Changes made to the API
 Some design choices of the original Tinkerforge API are overly complex. I therefore replaced them with a simpler and more intuitive approach. A list of things that were changed can be found below:
 ## Design Changes
-- Only Python 3 is supported (3.9+)
+- Only Python 3 is supported (3.11+)
  - Replaced threads with an async event loop
  - Completely rewritten how responses from bricks/bricklets work. All setters now have a `response_expected` parameter, which is set to `True` by default. If there is an error when calling the function, it will then raise an exception - either an `AttributeError` if the function is unknown, or a `ValueError` if one or more parameters are invalid.
 

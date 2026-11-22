@@ -119,3 +119,27 @@ def check_length(name: str, value: Sized, length: int) -> None:
     """
     if len(value) != length:
         raise ValueError(f"Invalid argument: expected {length} items for {name}, got {len(value)} items")
+
+
+def encode_string(name: str, value: str, length: int) -> bytes:
+    """
+    Encode a string, that is sent to a device. The devices use fixed length strings of single byte characters.
+
+    Parameters
+    ----------
+    name: str
+        The name of the argument
+    value: str
+        The string to encode
+    length: int
+        The maximum length of the string accepted by the device
+
+    Raises
+    ------
+    ValueError
+        If the string is too long or contains characters, that cannot be encoded as Latin-1.
+    """
+    encoded = str(value).encode("latin-1")
+    if len(encoded) > length:
+        raise ValueError(f"Invalid argument: {name} can be at most {length} characters long, got {len(encoded)}")
+    return encoded

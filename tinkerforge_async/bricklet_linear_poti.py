@@ -67,8 +67,7 @@ class FunctionID(_FunctionID):
     GET_DEBOUNCE_PERIOD = 12
 
 
-PERCENTAGE = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
-POSITION = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
+PERCENT = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
 
 
 class BrickletLinearPoti(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -132,7 +131,7 @@ class BrickletLinearPoti(Device):  # pylint: disable=too-many-public-methods,too
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -165,7 +164,7 @@ class BrickletLinearPoti(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_POSITION, response_expected=True
         )
-        return POSITION.to_si(unpack_payload(payload, "H"))
+        return PERCENT.to_si(unpack_payload(payload, "H"))
 
     async def get_analog_value(self) -> int:
         """
@@ -262,9 +261,9 @@ class BrickletLinearPoti(Device):  # pylint: disable=too-many-public-methods,too
 
         Units: minimum in %, maximum in %.
         """
-        minimum_raw = PERCENTAGE.from_si(minimum)
+        minimum_raw = PERCENT.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = PERCENTAGE.from_si(maximum)
+        maximum_raw = PERCENT.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -283,7 +282,7 @@ class BrickletLinearPoti(Device):  # pylint: disable=too-many-public-methods,too
             device=self, function_id=FunctionID.GET_POSITION_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return BasicCallbackConfiguration(Threshold(option), PERCENTAGE.to_si(minimum), PERCENTAGE.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), PERCENT.to_si(minimum), PERCENT.to_si(maximum))
 
     async def set_analog_value_callback_threshold(
         self,
@@ -366,9 +365,9 @@ class BrickletLinearPoti(Device):  # pylint: disable=too-many-public-methods,too
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.POSITION:
-            return 0, POSITION.to_si(value)
+            return 0, PERCENT.to_si(value)
         if callback_id is CallbackID.ANALOG_VALUE:
             return 1, value
         if callback_id is CallbackID.POSITION_REACHED:
-            return 0, POSITION.to_si(value)
+            return 0, PERCENT.to_si(value)
         return 1, value

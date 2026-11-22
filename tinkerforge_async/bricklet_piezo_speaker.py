@@ -18,7 +18,7 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
-from .helper import check_range
+from .helper import check_range, encode_string
 from .ip_connection_helper import pack_payload, unpack_payload
 from .quantities import LinearQuantity
 
@@ -57,7 +57,7 @@ class BeepDuration(Enum):
     INFINITE = 4294967295
 
 
-FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
+HERTZ = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
 
 
 class BrickletPiezoSpeaker(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -107,7 +107,7 @@ class BrickletPiezoSpeaker(Device):  # pylint: disable=too-many-public-methods,t
 
         Units: frequency in Hz (585 to 7100 Hz).
         """
-        frequency_raw = FREQUENCY.from_si(frequency)
+        frequency_raw = HERTZ.from_si(frequency)
         check_range("frequency", frequency_raw, 585, 7100, frequency)
         await self.ipcon.send_request(
             device=self,
@@ -128,12 +128,12 @@ class BrickletPiezoSpeaker(Device):  # pylint: disable=too-many-public-methods,t
 
         Units: frequency in Hz (585 to 7100 Hz).
         """
-        frequency_raw = FREQUENCY.from_si(frequency)
+        frequency_raw = HERTZ.from_si(frequency)
         check_range("frequency", frequency_raw, 585, 7100, frequency)
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.MORSE_CODE,
-            data=pack_payload((str(morse).encode("latin-1"), frequency_raw), "60s H"),
+            data=pack_payload((encode_string("morse", morse, 60), frequency_raw), "60s H"),
             response_expected=response_expected,
         )
 

@@ -164,9 +164,7 @@ class GetFilterConfiguration(NamedTuple):
     low_pass_filter: LowPassFilter
 
 
-X = LinearQuantity(196133, 200000000)  # raw: 1/10000 Standard Gravity, returned in m/s²
-Y = LinearQuantity(196133, 200000000)  # raw: 1/10000 Standard Gravity, returned in m/s²
-Z = LinearQuantity(196133, 200000000)  # raw: 1/10000 Standard Gravity, returned in m/s²
+STANDARD_GRAVITY_1_10000 = LinearQuantity(196133, 200000000)  # raw: 1/10000 Standard Gravity, returned in m/s²
 
 
 class BrickletAccelerometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -218,7 +216,7 @@ class BrickletAccelerometerV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -253,7 +251,9 @@ class BrickletAccelerometerV2(BrickletWithMCU):  # pylint: disable=too-many-publ
             device=self, function_id=FunctionID.GET_ACCELERATION, response_expected=True
         )
         x, y, z = unpack_payload(payload, "i i i")
-        return GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+        return GetAcceleration(
+            STANDARD_GRAVITY_1_10000.to_si(x), STANDARD_GRAVITY_1_10000.to_si(y), STANDARD_GRAVITY_1_10000.to_si(z)
+        )
 
     async def set_configuration(
         self,
@@ -465,7 +465,9 @@ class BrickletAccelerometerV2(BrickletWithMCU):  # pylint: disable=too-many-publ
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.ACCELERATION:
             x, y, z = value
-            return 0, GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+            return 0, GetAcceleration(
+                STANDARD_GRAVITY_1_10000.to_si(x), STANDARD_GRAVITY_1_10000.to_si(y), STANDARD_GRAVITY_1_10000.to_si(z)
+            )
         if callback_id is CallbackID.CONTINUOUS_ACCELERATION_16_BIT:
             return 1, tuple(value)
         return 2, tuple(value)

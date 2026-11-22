@@ -189,6 +189,17 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
     ("draw_text", (3, 3, 12345, DEVICE.Color.GRAY, DEVICE.Orientation.VERTICAL, "abc")),
     ("draw_text", (3, 3, DEVICE.Font.FONT_24X32, 12345, DEVICE.Orientation.VERTICAL, "abc")),
     ("draw_text", (3, 3, DEVICE.Font.FONT_24X32, DEVICE.Color.GRAY, 12345, "abc")),
+    (
+        "draw_text",
+        (
+            3,
+            3,
+            DEVICE.Font.FONT_24X32,
+            DEVICE.Color.GRAY,
+            DEVICE.Orientation.VERTICAL,
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        ),
+    ),
     ("draw_line", (296, 3, 3, 3, DEVICE.Color.GRAY)),
     ("draw_line", (3, 128, 3, 3, DEVICE.Color.GRAY)),
     ("draw_line", (3, 3, 296, 3, DEVICE.Color.GRAY)),

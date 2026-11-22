@@ -86,11 +86,9 @@ class GetMovingAverage(NamedTuple):
     velocity_average_length: int
 
 
-DISTANCE = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
-MEASUREMENT_FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
-OFFSET = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
-VALUE = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second, returned in m/s
-VELOCITY = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second, returned in m/s
+CENTI_METER = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
+CENTI_METER_PER_SECOND = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second, returned in m/s
+HERTZ = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
 
 
 class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -141,7 +139,7 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -171,7 +169,7 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DISTANCE, response_expected=True
         )
-        return DISTANCE.to_si(unpack_payload(payload, "h"))
+        return CENTI_METER.to_si(unpack_payload(payload, "h"))
 
     async def set_distance_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -215,9 +213,9 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = DISTANCE.from_si(minimum)
+        minimum_raw = CENTI_METER.from_si(minimum)
         check_range("minimum", minimum_raw, -32768, 32767, minimum)
-        maximum_raw = DISTANCE.from_si(maximum)
+        maximum_raw = CENTI_METER.from_si(maximum)
         check_range("maximum", maximum_raw, -32768, 32767, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -242,8 +240,8 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            DISTANCE.to_si(minimum),
-            DISTANCE.to_si(maximum),
+            CENTI_METER.to_si(minimum),
+            CENTI_METER.to_si(maximum),
         )
 
     async def get_velocity(self) -> Decimal:
@@ -260,7 +258,7 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VELOCITY, response_expected=True
         )
-        return VELOCITY.to_si(unpack_payload(payload, "h"))
+        return CENTI_METER_PER_SECOND.to_si(unpack_payload(payload, "h"))
 
     async def set_velocity_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -304,9 +302,9 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = VALUE.from_si(minimum)
+        minimum_raw = CENTI_METER_PER_SECOND.from_si(minimum)
         check_range("minimum", minimum_raw, -32768, 32767, minimum)
-        maximum_raw = VALUE.from_si(maximum)
+        maximum_raw = CENTI_METER_PER_SECOND.from_si(maximum)
         check_range("maximum", maximum_raw, -32768, 32767, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -328,7 +326,11 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c h h")
         return AdvancedCallbackConfiguration(
-            ms_to_seconds(period), value_has_to_change, Threshold(option), VALUE.to_si(minimum), VALUE.to_si(maximum)
+            ms_to_seconds(period),
+            value_has_to_change,
+            Threshold(option),
+            CENTI_METER_PER_SECOND.to_si(minimum),
+            CENTI_METER_PER_SECOND.to_si(maximum),
         )
 
     async def set_enable(self, enable: bool = False, response_expected: bool = True) -> None:
@@ -397,7 +399,7 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
         check_range("acquisition_count", acquisition_count, 1, 255)
         threshold_value = int(threshold_value)
         check_range("threshold_value", threshold_value, 0, 255)
-        measurement_frequency_raw = MEASUREMENT_FREQUENCY.from_si(measurement_frequency)
+        measurement_frequency_raw = HERTZ.from_si(measurement_frequency)
         check_range("measurement_frequency", measurement_frequency_raw, 0, 65535, measurement_frequency)
         await self.ipcon.send_request(
             device=self,
@@ -422,10 +424,7 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
             payload, "B ! B H"
         )
         return GetConfiguration(
-            acquisition_count,
-            enable_quick_termination,
-            threshold_value,
-            MEASUREMENT_FREQUENCY.to_si(measurement_frequency),
+            acquisition_count, enable_quick_termination, threshold_value, HERTZ.to_si(measurement_frequency)
         )
 
     async def set_moving_average(
@@ -473,7 +472,7 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
 
         Units: offset in m.
         """
-        offset_raw = OFFSET.from_si(offset)
+        offset_raw = CENTI_METER.from_si(offset)
         check_range("offset", offset_raw, -32768, 32767, offset)
         await self.ipcon.send_request(
             device=self,
@@ -491,7 +490,7 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_OFFSET_CALIBRATION, response_expected=True
         )
-        return OFFSET.to_si(unpack_payload(payload, "h"))
+        return CENTI_METER.to_si(unpack_payload(payload, "h"))
 
     async def set_distance_led_config(
         self, config: DistanceLEDConfig | int = DistanceLEDConfig.SHOW_DISTANCE, response_expected: bool = True
@@ -518,5 +517,5 @@ class BrickletLaserRangeFinderV2(BrickletWithMCU):  # pylint: disable=too-many-p
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.DISTANCE:
-            return 0, DISTANCE.to_si(value)
-        return 1, VELOCITY.to_si(value)
+            return 0, CENTI_METER.to_si(value)
+        return 1, CENTI_METER_PER_SECOND.to_si(value)

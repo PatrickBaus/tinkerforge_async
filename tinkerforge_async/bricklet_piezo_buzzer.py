@@ -17,7 +17,7 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
-from .helper import Duration, check_range, seconds_to_ms
+from .helper import Duration, check_range, encode_string, seconds_to_ms
 from .ip_connection_helper import pack_payload
 
 if TYPE_CHECKING:
@@ -103,7 +103,7 @@ class BrickletPiezoBuzzer(Device):  # pylint: disable=too-many-public-methods,to
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.MORSE_CODE,
-            data=pack_payload((str(morse).encode("latin-1"),), "60s"),
+            data=pack_payload((encode_string("morse", morse, 60),), "60s"),
             response_expected=response_expected,
         )
 

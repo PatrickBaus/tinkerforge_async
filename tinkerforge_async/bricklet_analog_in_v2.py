@@ -69,7 +69,7 @@ class FunctionID(_FunctionID):
     GET_MOVING_AVERAGE = 14
 
 
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
 
 
 class BrickletAnalogInV2(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -133,7 +133,7 @@ class BrickletAnalogInV2(Device):  # pylint: disable=too-many-public-methods,too
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -165,7 +165,7 @@ class BrickletAnalogInV2(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def get_analog_value(self) -> int:
         """
@@ -256,9 +256,9 @@ class BrickletAnalogInV2(Device):  # pylint: disable=too-many-public-methods,too
 
         Units: minimum in V, maximum in V.
         """
-        minimum_raw = VOLTAGE.from_si(minimum)
+        minimum_raw = MILLI_VOLT.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = VOLTAGE.from_si(maximum)
+        maximum_raw = MILLI_VOLT.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -277,7 +277,7 @@ class BrickletAnalogInV2(Device):  # pylint: disable=too-many-public-methods,too
             device=self, function_id=FunctionID.GET_VOLTAGE_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return BasicCallbackConfiguration(Threshold(option), VOLTAGE.to_si(minimum), VOLTAGE.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), MILLI_VOLT.to_si(minimum), MILLI_VOLT.to_si(maximum))
 
     async def set_analog_value_callback_threshold(
         self,
@@ -386,9 +386,9 @@ class BrickletAnalogInV2(Device):  # pylint: disable=too-many-public-methods,too
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.VOLTAGE:
-            return 0, VOLTAGE.to_si(value)
+            return 0, MILLI_VOLT.to_si(value)
         if callback_id is CallbackID.ANALOG_VALUE:
             return 1, value
         if callback_id is CallbackID.VOLTAGE_REACHED:
-            return 0, VOLTAGE.to_si(value)
+            return 0, MILLI_VOLT.to_si(value)
         return 1, value

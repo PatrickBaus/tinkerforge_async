@@ -74,7 +74,7 @@ class SampleRate(Enum):
     SAMPLE_RATE_4_SPS = 3
 
 
-CURRENT = LinearQuantity(1, 1000000000)  # raw: 1/1000000000 Ampere, returned in A
+NANO_AMPERE = LinearQuantity(1, 1000000000)  # raw: 1/1000000000 Ampere, returned in A
 
 
 class BrickletIndustrialDual020mA(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -139,7 +139,7 @@ class BrickletIndustrialDual020mA(Device):  # pylint: disable=too-many-public-me
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -180,7 +180,7 @@ class BrickletIndustrialDual020mA(Device):  # pylint: disable=too-many-public-me
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT, data=pack_payload((sensor,), "B"), response_expected=True
         )
-        return CURRENT.to_si(unpack_payload(payload, "i"))
+        return NANO_AMPERE.to_si(unpack_payload(payload, "i"))
 
     async def set_current_callback_period(
         self, sensor: int, period: Duration = 0, response_expected: bool = True
@@ -245,9 +245,9 @@ class BrickletIndustrialDual020mA(Device):  # pylint: disable=too-many-public-me
         """
         sensor = int(sensor)
         check_range("sensor", sensor, 0, 1)
-        minimum_raw = CURRENT.from_si(minimum)
+        minimum_raw = NANO_AMPERE.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = CURRENT.from_si(maximum)
+        maximum_raw = NANO_AMPERE.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -271,7 +271,7 @@ class BrickletIndustrialDual020mA(Device):  # pylint: disable=too-many-public-me
             response_expected=True,
         )
         option, minimum, maximum = unpack_payload(payload, "c i i")
-        return BasicCallbackConfiguration(Threshold(option), CURRENT.to_si(minimum), CURRENT.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), NANO_AMPERE.to_si(minimum), NANO_AMPERE.to_si(maximum))
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
@@ -342,6 +342,6 @@ class BrickletIndustrialDual020mA(Device):  # pylint: disable=too-many-public-me
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.CURRENT:
             channel, current = value
-            return channel, CURRENT.to_si(current)
+            return channel, NANO_AMPERE.to_si(current)
         channel, current = value
-        return channel, CURRENT.to_si(current)
+        return channel, NANO_AMPERE.to_si(current)

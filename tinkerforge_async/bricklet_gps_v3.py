@@ -178,18 +178,13 @@ class GetSatelliteStatus(NamedTuple):
     snr: Decimal
 
 
-ALTITUDE = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
-AZIMUTH = LinearQuantity(1)  # raw: 1/1 Degree, returned in °
-COURSE = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
-ELEVATION = LinearQuantity(1)  # raw: 1/1 Degree, returned in °
-GEOIDAL_SEPARATION = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
-HDOP = LinearQuantity(1, 100)  # raw: 1/100, dimensionless
-LATITUDE = LinearQuantity(1, 1000000)  # raw: 1/1000000 Degree, returned in °
-LONGITUDE = LinearQuantity(1, 1000000)  # raw: 1/1000000 Degree, returned in °
-PDOP = LinearQuantity(1, 100)  # raw: 1/100, dimensionless
-SNR = LinearQuantity(1)  # raw: 1/1 Decibel, returned in dB
-SPEED = LinearQuantity(1, 360)  # raw: 1/100 Kilometer Per Hour, returned in m/s
-VDOP = LinearQuantity(1, 100)  # raw: 1/100, dimensionless
+CENTI_DEGREE = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
+CENTI_KILOMETER_PER_HOUR = LinearQuantity(1, 360)  # raw: 1/100 Kilometer Per Hour, returned in m/s
+CENTI_METER = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
+DECIBEL = LinearQuantity(1)  # raw: 1/1 Decibel, returned in dB
+DEGREE = LinearQuantity(1)  # raw: 1/1 Degree, returned in °
+MICRO_DEGREE = LinearQuantity(1, 1000000)  # raw: 1/1000000 Degree, returned in °
+RATIO_1_100 = LinearQuantity(1, 100)  # raw: 1/100, dimensionless
 
 
 class BrickletGPSV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -255,7 +250,7 @@ class BrickletGPSV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_COORDINATES, response_expected=True
         )
         latitude, ns, longitude, ew = unpack_payload(payload, "I c I c")
-        return GetCoordinates(LATITUDE.to_si(latitude), ns, LONGITUDE.to_si(longitude), ew)
+        return GetCoordinates(MICRO_DEGREE.to_si(latitude), ns, MICRO_DEGREE.to_si(longitude), ew)
 
     async def get_status(self) -> GetStatus:
         """
@@ -284,7 +279,7 @@ class BrickletGPSV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_ALTITUDE, response_expected=True
         )
         altitude, geoidal_separation = unpack_payload(payload, "i i")
-        return GetAltitude(ALTITUDE.to_si(altitude), GEOIDAL_SEPARATION.to_si(geoidal_separation))
+        return GetAltitude(CENTI_METER.to_si(altitude), CENTI_METER.to_si(geoidal_separation))
 
     async def get_motion(self) -> GetMotion:
         """
@@ -303,7 +298,7 @@ class BrickletGPSV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_MOTION, response_expected=True
         )
         course, speed = unpack_payload(payload, "I I")
-        return GetMotion(COURSE.to_si(course), SPEED.to_si(speed))
+        return GetMotion(CENTI_DEGREE.to_si(course), CENTI_KILOMETER_PER_HOUR.to_si(speed))
 
     async def get_date_time(self) -> GetDateTime:
         """
@@ -369,9 +364,9 @@ class BrickletGPSV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             satellite_numbers_length,
             tuple(satellite_numbers_data),
             Fix(fix),
-            PDOP.to_si(pdop),
-            HDOP.to_si(hdop),
-            VDOP.to_si(vdop),
+            RATIO_1_100.to_si(pdop),
+            RATIO_1_100.to_si(hdop),
+            RATIO_1_100.to_si(vdop),
         )
 
     async def get_satellite_system_status(
@@ -428,7 +423,7 @@ class BrickletGPSV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             response_expected=True,
         )
         elevation, azimuth, snr = unpack_payload(payload, "h h h")
-        return GetSatelliteStatus(ELEVATION.to_si(elevation), AZIMUTH.to_si(azimuth), SNR.to_si(snr))
+        return GetSatelliteStatus(DEGREE.to_si(elevation), DEGREE.to_si(azimuth), DECIBEL.to_si(snr))
 
     async def set_fix_led_config(
         self, config: FixLEDConfig | int = FixLEDConfig.SHOW_FIX, response_expected: bool = True
@@ -618,15 +613,15 @@ class BrickletGPSV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             return 0, None
         if callback_id is CallbackID.COORDINATES:
             latitude, ns, longitude, ew = value
-            return 1, GetCoordinates(LATITUDE.to_si(latitude), ns, LONGITUDE.to_si(longitude), ew)
+            return 1, GetCoordinates(MICRO_DEGREE.to_si(latitude), ns, MICRO_DEGREE.to_si(longitude), ew)
         if callback_id is CallbackID.STATUS:
             has_fix, satellites_view = value
             return 2, GetStatus(has_fix, satellites_view)
         if callback_id is CallbackID.ALTITUDE:
             altitude, geoidal_separation = value
-            return 3, GetAltitude(ALTITUDE.to_si(altitude), GEOIDAL_SEPARATION.to_si(geoidal_separation))
+            return 3, GetAltitude(CENTI_METER.to_si(altitude), CENTI_METER.to_si(geoidal_separation))
         if callback_id is CallbackID.MOTION:
             course, speed = value
-            return 4, GetMotion(COURSE.to_si(course), SPEED.to_si(speed))
+            return 4, GetMotion(CENTI_DEGREE.to_si(course), CENTI_KILOMETER_PER_HOUR.to_si(speed))
         date, time = value
         return 5, GetDateTime(date, time)

@@ -88,11 +88,7 @@ class GetAlarm(NamedTuple):
     current_frequency: Decimal
 
 
-CURRENT_FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
-END_FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
-FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
-START_FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
-STEP_SIZE = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
+HERTZ = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
 
 
 class BrickletPiezoSpeakerV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -139,7 +135,7 @@ class BrickletPiezoSpeakerV2(BrickletWithMCU):  # pylint: disable=too-many-publi
 
         Units: frequency in Hz (50 to 15000 Hz).
         """
-        frequency_raw = FREQUENCY.from_si(frequency)
+        frequency_raw = HERTZ.from_si(frequency)
         check_range("frequency", frequency_raw, 50, 15000, frequency)
         volume = int(volume)
         check_range("volume", volume, 0, 10)
@@ -162,7 +158,7 @@ class BrickletPiezoSpeakerV2(BrickletWithMCU):  # pylint: disable=too-many-publi
         """
         _, payload = await self.ipcon.send_request(device=self, function_id=FunctionID.GET_BEEP, response_expected=True)
         frequency, volume, duration, duration_remaining = unpack_payload(payload, "H B I I")
-        return GetBeep(FREQUENCY.to_si(frequency), volume, BeepDuration(duration), ms_to_seconds(duration_remaining))
+        return GetBeep(HERTZ.to_si(frequency), volume, BeepDuration(duration), ms_to_seconds(duration_remaining))
 
     async def set_alarm(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -219,11 +215,11 @@ class BrickletPiezoSpeakerV2(BrickletWithMCU):  # pylint: disable=too-many-publi
         Units: start_frequency in Hz (50 to 14999 Hz), end_frequency in Hz (51 to 15000 Hz), step_size in Hz (0 to 14950
         Hz), step_delay in s.
         """
-        start_frequency_raw = START_FREQUENCY.from_si(start_frequency)
+        start_frequency_raw = HERTZ.from_si(start_frequency)
         check_range("start_frequency", start_frequency_raw, 50, 14999, start_frequency)
-        end_frequency_raw = END_FREQUENCY.from_si(end_frequency)
+        end_frequency_raw = HERTZ.from_si(end_frequency)
         check_range("end_frequency", end_frequency_raw, 51, 15000, end_frequency)
-        step_size_raw = STEP_SIZE.from_si(step_size)
+        step_size_raw = HERTZ.from_si(step_size)
         check_range("step_size", step_size_raw, 0, 14950, step_size)
         step_delay_raw = seconds_to_ms(step_delay)
         check_range("step_delay", step_delay_raw, 0, 65535, step_delay)
@@ -272,14 +268,14 @@ class BrickletPiezoSpeakerV2(BrickletWithMCU):  # pylint: disable=too-many-publi
             current_frequency,
         ) = unpack_payload(payload, "H H H H B I I H")
         return GetAlarm(
-            START_FREQUENCY.to_si(start_frequency),
-            END_FREQUENCY.to_si(end_frequency),
-            STEP_SIZE.to_si(step_size),
+            HERTZ.to_si(start_frequency),
+            HERTZ.to_si(end_frequency),
+            HERTZ.to_si(step_size),
             ms_to_seconds(step_delay),
             volume,
             AlarmDuration(duration),
             AlarmDuration(duration_remaining),
-            CURRENT_FREQUENCY.to_si(current_frequency),
+            HERTZ.to_si(current_frequency),
         )
 
     async def update_volume(self, volume: int, response_expected: bool = True) -> None:
@@ -301,7 +297,7 @@ class BrickletPiezoSpeakerV2(BrickletWithMCU):  # pylint: disable=too-many-publi
 
         Units: frequency in Hz (50 to 15000 Hz).
         """
-        frequency_raw = FREQUENCY.from_si(frequency)
+        frequency_raw = HERTZ.from_si(frequency)
         check_range("frequency", frequency_raw, 50, 15000, frequency)
         await self.ipcon.send_request(
             device=self,

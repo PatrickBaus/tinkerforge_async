@@ -16,7 +16,14 @@ from .ethernet import (
     GetEthernetWebsocketConfiguration,
     PhyMode,
 )
-from .master import BrickMaster, CallbackID, ExtensionPosition, ExtensionType, GetProtocol1BrickletName
+from .master import (
+    BrickMaster,
+    CallbackID,
+    ExtensionPosition,
+    ExtensionType,
+    GetProtocol1BrickletName,
+    SetBrickletXMCFlashConfig,
+)
 from .rs485 import GetRS485Configuration, Rs485Parity
 from .wifi import (
     EapOptions,
@@ -65,6 +72,7 @@ __all__ = [
     "GetEthernetStatus",
     "GetEthernetWebsocketConfiguration",
     "GetProtocol1BrickletName",
+    "SetBrickletXMCFlashConfig",
     "GetRS485Configuration",
     "GetWifi2APConfiguration",
     "GetWifi2ClientConfiguration",

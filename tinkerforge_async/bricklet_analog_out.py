@@ -57,7 +57,7 @@ class Mode(Enum):
     MODE_500K_TO_GROUND = 3
 
 
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
 
 
 class BrickletAnalogOut(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -93,7 +93,7 @@ class BrickletAnalogOut(Device):  # pylint: disable=too-many-public-methods,too-
 
         Units: voltage in V (0 to 5 V).
         """
-        voltage_raw = VOLTAGE.from_si(voltage)
+        voltage_raw = MILLI_VOLT.from_si(voltage)
         check_range("voltage", voltage_raw, 0, 5000, voltage)
         await self.ipcon.send_request(
             device=self,
@@ -111,7 +111,7 @@ class BrickletAnalogOut(Device):  # pylint: disable=too-many-public-methods,too-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def set_mode(self, mode: Mode | int = Mode.MODE_1K_TO_GROUND, response_expected: bool = True) -> None:
         """

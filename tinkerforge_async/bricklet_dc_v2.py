@@ -107,12 +107,11 @@ class GetPowerStatistics(NamedTuple):
     current: Decimal
 
 
-ACCELERATION = LinearQuantity(100, 32767)  # raw: 100/32767 Percent Per Second, returned in %/s
-CURRENT = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-DECELERATION = LinearQuantity(100, 32767)  # raw: 100/32767 Percent Per Second, returned in %/s
-FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
-VELOCITY = LinearQuantity(100, 32767)  # raw: 100/32767 Percent, returned in %
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+HERTZ = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
+MILLI_AMPERE = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+PERCENT_100_32767 = LinearQuantity(100, 32767)  # raw: 100/32767 Percent, returned in %
+PERCENT_PER_SECOND_100_32767 = LinearQuantity(100, 32767)  # raw: 100/32767 Percent Per Second, returned in %/s
 
 
 class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -167,7 +166,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -221,7 +220,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
 
         Units: velocity in % (-100 to 100 %).
         """
-        velocity_raw = VELOCITY.from_si(velocity)
+        velocity_raw = PERCENT_100_32767.from_si(velocity)
         check_range("velocity", velocity_raw, -32767, 32767, velocity)
         await self.ipcon.send_request(
             device=self,
@@ -239,7 +238,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VELOCITY, response_expected=True
         )
-        return VELOCITY.to_si(unpack_payload(payload, "h"))
+        return PERCENT_100_32767.to_si(unpack_payload(payload, "h"))
 
     async def get_current_velocity(self) -> Decimal:
         """
@@ -252,7 +251,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT_VELOCITY, response_expected=True
         )
-        return VELOCITY.to_si(unpack_payload(payload, "h"))
+        return PERCENT_100_32767.to_si(unpack_payload(payload, "h"))
 
     async def set_motion(
         self,
@@ -274,9 +273,9 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
 
         Units: acceleration in %/s, deceleration in %/s.
         """
-        acceleration_raw = ACCELERATION.from_si(acceleration)
+        acceleration_raw = PERCENT_PER_SECOND_100_32767.from_si(acceleration)
         check_range("acceleration", acceleration_raw, 0, 65535, acceleration)
-        deceleration_raw = DECELERATION.from_si(deceleration)
+        deceleration_raw = PERCENT_PER_SECOND_100_32767.from_si(deceleration)
         check_range("deceleration", deceleration_raw, 0, 65535, deceleration)
         await self.ipcon.send_request(
             device=self,
@@ -295,7 +294,9 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
             device=self, function_id=FunctionID.GET_MOTION, response_expected=True
         )
         acceleration, deceleration = unpack_payload(payload, "H H")
-        return GetMotion(ACCELERATION.to_si(acceleration), DECELERATION.to_si(deceleration))
+        return GetMotion(
+            PERCENT_PER_SECOND_100_32767.to_si(acceleration), PERCENT_PER_SECOND_100_32767.to_si(deceleration)
+        )
 
     async def full_brake(self, response_expected: bool = True) -> None:
         """
@@ -361,7 +362,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
 
         Units: frequency in Hz (1 to 20000 Hz).
         """
-        frequency_raw = FREQUENCY.from_si(frequency)
+        frequency_raw = HERTZ.from_si(frequency)
         check_range("frequency", frequency_raw, 1, 20000, frequency)
         await self.ipcon.send_request(
             device=self,
@@ -379,7 +380,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_PWM_FREQUENCY, response_expected=True
         )
-        return FREQUENCY.to_si(unpack_payload(payload, "H"))
+        return HERTZ.to_si(unpack_payload(payload, "H"))
 
     async def get_power_statistics(self) -> GetPowerStatistics:
         """
@@ -391,7 +392,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
             device=self, function_id=FunctionID.GET_POWER_STATISTICS, response_expected=True
         )
         voltage, current = unpack_payload(payload, "H H")
-        return GetPowerStatistics(VOLTAGE.to_si(voltage), CURRENT.to_si(current))
+        return GetPowerStatistics(MILLI_VOLT.to_si(voltage), MILLI_AMPERE.to_si(current))
 
     async def set_error_led_config(
         self, config: ErrorLEDConfig | int = ErrorLEDConfig.SHOW_ERROR, response_expected: bool = True
@@ -506,5 +507,5 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
         if callback_id is CallbackID.EMERGENCY_SHUTDOWN:
             return 0, None
         if callback_id is CallbackID.VELOCITY_REACHED:
-            return 1, VELOCITY.to_si(value)
-        return 2, VELOCITY.to_si(value)
+            return 1, PERCENT_100_32767.to_si(value)
+        return 2, PERCENT_100_32767.to_si(value)

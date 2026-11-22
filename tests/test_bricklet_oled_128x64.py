@@ -79,6 +79,7 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
     ("set_display_configuration", (256, True)),
     ("write_line", (8, 3, "abc")),
     ("write_line", (3, 26, "abc")),
+    ("write_line", (3, 3, "aaaaaaaaaaaaaaaaaaaaaaaaaaa")),
 ]
 
 

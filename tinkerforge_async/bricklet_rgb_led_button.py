@@ -70,9 +70,7 @@ class GetColorCalibration(NamedTuple):
     blue: Decimal
 
 
-BLUE = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
-GREEN = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
-RED = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
+PERCENT = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
 
 
 class BrickletRGBLEDButton(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -155,11 +153,11 @@ class BrickletRGBLEDButton(BrickletWithMCU):  # pylint: disable=too-many-public-
 
         Units: red in % (0 to 100 %), green in % (0 to 100 %), blue in % (0 to 100 %).
         """
-        red_raw = RED.from_si(red)
+        red_raw = PERCENT.from_si(red)
         check_range("red", red_raw, 0, 100, red)
-        green_raw = GREEN.from_si(green)
+        green_raw = PERCENT.from_si(green)
         check_range("green", green_raw, 0, 100, green)
-        blue_raw = BLUE.from_si(blue)
+        blue_raw = PERCENT.from_si(blue)
         check_range("blue", blue_raw, 0, 100, blue)
         await self.ipcon.send_request(
             device=self,
@@ -178,7 +176,7 @@ class BrickletRGBLEDButton(BrickletWithMCU):  # pylint: disable=too-many-public-
             device=self, function_id=FunctionID.GET_COLOR_CALIBRATION, response_expected=True
         )
         red, green, blue = unpack_payload(payload, "B B B")
-        return GetColorCalibration(RED.to_si(red), GREEN.to_si(green), BLUE.to_si(blue))
+        return GetColorCalibration(PERCENT.to_si(red), PERCENT.to_si(green), PERCENT.to_si(blue))
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         return 0, ButtonState(value)

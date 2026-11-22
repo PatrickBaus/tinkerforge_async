@@ -60,8 +60,7 @@ class FunctionID(_FunctionID):
     GET_DEBOUNCE_PERIOD = 7
 
 
-CO2_CONCENTRATION = LinearQuantity(1)  # raw: 1/1 Parts Per Million, returned in ppm
-VALUE = LinearQuantity(1)  # raw: 1/1 Parts Per Million, returned in ppm
+PARTS_PER_MILLION = LinearQuantity(1)  # raw: 1/1 Parts Per Million, returned in ppm
 
 
 class BrickletCO2(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -114,7 +113,7 @@ class BrickletCO2(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -146,7 +145,7 @@ class BrickletCO2(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CO2_CONCENTRATION, response_expected=True
         )
-        return CO2_CONCENTRATION.to_si(unpack_payload(payload, "H"))
+        return PARTS_PER_MILLION.to_si(unpack_payload(payload, "H"))
 
     async def set_co2_concentration_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -198,9 +197,9 @@ class BrickletCO2(Device):  # pylint: disable=too-many-public-methods,too-few-pu
 
         Units: minimum in ppm, maximum in ppm.
         """
-        minimum_raw = VALUE.from_si(minimum)
+        minimum_raw = PARTS_PER_MILLION.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = VALUE.from_si(maximum)
+        maximum_raw = PARTS_PER_MILLION.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -219,7 +218,9 @@ class BrickletCO2(Device):  # pylint: disable=too-many-public-methods,too-few-pu
             device=self, function_id=FunctionID.GET_CO2_CONCENTRATION_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return BasicCallbackConfiguration(Threshold(option), VALUE.to_si(minimum), VALUE.to_si(maximum))
+        return BasicCallbackConfiguration(
+            Threshold(option), PARTS_PER_MILLION.to_si(minimum), PARTS_PER_MILLION.to_si(maximum)
+        )
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
@@ -257,5 +258,5 @@ class BrickletCO2(Device):  # pylint: disable=too-many-public-methods,too-few-pu
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.CO2_CONCENTRATION:
-            return 0, CO2_CONCENTRATION.to_si(value)
-        return 0, CO2_CONCENTRATION.to_si(value)
+            return 0, PARTS_PER_MILLION.to_si(value)
+        return 0, PARTS_PER_MILLION.to_si(value)

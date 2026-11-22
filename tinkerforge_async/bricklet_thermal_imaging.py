@@ -167,15 +167,8 @@ class GetFFCShutterMode(NamedTuple):
     imminent_delay: int
 
 
-DESIRED_FFC_TEMP_DELTA = LinearQuantity(1, 100)  # raw: 1/100 Kelvin, returned in K
-REFLECTION_WINDOW = LinearQuantity(25, 2048)  # raw: 25/2048 Percent, returned in %
-SCENE_EMISSIVITY = LinearQuantity(25, 2048)  # raw: 25/2048 Percent, returned in %
-TAU_ATMOSPHERE = LinearQuantity(25, 2048)  # raw: 25/2048 Percent, returned in %
-TAU_WINDOW = LinearQuantity(25, 2048)  # raw: 25/2048 Percent, returned in %
-TEMPERATURE_ATMOSPHERE = LinearQuantity(1, 100)  # raw: 1/100 Kelvin, returned in K
-TEMPERATURE_BACKGROUND = LinearQuantity(1, 100)  # raw: 1/100 Kelvin, returned in K
-TEMPERATURE_REFLECTION = LinearQuantity(1, 100)  # raw: 1/100 Kelvin, returned in K
-TEMPERATUR_WINDOW = LinearQuantity(1, 100)  # raw: 1/100 Kelvin, returned in K
+CENTI_KELVIN = LinearQuantity(1, 100)  # raw: 1/100 Kelvin, returned in K
+PERCENT_25_2048 = LinearQuantity(25, 2048)  # raw: 25/2048 Percent, returned in %
 
 
 class BrickletThermalImaging(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -560,21 +553,21 @@ class BrickletThermalImaging(BrickletWithMCU):  # pylint: disable=too-many-publi
 
         .. versionadded:: 2.0.5 (Firmware)
         """
-        scene_emissivity_raw = SCENE_EMISSIVITY.from_si(scene_emissivity)
+        scene_emissivity_raw = PERCENT_25_2048.from_si(scene_emissivity)
         check_range("scene_emissivity", scene_emissivity_raw, 82, 8192, scene_emissivity)
-        temperature_background_raw = TEMPERATURE_BACKGROUND.from_si(temperature_background)
+        temperature_background_raw = CENTI_KELVIN.from_si(temperature_background)
         check_range("temperature_background", temperature_background_raw, 0, 65535, temperature_background)
-        tau_window_raw = TAU_WINDOW.from_si(tau_window)
+        tau_window_raw = PERCENT_25_2048.from_si(tau_window)
         check_range("tau_window", tau_window_raw, 82, 8192, tau_window)
-        temperatur_window_raw = TEMPERATUR_WINDOW.from_si(temperatur_window)
+        temperatur_window_raw = CENTI_KELVIN.from_si(temperatur_window)
         check_range("temperatur_window", temperatur_window_raw, 0, 65535, temperatur_window)
-        tau_atmosphere_raw = TAU_ATMOSPHERE.from_si(tau_atmosphere)
+        tau_atmosphere_raw = PERCENT_25_2048.from_si(tau_atmosphere)
         check_range("tau_atmosphere", tau_atmosphere_raw, 82, 8192, tau_atmosphere)
-        temperature_atmosphere_raw = TEMPERATURE_ATMOSPHERE.from_si(temperature_atmosphere)
+        temperature_atmosphere_raw = CENTI_KELVIN.from_si(temperature_atmosphere)
         check_range("temperature_atmosphere", temperature_atmosphere_raw, 0, 65535, temperature_atmosphere)
-        reflection_window_raw = REFLECTION_WINDOW.from_si(reflection_window)
+        reflection_window_raw = PERCENT_25_2048.from_si(reflection_window)
         check_range("reflection_window", reflection_window_raw, 0, 8192, reflection_window)
-        temperature_reflection_raw = TEMPERATURE_REFLECTION.from_si(temperature_reflection)
+        temperature_reflection_raw = CENTI_KELVIN.from_si(temperature_reflection)
         check_range("temperature_reflection", temperature_reflection_raw, 0, 65535, temperature_reflection)
         await self.ipcon.send_request(
             device=self,
@@ -619,14 +612,14 @@ class BrickletThermalImaging(BrickletWithMCU):  # pylint: disable=too-many-publi
             temperature_reflection,
         ) = unpack_payload(payload, "H H H H H H H H")
         return GetFluxLinearParameters(
-            SCENE_EMISSIVITY.to_si(scene_emissivity),
-            TEMPERATURE_BACKGROUND.to_si(temperature_background),
-            TAU_WINDOW.to_si(tau_window),
-            TEMPERATUR_WINDOW.to_si(temperatur_window),
-            TAU_ATMOSPHERE.to_si(tau_atmosphere),
-            TEMPERATURE_ATMOSPHERE.to_si(temperature_atmosphere),
-            REFLECTION_WINDOW.to_si(reflection_window),
-            TEMPERATURE_REFLECTION.to_si(temperature_reflection),
+            PERCENT_25_2048.to_si(scene_emissivity),
+            CENTI_KELVIN.to_si(temperature_background),
+            PERCENT_25_2048.to_si(tau_window),
+            CENTI_KELVIN.to_si(temperatur_window),
+            PERCENT_25_2048.to_si(tau_atmosphere),
+            CENTI_KELVIN.to_si(temperature_atmosphere),
+            PERCENT_25_2048.to_si(reflection_window),
+            CENTI_KELVIN.to_si(temperature_reflection),
         )
 
     async def set_ffc_shutter_mode(  # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -657,7 +650,7 @@ class BrickletThermalImaging(BrickletWithMCU):  # pylint: disable=too-many-publi
         )
         desired_ffc_period_raw = seconds_to_ms(desired_ffc_period)
         check_range("desired_ffc_period", desired_ffc_period_raw, 0, 4294967295, desired_ffc_period)
-        desired_ffc_temp_delta_raw = DESIRED_FFC_TEMP_DELTA.from_si(desired_ffc_temp_delta)
+        desired_ffc_temp_delta_raw = CENTI_KELVIN.from_si(desired_ffc_temp_delta)
         check_range("desired_ffc_temp_delta", desired_ffc_temp_delta_raw, 0, 65535, desired_ffc_temp_delta)
         imminent_delay = int(imminent_delay)
         check_range("imminent_delay", imminent_delay, 0, 65535)
@@ -713,7 +706,7 @@ class BrickletThermalImaging(BrickletWithMCU):  # pylint: disable=too-many-publi
             ms_to_seconds(elapsed_time_since_last_ffc),
             ms_to_seconds(desired_ffc_period),
             explicit_cmd_to_open,
-            DESIRED_FFC_TEMP_DELTA.to_si(desired_ffc_temp_delta),
+            CENTI_KELVIN.to_si(desired_ffc_temp_delta),
             imminent_delay,
         )
 

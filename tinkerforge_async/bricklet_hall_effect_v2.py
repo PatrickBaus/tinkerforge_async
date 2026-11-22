@@ -67,10 +67,8 @@ class GetCounterConfig(NamedTuple):
     debounce: Decimal
 
 
-DEBOUNCE = LinearQuantity(1, 1000000)  # raw: 1/1000000 Second, returned in s
-HIGH_THRESHOLD = LinearQuantity(1, 1000000)  # raw: 1/1000000 Tesla, returned in T
-LOW_THRESHOLD = LinearQuantity(1, 1000000)  # raw: 1/1000000 Tesla, returned in T
-MAGNETIC_FLUX_DENSITY = LinearQuantity(1, 1000000)  # raw: 1/1000000 Tesla, returned in T
+MICRO_SECOND = LinearQuantity(1, 1000000)  # raw: 1/1000000 Second, returned in s
+MICRO_TESLA = LinearQuantity(1, 1000000)  # raw: 1/1000000 Tesla, returned in T
 
 
 class BrickletHallEffectV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -125,7 +123,7 @@ class BrickletHallEffectV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -153,7 +151,7 @@ class BrickletHallEffectV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MAGNETIC_FLUX_DENSITY, response_expected=True
         )
-        return MAGNETIC_FLUX_DENSITY.to_si(unpack_payload(payload, "h"))
+        return MICRO_TESLA.to_si(unpack_payload(payload, "h"))
 
     async def set_magnetic_flux_density_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -198,9 +196,9 @@ class BrickletHallEffectV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = MAGNETIC_FLUX_DENSITY.from_si(minimum)
+        minimum_raw = MICRO_TESLA.from_si(minimum)
         check_range("minimum", minimum_raw, -32768, 32767, minimum)
-        maximum_raw = MAGNETIC_FLUX_DENSITY.from_si(maximum)
+        maximum_raw = MICRO_TESLA.from_si(maximum)
         check_range("maximum", maximum_raw, -32768, 32767, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -225,8 +223,8 @@ class BrickletHallEffectV2(BrickletWithMCU):  # pylint: disable=too-many-public-
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            MAGNETIC_FLUX_DENSITY.to_si(minimum),
-            MAGNETIC_FLUX_DENSITY.to_si(maximum),
+            MICRO_TESLA.to_si(minimum),
+            MICRO_TESLA.to_si(maximum),
         )
 
     async def get_counter(self, reset_counter: bool) -> int:
@@ -268,11 +266,11 @@ class BrickletHallEffectV2(BrickletWithMCU):  # pylint: disable=too-many-public-
 
         Units: high_threshold in T, low_threshold in T, debounce in s (0 to 1 s).
         """
-        high_threshold_raw = HIGH_THRESHOLD.from_si(high_threshold)
+        high_threshold_raw = MICRO_TESLA.from_si(high_threshold)
         check_range("high_threshold", high_threshold_raw, -32768, 32767, high_threshold)
-        low_threshold_raw = LOW_THRESHOLD.from_si(low_threshold)
+        low_threshold_raw = MICRO_TESLA.from_si(low_threshold)
         check_range("low_threshold", low_threshold_raw, -32768, 32767, low_threshold)
-        debounce_raw = DEBOUNCE.from_si(debounce)
+        debounce_raw = MICRO_SECOND.from_si(debounce)
         check_range("debounce", debounce_raw, 0, 1000000, debounce)
         await self.ipcon.send_request(
             device=self,
@@ -292,7 +290,7 @@ class BrickletHallEffectV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         )
         high_threshold, low_threshold, debounce = unpack_payload(payload, "h h I")
         return GetCounterConfig(
-            HIGH_THRESHOLD.to_si(high_threshold), LOW_THRESHOLD.to_si(low_threshold), DEBOUNCE.to_si(debounce)
+            MICRO_TESLA.to_si(high_threshold), MICRO_TESLA.to_si(low_threshold), MICRO_SECOND.to_si(debounce)
         )
 
     async def set_counter_callback_configuration(
@@ -331,5 +329,5 @@ class BrickletHallEffectV2(BrickletWithMCU):  # pylint: disable=too-many-public-
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.MAGNETIC_FLUX_DENSITY:
-            return 0, MAGNETIC_FLUX_DENSITY.to_si(value)
+            return 0, MICRO_TESLA.to_si(value)
         return 1, value

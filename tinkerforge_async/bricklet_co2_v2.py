@@ -81,10 +81,10 @@ class GetAllValues(NamedTuple):
     humidity: Decimal
 
 
-AIR_PRESSURE = LinearQuantity(100)  # raw: 1/1 Hectopascal, returned in Pa
-CO2_CONCENTRATION = LinearQuantity(1)  # raw: 1/1 Parts Per Million, returned in ppm
-HUMIDITY = LinearQuantity(1, 100)  # raw: 1/100 Percent Relative Humidity, returned in %RH
-VALUE = LinearQuantity(1)  # raw: 1/1 Parts Per Million, returned in ppm
+CENTI_DEGREE_CELSIUS_DIFFERENCE = LinearQuantity(1, 100)  # raw: 1/100 Degree Celsius, returned in K
+CENTI_PERCENT_RELATIVE_HUMIDITY = LinearQuantity(1, 100)  # raw: 1/100 Percent Relative Humidity, returned in %RH
+HECTOPASCAL = LinearQuantity(100)  # raw: 1/1 Hectopascal, returned in Pa
+PARTS_PER_MILLION = LinearQuantity(1)  # raw: 1/1 Parts Per Million, returned in ppm
 
 
 class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -150,7 +150,7 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -189,7 +189,9 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         )
         co2_concentration, temperature, humidity = unpack_payload(payload, "H h H")
         return GetAllValues(
-            CO2_CONCENTRATION.to_si(co2_concentration), TEMPERATURE.to_si(temperature), HUMIDITY.to_si(humidity)
+            PARTS_PER_MILLION.to_si(co2_concentration),
+            TEMPERATURE.to_si(temperature),
+            CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(humidity),
         )
 
     async def set_air_pressure(self, air_pressure: float | Decimal = 0, response_expected: bool = True) -> None:
@@ -208,7 +210,7 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
 
         Units: air_pressure in Pa.
         """
-        air_pressure_raw = AIR_PRESSURE.from_si(air_pressure)
+        air_pressure_raw = HECTOPASCAL.from_si(air_pressure)
         check_range("air_pressure", air_pressure_raw, 0, 65535, air_pressure)
         await self.ipcon.send_request(
             device=self,
@@ -226,7 +228,7 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_AIR_PRESSURE, response_expected=True
         )
-        return AIR_PRESSURE.to_si(unpack_payload(payload, "H"))
+        return HECTOPASCAL.to_si(unpack_payload(payload, "H"))
 
     async def set_temperature_offset(self, offset: float | Decimal, response_expected: bool = True) -> None:
         """
@@ -251,7 +253,7 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
 
         Units: offset in K.
         """
-        offset_raw = TEMPERATURE.from_si(offset)
+        offset_raw = CENTI_DEGREE_CELSIUS_DIFFERENCE.from_si(offset)
         check_range("offset", offset_raw, 0, 65535, offset)
         await self.ipcon.send_request(
             device=self,
@@ -270,7 +272,7 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TEMPERATURE_OFFSET, response_expected=True
         )
-        return TEMPERATURE.to_si(unpack_payload(payload, "H"))
+        return CENTI_DEGREE_CELSIUS_DIFFERENCE.to_si(unpack_payload(payload, "H"))
 
     async def set_all_values_callback_configuration(
         self, period: Duration = 0, value_has_to_change: bool = False, response_expected: bool = True
@@ -315,7 +317,7 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CO2_CONCENTRATION, response_expected=True
         )
-        return CO2_CONCENTRATION.to_si(unpack_payload(payload, "H"))
+        return PARTS_PER_MILLION.to_si(unpack_payload(payload, "H"))
 
     async def set_co2_concentration_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -360,9 +362,9 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = VALUE.from_si(minimum)
+        minimum_raw = PARTS_PER_MILLION.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = VALUE.from_si(maximum)
+        maximum_raw = PARTS_PER_MILLION.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -384,7 +386,11 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c H H")
         return AdvancedCallbackConfiguration(
-            ms_to_seconds(period), value_has_to_change, Threshold(option), VALUE.to_si(minimum), VALUE.to_si(maximum)
+            ms_to_seconds(period),
+            value_has_to_change,
+            Threshold(option),
+            PARTS_PER_MILLION.to_si(minimum),
+            PARTS_PER_MILLION.to_si(maximum),
         )
 
     async def get_temperature(self) -> Decimal:
@@ -484,7 +490,7 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_HUMIDITY, response_expected=True
         )
-        return HUMIDITY.to_si(unpack_payload(payload, "H"))
+        return CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(unpack_payload(payload, "H"))
 
     async def set_humidity_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -528,9 +534,9 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = HUMIDITY.from_si(minimum)
+        minimum_raw = CENTI_PERCENT_RELATIVE_HUMIDITY.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = HUMIDITY.from_si(maximum)
+        maximum_raw = CENTI_PERCENT_RELATIVE_HUMIDITY.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -555,8 +561,8 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            HUMIDITY.to_si(minimum),
-            HUMIDITY.to_si(maximum),
+            CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(minimum),
+            CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(maximum),
         )
 
     async def set_automatic_self_calibration(self, enabled: bool = True, response_expected: bool = True) -> None:
@@ -634,7 +640,7 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
 
         .. versionadded:: 2.0.4 (Firmware)
         """
-        co2_concentration_raw = CO2_CONCENTRATION.from_si(co2_concentration)
+        co2_concentration_raw = PARTS_PER_MILLION.from_si(co2_concentration)
         check_range("co2_concentration", co2_concentration_raw, 400, 2000, co2_concentration)
         await self.ipcon.send_request(
             device=self,
@@ -663,16 +669,18 @@ class BrickletCO2V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_FORCED_RECALIBRATION, response_expected=True
         )
-        return CO2_CONCENTRATION.to_si(unpack_payload(payload, "H"))
+        return PARTS_PER_MILLION.to_si(unpack_payload(payload, "H"))
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.ALL_VALUES:
             co2_concentration, temperature, humidity = value
             return 0, GetAllValues(
-                CO2_CONCENTRATION.to_si(co2_concentration), TEMPERATURE.to_si(temperature), HUMIDITY.to_si(humidity)
+                PARTS_PER_MILLION.to_si(co2_concentration),
+                TEMPERATURE.to_si(temperature),
+                CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(humidity),
             )
         if callback_id is CallbackID.CO2_CONCENTRATION:
-            return 1, CO2_CONCENTRATION.to_si(value)
+            return 1, PARTS_PER_MILLION.to_si(value)
         if callback_id is CallbackID.TEMPERATURE:
             return 2, TEMPERATURE.to_si(value)
-        return 3, HUMIDITY.to_si(value)
+        return 3, CENTI_PERCENT_RELATIVE_HUMIDITY.to_si(value)
