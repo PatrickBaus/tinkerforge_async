@@ -72,6 +72,11 @@ class EdgeInterrupt(NamedTuple):
     value: bool
 
 
+class EdgeCountEvent(NamedTuple):
+    count_: int
+    value: bool
+
+
 class BrickletHallEffect(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
     """
     Detects presence of magnetic field
@@ -241,4 +246,4 @@ class BrickletHallEffect(Device):  # pylint: disable=too-many-public-methods,too
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         count, value = value
-        return 0, EdgeInterrupt(count, value)
+        return 0, EdgeCountEvent(count, value)

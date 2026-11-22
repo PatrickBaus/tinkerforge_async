@@ -294,6 +294,21 @@ class CardemuGetTagID(NamedTuple):
     tag_id_data: tuple[int, ...]
 
 
+class ReaderStateChangedEvent(NamedTuple):
+    state: ReaderState
+    idle: bool
+
+
+class CardemuStateChangedEvent(NamedTuple):
+    state: CardemuState
+    idle: bool
+
+
+class P2PStateChangedEvent(NamedTuple):
+    state: P2PState
+    idle: bool
+
+
 class SimpleTagSeenEvent(NamedTuple):
     tag_type: TagType
     tag_id: bytes
@@ -1210,12 +1225,12 @@ class BrickletNFC(BrickletWithMCU):  # pylint: disable=too-many-public-methods,t
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.READER_STATE_CHANGED:
             state, idle = value
-            return 0, ReaderGetState(ReaderState(state), idle)
+            return 0, ReaderStateChangedEvent(ReaderState(state), idle)
         if callback_id is CallbackID.CARDEMU_STATE_CHANGED:
             state, idle = value
-            return 1, CardemuGetState(CardemuState(state), idle)
+            return 1, CardemuStateChangedEvent(CardemuState(state), idle)
         state, idle = value
-        return 2, P2PGetState(P2PState(state), idle)
+        return 2, P2PStateChangedEvent(P2PState(state), idle)
 
     def _to_events(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches
         self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None

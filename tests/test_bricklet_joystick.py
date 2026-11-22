@@ -187,7 +187,7 @@ def test_callback_position(device, connection):
 def test_callback_analog_value(device, connection):
     """The callback ANALOG_VALUE is converted to an event."""
     connection.callback(CallbackID.ANALOG_VALUE, "H H", *(3, 4))
-    assert summary(read_events(device)) == [(1, CallbackID.ANALOG_VALUE, GetPosition(3, 4))]
+    assert summary(read_events(device)) == [(1, CallbackID.ANALOG_VALUE, GetAnalogValue(3, 4))]
 
 
 def test_callback_position_reached(device, connection):
@@ -199,7 +199,7 @@ def test_callback_position_reached(device, connection):
 def test_callback_analog_value_reached(device, connection):
     """The callback ANALOG_VALUE_REACHED is converted to an event."""
     connection.callback(CallbackID.ANALOG_VALUE_REACHED, "H H", *(3, 4))
-    assert summary(read_events(device)) == [(3, CallbackID.ANALOG_VALUE_REACHED, GetPosition(3, 4))]
+    assert summary(read_events(device)) == [(3, CallbackID.ANALOG_VALUE_REACHED, GetAnalogValue(3, 4))]
 
 
 def test_callback_pressed(device, connection):

@@ -252,6 +252,12 @@ class ModbusSlaveReadCoilsRequestEvent(NamedTuple):
     count_: int
 
 
+class ModbusSlaveReadHoldingRegistersRequestEvent(NamedTuple):
+    request_id: int
+    starting_address: int
+    count_: int
+
+
 class ModbusSlaveWriteSingleCoilRequestEvent(NamedTuple):
     request_id: int
     coil_address: int
@@ -267,6 +273,33 @@ class ModbusSlaveWriteSingleRegisterRequestEvent(NamedTuple):
     request_id: int
     register_address: int
     register_value: int
+
+
+class ModbusMasterWriteSingleRegisterResponseEvent(NamedTuple):
+    request_id: int
+    exception_code: ExceptionCode
+
+
+class ModbusMasterWriteMultipleCoilsResponseEvent(NamedTuple):
+    request_id: int
+    exception_code: ExceptionCode
+
+
+class ModbusMasterWriteMultipleRegistersResponseEvent(NamedTuple):
+    request_id: int
+    exception_code: ExceptionCode
+
+
+class ModbusSlaveReadDiscreteInputsRequestEvent(NamedTuple):
+    request_id: int
+    starting_address: int
+    count_: int
+
+
+class ModbusSlaveReadInputRegistersRequestEvent(NamedTuple):
+    request_id: int
+    starting_address: int
+    count_: int
 
 
 class ModbusMasterReadCoilsResponseEvent(NamedTuple):
@@ -1614,7 +1647,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             return 1, ModbusSlaveReadCoilsRequestEvent(request_id, starting_address, count)
         if callback_id is CallbackID.MODBUS_SLAVE_READ_HOLDING_REGISTERS_REQUEST:
             request_id, starting_address, count = value
-            return 2, ModbusSlaveReadCoilsRequestEvent(request_id, starting_address, count)
+            return 2, ModbusSlaveReadHoldingRegistersRequestEvent(request_id, starting_address, count)
         if callback_id is CallbackID.MODBUS_SLAVE_WRITE_SINGLE_COIL_REQUEST:
             request_id, coil_address, coil_value = value
             return 3, ModbusSlaveWriteSingleCoilRequestEvent(request_id, coil_address, coil_value)
@@ -1626,19 +1659,19 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             return 5, ModbusSlaveWriteSingleRegisterRequestEvent(request_id, register_address, register_value)
         if callback_id is CallbackID.MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE:
             request_id, exception_code = value
-            return 6, ModbusMasterWriteSingleCoilResponseEvent(request_id, ExceptionCode(exception_code))
+            return 6, ModbusMasterWriteSingleRegisterResponseEvent(request_id, ExceptionCode(exception_code))
         if callback_id is CallbackID.MODBUS_MASTER_WRITE_MULTIPLE_COILS_RESPONSE:
             request_id, exception_code = value
-            return 7, ModbusMasterWriteSingleCoilResponseEvent(request_id, ExceptionCode(exception_code))
+            return 7, ModbusMasterWriteMultipleCoilsResponseEvent(request_id, ExceptionCode(exception_code))
         if callback_id is CallbackID.MODBUS_MASTER_WRITE_MULTIPLE_REGISTERS_RESPONSE:
             request_id, exception_code = value
-            return 8, ModbusMasterWriteSingleCoilResponseEvent(request_id, ExceptionCode(exception_code))
+            return 8, ModbusMasterWriteMultipleRegistersResponseEvent(request_id, ExceptionCode(exception_code))
         if callback_id is CallbackID.MODBUS_SLAVE_READ_DISCRETE_INPUTS_REQUEST:
             request_id, starting_address, count = value
-            return 9, ModbusSlaveReadCoilsRequestEvent(request_id, starting_address, count)
+            return 9, ModbusSlaveReadDiscreteInputsRequestEvent(request_id, starting_address, count)
         if callback_id is CallbackID.MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST:
             request_id, starting_address, count = value
-            return 10, ModbusSlaveReadCoilsRequestEvent(request_id, starting_address, count)
+            return 10, ModbusSlaveReadInputRegistersRequestEvent(request_id, starting_address, count)
         return 11, value
 
     def _to_events(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches

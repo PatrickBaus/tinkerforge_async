@@ -9,12 +9,15 @@ from tinkerforge_async.bricklet_nfc import (
     BrickletNFC,
     CardemuGetState,
     CardemuGetTagID,
+    CardemuStateChangedEvent,
     P2PGetState,
     P2PReadNDEF,
+    P2PStateChangedEvent,
     ReaderGetState,
     ReaderGetTagID,
     ReaderReadNDEF,
     ReaderReadPage,
+    ReaderStateChangedEvent,
     SimpleGetTagID,
 )
 from tinkerforge_async.devices import ThresholdOption as Threshold
@@ -468,7 +471,7 @@ def test_callback_reader_state_changed(device, connection):
     """The callback READER_STATE_CHANGED is converted to an event."""
     connection.callback(CallbackID.READER_STATE_CHANGED, "B !", *(199, True))
     assert summary(read_events(device)) == [
-        (0, CallbackID.READER_STATE_CHANGED, ReaderGetState(DEVICE.ReaderState.REQUEST_NDEF_ERROR, True))
+        (0, CallbackID.READER_STATE_CHANGED, ReaderStateChangedEvent(DEVICE.ReaderState.REQUEST_NDEF_ERROR, True))
     ]
 
 
@@ -476,7 +479,7 @@ def test_callback_cardemu_state_changed(device, connection):
     """The callback CARDEMU_STATE_CHANGED is converted to an event."""
     connection.callback(CallbackID.CARDEMU_STATE_CHANGED, "B !", *(195, True))
     assert summary(read_events(device)) == [
-        (1, CallbackID.CARDEMU_STATE_CHANGED, CardemuGetState(DEVICE.CardemuState.TRANSFER_NDEF_ERROR, True))
+        (1, CallbackID.CARDEMU_STATE_CHANGED, CardemuStateChangedEvent(DEVICE.CardemuState.TRANSFER_NDEF_ERROR, True))
     ]
 
 
@@ -484,7 +487,7 @@ def test_callback_p2p_state_changed(device, connection):
     """The callback P2P_STATE_CHANGED is converted to an event."""
     connection.callback(CallbackID.P2P_STATE_CHANGED, "B !", *(195, True))
     assert summary(read_events(device)) == [
-        (2, CallbackID.P2P_STATE_CHANGED, P2PGetState(DEVICE.P2PState.TRANSFER_NDEF_ERROR, True))
+        (2, CallbackID.P2P_STATE_CHANGED, P2PStateChangedEvent(DEVICE.P2PState.TRANSFER_NDEF_ERROR, True))
     ]
 
 

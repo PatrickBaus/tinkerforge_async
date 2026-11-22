@@ -119,6 +119,18 @@ class DateTimeEvent(NamedTuple):
     timestamp: Decimal
 
 
+class AlarmEvent(NamedTuple):
+    year: int
+    month: int
+    day: int
+    hour: int
+    minute: int
+    second: int
+    centisecond: int
+    weekday: Weekday
+    timestamp: Decimal
+
+
 OFFSET = LinearQuantity(217, 100)  # raw: 217/100 Parts Per Million, returned in ppm
 
 
@@ -391,6 +403,6 @@ class BrickletRealTimeClock(Device):  # pylint: disable=too-many-public-methods,
                 year, month, day, hour, minute, second, centisecond, Weekday(weekday), ms_to_seconds(timestamp)
             )
         year, month, day, hour, minute, second, centisecond, weekday, timestamp = value
-        return 1, DateTimeEvent(
+        return 1, AlarmEvent(
             year, month, day, hour, minute, second, centisecond, Weekday(weekday), ms_to_seconds(timestamp)
         )

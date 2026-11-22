@@ -104,6 +104,11 @@ class GetState(NamedTuple):
     idle: bool
 
 
+class StateChangedEvent(NamedTuple):
+    state: State
+    idle: bool
+
+
 class BrickletNFCRFID(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
     """
     Reads and writes NFC and RFID tags
@@ -326,4 +331,4 @@ class BrickletNFCRFID(Device):  # pylint: disable=too-many-public-methods,too-fe
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         state, idle = value
-        return 0, GetState(State(state), idle)
+        return 0, StateChangedEvent(State(state), idle)

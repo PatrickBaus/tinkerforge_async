@@ -161,6 +161,11 @@ class ReadFrame(NamedTuple):
     length: int
 
 
+class ReadEvent(NamedTuple):
+    message: tuple[str, ...]
+    length: int
+
+
 class BrickletRS232(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
     """
     Communicates with RS232 devices
@@ -385,7 +390,7 @@ class BrickletRS232(Device):  # pylint: disable=too-many-public-methods,too-few-
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.READ:
             message, length = value
-            return 0, Read(tuple(message), length)
+            return 0, ReadEvent(tuple(message), length)
         if callback_id is CallbackID.ERROR:
             return 1, Error(value)
         return 2, value

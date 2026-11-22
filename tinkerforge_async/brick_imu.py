@@ -946,10 +946,10 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
             return 0, GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
         if callback_id is CallbackID.MAGNETIC_FIELD:
             x, y, z = value
-            return 1, GetAcceleration(X_2.to_si(x), Y_2.to_si(y), Z_2.to_si(z))
+            return 1, GetMagneticField(X_2.to_si(x), Y_2.to_si(y), Z_2.to_si(z))
         if callback_id is CallbackID.ANGULAR_VELOCITY:
             x, y, z = value
-            return 2, GetAcceleration(X_3.to_si(x), Y_3.to_si(y), Z_3.to_si(z))
+            return 2, GetAngularVelocity(X_3.to_si(x), Y_3.to_si(y), Z_3.to_si(z))
         if callback_id is CallbackID.ALL_DATA:
             acc_x, acc_y, acc_z, mag_x, mag_y, mag_z, ang_x, ang_y, ang_z, temperature = value
             return 3, GetAllData(
