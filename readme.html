@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Readme &#8212; tinkerforge_async v1.8.1.dev26 documentation</title>
+    <title>Readme &#8212; tinkerforge_async v1.8.1.dev27 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
-    <script src="_static/documentation_options.js?v=e74ae3b7"></script>
+    <script src="_static/documentation_options.js?v=433267ae"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to tinkerforge_async’s documentation!"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">tinkerforge_async v1.8.1.dev26 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">tinkerforge_async v1.8.1.dev27 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Readme</a></li> 
       </ul>
     </div>  
@@ -716,7 +716,7 @@ pip<span class="w"> </span>install<span class="w"> </span>tinkerforge-async
 <section id="design-changes">
 <h3>Design Changes<a class="headerlink" href="#design-changes" title="Link to this heading">¶</a></h3>
 <ul>
-<li><p>Only Python 3 is supported (3.11+)</p></li>
+<li><p>Only Python 3 is supported (3.12+)</p></li>
 <li><p>Replaced threads with an async event loop</p></li>
 <li><p>Completely rewritten how responses from bricks/bricklets work. All setters now have a <code class="docutils literal notranslate"><span class="pre">response_expected</span></code> parameter, which is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> by default. If there is an error when calling the function, it will then raise an exception - either an <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> if the function is unknown, or a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if one or more parameters are invalid.</p>
 <p>Old style:</p>
@@ -950,7 +950,7 @@ after a tag get a development version like <code class="docutils literal notrans
         <li class="right" >
           <a href="index.html" title="Welcome to tinkerforge_async’s documentation!"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">tinkerforge_async v1.8.1.dev26 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">tinkerforge_async v1.8.1.dev27 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Readme</a></li> 
       </ul>
     </div>
