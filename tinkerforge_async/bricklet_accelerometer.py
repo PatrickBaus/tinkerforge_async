@@ -124,10 +124,8 @@ class GetConfiguration(NamedTuple):
     filter_bandwidth: FilterBandwidth
 
 
-TEMPERATURE_2 = LinearQuantity(1, 1, CELSIUS_ZERO)  # raw: 1/1 Degree Celsius, returned in K
-X = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
-Y = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
-Z = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
+DEGREE_CELSIUS = LinearQuantity(1, 1, CELSIUS_ZERO)  # raw: 1/1 Degree Celsius, returned in K
+MILLI_STANDARD_GRAVITY = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
 
 
 class BrickletAccelerometer(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -181,7 +179,9 @@ class BrickletAccelerometer(Device):  # pylint: disable=too-many-public-methods,
             device=self, function_id=FunctionID.GET_ACCELERATION, response_expected=True
         )
         x, y, z = unpack_payload(payload, "h h h")
-        return GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+        return GetAcceleration(
+            MILLI_STANDARD_GRAVITY.to_si(x), MILLI_STANDARD_GRAVITY.to_si(y), MILLI_STANDARD_GRAVITY.to_si(z)
+        )
 
     async def set_acceleration_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -237,17 +237,17 @@ class BrickletAccelerometer(Device):  # pylint: disable=too-many-public-methods,
 
         Units: min_x in m/s², max_x in m/s², min_y in m/s², max_y in m/s², min_z in m/s², max_z in m/s².
         """
-        min_x_raw = X.from_si(min_x)
+        min_x_raw = MILLI_STANDARD_GRAVITY.from_si(min_x)
         check_range("min_x", min_x_raw, -32768, 32767, min_x)
-        max_x_raw = X.from_si(max_x)
+        max_x_raw = MILLI_STANDARD_GRAVITY.from_si(max_x)
         check_range("max_x", max_x_raw, -32768, 32767, max_x)
-        min_y_raw = Y.from_si(min_y)
+        min_y_raw = MILLI_STANDARD_GRAVITY.from_si(min_y)
         check_range("min_y", min_y_raw, -32768, 32767, min_y)
-        max_y_raw = Y.from_si(max_y)
+        max_y_raw = MILLI_STANDARD_GRAVITY.from_si(max_y)
         check_range("max_y", max_y_raw, -32768, 32767, max_y)
-        min_z_raw = Z.from_si(min_z)
+        min_z_raw = MILLI_STANDARD_GRAVITY.from_si(min_z)
         check_range("min_z", min_z_raw, -32768, 32767, min_z)
-        max_z_raw = Z.from_si(max_z)
+        max_z_raw = MILLI_STANDARD_GRAVITY.from_si(max_z)
         check_range("max_z", max_z_raw, -32768, 32767, max_z)
         await self.ipcon.send_request(
             device=self,
@@ -271,12 +271,12 @@ class BrickletAccelerometer(Device):  # pylint: disable=too-many-public-methods,
         option, min_x, max_x, min_y, max_y, min_z, max_z = unpack_payload(payload, "c h h h h h h")
         return GetAccelerationCallbackThreshold(
             Threshold(option),
-            X.to_si(min_x),
-            X.to_si(max_x),
-            Y.to_si(min_y),
-            Y.to_si(max_y),
-            Z.to_si(min_z),
-            Z.to_si(max_z),
+            MILLI_STANDARD_GRAVITY.to_si(min_x),
+            MILLI_STANDARD_GRAVITY.to_si(max_x),
+            MILLI_STANDARD_GRAVITY.to_si(min_y),
+            MILLI_STANDARD_GRAVITY.to_si(max_y),
+            MILLI_STANDARD_GRAVITY.to_si(min_z),
+            MILLI_STANDARD_GRAVITY.to_si(max_z),
         )
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
@@ -322,7 +322,7 @@ class BrickletAccelerometer(Device):  # pylint: disable=too-many-public-methods,
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TEMPERATURE, response_expected=True
         )
-        return TEMPERATURE_2.to_si(unpack_payload(payload, "h"))
+        return DEGREE_CELSIUS.to_si(unpack_payload(payload, "h"))
 
     async def set_configuration(
         self,
@@ -386,6 +386,10 @@ class BrickletAccelerometer(Device):  # pylint: disable=too-many-public-methods,
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.ACCELERATION:
             x, y, z = value
-            return 0, GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+            return 0, GetAcceleration(
+                MILLI_STANDARD_GRAVITY.to_si(x), MILLI_STANDARD_GRAVITY.to_si(y), MILLI_STANDARD_GRAVITY.to_si(z)
+            )
         x, y, z = value
-        return 1, GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+        return 1, GetAcceleration(
+            MILLI_STANDARD_GRAVITY.to_si(x), MILLI_STANDARD_GRAVITY.to_si(y), MILLI_STANDARD_GRAVITY.to_si(z)
+        )

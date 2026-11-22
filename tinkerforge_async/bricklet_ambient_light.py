@@ -67,7 +67,7 @@ class FunctionID(_FunctionID):
     GET_DEBOUNCE_PERIOD = 12
 
 
-ILLUMINANCE = LinearQuantity(1, 10)  # raw: 1/10 Lux, returned in lx
+DECI_LUX = LinearQuantity(1, 10)  # raw: 1/10 Lux, returned in lx
 
 
 class BrickletAmbientLight(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -131,7 +131,7 @@ class BrickletAmbientLight(Device):  # pylint: disable=too-many-public-methods,t
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -163,7 +163,7 @@ class BrickletAmbientLight(Device):  # pylint: disable=too-many-public-methods,t
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ILLUMINANCE, response_expected=True
         )
-        return ILLUMINANCE.to_si(unpack_payload(payload, "H"))
+        return DECI_LUX.to_si(unpack_payload(payload, "H"))
 
     async def get_analog_value(self) -> int:
         """
@@ -264,9 +264,9 @@ class BrickletAmbientLight(Device):  # pylint: disable=too-many-public-methods,t
 
         Units: minimum in lx, maximum in lx.
         """
-        minimum_raw = ILLUMINANCE.from_si(minimum)
+        minimum_raw = DECI_LUX.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = ILLUMINANCE.from_si(maximum)
+        maximum_raw = DECI_LUX.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -285,7 +285,7 @@ class BrickletAmbientLight(Device):  # pylint: disable=too-many-public-methods,t
             device=self, function_id=FunctionID.GET_ILLUMINANCE_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return BasicCallbackConfiguration(Threshold(option), ILLUMINANCE.to_si(minimum), ILLUMINANCE.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), DECI_LUX.to_si(minimum), DECI_LUX.to_si(maximum))
 
     async def set_analog_value_callback_threshold(
         self,
@@ -368,9 +368,9 @@ class BrickletAmbientLight(Device):  # pylint: disable=too-many-public-methods,t
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.ILLUMINANCE:
-            return 0, ILLUMINANCE.to_si(value)
+            return 0, DECI_LUX.to_si(value)
         if callback_id is CallbackID.ANALOG_VALUE:
             return 1, value
         if callback_id is CallbackID.ILLUMINANCE_REACHED:
-            return 0, ILLUMINANCE.to_si(value)
+            return 0, DECI_LUX.to_si(value)
         return 1, value

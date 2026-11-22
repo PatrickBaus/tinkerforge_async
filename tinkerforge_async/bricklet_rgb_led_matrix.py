@@ -54,7 +54,7 @@ class FunctionID(_FunctionID):
     GET_SUPPLY_VOLTAGE = 10
 
 
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
 
 
 class BrickletRGBLEDMatrix(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -214,7 +214,7 @@ class BrickletRGBLEDMatrix(BrickletWithMCU):  # pylint: disable=too-many-public-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_SUPPLY_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         return 0, value

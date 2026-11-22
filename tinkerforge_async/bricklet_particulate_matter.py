@@ -84,15 +84,8 @@ class GetSensorInfo(NamedTuple):
     checksum_error_count: int
 
 
-GREATER03UM = LinearQuantity(10000)  # raw: 10000/1 Particles Per Cubic Meter, returned in 1/m³
-GREATER05UM = LinearQuantity(10000)  # raw: 10000/1 Particles Per Cubic Meter, returned in 1/m³
-GREATER100UM = LinearQuantity(10000)  # raw: 10000/1 Particles Per Cubic Meter, returned in 1/m³
-GREATER10UM = LinearQuantity(10000)  # raw: 10000/1 Particles Per Cubic Meter, returned in 1/m³
-GREATER25UM = LinearQuantity(10000)  # raw: 10000/1 Particles Per Cubic Meter, returned in 1/m³
-GREATER50UM = LinearQuantity(10000)  # raw: 10000/1 Particles Per Cubic Meter, returned in 1/m³
-PM10 = LinearQuantity(1, 1000000000)  # raw: 1/1000000 Gram Per Cubic Meter, returned in kg/m³
-PM100 = LinearQuantity(1, 1000000000)  # raw: 1/1000000 Gram Per Cubic Meter, returned in kg/m³
-PM25 = LinearQuantity(1, 1000000000)  # raw: 1/1000000 Gram Per Cubic Meter, returned in kg/m³
+MICRO_GRAM_PER_CUBIC_METER = LinearQuantity(1, 1000000000)  # raw: 1/1000000 Gram Per Cubic Meter, returned in kg/m³
+PARTICLES_PER_CUBIC_METER_10000_1 = LinearQuantity(10000)  # raw: 10000/1 Particles Per Cubic Meter, returned in 1/m³
 
 
 class BrickletParticulateMatter(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -140,7 +133,7 @@ class BrickletParticulateMatter(BrickletWithMCU):  # pylint: disable=too-many-pu
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -180,7 +173,11 @@ class BrickletParticulateMatter(BrickletWithMCU):  # pylint: disable=too-many-pu
             device=self, function_id=FunctionID.GET_PM_CONCENTRATION, response_expected=True
         )
         pm10, pm25, pm100 = unpack_payload(payload, "H H H")
-        return GetPMConcentration(PM10.to_si(pm10), PM25.to_si(pm25), PM100.to_si(pm100))
+        return GetPMConcentration(
+            MICRO_GRAM_PER_CUBIC_METER.to_si(pm10),
+            MICRO_GRAM_PER_CUBIC_METER.to_si(pm25),
+            MICRO_GRAM_PER_CUBIC_METER.to_si(pm100),
+        )
 
     async def get_pm_count(self) -> GetPMCount:
         """
@@ -211,12 +208,12 @@ class BrickletParticulateMatter(BrickletWithMCU):  # pylint: disable=too-many-pu
             payload, "H H H H H H"
         )
         return GetPMCount(
-            GREATER03UM.to_si(greater03um),
-            GREATER05UM.to_si(greater05um),
-            GREATER10UM.to_si(greater10um),
-            GREATER25UM.to_si(greater25um),
-            GREATER50UM.to_si(greater50um),
-            GREATER100UM.to_si(greater100um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater03um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater05um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater10um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater25um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater50um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater100um),
         )
 
     async def set_enable(self, enable: bool = True, response_expected: bool = True) -> None:
@@ -332,13 +329,17 @@ class BrickletParticulateMatter(BrickletWithMCU):  # pylint: disable=too-many-pu
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.PM_CONCENTRATION:
             pm10, pm25, pm100 = value
-            return 0, GetPMConcentration(PM10.to_si(pm10), PM25.to_si(pm25), PM100.to_si(pm100))
+            return 0, GetPMConcentration(
+                MICRO_GRAM_PER_CUBIC_METER.to_si(pm10),
+                MICRO_GRAM_PER_CUBIC_METER.to_si(pm25),
+                MICRO_GRAM_PER_CUBIC_METER.to_si(pm100),
+            )
         greater03um, greater05um, greater10um, greater25um, greater50um, greater100um = value
         return 1, GetPMCount(
-            GREATER03UM.to_si(greater03um),
-            GREATER05UM.to_si(greater05um),
-            GREATER10UM.to_si(greater10um),
-            GREATER25UM.to_si(greater25um),
-            GREATER50UM.to_si(greater50um),
-            GREATER100UM.to_si(greater100um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater03um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater05um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater10um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater25um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater50um),
+            PARTICLES_PER_CUBIC_METER_10000_1.to_si(greater100um),
         )

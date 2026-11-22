@@ -19,7 +19,7 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
-from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
+from .helper import Duration, check_length, check_range, encode_string, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 
 if TYPE_CHECKING:
@@ -116,7 +116,7 @@ class BrickletLCD20x4(Device):  # pylint: disable=too-many-public-methods,too-fe
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.WRITE_LINE,
-            data=pack_payload((line, position, str(text).encode("latin-1")), "B B 20s"),
+            data=pack_payload((line, position, encode_string("text", text, 20)), "B B 20s"),
             response_expected=response_expected,
         )
 
@@ -267,7 +267,7 @@ class BrickletLCD20x4(Device):  # pylint: disable=too-many-public-methods,too-fe
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_DEFAULT_TEXT,
-            data=pack_payload((line, str(text).encode("latin-1")), "B 20s"),
+            data=pack_payload((line, encode_string("text", text, 20)), "B 20s"),
             response_expected=response_expected,
         )
 

@@ -55,15 +55,15 @@ CALLS: list[Call] = [
         reply=("i B i i i", (3, 3, 5, 6, 7)),
         result=GetAllValues(3, DEVICE.Accuracy.HIGH, Decimal("273.20"), Decimal("0.06"), Decimal("7")),
     ),
-    Call("set_temperature_offset", FunctionID.SET_TEMPERATURE_OFFSET, (Decimal("273.18"),), sent=("i", (3,))),
+    Call("set_temperature_offset", FunctionID.SET_TEMPERATURE_OFFSET, (Decimal("0.03"),), sent=("i", (3,))),
     Call(
         "set_temperature_offset",
         FunctionID.SET_TEMPERATURE_OFFSET,
-        (Decimal("273.18"), False),
+        (Decimal("0.03"), False),
         sent=("i", (3,)),
         response_expected=False,
     ),
-    Call("get_temperature_offset", FunctionID.GET_TEMPERATURE_OFFSET, (), reply=("i", (3,)), result=Decimal("273.18")),
+    Call("get_temperature_offset", FunctionID.GET_TEMPERATURE_OFFSET, (), reply=("i", (3,)), result=Decimal("0.03")),
     Call(
         "set_all_values_callback_configuration",
         FunctionID.SET_ALL_VALUES_CALLBACK_CONFIGURATION,
@@ -271,7 +271,7 @@ CALLS: list[Call] = [
 ]
 
 REJECTED: list[tuple[str, tuple[Any, ...]]] = [
-    ("set_temperature_offset", (Decimal("21475109.63"),)),
+    ("set_temperature_offset", (Decimal("21474836.48"),)),
     ("set_all_values_callback_configuration", (Decimal("4294967.296"), True)),
     ("set_iaq_index_callback_configuration", (Decimal("4294967.296"), True)),
     (

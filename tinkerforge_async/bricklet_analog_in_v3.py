@@ -76,8 +76,7 @@ class GetCalibration(NamedTuple):
     divisor: int
 
 
-OFFSET = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
 
 
 class BrickletAnalogInV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -124,7 +123,7 @@ class BrickletAnalogInV3(BrickletWithMCU):  # pylint: disable=too-many-public-me
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -153,7 +152,7 @@ class BrickletAnalogInV3(BrickletWithMCU):  # pylint: disable=too-many-public-me
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def set_voltage_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -197,9 +196,9 @@ class BrickletAnalogInV3(BrickletWithMCU):  # pylint: disable=too-many-public-me
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = VOLTAGE.from_si(minimum)
+        minimum_raw = MILLI_VOLT.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = VOLTAGE.from_si(maximum)
+        maximum_raw = MILLI_VOLT.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -224,8 +223,8 @@ class BrickletAnalogInV3(BrickletWithMCU):  # pylint: disable=too-many-public-me
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            VOLTAGE.to_si(minimum),
-            VOLTAGE.to_si(maximum),
+            MILLI_VOLT.to_si(minimum),
+            MILLI_VOLT.to_si(maximum),
         )
 
     async def set_oversampling(
@@ -276,7 +275,7 @@ class BrickletAnalogInV3(BrickletWithMCU):  # pylint: disable=too-many-public-me
 
         Units: offset in V.
         """
-        offset_raw = OFFSET.from_si(offset)
+        offset_raw = MILLI_VOLT.from_si(offset)
         check_range("offset", offset_raw, -32768, 32767, offset)
         multiplier = int(multiplier)
         check_range("multiplier", multiplier, 0, 65535)
@@ -299,7 +298,7 @@ class BrickletAnalogInV3(BrickletWithMCU):  # pylint: disable=too-many-public-me
             device=self, function_id=FunctionID.GET_CALIBRATION, response_expected=True
         )
         offset, multiplier, divisor = unpack_payload(payload, "h H H")
-        return GetCalibration(OFFSET.to_si(offset), multiplier, divisor)
+        return GetCalibration(MILLI_VOLT.to_si(offset), multiplier, divisor)
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
-        return 0, VOLTAGE.to_si(value)
+        return 0, MILLI_VOLT.to_si(value)

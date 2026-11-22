@@ -141,7 +141,7 @@ class BrickletXMC1400Breakout(BrickletWithMCU):  # pylint: disable=too-many-publ
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,

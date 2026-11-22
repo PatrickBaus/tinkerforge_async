@@ -48,8 +48,7 @@ class FunctionID(_FunctionID):
     GET_POSITION_CALLBACK_CONFIGURATION = 3
 
 
-PERCENTAGE = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
-POSITION = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
+PERCENT = LinearQuantity(1)  # raw: 1/1 Percent, returned in %
 
 
 class BrickletLinearPotiV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -95,7 +94,7 @@ class BrickletLinearPotiV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -124,7 +123,7 @@ class BrickletLinearPotiV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_POSITION, response_expected=True
         )
-        return POSITION.to_si(unpack_payload(payload, "B"))
+        return PERCENT.to_si(unpack_payload(payload, "B"))
 
     async def set_position_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -168,9 +167,9 @@ class BrickletLinearPotiV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = PERCENTAGE.from_si(minimum)
+        minimum_raw = PERCENT.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 255, minimum)
-        maximum_raw = PERCENTAGE.from_si(maximum)
+        maximum_raw = PERCENT.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 255, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -195,9 +194,9 @@ class BrickletLinearPotiV2(BrickletWithMCU):  # pylint: disable=too-many-public-
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            PERCENTAGE.to_si(minimum),
-            PERCENTAGE.to_si(maximum),
+            PERCENT.to_si(minimum),
+            PERCENT.to_si(maximum),
         )
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
-        return 0, POSITION.to_si(value)
+        return 0, PERCENT.to_si(value)

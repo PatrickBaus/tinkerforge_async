@@ -84,10 +84,8 @@ class GetVoltages(NamedTuple):
     voltage_dc: Decimal
 
 
-POWER_OFF_DELAY = LinearQuantity(1)  # raw: 1/1 Second, returned in s
-POWER_OFF_DURATION = LinearQuantity(1)  # raw: 1/1 Second, returned in s
-VOLTAGE_DC = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
-VOLTAGE_USB = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+SECOND = LinearQuantity(1)  # raw: 1/1 Second, returned in s
 
 
 class BrickHAT(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -130,7 +128,7 @@ class BrickHAT(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -184,9 +182,9 @@ class BrickHAT(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-
 
         Units: power_off_delay in s, power_off_duration in s.
         """
-        power_off_delay_raw = POWER_OFF_DELAY.from_si(power_off_delay)
+        power_off_delay_raw = SECOND.from_si(power_off_delay)
         check_range("power_off_delay", power_off_delay_raw, 0, 4294967295, power_off_delay)
-        power_off_duration_raw = POWER_OFF_DURATION.from_si(power_off_duration)
+        power_off_duration_raw = SECOND.from_si(power_off_duration)
         check_range("power_off_duration", power_off_duration_raw, 0, 4294967295, power_off_duration)
         await self.ipcon.send_request(
             device=self,
@@ -217,8 +215,8 @@ class BrickHAT(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-
             payload, "I I ! ! !"
         )
         return GetSleepMode(
-            POWER_OFF_DELAY.to_si(power_off_delay),
-            POWER_OFF_DURATION.to_si(power_off_duration),
+            SECOND.to_si(power_off_delay),
+            SECOND.to_si(power_off_duration),
             raspberry_pi_off,
             bricklets_off,
             enable_sleep_indicator,
@@ -267,7 +265,7 @@ class BrickHAT(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-
             device=self, function_id=FunctionID.GET_VOLTAGES, response_expected=True
         )
         voltage_usb, voltage_dc = unpack_payload(payload, "H H")
-        return GetVoltages(VOLTAGE_USB.to_si(voltage_usb), VOLTAGE_DC.to_si(voltage_dc))
+        return GetVoltages(MILLI_VOLT.to_si(voltage_usb), MILLI_VOLT.to_si(voltage_dc))
 
     async def set_voltages_callback_configuration(
         self, period: Duration = 0, value_has_to_change: bool = False, response_expected: bool = True
@@ -331,4 +329,4 @@ class BrickHAT(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         voltage_usb, voltage_dc = value
-        return 0, GetVoltages(VOLTAGE_USB.to_si(voltage_usb), VOLTAGE_DC.to_si(voltage_dc))
+        return 0, GetVoltages(MILLI_VOLT.to_si(voltage_usb), MILLI_VOLT.to_si(voltage_dc))

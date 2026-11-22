@@ -118,16 +118,11 @@ class GetDateTime(NamedTuple):
     time: int
 
 
-ALTITUDE = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
-COURSE = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
-EPE = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
-GEOIDAL_SEPARATION = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
-HDOP = LinearQuantity(1, 100)  # raw: 1/100, dimensionless
-LATITUDE = LinearQuantity(1, 1000000)  # raw: 1/1000000 Degree, returned in °
-LONGITUDE = LinearQuantity(1, 1000000)  # raw: 1/1000000 Degree, returned in °
-PDOP = LinearQuantity(1, 100)  # raw: 1/100, dimensionless
-SPEED = LinearQuantity(1, 360)  # raw: 1/100 Kilometer Per Hour, returned in m/s
-VDOP = LinearQuantity(1, 100)  # raw: 1/100, dimensionless
+CENTI_DEGREE = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
+CENTI_KILOMETER_PER_HOUR = LinearQuantity(1, 360)  # raw: 1/100 Kilometer Per Hour, returned in m/s
+CENTI_METER = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
+MICRO_DEGREE = LinearQuantity(1, 1000000)  # raw: 1/1000000 Degree, returned in °
+RATIO_1_100 = LinearQuantity(1, 100)  # raw: 1/100, dimensionless
 
 
 class BrickletGPS(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -197,14 +192,14 @@ class BrickletGPS(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         )
         latitude, ns, longitude, ew, pdop, hdop, vdop, epe = unpack_payload(payload, "I c I c H H H H")
         return GetCoordinates(
-            LATITUDE.to_si(latitude),
+            MICRO_DEGREE.to_si(latitude),
             ns,
-            LONGITUDE.to_si(longitude),
+            MICRO_DEGREE.to_si(longitude),
             ew,
-            PDOP.to_si(pdop),
-            HDOP.to_si(hdop),
-            VDOP.to_si(vdop),
-            EPE.to_si(epe),
+            RATIO_1_100.to_si(pdop),
+            RATIO_1_100.to_si(hdop),
+            RATIO_1_100.to_si(vdop),
+            CENTI_METER.to_si(epe),
         )
 
     async def get_status(self) -> GetStatus:
@@ -244,7 +239,7 @@ class BrickletGPS(Device):  # pylint: disable=too-many-public-methods,too-few-pu
             device=self, function_id=FunctionID.GET_ALTITUDE, response_expected=True
         )
         altitude, geoidal_separation = unpack_payload(payload, "i i")
-        return GetAltitude(ALTITUDE.to_si(altitude), GEOIDAL_SEPARATION.to_si(geoidal_separation))
+        return GetAltitude(CENTI_METER.to_si(altitude), CENTI_METER.to_si(geoidal_separation))
 
     async def get_motion(self) -> GetMotion:
         """
@@ -263,7 +258,7 @@ class BrickletGPS(Device):  # pylint: disable=too-many-public-methods,too-few-pu
             device=self, function_id=FunctionID.GET_MOTION, response_expected=True
         )
         course, speed = unpack_payload(payload, "I I")
-        return GetMotion(COURSE.to_si(course), SPEED.to_si(speed))
+        return GetMotion(CENTI_DEGREE.to_si(course), CENTI_KILOMETER_PER_HOUR.to_si(speed))
 
     async def get_date_time(self) -> GetDateTime:
         """
@@ -434,23 +429,23 @@ class BrickletGPS(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         if callback_id is CallbackID.COORDINATES:
             latitude, ns, longitude, ew, pdop, hdop, vdop, epe = value
             return 0, GetCoordinates(
-                LATITUDE.to_si(latitude),
+                MICRO_DEGREE.to_si(latitude),
                 ns,
-                LONGITUDE.to_si(longitude),
+                MICRO_DEGREE.to_si(longitude),
                 ew,
-                PDOP.to_si(pdop),
-                HDOP.to_si(hdop),
-                VDOP.to_si(vdop),
-                EPE.to_si(epe),
+                RATIO_1_100.to_si(pdop),
+                RATIO_1_100.to_si(hdop),
+                RATIO_1_100.to_si(vdop),
+                CENTI_METER.to_si(epe),
             )
         if callback_id is CallbackID.STATUS:
             fix, satellites_view, satellites_used = value
             return 1, GetStatus(Fix(fix), satellites_view, satellites_used)
         if callback_id is CallbackID.ALTITUDE:
             altitude, geoidal_separation = value
-            return 2, GetAltitude(ALTITUDE.to_si(altitude), GEOIDAL_SEPARATION.to_si(geoidal_separation))
+            return 2, GetAltitude(CENTI_METER.to_si(altitude), CENTI_METER.to_si(geoidal_separation))
         if callback_id is CallbackID.MOTION:
             course, speed = value
-            return 3, GetMotion(COURSE.to_si(course), SPEED.to_si(speed))
+            return 3, GetMotion(CENTI_DEGREE.to_si(course), CENTI_KILOMETER_PER_HOUR.to_si(speed))
         date, time = value
         return 4, GetDateTime(date, time)

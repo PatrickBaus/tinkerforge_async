@@ -115,3 +115,17 @@ def test_energy_monitor():
     assert data.real_power == Decimal("117.82")
     assert data.power_factor == 1  # 1/1000
     assert data.frequency == 50
+
+
+def test_a_temperature_offset_is_a_difference():
+    """An offset of 1 K is 1 °C, not -272.15 °C. The raw offset is in 1/100 K."""
+    for device_class in (BrickletAirQuality, BrickletCO2V2):
+        connection = FakeConnection()
+        device = device_class(UID, connection)
+        run(device.set_temperature_offset(Decimal("1.5")))
+        assert connection.requests[-1].function_id is device_class.FunctionID.SET_TEMPERATURE_OFFSET
+        assert int.from_bytes(connection.requests[-1].data, "little", signed=True) == 150
+    device, _ = reply(BrickletAirQuality, "GET_TEMPERATURE_OFFSET", "i", -250)
+    assert run(device.get_temperature_offset()) == Decimal("-2.5")
+    device, _ = reply(BrickletCO2V2, "GET_TEMPERATURE_OFFSET", "H", 0)
+    assert run(device.get_temperature_offset()) == 0

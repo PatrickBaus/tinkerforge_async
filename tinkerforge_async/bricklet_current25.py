@@ -70,7 +70,7 @@ class FunctionID(_FunctionID):
     GET_DEBOUNCE_PERIOD = 14
 
 
-CURRENT = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
+MILLI_AMPERE = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
 
 
 class BrickletCurrent25(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -136,7 +136,7 @@ class BrickletCurrent25(Device):  # pylint: disable=too-many-public-methods,too-
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -168,7 +168,7 @@ class BrickletCurrent25(Device):  # pylint: disable=too-many-public-methods,too-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT, response_expected=True
         )
-        return CURRENT.to_si(unpack_payload(payload, "h"))
+        return MILLI_AMPERE.to_si(unpack_payload(payload, "h"))
 
     async def calibrate(self, response_expected: bool = True) -> None:
         """
@@ -295,9 +295,9 @@ class BrickletCurrent25(Device):  # pylint: disable=too-many-public-methods,too-
 
         Units: minimum in A, maximum in A.
         """
-        minimum_raw = CURRENT.from_si(minimum)
+        minimum_raw = MILLI_AMPERE.from_si(minimum)
         check_range("minimum", minimum_raw, -32768, 32767, minimum)
-        maximum_raw = CURRENT.from_si(maximum)
+        maximum_raw = MILLI_AMPERE.from_si(maximum)
         check_range("maximum", maximum_raw, -32768, 32767, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -316,7 +316,7 @@ class BrickletCurrent25(Device):  # pylint: disable=too-many-public-methods,too-
             device=self, function_id=FunctionID.GET_CURRENT_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c h h")
-        return BasicCallbackConfiguration(Threshold(option), CURRENT.to_si(minimum), CURRENT.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), MILLI_AMPERE.to_si(minimum), MILLI_AMPERE.to_si(maximum))
 
     async def set_analog_value_callback_threshold(
         self,
@@ -399,11 +399,11 @@ class BrickletCurrent25(Device):  # pylint: disable=too-many-public-methods,too-
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.CURRENT:
-            return 0, CURRENT.to_si(value)
+            return 0, MILLI_AMPERE.to_si(value)
         if callback_id is CallbackID.ANALOG_VALUE:
             return 1, value
         if callback_id is CallbackID.CURRENT_REACHED:
-            return 0, CURRENT.to_si(value)
+            return 0, MILLI_AMPERE.to_si(value)
         if callback_id is CallbackID.ANALOG_VALUE_REACHED:
             return 1, value
         return 2, None

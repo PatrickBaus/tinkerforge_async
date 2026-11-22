@@ -221,7 +221,7 @@ class FrameReadEvent(NamedTuple):
     data: bytes
 
 
-SAMPLE_POINT = LinearQuantity(1, 10)  # raw: 1/10 Percent, returned in %
+DECI_PERCENT = LinearQuantity(1, 10)  # raw: 1/10 Percent, returned in %
 
 
 class BrickletCANV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -464,7 +464,7 @@ class BrickletCANV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         """
         baud_rate = int(baud_rate)
         check_range("baud_rate", baud_rate, 10000, 1000000)
-        sample_point_raw = SAMPLE_POINT.from_si(sample_point)
+        sample_point_raw = DECI_PERCENT.from_si(sample_point)
         check_range("sample_point", sample_point_raw, 500, 900, sample_point)
         await self.ipcon.send_request(
             device=self,
@@ -484,7 +484,7 @@ class BrickletCANV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         )
         baud_rate, sample_point, transceiver_mode = unpack_payload(payload, "I H B")
         return GetTransceiverConfiguration(
-            baud_rate, SAMPLE_POINT.to_si(sample_point), TransceiverMode(transceiver_mode)
+            baud_rate, DECI_PERCENT.to_si(sample_point), TransceiverMode(transceiver_mode)
         )
 
     async def set_queue_configuration_low_level(  # pylint: disable=too-many-arguments,too-many-positional-arguments

@@ -92,11 +92,8 @@ class GetCalibration(NamedTuple):
     gain: tuple[int, ...]
 
 
-ANGLE = LinearQuantity(1, 10)  # raw: 1/10 Degree, returned in °
-HEADING = LinearQuantity(1, 10)  # raw: 1/10 Degree, returned in °
-X = LinearQuantity(1, 100000000)  # raw: 1/100000000 Tesla, returned in T
-Y = LinearQuantity(1, 100000000)  # raw: 1/100000000 Tesla, returned in T
-Z = LinearQuantity(1, 100000000)  # raw: 1/100000000 Tesla, returned in T
+DECI_DEGREE = LinearQuantity(1, 10)  # raw: 1/10 Degree, returned in °
+TESLA_1_100000000 = LinearQuantity(1, 100000000)  # raw: 1/100000000 Tesla, returned in T
 
 
 class BrickletCompass(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -149,7 +146,7 @@ class BrickletCompass(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -180,7 +177,7 @@ class BrickletCompass(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_HEADING, response_expected=True
         )
-        return HEADING.to_si(unpack_payload(payload, "h"))
+        return DECI_DEGREE.to_si(unpack_payload(payload, "h"))
 
     async def set_heading_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -224,9 +221,9 @@ class BrickletCompass(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = ANGLE.from_si(minimum)
+        minimum_raw = DECI_DEGREE.from_si(minimum)
         check_range("minimum", minimum_raw, -32768, 32767, minimum)
-        maximum_raw = ANGLE.from_si(maximum)
+        maximum_raw = DECI_DEGREE.from_si(maximum)
         check_range("maximum", maximum_raw, -32768, 32767, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -248,7 +245,11 @@ class BrickletCompass(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c h h")
         return AdvancedCallbackConfiguration(
-            ms_to_seconds(period), value_has_to_change, Threshold(option), ANGLE.to_si(minimum), ANGLE.to_si(maximum)
+            ms_to_seconds(period),
+            value_has_to_change,
+            Threshold(option),
+            DECI_DEGREE.to_si(minimum),
+            DECI_DEGREE.to_si(maximum),
         )
 
     async def get_magnetic_flux_density(self) -> GetMagneticFluxDensity:
@@ -266,7 +267,9 @@ class BrickletCompass(BrickletWithMCU):  # pylint: disable=too-many-public-metho
             device=self, function_id=FunctionID.GET_MAGNETIC_FLUX_DENSITY, response_expected=True
         )
         x, y, z = unpack_payload(payload, "i i i")
-        return GetMagneticFluxDensity(X.to_si(x), Y.to_si(y), Z.to_si(z))
+        return GetMagneticFluxDensity(
+            TESLA_1_100000000.to_si(x), TESLA_1_100000000.to_si(y), TESLA_1_100000000.to_si(z)
+        )
 
     async def set_magnetic_flux_density_callback_configuration(
         self, period: Duration = 0, value_has_to_change: bool = False, response_expected: bool = True
@@ -370,6 +373,8 @@ class BrickletCompass(BrickletWithMCU):  # pylint: disable=too-many-public-metho
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.HEADING:
-            return 0, HEADING.to_si(value)
+            return 0, DECI_DEGREE.to_si(value)
         x, y, z = value
-        return 1, GetMagneticFluxDensity(X.to_si(x), Y.to_si(y), Z.to_si(z))
+        return 1, GetMagneticFluxDensity(
+            TESLA_1_100000000.to_si(x), TESLA_1_100000000.to_si(y), TESLA_1_100000000.to_si(z)
+        )

@@ -124,8 +124,8 @@ class GetRGBWValues(NamedTuple):
     w: tuple[int, ...]
 
 
-FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+HERTZ = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
 
 
 class BrickletLEDStrip(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -282,7 +282,7 @@ class BrickletLEDStrip(Device):  # pylint: disable=too-many-public-methods,too-f
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_SUPPLY_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def set_clock_frequency(self, frequency: float | Decimal = 1666666, response_expected: bool = True) -> None:
         """
@@ -306,7 +306,7 @@ class BrickletLEDStrip(Device):  # pylint: disable=too-many-public-methods,too-f
 
         .. versionadded:: 2.0.1 (Firmware)
         """
-        frequency_raw = FREQUENCY.from_si(frequency)
+        frequency_raw = HERTZ.from_si(frequency)
         check_range("frequency", frequency_raw, 10000, 2000000, frequency)
         await self.ipcon.send_request(
             device=self,
@@ -326,7 +326,7 @@ class BrickletLEDStrip(Device):  # pylint: disable=too-many-public-methods,too-f
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CLOCK_FREQUENCY, response_expected=True
         )
-        return FREQUENCY.to_si(unpack_payload(payload, "I"))
+        return HERTZ.to_si(unpack_payload(payload, "I"))
 
     async def set_chip_type(self, chip: ChipType | int = ChipType.WS2801, response_expected: bool = True) -> None:
         """

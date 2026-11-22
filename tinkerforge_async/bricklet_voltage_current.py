@@ -121,9 +121,9 @@ class GetCalibration(NamedTuple):
     gain_divisor: int
 
 
-CURRENT = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-POWER = LinearQuantity(1, 1000)  # raw: 1/1000 Watt, returned in W
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_AMPERE = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_WATT = LinearQuantity(1, 1000)  # raw: 1/1000 Watt, returned in W
 
 
 class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -200,7 +200,7 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -232,7 +232,7 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT, response_expected=True
         )
-        return CURRENT.to_si(unpack_payload(payload, "i"))
+        return MILLI_AMPERE.to_si(unpack_payload(payload, "i"))
 
     async def get_voltage(self) -> Decimal:
         """
@@ -247,7 +247,7 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "i"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "i"))
 
     async def get_power(self) -> Decimal:
         """
@@ -262,7 +262,7 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_POWER, response_expected=True
         )
-        return POWER.to_si(unpack_payload(payload, "i"))
+        return MILLI_WATT.to_si(unpack_payload(payload, "i"))
 
     async def set_configuration(
         self,
@@ -435,9 +435,9 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
 
         Units: minimum in A, maximum in A.
         """
-        minimum_raw = CURRENT.from_si(minimum)
+        minimum_raw = MILLI_AMPERE.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = CURRENT.from_si(maximum)
+        maximum_raw = MILLI_AMPERE.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -456,7 +456,7 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_CURRENT_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c i i")
-        return BasicCallbackConfiguration(Threshold(option), CURRENT.to_si(minimum), CURRENT.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), MILLI_AMPERE.to_si(minimum), MILLI_AMPERE.to_si(maximum))
 
     async def set_voltage_callback_threshold(
         self,
@@ -482,9 +482,9 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
 
         Units: minimum in V, maximum in V.
         """
-        minimum_raw = VOLTAGE.from_si(minimum)
+        minimum_raw = MILLI_VOLT.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = VOLTAGE.from_si(maximum)
+        maximum_raw = MILLI_VOLT.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -503,7 +503,7 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_VOLTAGE_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c i i")
-        return BasicCallbackConfiguration(Threshold(option), VOLTAGE.to_si(minimum), VOLTAGE.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), MILLI_VOLT.to_si(minimum), MILLI_VOLT.to_si(maximum))
 
     async def set_power_callback_threshold(
         self,
@@ -529,9 +529,9 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
 
         Units: minimum in W, maximum in W.
         """
-        minimum_raw = POWER.from_si(minimum)
+        minimum_raw = MILLI_WATT.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = POWER.from_si(maximum)
+        maximum_raw = MILLI_WATT.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -550,7 +550,7 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_POWER_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c i i")
-        return BasicCallbackConfiguration(Threshold(option), POWER.to_si(minimum), POWER.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), MILLI_WATT.to_si(minimum), MILLI_WATT.to_si(maximum))
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
@@ -594,13 +594,13 @@ class BrickletVoltageCurrent(Device):  # pylint: disable=too-many-public-methods
         self, callback_id: CallbackID, value: Any
     ) -> tuple[int, Any]:
         if callback_id is CallbackID.CURRENT:
-            return 0, CURRENT.to_si(value)
+            return 0, MILLI_AMPERE.to_si(value)
         if callback_id is CallbackID.VOLTAGE:
-            return 1, VOLTAGE.to_si(value)
+            return 1, MILLI_VOLT.to_si(value)
         if callback_id is CallbackID.POWER:
-            return 2, POWER.to_si(value)
+            return 2, MILLI_WATT.to_si(value)
         if callback_id is CallbackID.CURRENT_REACHED:
-            return 0, CURRENT.to_si(value)
+            return 0, MILLI_AMPERE.to_si(value)
         if callback_id is CallbackID.VOLTAGE_REACHED:
-            return 1, VOLTAGE.to_si(value)
-        return 2, POWER.to_si(value)
+            return 1, MILLI_VOLT.to_si(value)
+        return 2, MILLI_AMPERE.to_si(value)

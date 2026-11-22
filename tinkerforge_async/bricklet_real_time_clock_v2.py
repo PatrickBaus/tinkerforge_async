@@ -120,7 +120,7 @@ class AlarmEvent(NamedTuple):
     timestamp: Decimal
 
 
-OFFSET = LinearQuantity(217, 100)  # raw: 217/100 Parts Per Million, returned in ppm
+PARTS_PER_MILLION_217_100 = LinearQuantity(217, 100)  # raw: 217/100 Parts Per Million, returned in ppm
 
 
 class BrickletRealTimeClockV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -265,7 +265,7 @@ class BrickletRealTimeClockV2(BrickletWithMCU):  # pylint: disable=too-many-publ
 
         Units: offset in ppm.
         """
-        offset_raw = OFFSET.from_si(offset)
+        offset_raw = PARTS_PER_MILLION_217_100.from_si(offset)
         check_range("offset", offset_raw, -128, 127, offset)
         await self.ipcon.send_request(
             device=self,
@@ -283,7 +283,7 @@ class BrickletRealTimeClockV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_OFFSET, response_expected=True
         )
-        return OFFSET.to_si(unpack_payload(payload, "b"))
+        return PARTS_PER_MILLION_217_100.to_si(unpack_payload(payload, "b"))
 
     async def set_date_time_callback_configuration(self, period: Duration = 0, response_expected: bool = True) -> None:
         """

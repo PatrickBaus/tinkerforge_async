@@ -99,19 +99,12 @@ class PositionReachedEvent(NamedTuple):
     position: Decimal
 
 
-ACCELERATION = LinearQuantity(1, 100)  # raw: 1/100 Degree Per Second Squared, returned in °/s²
-ANGLE = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
-CURRENT = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-CURRENT_POSITION = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
-CURRENT_VELOCITY = LinearQuantity(1, 100)  # raw: 1/100 Degree Per Second, returned in °/s
-DECELERATION = LinearQuantity(1, 100)  # raw: 1/100 Degree Per Second Squared, returned in °/s²
-INPUT_VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
-OFFSET = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-PERIOD = LinearQuantity(1, 1000000)  # raw: 1/1000000 Second, returned in s
-POSITION = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
-TIME = LinearQuantity(1, 1000000)  # raw: 1/1000000 Second, returned in s
-VELOCITY = LinearQuantity(1, 100)  # raw: 1/100 Degree Per Second, returned in °/s
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+CENTI_DEGREE = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
+CENTI_DEGREE_PER_SECOND = LinearQuantity(1, 100)  # raw: 1/100 Degree Per Second, returned in °/s
+CENTI_DEGREE_PER_SECOND_SQUARED = LinearQuantity(1, 100)  # raw: 1/100 Degree Per Second Squared, returned in °/s²
+MICRO_SECOND = LinearQuantity(1, 1000000)  # raw: 1/1000000 Second, returned in s
+MILLI_AMPERE = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
 
 
 class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -166,10 +159,10 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         )
         return GetStatus(
             tuple(enabled),
-            tuple(CURRENT_POSITION.to_si(item) for item in current_position),
-            tuple(CURRENT_VELOCITY.to_si(item) for item in current_velocity),
-            tuple(CURRENT.to_si(item) for item in current),
-            INPUT_VOLTAGE.to_si(input_voltage),
+            tuple(CENTI_DEGREE.to_si(item) for item in current_position),
+            tuple(CENTI_DEGREE_PER_SECOND.to_si(item) for item in current_velocity),
+            tuple(MILLI_AMPERE.to_si(item) for item in current),
+            MILLI_VOLT.to_si(input_voltage),
         )
 
     async def set_enable(self, servo_channel: int, enable: bool = False, response_expected: bool = True) -> None:
@@ -215,7 +208,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         """
         servo_channel = int(servo_channel)
         check_range("servo_channel", servo_channel, 0, 65535)
-        position_raw = POSITION.from_si(position)
+        position_raw = CENTI_DEGREE.from_si(position)
         check_range("position", position_raw, -32768, 32767, position)
         await self.ipcon.send_request(
             device=self,
@@ -238,7 +231,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
             data=pack_payload((servo_channel,), "H"),
             response_expected=True,
         )
-        return POSITION.to_si(unpack_payload(payload, "h"))
+        return CENTI_DEGREE.to_si(unpack_payload(payload, "h"))
 
     async def get_current_position(self, servo_channel: int) -> Decimal:
         """
@@ -256,7 +249,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
             data=pack_payload((servo_channel,), "H"),
             response_expected=True,
         )
-        return POSITION.to_si(unpack_payload(payload, "h"))
+        return CENTI_DEGREE.to_si(unpack_payload(payload, "h"))
 
     async def get_current_velocity(self, servo_channel: int) -> Decimal:
         """
@@ -274,7 +267,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
             data=pack_payload((servo_channel,), "H"),
             response_expected=True,
         )
-        return VELOCITY.to_si(unpack_payload(payload, "H"))
+        return CENTI_DEGREE_PER_SECOND.to_si(unpack_payload(payload, "H"))
 
     async def set_motion_configuration(
         self,
@@ -298,11 +291,11 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         """
         servo_channel = int(servo_channel)
         check_range("servo_channel", servo_channel, 0, 65535)
-        velocity_raw = VELOCITY.from_si(velocity)
+        velocity_raw = CENTI_DEGREE_PER_SECOND.from_si(velocity)
         check_range("velocity", velocity_raw, 0, 500000, velocity)
-        acceleration_raw = ACCELERATION.from_si(acceleration)
+        acceleration_raw = CENTI_DEGREE_PER_SECOND_SQUARED.from_si(acceleration)
         check_range("acceleration", acceleration_raw, 0, 500000, acceleration)
-        deceleration_raw = DECELERATION.from_si(deceleration)
+        deceleration_raw = CENTI_DEGREE_PER_SECOND_SQUARED.from_si(deceleration)
         check_range("deceleration", deceleration_raw, 0, 500000, deceleration)
         await self.ipcon.send_request(
             device=self,
@@ -328,7 +321,9 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         )
         velocity, acceleration, deceleration = unpack_payload(payload, "I I I")
         return GetMotionConfiguration(
-            VELOCITY.to_si(velocity), ACCELERATION.to_si(acceleration), DECELERATION.to_si(deceleration)
+            CENTI_DEGREE_PER_SECOND.to_si(velocity),
+            CENTI_DEGREE_PER_SECOND_SQUARED.to_si(acceleration),
+            CENTI_DEGREE_PER_SECOND_SQUARED.to_si(deceleration),
         )
 
     async def set_pulse_width(
@@ -361,9 +356,9 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         """
         servo_channel = int(servo_channel)
         check_range("servo_channel", servo_channel, 0, 65535)
-        minimum_raw = TIME.from_si(minimum)
+        minimum_raw = MICRO_SECOND.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 4294967295, minimum)
-        maximum_raw = TIME.from_si(maximum)
+        maximum_raw = MICRO_SECOND.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 4294967295, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -388,7 +383,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
             response_expected=True,
         )
         minimum, maximum = unpack_payload(payload, "I I")
-        return GetPulseWidth(TIME.to_si(minimum), TIME.to_si(maximum))
+        return GetPulseWidth(MICRO_SECOND.to_si(minimum), MICRO_SECOND.to_si(maximum))
 
     async def set_degree(
         self,
@@ -433,9 +428,9 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         """
         servo_channel = int(servo_channel)
         check_range("servo_channel", servo_channel, 0, 65535)
-        minimum_raw = ANGLE.from_si(minimum)
+        minimum_raw = CENTI_DEGREE.from_si(minimum)
         check_range("minimum", minimum_raw, -32768, 32767, minimum)
-        maximum_raw = ANGLE.from_si(maximum)
+        maximum_raw = CENTI_DEGREE.from_si(maximum)
         check_range("maximum", maximum_raw, -32768, 32767, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -460,7 +455,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
             response_expected=True,
         )
         minimum, maximum = unpack_payload(payload, "h h")
-        return GetDegree(ANGLE.to_si(minimum), ANGLE.to_si(maximum))
+        return GetDegree(CENTI_DEGREE.to_si(minimum), CENTI_DEGREE.to_si(maximum))
 
     async def set_period(
         self, servo_channel: int, period: float | Decimal = Decimal("0.0195"), response_expected: bool = True
@@ -484,7 +479,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         """
         servo_channel = int(servo_channel)
         check_range("servo_channel", servo_channel, 0, 65535)
-        period_raw = PERIOD.from_si(period)
+        period_raw = MICRO_SECOND.from_si(period)
         check_range("period", period_raw, 1, 1000000, period)
         await self.ipcon.send_request(
             device=self,
@@ -505,7 +500,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
             data=pack_payload((servo_channel,), "H"),
             response_expected=True,
         )
-        return PERIOD.to_si(unpack_payload(payload, "I"))
+        return MICRO_SECOND.to_si(unpack_payload(payload, "I"))
 
     async def get_servo_current(self, servo_channel: int) -> Decimal:
         """
@@ -521,7 +516,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
             data=pack_payload((servo_channel,), "H"),
             response_expected=True,
         )
-        return CURRENT.to_si(unpack_payload(payload, "H"))
+        return MILLI_AMPERE.to_si(unpack_payload(payload, "H"))
 
     async def set_servo_current_configuration(
         self, servo_channel: int, averaging_duration: Duration = Decimal("0.255"), response_expected: bool = True
@@ -596,7 +591,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_OVERALL_CURRENT, response_expected=True
         )
-        return CURRENT.to_si(unpack_payload(payload, "H"))
+        return MILLI_AMPERE.to_si(unpack_payload(payload, "H"))
 
     async def get_input_voltage(self) -> Decimal:
         """
@@ -608,7 +603,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_INPUT_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def set_current_calibration(self, offset: Sequence[float | Decimal], response_expected: bool = True) -> None:
         """
@@ -622,7 +617,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_CURRENT_CALIBRATION,
-            data=pack_payload(([OFFSET.from_si(item) for item in offset],), "10h"),
+            data=pack_payload(([MILLI_AMPERE.from_si(item) for item in offset],), "10h"),
             response_expected=response_expected,
         )
 
@@ -635,7 +630,7 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT_CALIBRATION, response_expected=True
         )
-        return tuple(OFFSET.to_si(item) for item in unpack_payload(payload, "10h"))
+        return tuple(MILLI_AMPERE.to_si(item) for item in unpack_payload(payload, "10h"))
 
     async def set_position_reached_callback_configuration(
         self, servo_channel: int, enabled: bool = False, response_expected: bool = True
@@ -669,4 +664,4 @@ class BrickletServoV2(BrickletWithMCU):  # pylint: disable=too-many-public-metho
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         servo_channel, position = value
-        return 0, PositionReachedEvent(servo_channel, POSITION.to_si(position))
+        return 0, PositionReachedEvent(servo_channel, CENTI_DEGREE.to_si(position))

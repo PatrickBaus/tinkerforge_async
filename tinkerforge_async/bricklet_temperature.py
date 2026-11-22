@@ -112,7 +112,7 @@ class BrickletTemperature(Device):
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -169,7 +169,7 @@ class BrickletTemperature(Device):
 
     async def set_temperature_callback_threshold(
         self,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal = CELSIUS_ZERO,
         maximum: float | Decimal = CELSIUS_ZERO,
         response_expected: bool = True,

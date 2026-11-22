@@ -240,23 +240,12 @@ class GetSensorConfiguration(NamedTuple):
     accelerometer_bandwidth: AccelerometerBandwidth
 
 
-HEADING = LinearQuantity(1, 16)  # raw: 1/16 Degree, returned in °
-PITCH = LinearQuantity(1, 16)  # raw: 1/16 Degree, returned in °
-ROLL = LinearQuantity(1, 16)  # raw: 1/16 Degree, returned in °
-TEMPERATURE_2 = LinearQuantity(1, 1, CELSIUS_ZERO)  # raw: 1/1 Degree Celsius, returned in K
-W = LinearQuantity(1, 16383)  # raw: 1/16383, dimensionless
-X = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second Squared, returned in m/s²
-X_2 = LinearQuantity(1, 16000000)  # raw: 1/16000000 Tesla, returned in T
-X_3 = LinearQuantity(1, 16)  # raw: 1/16 Degree Per Second, returned in °/s
-X_4 = LinearQuantity(1, 16383)  # raw: 1/16383, dimensionless
-Y = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second Squared, returned in m/s²
-Y_2 = LinearQuantity(1, 16000000)  # raw: 1/16000000 Tesla, returned in T
-Y_3 = LinearQuantity(1, 16)  # raw: 1/16 Degree Per Second, returned in °/s
-Y_4 = LinearQuantity(1, 16383)  # raw: 1/16383, dimensionless
-Z = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second Squared, returned in m/s²
-Z_2 = LinearQuantity(1, 16000000)  # raw: 1/16000000 Tesla, returned in T
-Z_3 = LinearQuantity(1, 16)  # raw: 1/16 Degree Per Second, returned in °/s
-Z_4 = LinearQuantity(1, 16383)  # raw: 1/16383, dimensionless
+CENTI_METER_PER_SECOND_SQUARED = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second Squared, returned in m/s²
+DEGREE_1_16 = LinearQuantity(1, 16)  # raw: 1/16 Degree, returned in °
+DEGREE_CELSIUS = LinearQuantity(1, 1, CELSIUS_ZERO)  # raw: 1/1 Degree Celsius, returned in K
+DEGREE_PER_SECOND_1_16 = LinearQuantity(1, 16)  # raw: 1/16 Degree Per Second, returned in °/s
+RATIO_1_16383 = LinearQuantity(1, 16383)  # raw: 1/16383, dimensionless
+TESLA_1_16000000 = LinearQuantity(1, 16000000)  # raw: 1/16000000 Tesla, returned in T
 
 
 class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -359,7 +348,7 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -394,7 +383,11 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_ACCELERATION, response_expected=True
         )
         x, y, z = unpack_payload(payload, "h h h")
-        return GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+        return GetAcceleration(
+            CENTI_METER_PER_SECOND_SQUARED.to_si(x),
+            CENTI_METER_PER_SECOND_SQUARED.to_si(y),
+            CENTI_METER_PER_SECOND_SQUARED.to_si(z),
+        )
 
     async def get_magnetic_field(self) -> GetMagneticField:
         """
@@ -411,7 +404,7 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_MAGNETIC_FIELD, response_expected=True
         )
         x, y, z = unpack_payload(payload, "h h h")
-        return GetMagneticField(X_2.to_si(x), Y_2.to_si(y), Z_2.to_si(z))
+        return GetMagneticField(TESLA_1_16000000.to_si(x), TESLA_1_16000000.to_si(y), TESLA_1_16000000.to_si(z))
 
     async def get_angular_velocity(self) -> GetAngularVelocity:
         """
@@ -429,7 +422,9 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_ANGULAR_VELOCITY, response_expected=True
         )
         x, y, z = unpack_payload(payload, "h h h")
-        return GetAngularVelocity(X_3.to_si(x), Y_3.to_si(y), Z_3.to_si(z))
+        return GetAngularVelocity(
+            DEGREE_PER_SECOND_1_16.to_si(x), DEGREE_PER_SECOND_1_16.to_si(y), DEGREE_PER_SECOND_1_16.to_si(z)
+        )
 
     async def get_temperature(self) -> Decimal:
         """
@@ -442,7 +437,7 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TEMPERATURE, response_expected=True
         )
-        return TEMPERATURE_2.to_si(unpack_payload(payload, "b"))
+        return DEGREE_CELSIUS.to_si(unpack_payload(payload, "b"))
 
     async def get_orientation(self) -> GetOrientation:
         """
@@ -462,7 +457,7 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_ORIENTATION, response_expected=True
         )
         heading, roll, pitch = unpack_payload(payload, "h h h")
-        return GetOrientation(HEADING.to_si(heading), ROLL.to_si(roll), PITCH.to_si(pitch))
+        return GetOrientation(DEGREE_1_16.to_si(heading), DEGREE_1_16.to_si(roll), DEGREE_1_16.to_si(pitch))
 
     async def get_linear_acceleration(self) -> GetLinearAcceleration:
         """
@@ -486,7 +481,11 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_LINEAR_ACCELERATION, response_expected=True
         )
         x, y, z = unpack_payload(payload, "h h h")
-        return GetLinearAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+        return GetLinearAcceleration(
+            CENTI_METER_PER_SECOND_SQUARED.to_si(x),
+            CENTI_METER_PER_SECOND_SQUARED.to_si(y),
+            CENTI_METER_PER_SECOND_SQUARED.to_si(z),
+        )
 
     async def get_gravity_vector(self) -> GetGravityVector:
         """
@@ -509,7 +508,11 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_GRAVITY_VECTOR, response_expected=True
         )
         x, y, z = unpack_payload(payload, "h h h")
-        return GetGravityVector(X.to_si(x), Y.to_si(y), Z.to_si(z))
+        return GetGravityVector(
+            CENTI_METER_PER_SECOND_SQUARED.to_si(x),
+            CENTI_METER_PER_SECOND_SQUARED.to_si(y),
+            CENTI_METER_PER_SECOND_SQUARED.to_si(z),
+        )
 
     async def get_quaternion(self) -> GetQuaternion:
         """
@@ -527,7 +530,9 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_QUATERNION, response_expected=True
         )
         w, x, y, z = unpack_payload(payload, "h h h h")
-        return GetQuaternion(W.to_si(w), X_4.to_si(x), Y_4.to_si(y), Z_4.to_si(z))
+        return GetQuaternion(
+            RATIO_1_16383.to_si(w), RATIO_1_16383.to_si(x), RATIO_1_16383.to_si(y), RATIO_1_16383.to_si(z)
+        )
 
     async def get_all_data(self) -> GetAllData:
         """
@@ -586,7 +591,7 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             tuple(quaternion),
             tuple(linear_acceleration),
             tuple(gravity_vector),
-            TEMPERATURE_2.to_si(temperature),
+            DEGREE_CELSIUS.to_si(temperature),
             calibration_status,
         )
 
@@ -993,27 +998,43 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
     ) -> tuple[int, Any]:
         if callback_id is CallbackID.ACCELERATION:
             x, y, z = value
-            return 0, GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+            return 0, GetAcceleration(
+                CENTI_METER_PER_SECOND_SQUARED.to_si(x),
+                CENTI_METER_PER_SECOND_SQUARED.to_si(y),
+                CENTI_METER_PER_SECOND_SQUARED.to_si(z),
+            )
         if callback_id is CallbackID.MAGNETIC_FIELD:
             x, y, z = value
-            return 1, GetMagneticField(X_2.to_si(x), Y_2.to_si(y), Z_2.to_si(z))
+            return 1, GetMagneticField(TESLA_1_16000000.to_si(x), TESLA_1_16000000.to_si(y), TESLA_1_16000000.to_si(z))
         if callback_id is CallbackID.ANGULAR_VELOCITY:
             x, y, z = value
-            return 2, GetAngularVelocity(X_3.to_si(x), Y_3.to_si(y), Z_3.to_si(z))
+            return 2, GetAngularVelocity(
+                DEGREE_PER_SECOND_1_16.to_si(x), DEGREE_PER_SECOND_1_16.to_si(y), DEGREE_PER_SECOND_1_16.to_si(z)
+            )
         if callback_id is CallbackID.TEMPERATURE:
-            return 3, TEMPERATURE_2.to_si(value)
+            return 3, DEGREE_CELSIUS.to_si(value)
         if callback_id is CallbackID.LINEAR_ACCELERATION:
             x, y, z = value
-            return 4, GetLinearAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+            return 4, GetLinearAcceleration(
+                CENTI_METER_PER_SECOND_SQUARED.to_si(x),
+                CENTI_METER_PER_SECOND_SQUARED.to_si(y),
+                CENTI_METER_PER_SECOND_SQUARED.to_si(z),
+            )
         if callback_id is CallbackID.GRAVITY_VECTOR:
             x, y, z = value
-            return 5, GetGravityVector(X.to_si(x), Y.to_si(y), Z.to_si(z))
+            return 5, GetGravityVector(
+                CENTI_METER_PER_SECOND_SQUARED.to_si(x),
+                CENTI_METER_PER_SECOND_SQUARED.to_si(y),
+                CENTI_METER_PER_SECOND_SQUARED.to_si(z),
+            )
         if callback_id is CallbackID.ORIENTATION:
             heading, roll, pitch = value
-            return 6, GetOrientation(HEADING.to_si(heading), ROLL.to_si(roll), PITCH.to_si(pitch))
+            return 6, GetOrientation(DEGREE_1_16.to_si(heading), DEGREE_1_16.to_si(roll), DEGREE_1_16.to_si(pitch))
         if callback_id is CallbackID.QUATERNION:
             w, x, y, z = value
-            return 7, GetQuaternion(W.to_si(w), X_4.to_si(x), Y_4.to_si(y), Z_4.to_si(z))
+            return 7, GetQuaternion(
+                RATIO_1_16383.to_si(w), RATIO_1_16383.to_si(x), RATIO_1_16383.to_si(y), RATIO_1_16383.to_si(z)
+            )
         (
             acceleration,
             magnetic_field,
@@ -1033,6 +1054,6 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             tuple(quaternion),
             tuple(linear_acceleration),
             tuple(gravity_vector),
-            TEMPERATURE_2.to_si(temperature),
+            DEGREE_CELSIUS.to_si(temperature),
             calibration_status,
         )

@@ -60,8 +60,7 @@ class FunctionID(_FunctionID):
     GET_DEBOUNCE_PERIOD = 7
 
 
-UV_LIGHT = LinearQuantity(1, 10000)  # raw: 1/10000 Watt Per Square Meter, returned in W/m²
-VALUE = LinearQuantity(1, 10000)  # raw: 1/10000 Watt Per Square Meter, returned in W/m²
+WATT_PER_SQUARE_METER_1_10000 = LinearQuantity(1, 10000)  # raw: 1/10000 Watt Per Square Meter, returned in W/m²
 
 
 class BrickletUVLight(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -114,7 +113,7 @@ class BrickletUVLight(Device):  # pylint: disable=too-many-public-methods,too-fe
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -151,7 +150,7 @@ class BrickletUVLight(Device):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_UV_LIGHT, response_expected=True
         )
-        return UV_LIGHT.to_si(unpack_payload(payload, "I"))
+        return WATT_PER_SQUARE_METER_1_10000.to_si(unpack_payload(payload, "I"))
 
     async def set_uv_light_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -203,9 +202,9 @@ class BrickletUVLight(Device):  # pylint: disable=too-many-public-methods,too-fe
 
         Units: minimum in W/m², maximum in W/m².
         """
-        minimum_raw = VALUE.from_si(minimum)
+        minimum_raw = WATT_PER_SQUARE_METER_1_10000.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 4294967295, minimum)
-        maximum_raw = VALUE.from_si(maximum)
+        maximum_raw = WATT_PER_SQUARE_METER_1_10000.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 4294967295, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -224,7 +223,11 @@ class BrickletUVLight(Device):  # pylint: disable=too-many-public-methods,too-fe
             device=self, function_id=FunctionID.GET_UV_LIGHT_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c I I")
-        return BasicCallbackConfiguration(Threshold(option), VALUE.to_si(minimum), VALUE.to_si(maximum))
+        return BasicCallbackConfiguration(
+            Threshold(option),
+            WATT_PER_SQUARE_METER_1_10000.to_si(minimum),
+            WATT_PER_SQUARE_METER_1_10000.to_si(maximum),
+        )
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
@@ -262,5 +265,5 @@ class BrickletUVLight(Device):  # pylint: disable=too-many-public-methods,too-fe
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.UV_LIGHT:
-            return 0, UV_LIGHT.to_si(value)
-        return 0, UV_LIGHT.to_si(value)
+            return 0, WATT_PER_SQUARE_METER_1_10000.to_si(value)
+        return 0, WATT_PER_SQUARE_METER_1_10000.to_si(value)

@@ -64,6 +64,18 @@ class FunctionID(_FunctionID):
     GET_REFERENCE_AIR_PRESSURE = 19
     SET_AVERAGING = 20
     GET_AVERAGING = 21
+    SET_I2C_MODE = 22
+    GET_I2C_MODE = 23
+
+
+@unique
+class I2CMode(Enum):
+    """
+    The speed of the I2C bus between the Bricklet and its sensor
+    """
+
+    FAST = 0  # 400 kHz
+    SLOW = 1  # 100 kHz
 
 
 class GetAveraging(NamedTuple):
@@ -88,6 +100,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
     CallbackID: TypeAlias = CallbackID
     FunctionID = FunctionID
     ThresholdOption = Threshold
+    I2CMode: TypeAlias = I2CMode
 
     CALLBACK_FORMATS = {
         CallbackID.AIR_PRESSURE: "i",
@@ -127,7 +140,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -221,7 +234,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
 
     async def set_air_pressure_callback_threshold(
         self,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
@@ -272,7 +285,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
 
     async def set_altitude_callback_threshold(
         self,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected=True,
@@ -463,6 +476,43 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_AVERAGING, response_expected=True
         )
         return GetAveraging(*unpack_payload(payload, "B B B"))
+
+    async def set_i2c_mode(self, mode: I2CMode | int = I2CMode.FAST, response_expected: bool = True) -> None:
+        """
+        Sets the I2C mode. Possible modes are:
+
+        * 0: Fast (400kHz)
+        * 1: Slow (100kHz)
+
+        If you have problems with obvious outliers in the
+        Barometer Bricklet measurements, they may be caused by EMI issues.
+        In this case it may be helpful to lower the I2C speed.
+
+        It is however not recommended to lower the I2C speed in applications where
+        a high throughput needs to be achieved.
+
+        .. versionadded:: 2.0.3$nbsp;(Plugin)
+        """
+        if not isinstance(mode, I2CMode):
+            mode = I2CMode(mode)
+
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_I2C_MODE,
+            data=pack_payload((mode.value,), "B"),
+            response_expected=response_expected,
+        )
+
+    async def get_i2c_mode(self) -> I2CMode:
+        """
+        Returns the I2C mode as set by :func:`Set I2C Mode`.
+
+        .. versionadded:: 2.0.3$nbsp;(Plugin)
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_I2C_MODE, response_expected=True
+        )
+        return I2CMode(unpack_payload(payload, "B"))
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id in (CallbackID.AIR_PRESSURE, CallbackID.AIR_PRESSURE_REACHED):

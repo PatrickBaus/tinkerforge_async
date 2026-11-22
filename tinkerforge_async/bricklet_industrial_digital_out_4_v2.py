@@ -76,8 +76,8 @@ class GetPWMConfiguration(NamedTuple):
     duty_cycle: Decimal
 
 
-DUTY_CYCLE = LinearQuantity(1, 100)  # raw: 1/100 Percent, returned in %
-FREQUENCY = LinearQuantity(1, 10)  # raw: 1/10 Hertz, returned in Hz
+CENTI_PERCENT = LinearQuantity(1, 100)  # raw: 1/100 Percent, returned in %
+DECI_HERTZ = LinearQuantity(1, 10)  # raw: 1/10 Hertz, returned in Hz
 
 
 class BrickletIndustrialDigitalOut4V2(
@@ -268,9 +268,9 @@ class BrickletIndustrialDigitalOut4V2(
         """
         channel = int(channel)
         check_range("channel", channel, 0, 3)
-        frequency_raw = FREQUENCY.from_si(frequency)
+        frequency_raw = DECI_HERTZ.from_si(frequency)
         check_range("frequency", frequency_raw, 0, 4294967295, frequency)
-        duty_cycle_raw = DUTY_CYCLE.from_si(duty_cycle)
+        duty_cycle_raw = CENTI_PERCENT.from_si(duty_cycle)
         check_range("duty_cycle", duty_cycle_raw, 0, 10000, duty_cycle)
         await self.ipcon.send_request(
             device=self,
@@ -294,7 +294,7 @@ class BrickletIndustrialDigitalOut4V2(
             response_expected=True,
         )
         frequency, duty_cycle = unpack_payload(payload, "I H")
-        return GetPWMConfiguration(FREQUENCY.to_si(frequency), DUTY_CYCLE.to_si(duty_cycle))
+        return GetPWMConfiguration(DECI_HERTZ.to_si(frequency), CENTI_PERCENT.to_si(duty_cycle))
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         channel, value = value

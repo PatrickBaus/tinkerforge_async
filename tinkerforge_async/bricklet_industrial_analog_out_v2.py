@@ -107,8 +107,8 @@ class GetOutLEDStatusConfig(NamedTuple):
     config: OutLEDStatusConfig
 
 
-CURRENT = LinearQuantity(1, 1000000)  # raw: 1/1000000 Ampere, returned in A
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MICRO_AMPERE = LinearQuantity(1, 1000000)  # raw: 1/1000000 Ampere, returned in A
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
 
 
 class BrickletIndustrialAnalogOutV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -169,7 +169,7 @@ class BrickletIndustrialAnalogOutV2(BrickletWithMCU):  # pylint: disable=too-man
 
         Units: voltage in V (0 to 10 V).
         """
-        voltage_raw = VOLTAGE.from_si(voltage)
+        voltage_raw = MILLI_VOLT.from_si(voltage)
         check_range("voltage", voltage_raw, 0, 10000, voltage)
         await self.ipcon.send_request(
             device=self,
@@ -187,7 +187,7 @@ class BrickletIndustrialAnalogOutV2(BrickletWithMCU):  # pylint: disable=too-man
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def set_current(self, current: float | Decimal, response_expected: bool = True) -> None:
         """
@@ -198,7 +198,7 @@ class BrickletIndustrialAnalogOutV2(BrickletWithMCU):  # pylint: disable=too-man
 
         Units: current in A (0 to 0.024 A).
         """
-        current_raw = CURRENT.from_si(current)
+        current_raw = MICRO_AMPERE.from_si(current)
         check_range("current", current_raw, 0, 24000, current)
         await self.ipcon.send_request(
             device=self,
@@ -216,7 +216,7 @@ class BrickletIndustrialAnalogOutV2(BrickletWithMCU):  # pylint: disable=too-man
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT, response_expected=True
         )
-        return CURRENT.to_si(unpack_payload(payload, "H"))
+        return MICRO_AMPERE.to_si(unpack_payload(payload, "H"))
 
     async def set_configuration(
         self,

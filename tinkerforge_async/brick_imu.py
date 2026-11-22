@@ -176,29 +176,12 @@ class GetProtocol1BrickletName(NamedTuple):
     name: str
 
 
-ACC_X = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
-ACC_Y = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
-ACC_Z = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
-ANG_X = LinearQuantity(8, 115)  # raw: 8/115 Degree Per Second, returned in °/s
-ANG_Y = LinearQuantity(8, 115)  # raw: 8/115 Degree Per Second, returned in °/s
-ANG_Z = LinearQuantity(8, 115)  # raw: 8/115 Degree Per Second, returned in °/s
-MAG_X = LinearQuantity(1, 10000000)  # raw: 1/10000000 Tesla, returned in T
-MAG_Y = LinearQuantity(1, 10000000)  # raw: 1/10000000 Tesla, returned in T
-MAG_Z = LinearQuantity(1, 10000000)  # raw: 1/10000000 Tesla, returned in T
-PITCH = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
-ROLL = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
-SPEED = LinearQuantity(1)  # raw: 1/1 Degree Per Second, returned in °/s
-TEMPERATURE_2 = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
-X = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
-X_2 = LinearQuantity(1, 10000000)  # raw: 1/10000000 Tesla, returned in T
-X_3 = LinearQuantity(8, 115)  # raw: 8/115 Degree Per Second, returned in °/s
-Y = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
-YAW = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
-Y_2 = LinearQuantity(1, 10000000)  # raw: 1/10000000 Tesla, returned in T
-Y_3 = LinearQuantity(8, 115)  # raw: 8/115 Degree Per Second, returned in °/s
-Z = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
-Z_2 = LinearQuantity(1, 10000000)  # raw: 1/10000000 Tesla, returned in T
-Z_3 = LinearQuantity(8, 115)  # raw: 8/115 Degree Per Second, returned in °/s
+CENTI_DEGREE = LinearQuantity(1, 100)  # raw: 1/100 Degree, returned in °
+DECI_DEGREE_CELSIUS = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
+DEGREE_PER_SECOND = LinearQuantity(1)  # raw: 1/1 Degree Per Second, returned in °/s
+DEGREE_PER_SECOND_8_115 = LinearQuantity(8, 115)  # raw: 8/115 Degree Per Second, returned in °/s
+MILLI_STANDARD_GRAVITY = LinearQuantity(196133, 20000000)  # raw: 1/1000 Standard Gravity, returned in m/s²
+TESLA_1_10000000 = LinearQuantity(1, 10000000)  # raw: 1/10000000 Tesla, returned in T
 
 
 class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -258,7 +241,9 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
             device=self, function_id=FunctionID.GET_ACCELERATION, response_expected=True
         )
         x, y, z = unpack_payload(payload, "h h h")
-        return GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+        return GetAcceleration(
+            MILLI_STANDARD_GRAVITY.to_si(x), MILLI_STANDARD_GRAVITY.to_si(y), MILLI_STANDARD_GRAVITY.to_si(z)
+        )
 
     async def get_magnetic_field(self) -> GetMagneticField:
         """
@@ -275,7 +260,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
             device=self, function_id=FunctionID.GET_MAGNETIC_FIELD, response_expected=True
         )
         x, y, z = unpack_payload(payload, "h h h")
-        return GetMagneticField(X_2.to_si(x), Y_2.to_si(y), Z_2.to_si(z))
+        return GetMagneticField(TESLA_1_10000000.to_si(x), TESLA_1_10000000.to_si(y), TESLA_1_10000000.to_si(z))
 
     async def get_angular_velocity(self) -> GetAngularVelocity:
         """
@@ -293,7 +278,9 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
             device=self, function_id=FunctionID.GET_ANGULAR_VELOCITY, response_expected=True
         )
         x, y, z = unpack_payload(payload, "h h h")
-        return GetAngularVelocity(X_3.to_si(x), Y_3.to_si(y), Z_3.to_si(z))
+        return GetAngularVelocity(
+            DEGREE_PER_SECOND_8_115.to_si(x), DEGREE_PER_SECOND_8_115.to_si(y), DEGREE_PER_SECOND_8_115.to_si(z)
+        )
 
     async def get_all_data(self) -> GetAllData:
         """
@@ -314,15 +301,15 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
             payload, "h h h h h h h h h h"
         )
         return GetAllData(
-            ACC_X.to_si(acc_x),
-            ACC_Y.to_si(acc_y),
-            ACC_Z.to_si(acc_z),
-            MAG_X.to_si(mag_x),
-            MAG_Y.to_si(mag_y),
-            MAG_Z.to_si(mag_z),
-            ANG_X.to_si(ang_x),
-            ANG_Y.to_si(ang_y),
-            ANG_Z.to_si(ang_z),
+            MILLI_STANDARD_GRAVITY.to_si(acc_x),
+            MILLI_STANDARD_GRAVITY.to_si(acc_y),
+            MILLI_STANDARD_GRAVITY.to_si(acc_z),
+            TESLA_1_10000000.to_si(mag_x),
+            TESLA_1_10000000.to_si(mag_y),
+            TESLA_1_10000000.to_si(mag_z),
+            DEGREE_PER_SECOND_8_115.to_si(ang_x),
+            DEGREE_PER_SECOND_8_115.to_si(ang_y),
+            DEGREE_PER_SECOND_8_115.to_si(ang_z),
             TEMPERATURE.to_si(temperature),
         )
 
@@ -347,7 +334,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
             device=self, function_id=FunctionID.GET_ORIENTATION, response_expected=True
         )
         roll, pitch, yaw = unpack_payload(payload, "h h h")
-        return GetOrientation(ROLL.to_si(roll), PITCH.to_si(pitch), YAW.to_si(yaw))
+        return GetOrientation(CENTI_DEGREE.to_si(roll), CENTI_DEGREE.to_si(pitch), CENTI_DEGREE.to_si(yaw))
 
     async def get_quaternion(self) -> GetQuaternion:
         """
@@ -496,7 +483,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
 
         Units: speed in °/s.
         """
-        speed_raw = SPEED.from_si(speed)
+        speed_raw = DEGREE_PER_SECOND.from_si(speed)
         check_range("speed", speed_raw, 0, 65535, speed)
         await self.ipcon.send_request(
             device=self,
@@ -514,7 +501,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CONVERGENCE_SPEED, response_expected=True
         )
-        return SPEED.to_si(unpack_payload(payload, "H"))
+        return DEGREE_PER_SECOND.to_si(unpack_payload(payload, "H"))
 
     async def set_calibration(
         self, typ: CalibrationType | int, data: Sequence[int], response_expected: bool = True
@@ -898,7 +885,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CHIP_TEMPERATURE, response_expected=True
         )
-        return TEMPERATURE_2.to_si(unpack_payload(payload, "h"))
+        return DECI_DEGREE_CELSIUS.to_si(unpack_payload(payload, "h"))
 
     async def write_bricklet_plugin(
         self, port: Port | str, offset: int, chunk: bytes | Sequence[int], response_expected: bool = True
@@ -943,29 +930,33 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
     ) -> tuple[int, Any]:
         if callback_id is CallbackID.ACCELERATION:
             x, y, z = value
-            return 0, GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+            return 0, GetAcceleration(
+                MILLI_STANDARD_GRAVITY.to_si(x), MILLI_STANDARD_GRAVITY.to_si(y), MILLI_STANDARD_GRAVITY.to_si(z)
+            )
         if callback_id is CallbackID.MAGNETIC_FIELD:
             x, y, z = value
-            return 1, GetMagneticField(X_2.to_si(x), Y_2.to_si(y), Z_2.to_si(z))
+            return 1, GetMagneticField(TESLA_1_10000000.to_si(x), TESLA_1_10000000.to_si(y), TESLA_1_10000000.to_si(z))
         if callback_id is CallbackID.ANGULAR_VELOCITY:
             x, y, z = value
-            return 2, GetAngularVelocity(X_3.to_si(x), Y_3.to_si(y), Z_3.to_si(z))
+            return 2, GetAngularVelocity(
+                DEGREE_PER_SECOND_8_115.to_si(x), DEGREE_PER_SECOND_8_115.to_si(y), DEGREE_PER_SECOND_8_115.to_si(z)
+            )
         if callback_id is CallbackID.ALL_DATA:
             acc_x, acc_y, acc_z, mag_x, mag_y, mag_z, ang_x, ang_y, ang_z, temperature = value
             return 3, GetAllData(
-                ACC_X.to_si(acc_x),
-                ACC_Y.to_si(acc_y),
-                ACC_Z.to_si(acc_z),
-                MAG_X.to_si(mag_x),
-                MAG_Y.to_si(mag_y),
-                MAG_Z.to_si(mag_z),
-                ANG_X.to_si(ang_x),
-                ANG_Y.to_si(ang_y),
-                ANG_Z.to_si(ang_z),
+                MILLI_STANDARD_GRAVITY.to_si(acc_x),
+                MILLI_STANDARD_GRAVITY.to_si(acc_y),
+                MILLI_STANDARD_GRAVITY.to_si(acc_z),
+                TESLA_1_10000000.to_si(mag_x),
+                TESLA_1_10000000.to_si(mag_y),
+                TESLA_1_10000000.to_si(mag_z),
+                DEGREE_PER_SECOND_8_115.to_si(ang_x),
+                DEGREE_PER_SECOND_8_115.to_si(ang_y),
+                DEGREE_PER_SECOND_8_115.to_si(ang_z),
                 TEMPERATURE.to_si(temperature),
             )
         if callback_id is CallbackID.ORIENTATION:
             roll, pitch, yaw = value
-            return 4, GetOrientation(ROLL.to_si(roll), PITCH.to_si(pitch), YAW.to_si(yaw))
+            return 4, GetOrientation(CENTI_DEGREE.to_si(roll), CENTI_DEGREE.to_si(pitch), CENTI_DEGREE.to_si(yaw))
         x, y, z, w = value
         return 5, GetQuaternion(x, y, z, w)

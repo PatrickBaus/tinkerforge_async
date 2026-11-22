@@ -343,13 +343,9 @@ class NewStateEvent(NamedTuple):
     state_previous: State
 
 
-CURRENT = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-CURRENT_CONSUMPTION = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-INPUT_VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
-MOTOR_RUN_CURRENT = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-STANDSTILL_CURRENT = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
-TIME_BASE = LinearQuantity(1)  # raw: 1/1 Second, returned in s
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_AMPERE = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+SECOND = LinearQuantity(1)  # raw: 1/1 Second, returned in s
 
 
 class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -675,7 +671,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_INPUT_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def set_motor_current(
         self, current: float | Decimal = Decimal("0.8"), response_expected: bool = True
@@ -689,7 +685,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
 
         Units: current in A (0.36 to 1.64 A).
         """
-        current_raw = CURRENT.from_si(current)
+        current_raw = MILLI_AMPERE.from_si(current)
         check_range("current", current_raw, 360, 1640, current)
         await self.ipcon.send_request(
             device=self,
@@ -707,7 +703,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MOTOR_CURRENT, response_expected=True
         )
-        return CURRENT.to_si(unpack_payload(payload, "H"))
+        return MILLI_AMPERE.to_si(unpack_payload(payload, "H"))
 
     async def set_enabled(self, enabled: bool = False, response_expected: bool = True) -> None:
         """
@@ -794,9 +790,9 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         Units: standstill_current in A, motor_run_current in A, standstill_delay_time in s (0 to 0.307 s),
         power_down_time in s (0 to 5.222 s).
         """
-        standstill_current_raw = STANDSTILL_CURRENT.from_si(standstill_current)
+        standstill_current_raw = MILLI_AMPERE.from_si(standstill_current)
         check_range("standstill_current", standstill_current_raw, 0, 65535, standstill_current)
-        motor_run_current_raw = MOTOR_RUN_CURRENT.from_si(motor_run_current)
+        motor_run_current_raw = MILLI_AMPERE.from_si(motor_run_current)
         check_range("motor_run_current", motor_run_current_raw, 0, 65535, motor_run_current)
         standstill_delay_time_raw = seconds_to_ms(standstill_delay_time)
         check_range("standstill_delay_time", standstill_delay_time_raw, 0, 307, standstill_delay_time)
@@ -848,8 +844,8 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
             high_velocity_chopper_mode,
         ) = unpack_payload(payload, "H H H H H H H !")
         return GetBasicConfiguration(
-            STANDSTILL_CURRENT.to_si(standstill_current),
-            MOTOR_RUN_CURRENT.to_si(motor_run_current),
+            MILLI_AMPERE.to_si(standstill_current),
+            MILLI_AMPERE.to_si(motor_run_current),
             ms_to_seconds(standstill_delay_time),
             ms_to_seconds(power_down_time),
             stealth_threshold,
@@ -1276,7 +1272,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
 
         Units: voltage in V.
         """
-        voltage_raw = VOLTAGE.from_si(voltage)
+        voltage_raw = MILLI_VOLT.from_si(voltage)
         check_range("voltage", voltage_raw, 0, 65535, voltage)
         await self.ipcon.send_request(
             device=self,
@@ -1294,7 +1290,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MINIMUM_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def set_time_base(self, time_base: float | Decimal = 1, response_expected: bool = True) -> None:
         """
@@ -1307,7 +1303,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
 
         Units: time_base in s.
         """
-        time_base_raw = TIME_BASE.from_si(time_base)
+        time_base_raw = SECOND.from_si(time_base)
         check_range("time_base", time_base_raw, 0, 4294967295, time_base)
         await self.ipcon.send_request(
             device=self,
@@ -1325,7 +1321,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TIME_BASE, response_expected=True
         )
-        return TIME_BASE.to_si(unpack_payload(payload, "I"))
+        return SECOND.to_si(unpack_payload(payload, "I"))
 
     async def get_all_data(self) -> GetAllData:
         """
@@ -1355,8 +1351,8 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
             current_velocity,
             current_position,
             remaining_steps,
-            INPUT_VOLTAGE.to_si(input_voltage),
-            CURRENT_CONSUMPTION.to_si(current_consumption),
+            MILLI_VOLT.to_si(input_voltage),
+            MILLI_AMPERE.to_si(current_consumption),
         )
 
     async def set_all_callback_configuration(self, period: Duration = 0, response_expected: bool = True) -> None:
@@ -1500,7 +1496,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         self, callback_id: CallbackID, value: Any
     ) -> tuple[int, Any]:
         if callback_id is CallbackID.UNDER_VOLTAGE:
-            return 0, VOLTAGE.to_si(value)
+            return 0, MILLI_VOLT.to_si(value)
         if callback_id is CallbackID.POSITION_REACHED:
             return 1, value
         if callback_id is CallbackID.ALL_DATA:
@@ -1509,8 +1505,8 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
                 current_velocity,
                 current_position,
                 remaining_steps,
-                INPUT_VOLTAGE.to_si(input_voltage),
-                CURRENT_CONSUMPTION.to_si(current_consumption),
+                MILLI_VOLT.to_si(input_voltage),
+                MILLI_AMPERE.to_si(current_consumption),
             )
         if callback_id is CallbackID.NEW_STATE:
             state_new, state_previous = value

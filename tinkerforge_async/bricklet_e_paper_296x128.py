@@ -19,7 +19,7 @@ from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
-from .helper import check_length, check_range
+from .helper import check_length, check_range, encode_string
 from .ip_connection_helper import pack_payload, unpack_payload
 from .streams import Chunk, read_stream, write_stream
 
@@ -556,7 +556,7 @@ class BrickletEPaper296x128(BrickletWithMCU):  # pylint: disable=too-many-public
                     Font(font).value,
                     Color(color).value,
                     Orientation(orientation).value,
-                    str(text).encode("latin-1"),
+                    encode_string("text", text, 50),
                 ),
                 "H B B B B 50s",
             ),

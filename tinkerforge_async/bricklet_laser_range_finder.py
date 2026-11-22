@@ -112,10 +112,9 @@ class GetConfiguration(NamedTuple):
     measurement_frequency: Decimal
 
 
-DISTANCE = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
-MEASUREMENT_FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
-VALUE = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second, returned in m/s
-VELOCITY = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second, returned in m/s
+CENTI_METER = LinearQuantity(1, 100)  # raw: 1/100 Meter, returned in m
+CENTI_METER_PER_SECOND = LinearQuantity(1, 100)  # raw: 1/100 Meter Per Second, returned in m/s
+HERTZ = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
 
 
 class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -181,7 +180,7 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -219,7 +218,7 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DISTANCE, response_expected=True
         )
-        return DISTANCE.to_si(unpack_payload(payload, "H"))
+        return CENTI_METER.to_si(unpack_payload(payload, "H"))
 
     async def get_velocity(self) -> Decimal:
         """
@@ -242,7 +241,7 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VELOCITY, response_expected=True
         )
-        return VELOCITY.to_si(unpack_payload(payload, "h"))
+        return CENTI_METER_PER_SECOND.to_si(unpack_payload(payload, "h"))
 
     async def set_distance_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -320,9 +319,9 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
 
         Units: minimum in m, maximum in m.
         """
-        minimum_raw = DISTANCE.from_si(minimum)
+        minimum_raw = CENTI_METER.from_si(minimum)
         check_range("minimum", minimum_raw, 0, 65535, minimum)
-        maximum_raw = DISTANCE.from_si(maximum)
+        maximum_raw = CENTI_METER.from_si(maximum)
         check_range("maximum", maximum_raw, 0, 65535, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -341,7 +340,7 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
             device=self, function_id=FunctionID.GET_DISTANCE_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c H H")
-        return BasicCallbackConfiguration(Threshold(option), DISTANCE.to_si(minimum), DISTANCE.to_si(maximum))
+        return BasicCallbackConfiguration(Threshold(option), CENTI_METER.to_si(minimum), CENTI_METER.to_si(maximum))
 
     async def set_velocity_callback_threshold(
         self,
@@ -367,9 +366,9 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
 
         Units: minimum in m/s, maximum in m/s.
         """
-        minimum_raw = VALUE.from_si(minimum)
+        minimum_raw = CENTI_METER_PER_SECOND.from_si(minimum)
         check_range("minimum", minimum_raw, -32768, 32767, minimum)
-        maximum_raw = VALUE.from_si(maximum)
+        maximum_raw = CENTI_METER_PER_SECOND.from_si(maximum)
         check_range("maximum", maximum_raw, -32768, 32767, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -388,7 +387,9 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
             device=self, function_id=FunctionID.GET_VELOCITY_CALLBACK_THRESHOLD, response_expected=True
         )
         option, minimum, maximum = unpack_payload(payload, "c h h")
-        return BasicCallbackConfiguration(Threshold(option), VALUE.to_si(minimum), VALUE.to_si(maximum))
+        return BasicCallbackConfiguration(
+            Threshold(option), CENTI_METER_PER_SECOND.to_si(minimum), CENTI_METER_PER_SECOND.to_si(maximum)
+        )
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
@@ -576,7 +577,7 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
         check_range("acquisition_count", acquisition_count, 1, 255)
         threshold_value = int(threshold_value)
         check_range("threshold_value", threshold_value, 0, 255)
-        measurement_frequency_raw = MEASUREMENT_FREQUENCY.from_si(measurement_frequency)
+        measurement_frequency_raw = HERTZ.from_si(measurement_frequency)
         check_range("measurement_frequency", measurement_frequency_raw, 0, 65535, measurement_frequency)
         await self.ipcon.send_request(
             device=self,
@@ -603,17 +604,14 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
             payload, "B ! B H"
         )
         return GetConfiguration(
-            acquisition_count,
-            enable_quick_termination,
-            threshold_value,
-            MEASUREMENT_FREQUENCY.to_si(measurement_frequency),
+            acquisition_count, enable_quick_termination, threshold_value, HERTZ.to_si(measurement_frequency)
         )
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.DISTANCE:
-            return 0, DISTANCE.to_si(value)
+            return 0, CENTI_METER.to_si(value)
         if callback_id is CallbackID.VELOCITY:
-            return 1, VELOCITY.to_si(value)
+            return 1, CENTI_METER_PER_SECOND.to_si(value)
         if callback_id is CallbackID.DISTANCE_REACHED:
-            return 0, DISTANCE.to_si(value)
-        return 1, VELOCITY.to_si(value)
+            return 0, CENTI_METER.to_si(value)
+        return 1, CENTI_METER_PER_SECOND.to_si(value)

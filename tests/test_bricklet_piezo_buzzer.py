@@ -28,6 +28,7 @@ CALLS: list[Call] = [
 
 REJECTED: list[tuple[str, tuple[Any, ...]]] = [
     ("beep", (Decimal("4294967.296"),)),
+    ("morse_code", ("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",)),
 ]
 
 

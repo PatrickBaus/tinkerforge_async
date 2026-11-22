@@ -54,8 +54,8 @@ class FunctionID(_FunctionID):
     GET_EMISSIVITY = 10
 
 
-EMISSIVITY = LinearQuantity(1, 65535)  # raw: 1/65535, dimensionless
-TEMPERATURE_2 = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
+DECI_DEGREE_CELSIUS = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
+RATIO_1_65535 = LinearQuantity(1, 65535)  # raw: 1/65535, dimensionless
 
 
 class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -111,7 +111,7 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -139,7 +139,7 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_AMBIENT_TEMPERATURE, response_expected=True
         )
-        return TEMPERATURE_2.to_si(unpack_payload(payload, "h"))
+        return DECI_DEGREE_CELSIUS.to_si(unpack_payload(payload, "h"))
 
     async def set_ambient_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -184,9 +184,9 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = TEMPERATURE_2.from_si(minimum)
+        minimum_raw = DECI_DEGREE_CELSIUS.from_si(minimum)
         check_range("minimum", minimum_raw, -32768, 32767, minimum)
-        maximum_raw = TEMPERATURE_2.from_si(maximum)
+        maximum_raw = DECI_DEGREE_CELSIUS.from_si(maximum)
         check_range("maximum", maximum_raw, -32768, 32767, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -211,8 +211,8 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            TEMPERATURE_2.to_si(minimum),
-            TEMPERATURE_2.to_si(maximum),
+            DECI_DEGREE_CELSIUS.to_si(minimum),
+            DECI_DEGREE_CELSIUS.to_si(maximum),
         )
 
     async def get_object_temperature(self) -> Decimal:
@@ -229,7 +229,7 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_OBJECT_TEMPERATURE, response_expected=True
         )
-        return TEMPERATURE_2.to_si(unpack_payload(payload, "h"))
+        return DECI_DEGREE_CELSIUS.to_si(unpack_payload(payload, "h"))
 
     async def set_object_temperature_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -274,9 +274,9 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = TEMPERATURE_2.from_si(minimum)
+        minimum_raw = DECI_DEGREE_CELSIUS.from_si(minimum)
         check_range("minimum", minimum_raw, -32768, 32767, minimum)
-        maximum_raw = TEMPERATURE_2.from_si(maximum)
+        maximum_raw = DECI_DEGREE_CELSIUS.from_si(maximum)
         check_range("maximum", maximum_raw, -32768, 32767, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -301,8 +301,8 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            TEMPERATURE_2.to_si(minimum),
-            TEMPERATURE_2.to_si(maximum),
+            DECI_DEGREE_CELSIUS.to_si(minimum),
+            DECI_DEGREE_CELSIUS.to_si(maximum),
         )
 
     async def set_emissivity(self, emissivity: float | Decimal = 1, response_expected: bool = True) -> None:
@@ -326,7 +326,7 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         The emissivity is stored in non-volatile memory and will still be
         used after a restart or power cycle of the Bricklet.
         """
-        emissivity_raw = EMISSIVITY.from_si(emissivity)
+        emissivity_raw = RATIO_1_65535.from_si(emissivity)
         check_range("emissivity", emissivity_raw, 0, 65535, emissivity)
         await self.ipcon.send_request(
             device=self,
@@ -342,9 +342,9 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_EMISSIVITY, response_expected=True
         )
-        return EMISSIVITY.to_si(unpack_payload(payload, "H"))
+        return RATIO_1_65535.to_si(unpack_payload(payload, "H"))
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.AMBIENT_TEMPERATURE:
-            return 0, TEMPERATURE_2.to_si(value)
-        return 1, TEMPERATURE_2.to_si(value)
+            return 0, DECI_DEGREE_CELSIUS.to_si(value)
+        return 1, DECI_DEGREE_CELSIUS.to_si(value)

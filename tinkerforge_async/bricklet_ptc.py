@@ -178,7 +178,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -282,7 +282,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
 
     async def set_temperature_callback_threshold(
         self,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal = CELSIUS_ZERO,
         maximum: float | Decimal = CELSIUS_ZERO,
         response_expected: bool = True,
@@ -334,7 +334,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
 
     async def set_resistance_callback_threshold(
         self,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,

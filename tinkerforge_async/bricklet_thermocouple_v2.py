@@ -102,6 +102,11 @@ class GetErrorState(NamedTuple):
     open_circuit: bool
 
 
+# The raw value of the types G8 and G32 is gain * 1.6 * 2^17 * Vin. Decimals keep the conversion exact.
+G8_GAIN = 8 * Decimal("1.6") * 2**17
+G32_GAIN = 32 * Decimal("1.6") * 2**17
+
+
 class BrickletThermocoupleV2(BrickletWithMCU):
     """
     Measures temperature with a thermocouple.
@@ -168,7 +173,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -204,7 +209,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         self,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: Decimal | int | float = CELSIUS_ZERO,
         maximum: Decimal | int | float = CELSIUS_ZERO,
         response_expected=True,
@@ -353,16 +358,16 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         Convert to the sensor value to SI units
         """
         if self.__sensor_type is SensorType.TYPE_G8:
-            return Decimal(value / 8 / 1.6 / 2**17)
+            return Decimal(value) / G8_GAIN
         if self.__sensor_type is SensorType.TYPE_G32:
-            return Decimal(value / 32 / 1.6 / 2**17)
+            return Decimal(value) / G32_GAIN
         return TEMPERATURE.to_si(value)
 
     def __si_to_value(self, value: float | Decimal) -> int:
         if self.__sensor_type is SensorType.TYPE_G8:
-            return round(float(value) * 8 * 1.6 * 2**17)
+            return round(Decimal(str(value)) * G8_GAIN)
         if self.__sensor_type is SensorType.TYPE_G32:
-            return round(float(value) * 32 * 1.6 * 2**17)
+            return round(Decimal(str(value)) * G32_GAIN)
         return TEMPERATURE.from_si(value)
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

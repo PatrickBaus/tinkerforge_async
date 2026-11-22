@@ -54,15 +54,15 @@ CALLS: list[Call] = [
         response_expected=False,
     ),
     Call("get_air_pressure", FunctionID.GET_AIR_PRESSURE, (), reply=("H", (0,)), result=Decimal("0")),
-    Call("set_temperature_offset", FunctionID.SET_TEMPERATURE_OFFSET, (Decimal("273.18"),), sent=("H", (3,))),
+    Call("set_temperature_offset", FunctionID.SET_TEMPERATURE_OFFSET, (Decimal("0.03"),), sent=("H", (3,))),
     Call(
         "set_temperature_offset",
         FunctionID.SET_TEMPERATURE_OFFSET,
-        (Decimal("273.18"), False),
+        (Decimal("0.03"), False),
         sent=("H", (3,)),
         response_expected=False,
     ),
-    Call("get_temperature_offset", FunctionID.GET_TEMPERATURE_OFFSET, (), reply=("H", (3,)), result=Decimal("273.18")),
+    Call("get_temperature_offset", FunctionID.GET_TEMPERATURE_OFFSET, (), reply=("H", (3,)), result=Decimal("0.03")),
     Call(
         "set_all_values_callback_configuration",
         FunctionID.SET_ALL_VALUES_CALLBACK_CONFIGURATION,
@@ -235,7 +235,7 @@ CALLS: list[Call] = [
 
 REJECTED: list[tuple[str, tuple[Any, ...]]] = [
     ("set_air_pressure", (Decimal("6553600"),)),
-    ("set_temperature_offset", (Decimal("928.51"),)),
+    ("set_temperature_offset", (Decimal("655.36"),)),
     ("set_all_values_callback_configuration", (Decimal("4294967.296"), True)),
     ("set_co2_concentration_callback_configuration", (Decimal("4294967.296"), True, "o", Decimal("3"), Decimal("3"))),
     ("set_co2_concentration_callback_configuration", (Decimal("0.003"), True, "?", Decimal("3"), Decimal("3"))),

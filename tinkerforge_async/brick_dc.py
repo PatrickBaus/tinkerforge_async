@@ -113,11 +113,12 @@ class GetProtocol1BrickletName(NamedTuple):
     name: str
 
 
-ACCELERATION = LinearQuantity(100, 32767)  # raw: 100/32767 Percent Per Second, returned in %/s
-FREQUENCY = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
-TEMPERATURE_2 = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
-VELOCITY = LinearQuantity(100, 32767)  # raw: 100/32767 Percent, returned in %
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+DECI_DEGREE_CELSIUS = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
+HERTZ = LinearQuantity(1)  # raw: 1/1 Hertz, returned in Hz
+MILLI_AMPERE = LinearQuantity(1, 1000)  # raw: 1/1000 Ampere, returned in A
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+PERCENT_100_32767 = LinearQuantity(100, 32767)  # raw: 100/32767 Percent, returned in %
+PERCENT_PER_SECOND_100_32767 = LinearQuantity(100, 32767)  # raw: 100/32767 Percent Per Second, returned in %/s
 
 
 class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -178,7 +179,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
 
         Units: velocity in % (-100 to 100 %).
         """
-        velocity_raw = VELOCITY.from_si(velocity)
+        velocity_raw = PERCENT_100_32767.from_si(velocity)
         check_range("velocity", velocity_raw, -32767, 32767, velocity)
         await self.ipcon.send_request(
             device=self,
@@ -196,7 +197,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VELOCITY, response_expected=True
         )
-        return VELOCITY.to_si(unpack_payload(payload, "h"))
+        return PERCENT_100_32767.to_si(unpack_payload(payload, "h"))
 
     async def get_current_velocity(self) -> Decimal:
         """
@@ -209,7 +210,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT_VELOCITY, response_expected=True
         )
-        return VELOCITY.to_si(unpack_payload(payload, "h"))
+        return PERCENT_100_32767.to_si(unpack_payload(payload, "h"))
 
     async def set_acceleration(
         self, acceleration: float | Decimal = Decimal("30.51850947599719229712820826"), response_expected: bool = True
@@ -228,7 +229,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
 
         Units: acceleration in %/s.
         """
-        acceleration_raw = ACCELERATION.from_si(acceleration)
+        acceleration_raw = PERCENT_PER_SECOND_100_32767.from_si(acceleration)
         check_range("acceleration", acceleration_raw, 0, 65535, acceleration)
         await self.ipcon.send_request(
             device=self,
@@ -246,7 +247,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ACCELERATION, response_expected=True
         )
-        return ACCELERATION.to_si(unpack_payload(payload, "H"))
+        return PERCENT_PER_SECOND_100_32767.to_si(unpack_payload(payload, "H"))
 
     async def set_pwm_frequency(self, frequency: float | Decimal = 15000, response_expected: bool = True) -> None:
         """
@@ -261,7 +262,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
 
         Units: frequency in Hz (1 to 20000 Hz).
         """
-        frequency_raw = FREQUENCY.from_si(frequency)
+        frequency_raw = HERTZ.from_si(frequency)
         check_range("frequency", frequency_raw, 1, 20000, frequency)
         await self.ipcon.send_request(
             device=self,
@@ -279,7 +280,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_PWM_FREQUENCY, response_expected=True
         )
-        return FREQUENCY.to_si(unpack_payload(payload, "H"))
+        return HERTZ.to_si(unpack_payload(payload, "H"))
 
     async def full_brake(self, response_expected: bool = True) -> None:
         """
@@ -307,7 +308,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STACK_INPUT_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def get_external_input_voltage(self) -> Decimal:
         """
@@ -329,7 +330,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_EXTERNAL_INPUT_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def get_current_consumption(self) -> Decimal:
         """
@@ -340,7 +341,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT_CONSUMPTION, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_AMPERE.to_si(unpack_payload(payload, "H"))
 
     async def enable(self, response_expected: bool = True) -> None:
         """
@@ -383,7 +384,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
 
         Units: voltage in V.
         """
-        voltage_raw = VOLTAGE.from_si(voltage)
+        voltage_raw = MILLI_VOLT.from_si(voltage)
         check_range("voltage", voltage_raw, 0, 65535, voltage)
         await self.ipcon.send_request(
             device=self,
@@ -401,7 +402,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MINIMUM_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def set_drive_mode(
         self, mode: DriveMode | int = DriveMode.DRIVE_BRAKE, response_expected: bool = True
@@ -608,7 +609,7 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CHIP_TEMPERATURE, response_expected=True
         )
-        return TEMPERATURE_2.to_si(unpack_payload(payload, "h"))
+        return DECI_DEGREE_CELSIUS.to_si(unpack_payload(payload, "h"))
 
     async def write_bricklet_plugin(
         self, port: Port | str, offset: int, chunk: bytes | Sequence[int], response_expected: bool = True
@@ -650,9 +651,9 @@ class BrickDC(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-few
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.UNDER_VOLTAGE:
-            return 0, VOLTAGE.to_si(value)
+            return 0, MILLI_VOLT.to_si(value)
         if callback_id is CallbackID.EMERGENCY_SHUTDOWN:
             return 1, None
         if callback_id is CallbackID.VELOCITY_REACHED:
-            return 2, VELOCITY.to_si(value)
-        return 3, VELOCITY.to_si(value)
+            return 2, PERCENT_100_32767.to_si(value)
+        return 3, PERCENT_100_32767.to_si(value)

@@ -7,6 +7,7 @@ handles conversion of raw units to SI units.
 # pylint: disable=too-many-lines,duplicate-code
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
@@ -15,7 +16,7 @@ from ..devices import BasicCallbackConfiguration
 from ..devices import BrickletPort as Port
 from ..devices import DeviceIdentifier, DeviceWithMCU, GetSPITFPBaudrateConfig, GetSPITFPErrorCount
 from ..devices import ThresholdOption as Threshold
-from ..helper import Duration, ms_to_seconds, seconds_to_ms
+from ..helper import Duration, check_length, ms_to_seconds, seconds_to_ms
 from ..ip_connection_helper import pack_payload, unpack_payload
 from ..quantities import CELSIUS_ZERO, Quantity
 from .chibi import ChibiExtension, ChibiFrequency
@@ -27,6 +28,11 @@ from .wifi2 import Wifi2Extension, WifiApEncryption, WifiClientStatus, WifiMeshS
 
 if TYPE_CHECKING:
     from ..ip_connection import IPConnectionAsync
+
+
+class SetBrickletXMCFlashConfig(NamedTuple):
+    return_value: int
+    return_data: tuple[int, ...]
 
 
 class GetProtocol1BrickletName(NamedTuple):
@@ -313,7 +319,7 @@ class BrickMaster(
 
     async def set_stack_current_callback_threshold(
         self,
-        option: Threshold | int,
+        option: Threshold | str,
         minimum: float | Decimal,
         maximum: float | Decimal,
         response_expected: bool = True,
@@ -373,7 +379,7 @@ class BrickMaster(
 
     async def set_stack_voltage_callback_threshold(
         self,
-        option: Threshold | int,
+        option: Threshold | str,
         minimum: float | Decimal,
         maximum: float | Decimal,
         response_expected: bool = True,
@@ -433,7 +439,7 @@ class BrickMaster(
 
     async def set_usb_voltage_callback_threshold(
         self,
-        option: Threshold | int,
+        option: Threshold | str,
         minimum: float | Decimal,
         maximum: float | Decimal,
         response_expected: bool = True,
@@ -739,6 +745,86 @@ class BrickMaster(
             response_expected=True,
         )
         return GetProtocol1BrickletName(*unpack_payload(payload, "B 3B 40s"))
+
+    async def set_bricklet_xmc_flash_config(
+        self, config: int, parameter1: int, parameter2: int, data: bytes | Sequence[int]
+    ) -> SetBrickletXMCFlashConfig:
+        """
+        This function is for internal use to flash the initial
+        bootstrapper and bootloader to the Bricklets.
+
+        If you need to flash a boostrapper/bootloader (for example
+        because you made your own Bricklet from scratch) please
+        take a look at our open source flash and test tool at
+        `https://github.com/Tinkerforge/flash-test <https://github.com/Tinkerforge/flash-test>`__
+
+        Don't use this function directly.
+
+        .. versionadded:: 2.5.0$nbsp;(Firmware)
+        """
+        check_length("data", data, 52)
+
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_BRICKLET_XMC_FLASH_CONFIG,
+            data=pack_payload((int(config), int(parameter1), int(parameter2), list(map(int, data))), "I I I 52B"),
+            response_expected=True,
+        )
+        return_value, return_data = unpack_payload(payload, "I 60B")
+        return SetBrickletXMCFlashConfig(return_value, tuple(return_data))
+
+    async def set_bricklet_xmc_flash_data(self, data: bytes | Sequence[int]) -> int:
+        """
+        This function is for internal use to flash the initial
+        bootstrapper and bootloader to the Bricklets.
+
+        If you need to flash a boostrapper/bootloader (for example
+        because you made your own Bricklet from scratch) please
+        take a look at our open source flash and test tool at
+        `https://github.com/Tinkerforge/flash-test <https://github.com/Tinkerforge/flash-test>`__
+
+        Don't use this function directly.
+
+        .. versionadded:: 2.5.0$nbsp;(Firmware)
+        """
+        check_length("data", data, 64)
+
+        _, payload = await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_BRICKLET_XMC_FLASH_DATA,
+            data=pack_payload((list(map(int, data)),), "64B"),
+            response_expected=True,
+        )
+        return unpack_payload(payload, "I")
+
+    async def set_bricklets_enabled(self, bricklets_enabled: bool, response_expected: bool = True) -> None:
+        """
+        This function is only available in Master Brick hardware version >= 3.0.
+
+        Enables/disables all four Bricklets if set to true/false.
+
+        If you disable the Bricklets the power supply to the Bricklets will be disconnected.
+        The Bricklets will lose all configurations if disabled.
+
+        .. versionadded:: 2.5.0$nbsp;(Firmware)
+        """
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_BRICKLETS_ENABLED,
+            data=pack_payload((bool(bricklets_enabled),), "!"),
+            response_expected=response_expected,
+        )
+
+    async def get_bricklets_enabled(self) -> bool:
+        """
+        Returns *true* if the Bricklets are enabled, *false* otherwise.
+
+        .. versionadded:: 2.5.0$nbsp;(Firmware)
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_BRICKLETS_ENABLED, response_expected=True
+        )
+        return unpack_payload(payload, "!")
 
     async def get_chip_temperature(self) -> Decimal:
         """

@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from tinkerforge_async.helper import join
+from tinkerforge_async.helper import check_length, check_range, encode_string, join
 
 from .fake_connection import run, take
 
@@ -74,3 +74,30 @@ def test_leaving_the_loop_closes_all_generators():
     sources = Source(1, 2, 3, endless=True), Source("a", endless=True)
     assert len(run(collect(*sources, count=2))) == 2
     assert all(source.closed for source in sources)
+
+
+def test_check_range():
+    """The limits are valid values. The error names the value, that the user passed."""
+    check_range("value", 0, 0, 255)
+    check_range("value", 255, 0, 255)
+    with pytest.raises(ValueError, match="value=256 is out of range"):
+        check_range("value", 256, 0, 255)
+    with pytest.raises(ValueError, match=r"voltage=70\.0 is out of range. The raw value 70000"):
+        check_range("voltage", 70000, 0, 65535, 70.0)
+
+
+def test_check_length():
+    """Arrays must have exactly the length, that the device expects."""
+    check_length("data", bytes(4), 4)
+    with pytest.raises(ValueError, match="expected 4 items for data, got 3 items"):
+        check_length("data", [1, 2, 3], 4)
+
+
+def test_encode_string():
+    """Strings are sent as Latin-1. Strings, that do not fit or cannot be encoded, are rejected."""
+    assert encode_string("text", "20 °C", 5) == b"20 \xb0C"
+    assert encode_string("text", "", 5) == b""
+    with pytest.raises(ValueError, match="text can be at most 5 characters long, got 6"):
+        encode_string("text", "123456", 5)
+    with pytest.raises(ValueError):
+        encode_string("text", "€", 5)

@@ -29,7 +29,7 @@ from .devices import (
 )
 from .devices import ThresholdOption as Threshold
 from .devices import _FunctionID
-from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
+from .helper import Duration, check_length, check_range, encode_string, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import pack_payload, unpack_payload
 from .streams import Chunk, read_stream, write_stream
 
@@ -359,7 +359,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -623,7 +623,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.WRITE_LINE,
-            data=pack_payload((line, position, str(text).encode("latin-1")), "B B 22s"),
+            data=pack_payload((line, position, encode_string("text", text, 22)), "B B 22s"),
             response_expected=response_expected,
         )
 
@@ -848,7 +848,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
             device=self,
             function_id=FunctionID.DRAW_TEXT,
             data=pack_payload(
-                (position_x, position_y, Font(font).value, Color(color).value, str(text).encode("latin-1")),
+                (position_x, position_y, Font(font).value, Color(color).value, encode_string("text", text, 22)),
                 "B B B ! 22s",
             ),
             response_expected=response_expected,
@@ -901,7 +901,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
             device=self,
             function_id=FunctionID.SET_GUI_BUTTON,
             data=pack_payload(
-                (index, position_x, position_y, width, height, str(text).encode("latin-1")), "B B B B B 16s"
+                (index, position_x, position_y, width, height, encode_string("text", text, 16)), "B B B B B 16s"
             ),
             response_expected=response_expected,
         )
@@ -1189,7 +1189,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
         await self.ipcon.send_request(
             device=self,
             function_id=FunctionID.SET_GUI_TAB_TEXT,
-            data=pack_payload((index, str(text).encode("latin-1")), "B 5s"),
+            data=pack_payload((index, encode_string("text", text, 5)), "B 5s"),
             response_expected=response_expected,
         )
 
@@ -1390,8 +1390,8 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
                     position_y,
                     width,
                     height,
-                    str(text_x).encode("latin-1"),
-                    str(text_y).encode("latin-1"),
+                    encode_string("text_x", text_x, 4),
+                    encode_string("text_y", text_y, 4),
                 ),
                 "B B B B B B 4s 4s",
             ),

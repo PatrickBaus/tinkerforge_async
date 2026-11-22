@@ -115,6 +115,13 @@ CALLS = [
         reply=(IDENTITY, (b"4ER", b"21", "z", (1, 0, 0), (2, 0, 1), 2122)),
         result=GetIdentity(UID, 58, BrickletPort.Z, (1, 0, 0), (2, 0, 1), DeviceIdentifier.BRICKLET_ISOLATOR),
     ),
+    # A HAT Brick is the root of its topology, and reports the position "i"
+    Call(
+        "get_identity",
+        FunctionID.GET_IDENTITY,
+        reply=(IDENTITY, (b"4ER", b"0", "i", (1, 0, 0), (2, 0, 1), 111)),
+        result=GetIdentity(UID, None, BrickletPort.I, (1, 0, 0), (2, 0, 1), DeviceIdentifier.BRICK_HAT),
+    ),
 ]
 
 REJECTED = [

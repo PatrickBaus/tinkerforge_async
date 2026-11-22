@@ -44,7 +44,7 @@ class FunctionID(_FunctionID):
     GET_INPUT_VOLTAGE = 3
 
 
-VOLTAGE = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
+MILLI_VOLT = LinearQuantity(1, 1000)  # raw: 1/1000 Volt, returned in V
 
 
 class BrickletAnalogOutV2(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -78,7 +78,7 @@ class BrickletAnalogOutV2(Device):  # pylint: disable=too-many-public-methods,to
 
         Units: voltage in V (0 to 12 V).
         """
-        voltage_raw = VOLTAGE.from_si(voltage)
+        voltage_raw = MILLI_VOLT.from_si(voltage)
         check_range("voltage", voltage_raw, 0, 12000, voltage)
         await self.ipcon.send_request(
             device=self,
@@ -96,7 +96,7 @@ class BrickletAnalogOutV2(Device):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_OUTPUT_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))
 
     async def get_input_voltage(self) -> Decimal:
         """
@@ -107,4 +107,4 @@ class BrickletAnalogOutV2(Device):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_INPUT_VOLTAGE, response_expected=True
         )
-        return VOLTAGE.to_si(unpack_payload(payload, "H"))
+        return MILLI_VOLT.to_si(unpack_payload(payload, "H"))

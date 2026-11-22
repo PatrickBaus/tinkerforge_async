@@ -4,7 +4,7 @@
 
 from decimal import Decimal
 
-from tinkerforge_async.brick_master import BrickMaster, GetProtocol1BrickletName
+from tinkerforge_async.brick_master import BrickMaster, GetProtocol1BrickletName, SetBrickletXMCFlashConfig
 from tinkerforge_async.devices import BasicCallbackConfiguration
 from tinkerforge_async.devices import FunctionID as DeviceFunctionID
 from tinkerforge_async.devices import GetSPITFPBaudrateConfig, GetSPITFPErrorCount
@@ -206,6 +206,32 @@ CALLS = [
         result=GetProtocol1BrickletName(0, (0, 0, 0), ""),
     ),
     Call("get_connection_type", FunctionID.GET_CONNECTION_TYPE, reply=("B", (6,)), result=ConnectionType.ETHERNET),
+    # Master Brick 3.0
+    Call(
+        "set_bricklet_xmc_flash_config",
+        FunctionID.SET_BRICKLET_XMC_FLASH_CONFIG,
+        (1, 2, 3, bytes(range(52))),
+        sent=("I I I 52B", (1, 2, 3, list(range(52)))),
+        reply=("I 60B", (7, list(range(60)))),
+        result=SetBrickletXMCFlashConfig(7, tuple(range(60))),
+    ),
+    Call(
+        "set_bricklet_xmc_flash_data",
+        FunctionID.SET_BRICKLET_XMC_FLASH_DATA,
+        (list(range(64)),),
+        sent=("64B", (list(range(64)),)),
+        reply=("I", (7,)),
+        result=7,
+    ),
+    Call("set_bricklets_enabled", FunctionID.SET_BRICKLETS_ENABLED, (True,), sent=("!", (True,))),
+    Call(
+        "set_bricklets_enabled",
+        FunctionID.SET_BRICKLETS_ENABLED,
+        (0, False),
+        sent=("!", (False,)),
+        response_expected=False,
+    ),
+    Call("get_bricklets_enabled", FunctionID.GET_BRICKLETS_ENABLED, reply=("!", (True,)), result=True),
     # Inherited from the bricks with a microcontroller
     Call("reset", DeviceFunctionID.RESET, response_expected=False),
 ]
@@ -221,6 +247,8 @@ REJECTED = [
     ("get_spitfp_baudrate", ("y",)),
     ("get_spitfp_error_count", ("y",)),
     ("get_protocol1_bricklet_name", ("y",)),
+    ("set_bricklet_xmc_flash_config", (1, 2, 3, bytes(51))),
+    ("set_bricklet_xmc_flash_data", (bytes(65),)),
 ]
 
 

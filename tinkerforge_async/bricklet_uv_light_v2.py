@@ -71,11 +71,8 @@ class IntegrationTime(Enum):
     INTEGRATION_TIME_800MS = 4
 
 
-UVA = LinearQuantity(1, 10000)  # raw: 1/10000 Watt Per Square Meter, returned in W/m²
-UVB = LinearQuantity(1, 10000)  # raw: 1/10000 Watt Per Square Meter, returned in W/m²
-UVI = LinearQuantity(1, 10)  # raw: 1/10 UV Index, returned in UVI
-VALUE = LinearQuantity(1, 10000)  # raw: 1/10000 Watt Per Square Meter, returned in W/m²
-VALUE_2 = LinearQuantity(1, 10)  # raw: 1/10 UV Index, returned in UVI
+DECI_UV_INDEX = LinearQuantity(1, 10)  # raw: 1/10 UV Index, returned in UVI
+WATT_PER_SQUARE_METER_1_10000 = LinearQuantity(1, 10000)  # raw: 1/10000 Watt Per Square Meter, returned in W/m²
 
 
 class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-few-public-methods
@@ -124,7 +121,7 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold | int = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -160,7 +157,7 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
         Units: uva in W/m².
         """
         _, payload = await self.ipcon.send_request(device=self, function_id=FunctionID.GET_UVA, response_expected=True)
-        return UVA.to_si(unpack_payload(payload, "i"))
+        return WATT_PER_SQUARE_METER_1_10000.to_si(unpack_payload(payload, "i"))
 
     async def set_uva_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -204,9 +201,9 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = VALUE.from_si(minimum)
+        minimum_raw = WATT_PER_SQUARE_METER_1_10000.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = VALUE.from_si(maximum)
+        maximum_raw = WATT_PER_SQUARE_METER_1_10000.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -228,7 +225,11 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         return AdvancedCallbackConfiguration(
-            ms_to_seconds(period), value_has_to_change, Threshold(option), VALUE.to_si(minimum), VALUE.to_si(maximum)
+            ms_to_seconds(period),
+            value_has_to_change,
+            Threshold(option),
+            WATT_PER_SQUARE_METER_1_10000.to_si(minimum),
+            WATT_PER_SQUARE_METER_1_10000.to_si(maximum),
         )
 
     async def get_uvb(self) -> Decimal:
@@ -248,7 +249,7 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
         Units: uvb in W/m².
         """
         _, payload = await self.ipcon.send_request(device=self, function_id=FunctionID.GET_UVB, response_expected=True)
-        return UVB.to_si(unpack_payload(payload, "i"))
+        return WATT_PER_SQUARE_METER_1_10000.to_si(unpack_payload(payload, "i"))
 
     async def set_uvb_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -292,9 +293,9 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = VALUE.from_si(minimum)
+        minimum_raw = WATT_PER_SQUARE_METER_1_10000.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = VALUE.from_si(maximum)
+        maximum_raw = WATT_PER_SQUARE_METER_1_10000.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -316,7 +317,11 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
         )
         period, value_has_to_change, option, minimum, maximum = unpack_payload(payload, "I ! c i i")
         return AdvancedCallbackConfiguration(
-            ms_to_seconds(period), value_has_to_change, Threshold(option), VALUE.to_si(minimum), VALUE.to_si(maximum)
+            ms_to_seconds(period),
+            value_has_to_change,
+            Threshold(option),
+            WATT_PER_SQUARE_METER_1_10000.to_si(minimum),
+            WATT_PER_SQUARE_METER_1_10000.to_si(maximum),
         )
 
     async def get_uvi(self) -> Decimal:
@@ -332,7 +337,7 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
         Units: uvi in UVI.
         """
         _, payload = await self.ipcon.send_request(device=self, function_id=FunctionID.GET_UVI, response_expected=True)
-        return UVI.to_si(unpack_payload(payload, "i"))
+        return DECI_UV_INDEX.to_si(unpack_payload(payload, "i"))
 
     async def set_uvi_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -376,9 +381,9 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
         """
         period_raw = seconds_to_ms(period)
         check_range("period", period_raw, 0, 4294967295, period)
-        minimum_raw = VALUE_2.from_si(minimum)
+        minimum_raw = DECI_UV_INDEX.from_si(minimum)
         check_range("minimum", minimum_raw, -2147483648, 2147483647, minimum)
-        maximum_raw = VALUE_2.from_si(maximum)
+        maximum_raw = DECI_UV_INDEX.from_si(maximum)
         check_range("maximum", maximum_raw, -2147483648, 2147483647, maximum)
         await self.ipcon.send_request(
             device=self,
@@ -403,8 +408,8 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
             ms_to_seconds(period),
             value_has_to_change,
             Threshold(option),
-            VALUE_2.to_si(minimum),
-            VALUE_2.to_si(maximum),
+            DECI_UV_INDEX.to_si(minimum),
+            DECI_UV_INDEX.to_si(maximum),
         )
 
     async def set_configuration(
@@ -440,7 +445,7 @@ class BrickletUVLightV2(BrickletWithMCU):  # pylint: disable=too-many-public-met
 
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.UVA:
-            return 0, UVA.to_si(value)
+            return 0, WATT_PER_SQUARE_METER_1_10000.to_si(value)
         if callback_id is CallbackID.UVB:
-            return 1, UVB.to_si(value)
-        return 2, UVI.to_si(value)
+            return 1, WATT_PER_SQUARE_METER_1_10000.to_si(value)
+        return 2, DECI_UV_INDEX.to_si(value)
