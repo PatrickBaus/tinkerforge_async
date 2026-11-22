@@ -78,6 +78,7 @@ branch = true
 relative_files = true
 
 [tool.coverage.report]
+show_missing = true
 exclude_also = [
     # Only evaluated by the type checker
     "if TYPE_CHECKING:",
@@ -85,6 +86,8 @@ exclude_also = [
     # Marks code after an endless loop, that only exists to tell mypy that the function does not return there
     "raise AssertionError",
 ]
+# Every line and branch of the library must be covered by the tests
+fail_under = 100
 
 [build-system]
 requires = [
