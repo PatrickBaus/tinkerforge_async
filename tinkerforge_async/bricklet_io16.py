@@ -271,6 +271,7 @@ class BrickletIO16(Device):
         )
         return GetPortConfiguration(*unpack_payload(payload, "B B"))
 
+    @override
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
@@ -289,6 +290,7 @@ class BrickletIO16(Device):
         interrupt_mask |= int(bool(period)) << (sid % 8)  # if period is non-zero, enable the interrupt
         await self.set_port_interrupt(port, interrupt_mask)
 
+    @override
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         self._validate_sid(sid, range(16))
 

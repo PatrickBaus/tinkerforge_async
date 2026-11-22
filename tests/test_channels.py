@@ -190,3 +190,33 @@ def test_channels_without_configuration_are_rejected(sid: int) -> None:
         asyncio.run(toy._set_callback_configuration(sid))
     with pytest.raises(InvalidSidError):
         asyncio.run(toy._get_callback_configuration(sid))
+
+
+async def configure_and_read_back(
+    device: Device, sid: int
+) -> AdvancedCallbackConfiguration | SimpleCallbackConfiguration:
+    """Configure a channel and read the configuration back. Typed as `Device`, like code that handles any device."""
+    await device.set_callback_configuration(sid, 2, True, ThresholdOption.INSIDE, 3, 4)
+    return await device.get_callback_configuration(sid)
+
+
+def test_the_public_methods_of_device_use_the_table() -> None:
+    """Device.set_callback_configuration() and Device.get_callback_configuration() work on the table of channels."""
+    toy = Toy()
+    result = asyncio.run(configure_and_read_back(toy, 1))
+    assert toy.calls == [
+        ("set_combined_callback_configuration", (2, True, ThresholdOption.INSIDE, 3, 4, True)),
+        ("get_combined_callback_configuration", ()),
+    ]
+    assert result == AdvancedCallbackConfiguration(Decimal(1), False, ThresholdOption.OFF, Decimal(0), Decimal(0))
+
+
+@pytest.mark.parametrize("sid", [4, 6])
+def test_the_public_methods_of_device_reject_invalid_sids(sid: int) -> None:
+    """A sid without a callback configuration or without a channel raises an InvalidSidError."""
+    toy = Toy()
+    with pytest.raises(InvalidSidError):
+        asyncio.run(toy.set_callback_configuration(sid))
+    with pytest.raises(InvalidSidError):
+        asyncio.run(toy.get_callback_configuration(sid))
+    assert not toy.calls

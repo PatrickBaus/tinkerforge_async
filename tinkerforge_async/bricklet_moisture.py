@@ -10,7 +10,7 @@ from __future__ import annotations
 import typing
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TypeAlias, cast
+from typing import TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -94,6 +94,7 @@ class BrickletMoisture(Device):
     async def get_value(self, sid: int) -> int:
         return cast(int, await self._get_value(sid))
 
+    @override
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
@@ -108,6 +109,7 @@ class BrickletMoisture(Device):
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
+    @override
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 

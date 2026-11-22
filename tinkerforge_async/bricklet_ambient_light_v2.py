@@ -136,6 +136,7 @@ class BrickletAmbientLightV2(Device):
     async def get_value(self, sid: int) -> Decimal:
         return cast(Decimal, await self._get_value(sid))
 
+    @override
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
@@ -150,6 +151,7 @@ class BrickletAmbientLightV2(Device):
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
+    @override
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 

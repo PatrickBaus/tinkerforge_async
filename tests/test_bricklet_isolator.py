@@ -57,7 +57,8 @@ CALLS = [
     Call(
         "set_callback_configuration",
         FunctionID.SET_STATISTICS_CALLBACK_CONFIGURATION,
-        (0, 2, True, False),
+        # option, minimum and maximum are ignored, because the statistics have no thresholds
+        (0, 2, True, "x", None, None, False),
         sent=("I !", (2000, True)),
         response_expected=False,
     ),

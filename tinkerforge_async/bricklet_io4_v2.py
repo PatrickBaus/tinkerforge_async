@@ -315,6 +315,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         direction = Direction(direction)
         return GetConfiguration(direction, value)
 
+    @override
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
         self,
         sid: int,
@@ -334,6 +335,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         else:  # The sids 5 to 8 are the edge counters of the channels
             await self.set_edge_count_callback_configuration(sid - 5, period, value_has_to_change, response_expected)
 
+    @override
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         self._validate_sid(sid, range(4 + 1 + 4))
 

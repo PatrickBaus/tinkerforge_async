@@ -7,6 +7,7 @@ the low-level communication with the Tinkerforge ip connection.
 # pylint: disable=duplicate-code  # Many sensors of different generations have a similar API
 from __future__ import annotations
 
+from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
@@ -18,8 +19,9 @@ from .devices import (
     GetSPITFPBaudrateConfig,
     GetSPITFPErrorCount,
     SimpleCallbackConfiguration,
-    _FunctionID,
 )
+from .devices import ThresholdOption as Threshold
+from .devices import _FunctionID
 from .helper import Duration, ms_to_seconds, seconds_to_ms
 from .ip_connection_helper import base58decode, pack_payload, unpack_payload
 
@@ -96,15 +98,24 @@ class BrickletIsolator(BrickletWithMCU):
     async def get_value(self, sid: int) -> GetStatistics:
         return cast(GetStatistics, await self._get_value(sid))
 
-    async def set_callback_configuration(  # pylint: disable=too-many-arguments
+    @override
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
+        option: Threshold | str = Threshold.OFF,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
         response_expected: bool = True,
     ) -> None:
-        await self._set_callback_configuration(sid, period, value_has_to_change, response_expected=response_expected)
+        # The statistics have no thresholds. option, minimum and maximum are ignored like by the other devices
+        # without thresholds. They are part of the signature of Device.set_callback_configuration().
+        await self._set_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
+        )
 
+    @override
     async def get_callback_configuration(self, sid: int) -> SimpleCallbackConfiguration:
         return cast(SimpleCallbackConfiguration, await self._get_callback_configuration(sid))
 

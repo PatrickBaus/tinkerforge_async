@@ -12,6 +12,7 @@ from decimal import Decimal
 from enum import Enum, unique
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, TypeAlias, cast, override
 
+from .helper import Duration
 from .ip_connection_helper import base58decode, pack_payload, uid64_to_uid32, unpack_payload
 from .quantities import CELSIUS_ZERO
 
@@ -501,6 +502,44 @@ class Device:
         if configuration.wrap_advanced:
             return AdvancedCallbackConfiguration(result.period, result.value_has_to_change, None, None, None)
         return result
+
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        sid: int,
+        period: Duration = 0,
+        value_has_to_change: bool = False,
+        option: ThresholdOption | str = ThresholdOption.OFF,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
+        response_expected: bool = True,
+    ) -> None:
+        """
+        Configure the callbacks of the channel with the secondary id `sid`. See `CHANNELS` for the channels of a
+        device. The period is given in s, a period of 0 disables the callback. The thresholds are given in the unit of
+        the channel. Options, that a channel does not support (thresholds, `value_has_to_change`), are ignored.
+
+        Raises
+        ------
+        InvalidSidError
+            If the device has no channel with this sid or the channel has no callback configuration.
+        """
+        await self._set_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
+        )
+
+    async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration | SimpleCallbackConfiguration:
+        """
+        Get the configuration of the callbacks of the channel with the secondary id `sid`. See `CHANNELS` for the
+        channels of a device. The period is returned in s.
+
+        Raises
+        ------
+        InvalidSidError
+            If the device has no channel with this sid or the channel has no callback configuration.
+        """
+        return cast(
+            AdvancedCallbackConfiguration | SimpleCallbackConfiguration, await self._get_callback_configuration(sid)
+        )
 
     def get_api_version(self) -> tuple[int, int, int]:
         """
