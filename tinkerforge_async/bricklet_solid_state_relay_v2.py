@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_range, ms_to_seconds, seconds_to_ms
@@ -99,7 +99,7 @@ class BrickletSolidStateRelayV2(BrickletWithMCU):  # pylint: disable=too-many-pu
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STATE, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_monoflop(self, state: bool, time: Duration, response_expected: bool = True) -> None:
         """

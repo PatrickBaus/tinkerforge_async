@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias, cast
 
 from .devices import Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, seconds_to_ms
@@ -64,7 +64,7 @@ class BrickletSegmentDisplay4x7(Device):
 
     SID_TO_CALLBACK = {0: (CallbackID.COUNTER_FINISHED,)}
 
-    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -184,4 +184,4 @@ class BrickletSegmentDisplay4x7(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_COUNTER_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))

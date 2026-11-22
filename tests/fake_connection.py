@@ -7,10 +7,13 @@ from collections import defaultdict
 from collections.abc import AsyncGenerator, Coroutine
 from contextlib import aclosing
 from enum import Enum
-from typing import Any, NamedTuple, override
+from typing import TYPE_CHECKING, Any, NamedTuple, cast, override
 
 from tinkerforge_async.ip_connection import Flags, HeaderPayload
 from tinkerforge_async.ip_connection_helper import pack_payload
+
+if TYPE_CHECKING:
+    from tinkerforge_async.ip_connection import IPConnectionAsync
 
 UID = 12345  # The uid of the devices under test
 
@@ -43,6 +46,11 @@ class FakeConnection:
         self.__replies: dict[Enum, list[bytes]] = defaultdict(list)
         self.__errors: dict[Enum, Exception] = {}
         self.__callbacks: list[tuple[int, bytes]] = []
+
+    @property
+    def ipcon(self) -> IPConnectionAsync:
+        """This fake, typed as the `IPConnectionAsync` it replaces, so that it can be handed to a device."""
+        return cast("IPConnectionAsync", self)
 
     def reply(self, function_id: Enum, form: str, *values: Any) -> None:
         """

@@ -14,7 +14,7 @@ function.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import check_range
@@ -192,7 +192,7 @@ class BrickletRemoteSwitchV2(BrickletWithMCU):  # pylint: disable=too-many-publi
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_REPEATS, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def switch_socket_a(
         self, house_code: int, receiver_code: int, switch_to: SwitchTo | int, response_expected: bool = True

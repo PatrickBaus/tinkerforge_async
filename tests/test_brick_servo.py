@@ -17,7 +17,7 @@ from tinkerforge_async.devices import GetSPITFPBaudrateConfig, GetSPITFPErrorCou
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickServo
 FunctionID = BrickServo.FunctionID
@@ -373,14 +373,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickServo) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 14
     assert device.get_api_version() == (2, 0, 4)
     assert str(device).startswith("Servo Brick with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -393,19 +393,19 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_under_voltage(device, connection):
+def test_callback_under_voltage(device: BrickServo, connection: FakeConnection) -> None:
     """The callback UNDER_VOLTAGE is converted to an event."""
     connection.callback(CallbackID.UNDER_VOLTAGE, "H", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.UNDER_VOLTAGE, Decimal("0.003"))]
 
 
-def test_callback_position_reached(device, connection):
+def test_callback_position_reached(device: BrickServo, connection: FakeConnection) -> None:
     """The callback POSITION_REACHED is converted to an event."""
     connection.callback(CallbackID.POSITION_REACHED, "B h", *(3, 4))
     assert summary(read_events(device)) == [(1, CallbackID.POSITION_REACHED, PositionReachedEvent(3, Decimal("0.04")))]
 
 
-def test_callback_velocity_reached(device, connection):
+def test_callback_velocity_reached(device: BrickServo, connection: FakeConnection) -> None:
     """The callback VELOCITY_REACHED is converted to an event."""
     connection.callback(CallbackID.VELOCITY_REACHED, "B h", *(3, 4))
     assert summary(read_events(device)) == [(2, CallbackID.VELOCITY_REACHED, VelocityReachedEvent(3, Decimal("0.04")))]

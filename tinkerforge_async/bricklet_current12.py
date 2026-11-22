@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -153,7 +153,7 @@ class BrickletCurrent12(Device):  # pylint: disable=too-many-public-methods,too-
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_current(self) -> Decimal:
         """
@@ -198,7 +198,7 @@ class BrickletCurrent12(Device):  # pylint: disable=too-many-public-methods,too-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_OVER_CURRENT, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_analog_value(self) -> int:
         """
@@ -217,7 +217,7 @@ class BrickletCurrent12(Device):  # pylint: disable=too-many-public-methods,too-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ANALOG_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_current_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """

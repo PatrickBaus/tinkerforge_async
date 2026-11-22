@@ -15,7 +15,7 @@ class EventBus:
     """
 
     def __init__(self) -> None:
-        self.__listeners: dict[str, set[asyncio.Queue]] = {}
+        self.__listeners: dict[str, set[asyncio.Queue[Any]]] = {}
 
     async def register(self, event_name: str) -> AsyncGenerator[Any, None]:
         """
@@ -31,7 +31,7 @@ class EventBus:
         Any
             The events
         """
-        queue: asyncio.Queue = asyncio.Queue()
+        queue: asyncio.Queue[Any] = asyncio.Queue()
         if self.__listeners.get(event_name, None) is None:
             self.__listeners[event_name] = {queue}
         else:
@@ -58,6 +58,6 @@ class EventBus:
         event: any
             The data to be published.
         """
-        listener_queues: set[asyncio.Queue] = self.__listeners.get(event_name, set())
+        listener_queues: set[asyncio.Queue[Any]] = self.__listeners.get(event_name, set())
         for queue in listener_queues:
             queue.put_nowait(event)

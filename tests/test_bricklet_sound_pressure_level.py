@@ -128,14 +128,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletSoundPressureLevel) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 290
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Sound Pressure Level Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -148,7 +148,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_get_spectrum_transfers_the_stream(device, connection):
+def test_get_spectrum_transfers_the_stream(device: BrickletSoundPressureLevel, connection: FakeConnection) -> None:
     """The high-level function get_spectrum() uses get_spectrum_low_level()."""
     data = [3] * 3
     for offset in range(0, 1, 30):
@@ -158,13 +158,13 @@ def test_get_spectrum_transfers_the_stream(device, connection):
     assert result == (3,) * 3
 
 
-def test_callback_decibel(device, connection):
+def test_callback_decibel(device: BrickletSoundPressureLevel, connection: FakeConnection) -> None:
     """The callback DECIBEL is converted to an event."""
     connection.callback(CallbackID.DECIBEL, "H", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.DECIBEL, Decimal("0.3"))]
 
 
-def test_callback_spectrum(device, connection):
+def test_callback_spectrum(device: BrickletSoundPressureLevel, connection: FakeConnection) -> None:
     """The callback SPECTRUM is converted to an event."""
     data = [3] * 3
     for offset in range(0, 1, 30):
@@ -174,4 +174,4 @@ def test_callback_spectrum(device, connection):
     assert events[0].payload == (3,) * 3
     connection_2 = FakeConnection()
     connection_2.callback(CallbackID.SPECTRUM, "H H 30H", *(33, 30, chunk(data, 0, 30, 0)))
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))

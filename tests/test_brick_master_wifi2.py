@@ -2,6 +2,8 @@
 
 # pylint: disable=duplicate-code  # The devices of a family have a similar API, and so have their tests
 
+from enum import Enum
+
 import pytest
 
 from tinkerforge_async.brick_master import (
@@ -23,7 +25,7 @@ from tinkerforge_async.brick_master import (
 )
 
 from .device_tests import BSSID, GATEWAY, IP, MAC, MASK, NULL, DeviceTests
-from .fake_connection import Call, request, run
+from .fake_connection import Call, FakeConnection, request, run
 
 DEVICE = BrickMaster
 FunctionID = BrickMaster.FunctionID
@@ -325,7 +327,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_start_wifi2_bootloader(brick, connection):
+def test_start_wifi2_bootloader(brick: BrickMaster, connection: FakeConnection) -> None:
     """The bootloader can only be started, if the Brick is connected via USB."""
     connection.reply(FunctionID.GET_CONNECTION_TYPE, "B", 1)
     connection.reply(FunctionID.START_WIFI2_BOOTLOADER, "b", 0)
@@ -336,7 +338,7 @@ def test_start_wifi2_bootloader(brick, connection):
     ]
 
 
-def test_start_wifi2_bootloader_fails_if_not_connected_via_usb(brick, connection):
+def test_start_wifi2_bootloader_fails_if_not_connected_via_usb(brick: BrickMaster, connection: FakeConnection) -> None:
     """The extension cannot be flashed over itself."""
     connection.reply(FunctionID.GET_CONNECTION_TYPE, "B", 7)
     with pytest.raises(RuntimeError, match="USB"):
@@ -344,7 +346,7 @@ def test_start_wifi2_bootloader_fails_if_not_connected_via_usb(brick, connection
     assert connection.requests == [request(FunctionID.GET_CONNECTION_TYPE)]
 
 
-def test_errors_of_the_bootloader_are_raised(brick, connection):
+def test_errors_of_the_bootloader_are_raised(brick: BrickMaster, connection: FakeConnection) -> None:
     """The Brick returns an error code other than 0."""
     connection.reply(FunctionID.GET_CONNECTION_TYPE, "B", 1)
     connection.reply(FunctionID.START_WIFI2_BOOTLOADER, "b", -1)
@@ -363,7 +365,9 @@ def test_errors_of_the_bootloader_are_raised(brick, connection):
         ("get_wifi2_mesh_router_password", FunctionID.GET_WIFI2_MESH_ROUTER_PASSWORD),
     ],
 )
-def test_reading_the_passwords_is_deprecated(brick, connection, method, function_id):
+def test_reading_the_passwords_is_deprecated(
+    brick: BrickMaster, connection: FakeConnection, method: str, function_id: Enum
+) -> None:
     """Newer firmwares do not return the passwords any more."""
     connection.reply(function_id, "64s", b"12345678")
     with pytest.warns(DeprecationWarning, match=method):

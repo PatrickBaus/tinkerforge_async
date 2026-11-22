@@ -15,7 +15,7 @@ from tinkerforge_async.bricklet_io16 import (
 from tinkerforge_async.devices import AdvancedCallbackConfiguration, InvalidSidError
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, read_events, request, run, summary
 
 DEVICE = BrickletIO16
 FunctionID = BrickletIO16.FunctionID
@@ -174,7 +174,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletIO16) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 28
     assert bricklet.get_api_version() == (2, 0, 1)
@@ -196,9 +196,15 @@ class TestRequests(DeviceTests):
         (15, Decimal("0.1"), b"b", 0b0000_1111, 0b1000_1111),
     ],
 )
-def test_set_callback_configuration(
-    bricklet, connection, sid, period, port, old_mask, new_mask
-):  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def test_set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    bricklet: BrickletIO16,
+    connection: FakeConnection,
+    sid: int,
+    period: int | Decimal,
+    port: bytes,
+    old_mask: int,
+    new_mask: int,
+) -> None:
     """A period other than 0 enables the interrupt of the pin. The interrupts have neither a period nor thresholds."""
     connection.reply(FunctionID.GET_PORT_INTERRUPT, "B", old_mask)
     run(bricklet.set_callback_configuration(sid, period))
@@ -212,9 +218,9 @@ def test_set_callback_configuration(
     "sid, port, mask, enabled",
     [(0, b"a", 0b1, True), (1, b"a", 0b1, False), (8, b"b", 0b1, True), (15, b"b", 0b0111_1111, False)],
 )
-def test_get_callback_configuration(
-    bricklet, connection, sid, port, mask, enabled
-):  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def test_get_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    bricklet: BrickletIO16, connection: FakeConnection, sid: int, port: bytes, mask: int, enabled: bool
+) -> None:
     """The period is 1, if the interrupt of the pin is enabled."""
     connection.reply(FunctionID.GET_PORT_INTERRUPT, "B", mask)
     assert run(bricklet.get_callback_configuration(sid)) == AdvancedCallbackConfiguration(
@@ -223,7 +229,7 @@ def test_get_callback_configuration(
     assert connection.requests == [request(FunctionID.GET_PORT_INTERRUPT, "c", port)]
 
 
-def test_events_of_ports(bricklet, connection):
+def test_events_of_ports(bricklet: BrickletIO16, connection: FakeConnection) -> None:
     """Without a filter by sid, one event per port is yielded. Its sid is 16, the payload is the value of all pins."""
     connection.callback(CallbackID.INTERRUPT, "c B B", "a", 0b0000_0101, 0b0000_0100)
     connection.callback(CallbackID.MONOFLOP_DONE, "c B B", "b", 0b0000_0001, 0b1000_0001)
@@ -237,7 +243,7 @@ def test_events_of_ports(bricklet, connection):
     assert summary(read_events(bricklet, events=(CallbackID.INTERRUPT,))) == [(16, CallbackID.INTERRUPT, 0b0000_0100)]
 
 
-def test_events_of_pins(bricklet, connection):
+def test_events_of_pins(bricklet: BrickletIO16, connection: FakeConnection) -> None:
     """With a filter by sid, one event is yielded for each of the pins that changed. The payload is the new value."""
     connection.callback(CallbackID.INTERRUPT, "c B B", "a", 0b0000_0101, 0b0000_0100)
     connection.callback(CallbackID.INTERRUPT, "c B B", "b", 0b0000_0011, 0b1000_0001)
@@ -253,7 +259,7 @@ def test_events_of_pins(bricklet, connection):
     ]
 
 
-def test_invalid_event_filters_are_rejected(bricklet):
+def test_invalid_event_filters_are_rejected(bricklet: BrickletIO16) -> None:
     """The events are either filtered by callback or by sid. Unknown sids are rejected."""
     with pytest.raises(ValueError):
         read_events(bricklet, events=(CallbackID.INTERRUPT,), sids=(0,))

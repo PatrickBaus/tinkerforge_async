@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -172,7 +172,7 @@ class BrickletIndustrialDigitalIn4V2(BrickletWithMCU):  # pylint: disable=too-ma
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_value(self) -> tuple[bool, ...]:
         """
@@ -274,7 +274,7 @@ class BrickletIndustrialDigitalIn4V2(BrickletWithMCU):  # pylint: disable=too-ma
             data=pack_payload((Channel(channel).value, bool(reset_counter)), "B !"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_edge_count_configuration(
         self,

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import check_length, check_range, encode_string
@@ -146,7 +146,7 @@ class BrickletLCD16x2(Device):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_BACKLIGHT_ON, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_config(self, cursor: bool = False, blinking: bool = False, response_expected: bool = True) -> None:
         """
@@ -187,7 +187,7 @@ class BrickletLCD16x2(Device):  # pylint: disable=too-many-public-methods,too-fe
             data=pack_payload((button,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_custom_character(
         self, index: int, character: bytes | Sequence[int], response_expected: bool = True

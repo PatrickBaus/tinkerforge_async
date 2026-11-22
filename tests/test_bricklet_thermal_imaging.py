@@ -431,14 +431,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletThermalImaging) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 278
     assert device.get_api_version() == (2, 0, 2)
     assert str(device).startswith("Thermal Imaging Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -451,7 +451,9 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_get_high_contrast_image_transfers_the_stream(device, connection):
+def test_get_high_contrast_image_transfers_the_stream(
+    device: BrickletThermalImaging, connection: FakeConnection
+) -> None:
     """The high-level function get_high_contrast_image() uses get_high_contrast_image_low_level()."""
     data = [i % 256 for i in range(4800)]
     for offset in range(0, 4800, 62):
@@ -461,7 +463,7 @@ def test_get_high_contrast_image_transfers_the_stream(device, connection):
     assert result == bytes([i % 256 for i in range(4800)])
 
 
-def test_get_temperature_image_transfers_the_stream(device, connection):
+def test_get_temperature_image_transfers_the_stream(device: BrickletThermalImaging, connection: FakeConnection) -> None:
     """The high-level function get_temperature_image() uses get_temperature_image_low_level()."""
     data = [3] * 4800
     for offset in range(0, 4800, 31):
@@ -471,7 +473,7 @@ def test_get_temperature_image_transfers_the_stream(device, connection):
     assert result == (3,) * 4800
 
 
-def test_callback_high_contrast_image(device, connection):
+def test_callback_high_contrast_image(device: BrickletThermalImaging, connection: FakeConnection) -> None:
     """The callback HIGH_CONTRAST_IMAGE is converted to an event."""
     data = [i % 256 for i in range(4800)]
     for offset in range(0, 4800, 62):
@@ -481,10 +483,10 @@ def test_callback_high_contrast_image(device, connection):
     assert events[0].payload == bytes([i % 256 for i in range(4800)])
     connection_2 = FakeConnection()
     connection_2.callback(CallbackID.HIGH_CONTRAST_IMAGE, "H 62B", *(62, chunk(data, 0, 62, 0)))
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))
 
 
-def test_callback_temperature_image(device, connection):
+def test_callback_temperature_image(device: BrickletThermalImaging, connection: FakeConnection) -> None:
     """The callback TEMPERATURE_IMAGE is converted to an event."""
     data = [3] * 4800
     for offset in range(0, 4800, 31):
@@ -494,4 +496,4 @@ def test_callback_temperature_image(device, connection):
     assert events[0].payload == (3,) * 4800
     connection_2 = FakeConnection()
     connection_2.callback(CallbackID.TEMPERATURE_IMAGE, "H 31H", *(31, chunk(data, 0, 31, 0)))
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))

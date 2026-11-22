@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -150,7 +150,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> Decimal:
-        return await self._get_value(sid)
+        return cast(Decimal, await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -161,13 +161,13 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ):
+    ) -> None:
         await self._set_callback_configuration(
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_air_pressure(self) -> Decimal:
         """
@@ -550,7 +550,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
         data_rate: DataRate | int = DataRate.RATE_50HZ,
         air_pressure_low_pass_filter: LowPassFilter | int = LowPassFilter.FILTER_9TH,
         response_expected: bool = True,
-    ):
+    ) -> None:
         """
         Configures the data rate and air pressure low pass filter. The low pass filter cut-off frequency (if enabled)
         can be set to 1/9th or 1/20th of the configured data rate to decrease the noise on the air pressure data.

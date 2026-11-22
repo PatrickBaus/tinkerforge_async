@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -159,7 +159,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> Decimal | tuple[Decimal, Decimal]:
-        return await self._get_value(sid)
+        return cast(Decimal | tuple[Decimal, Decimal], await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -176,7 +176,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_voltage(self, channel: int) -> Decimal:
         """
@@ -390,7 +390,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_ADC_VALUES, response_expected=True
         )
 
-        return unpack_payload(payload, "2i")
+        return cast(tuple[int, int], unpack_payload(payload, "2i"))
 
     async def set_channel_led_config(self, channel: int, config: LedConfig, response_expected: bool = True) -> None:
         """

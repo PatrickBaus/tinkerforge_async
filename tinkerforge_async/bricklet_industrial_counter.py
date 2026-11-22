@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -259,7 +259,7 @@ class BrickletIndustrialCounter(BrickletWithMCU):  # pylint: disable=too-many-pu
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_counter(self, channel: Channel | int) -> int:
         """
@@ -271,7 +271,7 @@ class BrickletIndustrialCounter(BrickletWithMCU):  # pylint: disable=too-many-pu
             data=pack_payload((Channel(channel).value,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "q")
+        return cast(int, unpack_payload(payload, "q"))
 
     async def get_all_counter(self) -> tuple[int, ...]:
         """
@@ -392,7 +392,7 @@ class BrickletIndustrialCounter(BrickletWithMCU):  # pylint: disable=too-many-pu
             data=pack_payload((Channel(channel).value,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_all_counter_active(self) -> tuple[bool, ...]:
         """

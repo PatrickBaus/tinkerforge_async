@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_range, ms_to_seconds, seconds_to_ms
@@ -112,7 +112,7 @@ class BrickletHallEffect(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_edge_count(self, reset_counter: bool) -> int:
         """
@@ -129,7 +129,7 @@ class BrickletHallEffect(Device):  # pylint: disable=too-many-public-methods,too
             data=pack_payload((bool(reset_counter),), "!"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_edge_count_config(
         self,
@@ -203,7 +203,7 @@ class BrickletHallEffect(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_EDGE_INTERRUPT, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_edge_count_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """

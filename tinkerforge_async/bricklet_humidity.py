@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -109,7 +109,7 @@ class BrickletHumidity(Device):
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> int | Decimal:
-        return await self._get_value(sid)
+        return cast(int | Decimal, await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -126,7 +126,7 @@ class BrickletHumidity(Device):
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_humidity(self) -> Decimal:
         """
@@ -164,7 +164,7 @@ class BrickletHumidity(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ANALOG_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_humidity_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -278,7 +278,7 @@ class BrickletHumidity(Device):
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
         response_expected: bool = True,
-    ):
+    ) -> None:
         """
         Sets the thresholds for the :cb:`Analog Value Reached` callback.
 

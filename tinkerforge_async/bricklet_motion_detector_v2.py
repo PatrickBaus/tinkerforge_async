@@ -9,7 +9,7 @@ units.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -78,7 +78,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         self.api_version = (2, 0, 0)
 
     async def get_value(self, sid: int) -> bool:
-        return await self._get_value(sid)
+        return cast(bool, await self._get_value(sid))
 
     async def get_motion_detected(self) -> bool:
         """
@@ -121,7 +121,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_SENSITIVITY, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_indicator(
         self, top_left: int = 0, top_right: int = 0, bottom: int = 0, response_expected: bool = True

@@ -5,6 +5,7 @@
 import asyncio
 from contextlib import aclosing
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -16,10 +17,10 @@ from tinkerforge_async.bricklet_io4_v2 import (
     GetMonoflop,
     GetPWMConfiguration,
 )
-from tinkerforge_async.devices import AdvancedCallbackConfiguration, SimpleCallbackConfiguration
+from tinkerforge_async.devices import AdvancedCallbackConfiguration, Event, SimpleCallbackConfiguration
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, request, run, summary, take
+from .fake_connection import Call, FakeConnection, read_events, request, run, summary, take
 
 DEVICE = BrickletIO4V2
 FunctionID = BrickletIO4V2.FunctionID
@@ -221,7 +222,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletIO4V2) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 2111
     assert bricklet.get_api_version() == (2, 0, 0)
@@ -232,7 +233,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def callbacks(connection):
+def callbacks(connection: FakeConnection) -> None:
     """Register one callback of each kind, and one unknown callback, that must be dropped."""
     connection.callback(CallbackID.INPUT_VALUE, "B ! !", 1, True, False)
     connection.callback(99)
@@ -240,7 +241,7 @@ def callbacks(connection):
     connection.callback(CallbackID.ALL_INPUT_VALUE, "4! 4!", (False, True, False, False), (True, False, True, False))
 
 
-def test_events_filtered_by_callback(bricklet, connection):
+def test_events_filtered_by_callback(bricklet: BrickletIO4V2, connection: FakeConnection) -> None:
     """The channel is the sid. The callback of all inputs is sid 4, its payload are the values of all channels."""
     callbacks(connection)
     assert summary(read_events(bricklet, events=(CallbackID.INPUT_VALUE,))) == [(1, CallbackID.INPUT_VALUE, False)]
@@ -252,7 +253,7 @@ def test_events_filtered_by_callback(bricklet, connection):
     assert events[0].additional == (False, True, False, False)  # The channels that changed
 
 
-def test_events_filtered_by_sid(bricklet, connection):
+def test_events_filtered_by_sid(bricklet: BrickletIO4V2, connection: FakeConnection) -> None:
     """The callback of all inputs is split into the channels, unless the sid 4 is requested."""
     callbacks(connection)
     events = read_events(bricklet, sids=(1,))
@@ -267,7 +268,7 @@ def test_events_filtered_by_sid(bricklet, connection):
     assert summary(read_events(bricklet, sids=(4,))) == [(4, CallbackID.ALL_INPUT_VALUE, (True, False, True, False))]
 
 
-def test_captured_inputs_are_events_of_sid_9(bricklet, connection):
+def test_captured_inputs_are_events_of_sid_9(bricklet: BrickletIO4V2, connection: FakeConnection) -> None:
     """The captured inputs are a stream of bitmasks. They are not split into the channels."""
     callbacks(connection)
     connection.callback(CallbackID.CAPTURE_INPUT, "64B", list(range(64)))
@@ -280,7 +281,7 @@ def test_captured_inputs_are_events_of_sid_9(bricklet, connection):
     assert summary(read_events(bricklet, sids=(2, 9))) == [(2, CallbackID.ALL_INPUT_VALUE, True)] + expected
 
 
-def test_invalid_event_filters_are_rejected(bricklet):
+def test_invalid_event_filters_are_rejected(bricklet: BrickletIO4V2) -> None:
     """The events are either filtered by callback or by sid. Unknown callbacks are rejected."""
     with pytest.raises(ValueError):
         read_events(bricklet, events=(CallbackID.INPUT_VALUE,), sids=(0,))
@@ -288,12 +289,12 @@ def test_invalid_event_filters_are_rejected(bricklet):
         read_events(bricklet, events=(99,))
 
 
-def test_all_events_are_read_without_a_filter(bricklet, connection):
+def test_all_events_are_read_without_a_filter(bricklet: BrickletIO4V2, connection: FakeConnection) -> None:
     """Without a filter the callbacks and the edge counters are read."""
     callbacks(connection)
     connection.reply(FunctionID.GET_EDGE_COUNT, "I", 7)
 
-    async def scenario():
+    async def scenario() -> list[Event]:
         await bricklet.set_edge_count_callback_configuration(2, period=Decimal("0.001"))
         return await take(bricklet.read_events(), 4)
 
@@ -305,14 +306,14 @@ def test_all_events_are_read_without_a_filter(bricklet, connection):
     ]
 
 
-async def requests_sent(connection, count):
+async def requests_sent(connection: FakeConnection, count: int) -> None:
     """Wait until the library has sent a number of requests."""
     async with asyncio.timeout(5):
         while len(connection.requests) < count:
             await asyncio.sleep(0.001)
 
 
-async def read_until(bricklet, payload, **filters):
+async def read_until(bricklet: BrickletIO4V2, payload: int, **filters: Any) -> list[Event]:
     """
     Read the events of the edge counters until an event with the given payload is read. The number of events depends
     on the timing, because a reading replaces the previous reading, if it has not been read yet.
@@ -327,7 +328,7 @@ async def read_until(bricklet, payload, **filters):
     return events
 
 
-def test_edge_count_events_are_polled(bricklet, connection):
+def test_edge_count_events_are_polled(bricklet: BrickletIO4V2, connection: FakeConnection) -> None:
     """
     The Bricklet has no callback for the edge counters, so the library polls them. The sid is the channel + 5. The
     counter is reset with every reading, so the payload is the number of edges per period.
@@ -335,7 +336,7 @@ def test_edge_count_events_are_polled(bricklet, connection):
     for count in (0, 3, 3, 5):  # The first reading only resets the counter
         connection.reply(FunctionID.GET_EDGE_COUNT, "I", count)
 
-    async def scenario():
+    async def scenario() -> list[Event]:
         await bricklet.set_callback_configuration(6, period=Decimal("0.001"))
         return await read_until(bricklet, 5, sids=(6,))
 
@@ -351,12 +352,12 @@ def test_edge_count_events_are_polled(bricklet, connection):
     )
 
 
-def test_edge_count_events_if_the_value_has_to_change(bricklet, connection):
+def test_edge_count_events_if_the_value_has_to_change(bricklet: BrickletIO4V2, connection: FakeConnection) -> None:
     """A reading, that is equal to the previous reading, is dropped."""
     for count in (0, 3, 3, 3, 5):
         connection.reply(FunctionID.GET_EDGE_COUNT, "I", count)
 
-    async def scenario():
+    async def scenario() -> list[Event]:
         await bricklet.set_edge_count_callback_configuration(0, Decimal("0.001"), value_has_to_change=True)
         events = await read_until(bricklet, 5, events=(CallbackID.EDGE_COUNT,))
         # The reading stays 5 from now on, so there are no more events
@@ -372,12 +373,12 @@ def test_edge_count_events_if_the_value_has_to_change(bricklet, connection):
     assert run(bricklet.get_edge_count_callback_configuration(0)) == SimpleCallbackConfiguration(Decimal("0.001"), True)
 
 
-def test_only_the_latest_edge_count_is_kept(bricklet, connection):
+def test_only_the_latest_edge_count_is_kept(bricklet: BrickletIO4V2, connection: FakeConnection) -> None:
     """If nobody reads the events, the old reading is replaced, so the reader does not get outdated events."""
     for count in range(100):
         connection.reply(FunctionID.GET_EDGE_COUNT, "I", count)
 
-    async def scenario():
+    async def scenario() -> Event:
         await bricklet.set_edge_count_callback_configuration(0, Decimal("0.001"))
         await requests_sent(connection, 5)
         return (await take(bricklet.read_events(sids=(5,)), 1))[0]
@@ -385,11 +386,11 @@ def test_only_the_latest_edge_count_is_kept(bricklet, connection):
     assert run(scenario()).payload >= 2
 
 
-def test_edge_count_polling_is_stopped(bricklet, connection):
+def test_edge_count_polling_is_stopped(bricklet: BrickletIO4V2, connection: FakeConnection) -> None:
     """A period of 0 stops the polling, and drops the event, that has not been read."""
     connection.reply(FunctionID.GET_EDGE_COUNT, "I", 1)
 
-    async def scenario():
+    async def scenario() -> SimpleCallbackConfiguration:
         await bricklet.set_edge_count_callback_configuration(0, 0)  # It is not running, there is nothing to stop
         await bricklet.set_edge_count_callback_configuration(0, Decimal("0.001"))
         await requests_sent(connection, 3)  # The second reading creates the first event
@@ -404,11 +405,13 @@ def test_edge_count_polling_is_stopped(bricklet, connection):
     assert run(scenario()) == SimpleCallbackConfiguration(Decimal(0), False)
 
 
-def test_edge_count_polling_ends_if_the_bricklet_rejects_the_request(bricklet, connection):
+def test_edge_count_polling_ends_if_the_bricklet_rejects_the_request(
+    bricklet: BrickletIO4V2, connection: FakeConnection
+) -> None:
     """The polling ends silently, and can be configured again."""
     connection.fail(FunctionID.GET_EDGE_COUNT, ValueError("Invalid parameter."))
 
-    async def scenario():
+    async def scenario() -> None:
         await bricklet.set_edge_count_callback_configuration(0, Decimal("0.001"))
         await requests_sent(connection, 1)
         await asyncio.sleep(0.02)

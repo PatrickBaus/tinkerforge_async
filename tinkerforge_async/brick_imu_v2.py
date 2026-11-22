@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletPort as Port
 from .devices import Channel, DeviceIdentifier, DeviceWithMCU, GetSPITFPBaudrateConfig, GetSPITFPErrorCount, _FunctionID
@@ -587,7 +587,7 @@ class BrickIMUV2(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.ARE_LEDS_ON, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def save_calibration(self) -> bool:
         """
@@ -605,7 +605,7 @@ class BrickIMUV2(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.SAVE_CALIBRATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_acceleration_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -943,7 +943,7 @@ class BrickIMUV2(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-
             data=pack_payload((CommunicationMethod(communication_method).value,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_spitfp_baudrate(
         self, bricklet_port: Port | str, baudrate: int = 1400000, response_expected: bool = True
@@ -972,7 +972,7 @@ class BrickIMUV2(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-
             data=pack_payload((Port(bricklet_port).value,), "c"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def get_spitfp_error_count(self, bricklet_port: Port | str) -> GetSPITFPErrorCount:
         """
@@ -1015,7 +1015,7 @@ class BrickIMUV2(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_STATUS_LED_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_protocol1_bricklet_name(self, port: Port | str) -> GetProtocol1BrickletName:
         """

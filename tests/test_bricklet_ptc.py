@@ -11,7 +11,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, BasicCallba
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import UID, Call, read_events, request, run, summary
+from .fake_connection import UID, Call, FakeConnection, read_events, request, run, summary
 
 DEVICE = BrickletPtc
 FunctionID = BrickletPtc.FunctionID
@@ -126,7 +126,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletPtc) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 226
     assert bricklet.get_api_version() == (2, 0, 1)
@@ -137,20 +137,20 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_sensor_type(bricklet, connection):
+def test_sensor_type(bricklet: BrickletPtc, connection: FakeConnection) -> None:
     """The sensor type is a Pt100 by default. It can be set by its value and is part of the representation."""
     assert bricklet.sensor_type is SensorType.PT_100
     bricklet.sensor_type = 1
     assert bricklet.sensor_type is SensorType.PT_1000
-    assert BrickletPtc(UID, connection, SensorType.PT_1000).sensor_type is SensorType.PT_1000
+    assert BrickletPtc(UID, connection.ipcon, SensorType.PT_1000).sensor_type is SensorType.PT_1000
     assert repr(bricklet).endswith("sensor_type=SensorType.PT_1000)")
     with pytest.raises(ValueError):
         bricklet.sensor_type = 2
 
 
-def test_resistance_of_a_pt1000(connection):
+def test_resistance_of_a_pt1000(connection: FakeConnection) -> None:
     """The full scale of 32768 is 3900 Ω for a Pt1000."""
-    bricklet = BrickletPtc(UID, connection, SensorType.PT_1000)
+    bricklet = BrickletPtc(UID, connection.ipcon, SensorType.PT_1000)
     connection.reply(FunctionID.GET_RESISTANCE, "i", 8192)
     connection.reply(FunctionID.GET_RESISTANCE_CALLBACK_THRESHOLD, "c i i", "<", 8192, 32768)
     connection.callback(CallbackID.RESISTANCE, "i", 16384)
@@ -162,7 +162,7 @@ def test_resistance_of_a_pt1000(connection):
     assert summary(read_events(bricklet)) == [(1, CallbackID.RESISTANCE, Decimal(1950))]
 
 
-def test_set_callback_configuration(bricklet, connection):
+def test_set_callback_configuration(bricklet: BrickletPtc, connection: FakeConnection) -> None:
     """The period and the threshold are set by two requests. The default of the temperature thresholds is 0 °C."""
     run(bricklet.set_callback_configuration(0, 1, False, Threshold.GREATER_THAN, Decimal("283.15")))
     run(bricklet.set_callback_configuration(1, Decimal("0.1"), maximum=390, response_expected=False))
@@ -174,7 +174,7 @@ def test_set_callback_configuration(bricklet, connection):
     ]
 
 
-def test_get_callback_configuration(bricklet, connection):
+def test_get_callback_configuration(bricklet: BrickletPtc, connection: FakeConnection) -> None:
     """The period and the threshold are merged."""
     connection.reply(FunctionID.GET_TEMPERATURE_CALLBACK_PERIOD, "I", 250)
     connection.reply(FunctionID.GET_TEMPERATURE_CALLBACK_THRESHOLD, "c i i", "i", 100, 200)
@@ -188,7 +188,7 @@ def test_get_callback_configuration(bricklet, connection):
     )
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletPtc, connection: FakeConnection) -> None:
     """The temperature is sid 0, the resistance sid 1 and the state of the sensor sid 2."""
     connection.callback(CallbackID.TEMPERATURE, "i", 2500)
     connection.callback(CallbackID.TEMPERATURE_REACHED, "i", -500)

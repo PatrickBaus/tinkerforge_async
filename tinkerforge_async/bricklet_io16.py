@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Generator, Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import AdvancedCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -196,7 +196,7 @@ class BrickletIO16(Device):
             data=pack_payload((port.value.encode("ascii"),), "c"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_port_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -365,7 +365,7 @@ class BrickletIO16(Device):
             data=pack_payload((port.value.encode("ascii"),), "c"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_port_monoflop(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -488,7 +488,7 @@ class BrickletIO16(Device):
             data=pack_payload((pin, bool(reset_counter)), "B !"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_edge_count_config(
         self,

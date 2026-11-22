@@ -9,7 +9,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, BasicCallba
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, read_events, request, run, summary
 
 DEVICE = BrickletAnalogIn
 FunctionID = BrickletAnalogIn.FunctionID
@@ -110,7 +110,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletAnalogIn) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 219
     assert bricklet.get_api_version() == (2, 0, 3)
@@ -121,7 +121,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_set_callback_configuration(bricklet, connection):
+def test_set_callback_configuration(bricklet: BrickletAnalogIn, connection: FakeConnection) -> None:
     """The period and the threshold are set by two requests."""
     run(bricklet.set_callback_configuration(0, 1, False, Threshold.GREATER_THAN, 5))
     run(bricklet.set_callback_configuration(1, Decimal("0.1"), maximum=7, response_expected=False))
@@ -133,7 +133,7 @@ def test_set_callback_configuration(bricklet, connection):
     ]
 
 
-def test_get_callback_configuration(bricklet, connection):
+def test_get_callback_configuration(bricklet: BrickletAnalogIn, connection: FakeConnection) -> None:
     """The period and the threshold are merged."""
     connection.reply(FunctionID.GET_VOLTAGE_CALLBACK_PERIOD, "I", 250)
     connection.reply(FunctionID.GET_VOLTAGE_CALLBACK_THRESHOLD, "c H H", "i", 100, 200)
@@ -147,7 +147,7 @@ def test_get_callback_configuration(bricklet, connection):
     )
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletAnalogIn, connection: FakeConnection) -> None:
     """The voltage is sid 0 and converted to V, the analog value is sid 1."""
     connection.callback(CallbackID.VOLTAGE, "H", 455)
     connection.callback(CallbackID.ANALOG_VALUE, "H", 1234)

@@ -10,7 +10,7 @@ from tinkerforge_async.devices import BasicCallbackConfiguration
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletDistanceUS
 FunctionID = BrickletDistanceUS.FunctionID
@@ -93,14 +93,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletDistanceUS) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 229
     assert device.get_api_version() == (2, 0, 1)
     assert str(device).startswith("Distance US Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -113,13 +113,13 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_distance(device, connection):
+def test_callback_distance(device: BrickletDistanceUS, connection: FakeConnection) -> None:
     """The callback DISTANCE is converted to an event."""
     connection.callback(CallbackID.DISTANCE, "H", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.DISTANCE, 3)]
 
 
-def test_callback_distance_reached(device, connection):
+def test_callback_distance_reached(device: BrickletDistanceUS, connection: FakeConnection) -> None:
     """The callback DISTANCE_REACHED is converted to an event."""
     connection.callback(CallbackID.DISTANCE_REACHED, "H", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.DISTANCE_REACHED, 3)]

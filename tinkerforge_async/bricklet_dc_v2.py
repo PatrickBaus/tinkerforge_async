@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -183,7 +183,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def set_enabled(self, enabled: bool, response_expected: bool = True) -> None:
         """
@@ -204,7 +204,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_velocity(self, velocity: float | Decimal = 0, response_expected: bool = True) -> None:
         """
@@ -444,7 +444,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_EMERGENCY_SHUTDOWN_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_velocity_reached_callback_configuration(
         self, enabled: bool = False, response_expected: bool = True
@@ -467,7 +467,7 @@ class BrickletDCV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods,
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VELOCITY_REACHED_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_current_velocity_callback_configuration(
         self, period: Duration = 0, value_has_to_change: bool = False, response_expected: bool = True

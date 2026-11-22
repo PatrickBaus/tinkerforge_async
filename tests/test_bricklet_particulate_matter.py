@@ -15,7 +15,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, SimpleCallb
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletParticulateMatter
 FunctionID = BrickletParticulateMatter.FunctionID
@@ -138,14 +138,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletParticulateMatter) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2110
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Particulate Matter Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -158,7 +158,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_pm_concentration(device, connection):
+def test_callback_pm_concentration(device: BrickletParticulateMatter, connection: FakeConnection) -> None:
     """The callback PM_CONCENTRATION is converted to an event."""
     connection.callback(CallbackID.PM_CONCENTRATION, "H H H", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -166,7 +166,7 @@ def test_callback_pm_concentration(device, connection):
     ]
 
 
-def test_callback_pm_count(device, connection):
+def test_callback_pm_count(device: BrickletParticulateMatter, connection: FakeConnection) -> None:
     """The callback PM_COUNT is converted to an event."""
     connection.callback(CallbackID.PM_COUNT, "H H H H H H", *(3, 4, 5, 6, 7, 8))
     assert summary(read_events(device)) == [

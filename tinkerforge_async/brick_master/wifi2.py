@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 import warnings
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 from ..ip_connection_helper import pack_payload, unpack_payload
 from .common import ConnectionType, FunctionID, MasterConnection
@@ -178,7 +178,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
             device=self, function_id=FunctionID.IS_WIFI2_PRESENT, response_expected=True
         )
 
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def start_wifi2_bootloader(self) -> None:
         """
@@ -206,7 +206,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         if result != 0:
             raise Wifi2BootloaderError("Failed to start the Wi-Fi 2.0 bootloader.")
 
-    async def write_wifi2_serial_port(self, data: bytes | str):
+    async def write_wifi2_serial_port(self, data: bytes | str) -> None:
         """
         Writes up to 60 bytes (number of bytes to be written specified by ``length``)
         to the serial port of the bootloader of the Wi-Fi Extension 2.0. Returns 0 on
@@ -264,7 +264,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         )
         return ReadWifi2SerialPort(*unpack_payload(payload, "60B B"))
 
-    async def set_wifi2_authentication_secret(self, secret: bytes | str, response_expected: bool = True):
+    async def set_wifi2_authentication_secret(self, secret: bytes | str, response_expected: bool = True) -> None:
         """
         Sets the Wi-Fi authentication secret. The secret can be a string of up to 64
         characters. An empty string disables the authentication. The default value is
@@ -304,7 +304,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
             device=self, function_id=FunctionID.GET_WIFI2_AUTHENTICATION_SECRET, response_expected=True
         )
 
-        return unpack_payload(payload, "64s")
+        return cast(str, unpack_payload(payload, "64s"))
 
     async def set_wifi2_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -314,7 +314,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         phy_mode: PhyMode = PhyMode.WIFI_G,
         sleep_mode: int = 0,
         website: bool = False,
-        response_expected=True,
+        response_expected: bool = True,
     ) -> None:
         """
         Sets the general configuration of the Wi-Fi Extension 2.0.
@@ -594,7 +594,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_WIFI2_CLIENT_HOSTNAME, response_expected=True
         )
-        return unpack_payload(payload, "32s")
+        return cast(str, unpack_payload(payload, "32s"))
 
     async def set_wifi2_client_password(self, password: bytes | str, response_expected: bool = True) -> None:
         """
@@ -637,7 +637,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_WIFI2_CLIENT_PASSWORD, response_expected=True
         )
-        return unpack_payload(payload, "64s")
+        return cast(str, unpack_payload(payload, "64s"))
 
     async def set_wifi2_ap_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -808,7 +808,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_WIFI2_AP_PASSWORD, response_expected=True
         )
-        return unpack_payload(payload, "64s")
+        return cast(str, unpack_payload(payload, "64s"))
 
     async def save_wifi2_configuration(self) -> int:
         """
@@ -824,7 +824,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.SAVE_WIFI2_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def get_wifi2_firmware_version(self) -> tuple[int, int, int]:
         """
@@ -835,7 +835,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_WIFI2_FIRMWARE_VERSION, response_expected=True
         )
-        return unpack_payload(payload, "3B")
+        return cast(tuple[int, int, int], unpack_payload(payload, "3B"))
 
     async def set_wifi2_status_led(self, enabled: bool, response_expected: bool = True) -> None:
         """
@@ -876,7 +876,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_WIFI2_STATUS_LED_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_wifi2_mesh_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -1069,7 +1069,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_WIFI2_MESH_ROUTER_SSID, response_expected=True
         )
-        return unpack_payload(payload, "32s")
+        return cast(str, unpack_payload(payload, "32s"))
 
     async def set_wifi2_mesh_router_password(self, password: bytes | str, response_expected: bool = True) -> None:
         """
@@ -1113,7 +1113,7 @@ class Wifi2Extension(MasterConnection):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_WIFI2_MESH_ROUTER_PASSWORD, response_expected=True
         )
-        return unpack_payload(payload, "64s")
+        return cast(str, unpack_payload(payload, "64s"))
 
     async def get_wifi2_mesh_common_status(self) -> GetWifi2MeshCommonStatus:
         """

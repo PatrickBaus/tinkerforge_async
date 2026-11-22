@@ -5,7 +5,7 @@
 from tinkerforge_async.bricklet_motion_detector_v2 import BrickletMotionDetectorV2, GetIndicator
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, summary
+from .fake_connection import Call, FakeConnection, read_events, summary
 
 DEVICE = BrickletMotionDetectorV2
 FunctionID = BrickletMotionDetectorV2.FunctionID
@@ -36,7 +36,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletMotionDetectorV2) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 292
     assert bricklet.get_api_version() == (2, 0, 0)
@@ -47,7 +47,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletMotionDetectorV2, connection: FakeConnection) -> None:
     """The callbacks have no payload. A detected motion is sid 0, the end of the detection cycle is sid 1."""
     connection.callback(CallbackID.MOTION_DETECTED)
     connection.callback(CallbackID.DETECTION_CYCLE_ENDED)

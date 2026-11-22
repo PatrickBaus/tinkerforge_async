@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import check_length, check_range
@@ -216,7 +216,7 @@ class BrickletCAN(Device):  # pylint: disable=too-many-public-methods,too-few-pu
             data=pack_payload((FrameType(frame_type).value, identifier, list(map(int, data)), length), "B I 8B B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def read_frame(self) -> ReadFrame:
         """
@@ -272,7 +272,7 @@ class BrickletCAN(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_FRAME_READ_CALLBACK_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_configuration(
         self,
@@ -491,7 +491,7 @@ class BrickletCAN(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_FRAME_READABLE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

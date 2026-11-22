@@ -9,7 +9,7 @@ from tinkerforge_async.bricklet_led_strip_v2 import BrickletLEDStripV2, GetLEDVa
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletLEDStripV2
 FunctionID = BrickletLEDStripV2.FunctionID
@@ -144,14 +144,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletLEDStripV2) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2103
     assert device.get_api_version() == (2, 0, 2)
     assert str(device).startswith("LED Strip Bricklet 2.0 with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -164,7 +164,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_set_led_values_transfers_the_stream(device, connection):
+def test_set_led_values_transfers_the_stream(device: BrickletLEDStripV2, connection: FakeConnection) -> None:
     """The high-level function set_led_values() uses set_led_values_low_level()."""
     data = [i % 256 for i in range(3)]
     result = run(device.set_led_values(*(3, data)))
@@ -179,7 +179,7 @@ def test_set_led_values_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_get_led_values_transfers_the_stream(device, connection):
+def test_get_led_values_transfers_the_stream(device: BrickletLEDStripV2, connection: FakeConnection) -> None:
     """The high-level function get_led_values() uses get_led_values_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 60):
@@ -189,7 +189,7 @@ def test_get_led_values_transfers_the_stream(device, connection):
     assert result == bytes([i % 256 for i in range(3)])
 
 
-def test_callback_frame_started(device, connection):
+def test_callback_frame_started(device: BrickletLEDStripV2, connection: FakeConnection) -> None:
     """The callback FRAME_STARTED is converted to an event."""
     connection.callback(CallbackID.FRAME_STARTED, "H", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.FRAME_STARTED, 3)]

@@ -3,6 +3,7 @@
 import asyncio
 import struct
 from decimal import Decimal
+from typing import cast
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -25,46 +26,46 @@ def fake_ipcon(response: bytes = b"") -> Mock:
 
 def sent_payload(ipcon: Mock) -> bytes:
     """The payload of the last request."""
-    return ipcon.send_request.call_args.kwargs["data"]
+    return cast(bytes, ipcon.send_request.call_args.kwargs["data"])
 
 
 @pytest.mark.parametrize(
     "seconds,milliseconds", [(0, 0), (1, 1000), (0.5, 500), (0.29, 290), (Decimal("0.1"), 100), (1.5, 1500)]
 )
-def test_seconds_to_ms(seconds, milliseconds):
+def test_seconds_to_ms(seconds: Decimal | float | int, milliseconds: int) -> None:
     """Seconds are converted to integer milliseconds without floating point errors."""
     result = seconds_to_ms(seconds)
     assert result == milliseconds
     assert isinstance(result, int)
 
 
-def test_ms_to_seconds():
+def test_ms_to_seconds() -> None:
     """Milliseconds are converted to a Decimal in seconds."""
     assert ms_to_seconds(1500) == Decimal("1.5")
     assert isinstance(ms_to_seconds(1500), Decimal)
 
 
-def test_callback_period_is_sent_in_ms():
+def test_callback_period_is_sent_in_ms() -> None:
     """A period of 0.5 s is 500 ms."""
     ipcon = fake_ipcon()
     asyncio.run(BrickletBarometer(1, ipcon).set_air_pressure_callback_period(0.5))
     assert struct.unpack("<I", sent_payload(ipcon)) == (500,)
 
 
-def test_callback_period_is_read_in_seconds():
+def test_callback_period_is_read_in_seconds() -> None:
     """A period of 250 ms is 0.25 s."""
     ipcon = fake_ipcon(struct.pack("<I", 250))
     assert asyncio.run(BrickletBarometer(1, ipcon).get_air_pressure_callback_period()) == Decimal("0.25")
 
 
-def test_debounce_period_defaults_to_100_ms():
+def test_debounce_period_defaults_to_100_ms() -> None:
     """The default debounce period is 0.1 s, which is the 100 ms default of the Bricklet."""
     ipcon = fake_ipcon()
     asyncio.run(BrickletBarometer(1, ipcon).set_debounce_period())
     assert struct.unpack("<I", sent_payload(ipcon)) == (100,)
 
 
-def test_master_debounce_period():
+def test_master_debounce_period() -> None:
     """The Master Brick takes and returns seconds, too."""
     ipcon = fake_ipcon(struct.pack("<I", 100))
     master = BrickMaster(1, ipcon)
@@ -73,7 +74,7 @@ def test_master_debounce_period():
     assert struct.unpack("<I", sent_payload(ipcon)) == (2000,)
 
 
-def test_callback_configuration_period_is_in_seconds():
+def test_callback_configuration_period_is_in_seconds() -> None:
     """Sending and reading the callback configuration uses seconds."""
     ipcon = fake_ipcon()
     asyncio.run(BrickletBarometerV2(1, ipcon).set_air_pressure_callback_configuration(1.5))
@@ -84,7 +85,7 @@ def test_callback_configuration_period_is_in_seconds():
     assert config.period == Decimal("1.5")
 
 
-def test_monoflop_time_is_in_seconds():
+def test_monoflop_time_is_in_seconds() -> None:
     """Sending a monoflop time of 1.5 s sends 1500 ms and the remaining time is returned in seconds."""
     ipcon = fake_ipcon()
     asyncio.run(BrickletIO4V2(1, ipcon).set_monoflop(0, True, 1.5))
@@ -95,7 +96,7 @@ def test_monoflop_time_is_in_seconds():
     assert (result.value, result.time, result.time_remaining) == (True, Decimal("1.5"), Decimal("0.5"))
 
 
-def test_io16_edge_count_debounce_is_in_seconds():
+def test_io16_edge_count_debounce_is_in_seconds() -> None:
     """The debounce time is stored in a byte of ms, so it is limited to 0.255 s."""
     ipcon = fake_ipcon()
     device = BrickletIO16(1, ipcon)
@@ -108,7 +109,7 @@ def test_io16_edge_count_debounce_is_in_seconds():
     assert asyncio.run(BrickletIO16(1, ipcon).get_edge_count_config(0)).debounce == Decimal("0.005")
 
 
-def test_segment_display_counter_length_is_in_seconds():
+def test_segment_display_counter_length_is_in_seconds() -> None:
     """The pause between two steps of the counter is given in seconds."""
     ipcon = fake_ipcon()
     asyncio.run(BrickletSegmentDisplay4x7(1, ipcon).start_counter(0, 100))

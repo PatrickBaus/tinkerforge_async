@@ -9,3 +9,12 @@ from .device_factory import device_factory
 from .devices import InvalidSidError
 from .ip_connection import IPConnectionAsync
 from .ip_connection_helper import base58decode, base58encode
+
+__all__ = [
+    "__version__",
+    "base58decode",
+    "base58encode",
+    "device_factory",
+    "InvalidSidError",
+    "IPConnectionAsync",
+]

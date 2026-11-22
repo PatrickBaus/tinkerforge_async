@@ -9,7 +9,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, summary
+from .fake_connection import Call, FakeConnection, read_events, summary
 
 DEVICE = BrickletTemperatureV2
 FunctionID = BrickletTemperatureV2.FunctionID
@@ -74,7 +74,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletTemperatureV2) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 2113
     assert bricklet.get_api_version() == (2, 0, 0)
@@ -85,7 +85,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_events_are_converted_to_kelvin(bricklet, connection):
+def test_events_are_converted_to_kelvin(bricklet: BrickletTemperatureV2, connection: FakeConnection) -> None:
     """The callback belongs to sid 0."""
     connection.callback(CallbackID.TEMPERATURE, "h", 2500)
     assert summary(read_events(bricklet)) == [(0, CallbackID.TEMPERATURE, Decimal("298.15"))]

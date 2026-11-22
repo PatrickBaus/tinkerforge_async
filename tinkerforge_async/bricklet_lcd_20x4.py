@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_length, check_range, encode_string, ms_to_seconds, seconds_to_ms
@@ -151,7 +151,7 @@ class BrickletLCD20x4(Device):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_BACKLIGHT_ON, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_config(self, cursor: bool = False, blinking: bool = False, response_expected: bool = True) -> None:
         """
@@ -193,7 +193,7 @@ class BrickletLCD20x4(Device):  # pylint: disable=too-many-public-methods,too-fe
             data=pack_payload((button,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_custom_character(
         self, index: int, character: bytes | Sequence[int], response_expected: bool = True
@@ -286,7 +286,7 @@ class BrickletLCD20x4(Device):  # pylint: disable=too-many-public-methods,too-fe
             data=pack_payload((line,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "20s")
+        return cast(str, unpack_payload(payload, "20s"))
 
     async def set_default_text_counter(
         self, counter: Duration = Decimal("-0.001"), response_expected: bool = True

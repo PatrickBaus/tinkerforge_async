@@ -14,7 +14,7 @@ function.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -211,7 +211,7 @@ class BrickletDualButtonV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STATE_CHANGED_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

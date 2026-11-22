@@ -337,14 +337,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletNFC) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 286
     assert device.get_api_version() == (2, 0, 4)
     assert str(device).startswith("NFC Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -357,7 +357,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_reader_get_tag_id_transfers_the_stream(device, connection):
+def test_reader_get_tag_id_transfers_the_stream(device: BrickletNFC, connection: FakeConnection) -> None:
     """The high-level function reader_get_tag_id() uses reader_get_tag_id_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 32):
@@ -367,7 +367,7 @@ def test_reader_get_tag_id_transfers_the_stream(device, connection):
     assert result.tag_id == bytes([i % 256 for i in range(3)])
 
 
-def test_reader_write_ndef_transfers_the_stream(device, connection):
+def test_reader_write_ndef_transfers_the_stream(device: BrickletNFC, connection: FakeConnection) -> None:
     """The high-level function reader_write_ndef() uses reader_write_ndef_low_level()."""
     data = [i % 256 for i in range(3)]
     result = run(device.reader_write_ndef(*(data,)))
@@ -382,7 +382,7 @@ def test_reader_write_ndef_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_reader_read_ndef_transfers_the_stream(device, connection):
+def test_reader_read_ndef_transfers_the_stream(device: BrickletNFC, connection: FakeConnection) -> None:
     """The high-level function reader_read_ndef() uses reader_read_ndef_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 60):
@@ -392,7 +392,7 @@ def test_reader_read_ndef_transfers_the_stream(device, connection):
     assert result == bytes([i % 256 for i in range(3)])
 
 
-def test_reader_write_page_transfers_the_stream(device, connection):
+def test_reader_write_page_transfers_the_stream(device: BrickletNFC, connection: FakeConnection) -> None:
     """The high-level function reader_write_page() uses reader_write_page_low_level()."""
     data = [i % 256 for i in range(3)]
     result = run(device.reader_write_page(*(DEVICE.ReaderWrite.TYPE4_NDEF, data)))
@@ -407,7 +407,7 @@ def test_reader_write_page_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_reader_read_page_transfers_the_stream(device, connection):
+def test_reader_read_page_transfers_the_stream(device: BrickletNFC, connection: FakeConnection) -> None:
     """The high-level function reader_read_page() uses reader_read_page_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 60):
@@ -417,7 +417,7 @@ def test_reader_read_page_transfers_the_stream(device, connection):
     assert result == bytes([i % 256 for i in range(3)])
 
 
-def test_cardemu_write_ndef_transfers_the_stream(device, connection):
+def test_cardemu_write_ndef_transfers_the_stream(device: BrickletNFC, connection: FakeConnection) -> None:
     """The high-level function cardemu_write_ndef() uses cardemu_write_ndef_low_level()."""
     data = [i % 256 for i in range(3)]
     result = run(device.cardemu_write_ndef(*(data,)))
@@ -432,7 +432,7 @@ def test_cardemu_write_ndef_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_p2p_write_ndef_transfers_the_stream(device, connection):
+def test_p2p_write_ndef_transfers_the_stream(device: BrickletNFC, connection: FakeConnection) -> None:
     """The high-level function p2p_write_ndef() uses p2p_write_ndef_low_level()."""
     data = [i % 256 for i in range(3)]
     result = run(device.p2p_write_ndef(*(data,)))
@@ -447,7 +447,7 @@ def test_p2p_write_ndef_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_p2p_read_ndef_transfers_the_stream(device, connection):
+def test_p2p_read_ndef_transfers_the_stream(device: BrickletNFC, connection: FakeConnection) -> None:
     """The high-level function p2p_read_ndef() uses p2p_read_ndef_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 60):
@@ -457,7 +457,7 @@ def test_p2p_read_ndef_transfers_the_stream(device, connection):
     assert result == bytes([i % 256 for i in range(3)])
 
 
-def test_simple_get_tag_id_transfers_the_stream(device, connection):
+def test_simple_get_tag_id_transfers_the_stream(device: BrickletNFC, connection: FakeConnection) -> None:
     """The high-level function simple_get_tag_id() uses simple_get_tag_id_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 10):
@@ -467,7 +467,7 @@ def test_simple_get_tag_id_transfers_the_stream(device, connection):
     assert result.tag_id == bytes([i % 256 for i in range(3)])
 
 
-def test_callback_reader_state_changed(device, connection):
+def test_callback_reader_state_changed(device: BrickletNFC, connection: FakeConnection) -> None:
     """The callback READER_STATE_CHANGED is converted to an event."""
     connection.callback(CallbackID.READER_STATE_CHANGED, "B !", *(199, True))
     assert summary(read_events(device)) == [
@@ -475,7 +475,7 @@ def test_callback_reader_state_changed(device, connection):
     ]
 
 
-def test_callback_cardemu_state_changed(device, connection):
+def test_callback_cardemu_state_changed(device: BrickletNFC, connection: FakeConnection) -> None:
     """The callback CARDEMU_STATE_CHANGED is converted to an event."""
     connection.callback(CallbackID.CARDEMU_STATE_CHANGED, "B !", *(195, True))
     assert summary(read_events(device)) == [
@@ -483,7 +483,7 @@ def test_callback_cardemu_state_changed(device, connection):
     ]
 
 
-def test_callback_p2p_state_changed(device, connection):
+def test_callback_p2p_state_changed(device: BrickletNFC, connection: FakeConnection) -> None:
     """The callback P2P_STATE_CHANGED is converted to an event."""
     connection.callback(CallbackID.P2P_STATE_CHANGED, "B !", *(195, True))
     assert summary(read_events(device)) == [
@@ -491,7 +491,7 @@ def test_callback_p2p_state_changed(device, connection):
     ]
 
 
-def test_callback_simple_tag_seen(device, connection):
+def test_callback_simple_tag_seen(device: BrickletNFC, connection: FakeConnection) -> None:
     """The callback SIMPLE_TAG_SEEN is converted to an event."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 10):

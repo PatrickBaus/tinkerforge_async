@@ -13,7 +13,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, LedConfig, 
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, summary
+from .fake_connection import Call, FakeConnection, read_events, summary
 
 DEVICE = BrickletIndustrialDualAnalogInV2
 FunctionID = BrickletIndustrialDualAnalogInV2.FunctionID
@@ -174,7 +174,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletIndustrialDualAnalogInV2) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 2121
     assert bricklet.get_api_version() == (2, 0, 0)
@@ -185,7 +185,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletIndustrialDualAnalogInV2, connection: FakeConnection) -> None:
     """
     The channel is part of the payload of the voltage callback and becomes the sid. The callback of all voltages is
     sid 2. The voltages are converted to V.

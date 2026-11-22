@@ -12,7 +12,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, LedConfig
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, summary
+from .fake_connection import Call, FakeConnection, read_events, summary
 
 DEVICE = BrickletIndustrialDual020mAV2
 FunctionID = BrickletIndustrialDual020mAV2.FunctionID
@@ -125,7 +125,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletIndustrialDual020mAV2) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 2120
     assert bricklet.get_api_version() == (2, 0, 0)
@@ -136,7 +136,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletIndustrialDual020mAV2, connection: FakeConnection) -> None:
     """The channel is part of the payload and becomes the sid. The current is converted to A."""
     connection.callback(CallbackID.CURRENT, "B i", 0, 4000000)
     connection.callback(CallbackID.CURRENT, "B i", 1, 20000000)

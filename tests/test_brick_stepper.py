@@ -16,7 +16,7 @@ from tinkerforge_async.devices import GetSPITFPBaudrateConfig, GetSPITFPErrorCou
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickStepper
 FunctionID = BrickStepper.FunctionID
@@ -279,14 +279,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickStepper) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 15
     assert device.get_api_version() == (2, 0, 4)
     assert str(device).startswith("Stepper Brick with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -299,19 +299,19 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_under_voltage(device, connection):
+def test_callback_under_voltage(device: BrickStepper, connection: FakeConnection) -> None:
     """The callback UNDER_VOLTAGE is converted to an event."""
     connection.callback(CallbackID.UNDER_VOLTAGE, "H", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.UNDER_VOLTAGE, Decimal("0.003"))]
 
 
-def test_callback_position_reached(device, connection):
+def test_callback_position_reached(device: BrickStepper, connection: FakeConnection) -> None:
     """The callback POSITION_REACHED is converted to an event."""
     connection.callback(CallbackID.POSITION_REACHED, "i", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.POSITION_REACHED, 3)]
 
 
-def test_callback_all_data(device, connection):
+def test_callback_all_data(device: BrickStepper, connection: FakeConnection) -> None:
     """The callback ALL_DATA is converted to an event."""
     connection.callback(CallbackID.ALL_DATA, "H i i H H H", *(3, 4, 5, 6, 7, 8))
     assert summary(read_events(device)) == [
@@ -319,7 +319,7 @@ def test_callback_all_data(device, connection):
     ]
 
 
-def test_callback_new_state(device, connection):
+def test_callback_new_state(device: BrickStepper, connection: FakeConnection) -> None:
     """The callback NEW_STATE is converted to an event."""
     connection.callback(CallbackID.NEW_STATE, "B B", *(6, 6))
     assert summary(read_events(device)) == [

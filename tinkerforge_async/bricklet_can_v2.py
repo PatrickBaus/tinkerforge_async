@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, Event, _FunctionID
 from .helper import check_length, check_range
@@ -311,7 +311,7 @@ class BrickletCANV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             ),
             response_expected=True,
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def write_frame(self, frame_type: FrameType | int, identifier: int, data: bytes | Sequence[int]) -> bool:
         """
@@ -438,7 +438,7 @@ class BrickletCANV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_FRAME_READ_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_transceiver_configuration(
         self,
@@ -1004,7 +1004,7 @@ class BrickletCANV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_FRAME_READABLE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_error_occurred_callback_configuration(
         self, enabled: bool = False, response_expected: bool = True
@@ -1032,7 +1032,7 @@ class BrickletCANV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ERROR_OCCURRED_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

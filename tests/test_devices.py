@@ -132,7 +132,7 @@ REJECTED = [
 ]
 
 
-def test_the_device_under_test_has_a_microcontroller():
+def test_the_device_under_test_has_a_microcontroller() -> None:
     """The functions in `CALLS` are tested with a Bricklet, that inherits them."""
     assert issubclass(DEVICE, BrickletWithMCU)
     assert not issubclass(BrickletTemperature, BrickletWithMCU)
@@ -142,10 +142,10 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_identity_of_a_device_without_microcontroller(connection):
+def test_identity_of_a_device_without_microcontroller(connection: FakeConnection) -> None:
     """The older Bricklets have the common functions of all devices."""
     connection.reply(FunctionID.GET_IDENTITY, IDENTITY, b"4ER", b"21", "a", (1, 1, 0), (2, 0, 3), 216)
-    bricklet = BrickletTemperature(UID, connection)
+    bricklet = BrickletTemperature(UID, connection.ipcon)
     assert run(bricklet.get_identity()) == GetIdentity(
         UID, 58, BrickletPort.A, (1, 1, 0), (2, 0, 3), DeviceIdentifier.BRICKLET_TEMPERATURE
     )
@@ -153,24 +153,26 @@ def test_identity_of_a_device_without_microcontroller(connection):
     assert not hasattr(bricklet, "get_chip_temperature")
 
 
-def test_properties(bricklet, connection):
+def test_properties(bricklet: BrickletTemperatureV2, connection: FakeConnection) -> None:
     """A device knows its uid and its connection."""
     assert bricklet.uid == UID
-    assert bricklet.ipcon is connection
+    assert bricklet.ipcon is connection.ipcon
     assert str(bricklet) == f"Temperature Bricklet 2.0 with uid 12345 connected at {connection}"
     assert repr(bricklet) == (
         f"tinkerforge_async.bricklet_temperature_v2.BrickletTemperatureV2(uid=12345, ipcon={connection!r})"
     )
 
 
-def test_uids_with_64_bits_are_shortened(connection):
+def test_uids_with_64_bits_are_shortened(connection: FakeConnection) -> None:
     """The uids of the newer devices have 64 bits. The protocol uses 32 bits of them."""
-    assert BrickletTemperatureV2(0xFFFF_FFFF, connection).uid == 0xFFFF_FFFF
-    assert BrickletTemperatureV2(0x1_0000_0000, connection).uid == 0x1_0000
-    assert BrickletTemperatureV2(0x3F0F_003F_0F00_0FFF, connection).uid == 0xFFFF_FFFF
+    assert BrickletTemperatureV2(0xFFFF_FFFF, connection.ipcon).uid == 0xFFFF_FFFF
+    assert BrickletTemperatureV2(0x1_0000_0000, connection.ipcon).uid == 0x1_0000
+    assert BrickletTemperatureV2(0x3F0F_003F_0F00_0FFF, connection.ipcon).uid == 0xFFFF_FFFF
 
 
-def test_connect_and_disconnect_are_passed_on_to_the_connection(bricklet, connection):
+def test_connect_and_disconnect_are_passed_on_to_the_connection(
+    bricklet: BrickletTemperatureV2, connection: FakeConnection
+) -> None:
     """A device can be used to connect, if the connection is not at hand."""
     run(bricklet.connect())
     assert connection.connected
@@ -178,7 +180,7 @@ def test_connect_and_disconnect_are_passed_on_to_the_connection(bricklet, connec
     assert not connection.connected
 
 
-def test_events_of_a_device_without_converter(connection):
+def test_events_of_a_device_without_converter(connection: FakeConnection) -> None:
     """By default, a device has one sid and its events have the raw value of the callback."""
 
     class Raw(Device):
@@ -189,14 +191,14 @@ def test_events_of_a_device_without_converter(connection):
         SID_TO_CALLBACK = {0: (BrickletTemperatureV2.CallbackID.TEMPERATURE,)}
 
     connection.callback(BrickletTemperatureV2.CallbackID.TEMPERATURE, "h", 2500)
-    (event,) = read_events(Raw("Raw device", UID, connection))
+    (event,) = read_events(Raw("Raw device", UID, connection.ipcon))
     assert (event.sid, event.payload) == (0, 2500)
 
 
-def test_event():
+def test_event() -> None:
     """An event has the time it was created, and can be printed."""
     connection = FakeConnection()
-    bricklet = BrickletTemperatureV2(UID, connection)
+    bricklet = BrickletTemperatureV2(UID, connection.ipcon)
     before = time.time()
     event = Event(bricklet, 0, BrickletTemperatureV2.CallbackID.TEMPERATURE, Decimal("298.15"))
     assert before <= event.timestamp <= time.time()

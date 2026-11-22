@@ -10,7 +10,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, BasicCallba
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletTemperatureIR
 FunctionID = BrickletTemperatureIR.FunctionID
@@ -172,14 +172,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletTemperatureIR) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 217
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Temperature IR Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -192,7 +192,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_configuration_of_sid_0(device, connection):
+def test_callback_configuration_of_sid_0(device: BrickletTemperatureIR, connection: FakeConnection) -> None:
     """The period and the threshold are configured by separate functions."""
     run(device.set_callback_configuration(0, 1, True, Threshold.OUTSIDE, Decimal("273.45"), Decimal("273.55")))
     assert sorted(connection.requests, key=lambda request: request.function_id.value) == sorted(
@@ -210,7 +210,7 @@ def test_callback_configuration_of_sid_0(device, connection):
     )
 
 
-def test_callback_configuration_of_sid_1(device, connection):
+def test_callback_configuration_of_sid_1(device: BrickletTemperatureIR, connection: FakeConnection) -> None:
     """The period and the threshold are configured by separate functions."""
     run(device.set_callback_configuration(1, 1, True, Threshold.OUTSIDE, Decimal("273.45"), Decimal("273.55")))
     assert sorted(connection.requests, key=lambda request: request.function_id.value) == sorted(
@@ -228,25 +228,25 @@ def test_callback_configuration_of_sid_1(device, connection):
     )
 
 
-def test_callback_ambient_temperature(device, connection):
+def test_callback_ambient_temperature(device: BrickletTemperatureIR, connection: FakeConnection) -> None:
     """The callback AMBIENT_TEMPERATURE is converted to an event."""
     connection.callback(CallbackID.AMBIENT_TEMPERATURE, "h", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.AMBIENT_TEMPERATURE, Decimal("273.45"))]
 
 
-def test_callback_object_temperature(device, connection):
+def test_callback_object_temperature(device: BrickletTemperatureIR, connection: FakeConnection) -> None:
     """The callback OBJECT_TEMPERATURE is converted to an event."""
     connection.callback(CallbackID.OBJECT_TEMPERATURE, "h", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.OBJECT_TEMPERATURE, Decimal("273.45"))]
 
 
-def test_callback_ambient_temperature_reached(device, connection):
+def test_callback_ambient_temperature_reached(device: BrickletTemperatureIR, connection: FakeConnection) -> None:
     """The callback AMBIENT_TEMPERATURE_REACHED is converted to an event."""
     connection.callback(CallbackID.AMBIENT_TEMPERATURE_REACHED, "h", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.AMBIENT_TEMPERATURE_REACHED, Decimal("273.45"))]
 
 
-def test_callback_object_temperature_reached(device, connection):
+def test_callback_object_temperature_reached(device: BrickletTemperatureIR, connection: FakeConnection) -> None:
     """The callback OBJECT_TEMPERATURE_REACHED is converted to an event."""
     connection.callback(CallbackID.OBJECT_TEMPERATURE_REACHED, "h", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.OBJECT_TEMPERATURE_REACHED, Decimal("273.45"))]

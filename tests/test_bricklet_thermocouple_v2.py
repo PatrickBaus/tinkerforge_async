@@ -11,7 +11,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import UID, Call, read_events, request, run, summary
+from .fake_connection import UID, Call, FakeConnection, read_events, request, run, summary
 
 DEVICE = BrickletThermocoupleV2
 FunctionID = BrickletThermocoupleV2.FunctionID
@@ -94,7 +94,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletThermocoupleV2) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 2109
     assert bricklet.get_api_version() == (2, 0, 0)
@@ -105,12 +105,12 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_sensor_type(bricklet, connection):
+def test_sensor_type(bricklet: BrickletThermocoupleV2, connection: FakeConnection) -> None:
     """The sensor is of type K by default. The type is updated, when the Bricklet is configured."""
     assert bricklet.sensor_type is SensorType.TYPE_K
     bricklet.sensor_type = 1
     assert bricklet.sensor_type is SensorType.TYPE_E
-    assert BrickletThermocoupleV2(UID, connection, SensorType.TYPE_J).sensor_type is SensorType.TYPE_J
+    assert BrickletThermocoupleV2(UID, connection.ipcon, SensorType.TYPE_J).sensor_type is SensorType.TYPE_J
     assert repr(bricklet).endswith("sensor_type=SensorType.TYPE_E)")
     with pytest.raises(ValueError):
         bricklet.sensor_type = 10
@@ -120,9 +120,9 @@ def test_sensor_type(bricklet, connection):
 
 
 @pytest.mark.parametrize("sensor_type, gain", [(SensorType.TYPE_G8, 8), (SensorType.TYPE_G32, 32)])
-def test_the_gain_types_return_a_voltage(connection, sensor_type, gain):
+def test_the_gain_types_return_a_voltage(connection: FakeConnection, sensor_type: SensorType, gain: int) -> None:
     """The types G8 and G32 do not convert the voltage to a temperature. The value is `gain * 1.6 * 2^17 * voltage`."""
-    bricklet = BrickletThermocoupleV2(UID, connection, sensor_type)
+    bricklet = BrickletThermocoupleV2(UID, connection.ipcon, sensor_type)
     raw = gain * 2**17 * 2  # 1.25 V
     connection.reply(FunctionID.GET_TEMPERATURE, "i", raw)
     connection.reply(FunctionID.GET_TEMPERATURE_CALLBACK_CONFIGURATION, "I ! c i i", 0, False, "x", raw, -raw)
@@ -137,7 +137,7 @@ def test_the_gain_types_return_a_voltage(connection, sensor_type, gain):
     assert summary(read_events(bricklet)) == [(0, CallbackID.TEMPERATURE, Decimal("1.25"))]
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletThermocoupleV2, connection: FakeConnection) -> None:
     """The temperature is sid 0 and the error state sid 1."""
     connection.callback(CallbackID.TEMPERATURE, "i", 2500)
     connection.callback(CallbackID.ERROR_STATE, "! !", True, False)

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -124,7 +124,7 @@ class BrickletAnalogIn(Device):
         ),
     )
 
-    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -134,7 +134,7 @@ class BrickletAnalogIn(Device):
         self.api_version = (2, 0, 3)
 
     async def get_value(self, sid: int) -> int | Decimal:
-        return await self._get_value(sid)
+        return cast(int | Decimal, await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -151,7 +151,7 @@ class BrickletAnalogIn(Device):
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_voltage(self) -> Decimal:
         """
@@ -181,7 +181,7 @@ class BrickletAnalogIn(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ANALOG_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_voltage_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -361,7 +361,7 @@ class BrickletAnalogIn(Device):
         )
         return ms_to_seconds(unpack_payload(payload, "I"))
 
-    async def set_range(self, value: Range | int = Range.AUTOMATIC, response_expected: bool = True):
+    async def set_range(self, value: Range | int = Range.AUTOMATIC, response_expected: bool = True) -> None:
         """
         Sets the measurement range. Possible ranges:
 
@@ -423,7 +423,7 @@ class BrickletAnalogIn(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_AVERAGING, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

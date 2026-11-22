@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, override
+from typing import TYPE_CHECKING, NamedTuple, cast, override
 
 from ..devices import Device
 from ..ip_connection_helper import pack_payload, unpack_payload
@@ -149,7 +149,7 @@ class EapOptions:
         return self.__outer_auth
 
     @outer_auth.setter
-    def outer_auth(self, value: WifiEapOuterAuth):
+    def outer_auth(self, value: WifiEapOuterAuth | int) -> None:
         if not isinstance(value, WifiEapOuterAuth):
             value = WifiEapOuterAuth(value)
         self.__outer_auth = value
@@ -162,7 +162,7 @@ class EapOptions:
         return self.__inner_auth
 
     @inner_auth.setter
-    def inner_auth(self, value: WifiEapInnerAuth):
+    def inner_auth(self, value: WifiEapInnerAuth | int) -> None:
         if not isinstance(value, WifiEapInnerAuth):
             value = WifiEapInnerAuth(value)
         self.__inner_auth = value
@@ -175,7 +175,7 @@ class EapOptions:
         return self.__cert_type
 
     @cert_type.setter
-    def cert_type(self, value: WifiEapCertType):
+    def cert_type(self, value: WifiEapCertType | int) -> None:
         if not isinstance(value, WifiEapCertType):
             value = WifiEapCertType(value)
         self.__cert_type = value
@@ -228,7 +228,7 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_WIFI_PRESENT, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_wifi_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -702,7 +702,7 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_LONG_WIFI_KEY, response_expected=True
         )
 
-        return unpack_payload(payload, "64s")
+        return cast(str, unpack_payload(payload, "64s"))
 
     async def set_wifi_hostname(self, hostname: bytes | str, response_expected: bool = True) -> None:
         """
@@ -746,7 +746,7 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_WIFI_HOSTNAME, response_expected=True
         )
 
-        return unpack_payload(payload, "16s")
+        return cast(str, unpack_payload(payload, "16s"))
 
     async def set_wifi_authentication_secret(self, secret: bytes | str, response_expected: bool = True) -> None:
         """
@@ -788,4 +788,4 @@ class WifiExtension(Device):  # pylint: disable=too-many-public-methods
             device=self, function_id=FunctionID.GET_WIFI_AUTHENTICATION_SECRET, response_expected=True
         )
 
-        return unpack_payload(payload, "64s")
+        return cast(str, unpack_payload(payload, "64s"))

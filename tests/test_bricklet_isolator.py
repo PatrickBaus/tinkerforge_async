@@ -8,7 +8,7 @@ from tinkerforge_async.bricklet_isolator import BrickletIsolator, GetStatistics
 from tinkerforge_async.devices import GetSPITFPBaudrateConfig, GetSPITFPErrorCount, SimpleCallbackConfiguration
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, summary
+from .fake_connection import Call, FakeConnection, read_events, summary
 
 DEVICE = BrickletIsolator
 FunctionID = BrickletIsolator.FunctionID
@@ -85,7 +85,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletIsolator) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 2122
     assert bricklet.get_api_version() == (2, 0, 1)
@@ -96,7 +96,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletIsolator, connection: FakeConnection) -> None:
     """The statistics are sid 0. The uid of the connected Bricklet is decoded like it is by `get_statistics()`."""
     connection.callback(CallbackID.STATISTICS, *STATISTICS[0:1], *STATISTICS[1])
     assert summary(read_events(bricklet)) == [(0, CallbackID.STATISTICS, GetStatistics(1000, 2000, 2113, 58))]

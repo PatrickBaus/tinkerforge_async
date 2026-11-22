@@ -8,7 +8,7 @@ the low-level communication with the Tinkerforge ip connection.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     BrickletWithMCU,
@@ -84,7 +84,7 @@ class BrickletIsolator(BrickletWithMCU):
         ),
     )
 
-    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -94,7 +94,7 @@ class BrickletIsolator(BrickletWithMCU):
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> GetStatistics:
-        return await self._get_value(sid)
+        return cast(GetStatistics, await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments
         self,
@@ -106,7 +106,7 @@ class BrickletIsolator(BrickletWithMCU):
         await self._set_callback_configuration(sid, period, value_has_to_change, response_expected=response_expected)
 
     async def get_callback_configuration(self, sid: int) -> SimpleCallbackConfiguration:
-        return await self._get_callback_configuration(sid)
+        return cast(SimpleCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_statistics(self) -> GetStatistics:
         """
@@ -209,7 +209,7 @@ class BrickletIsolator(BrickletWithMCU):
             data=pack_payload((), ""),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def get_isolator_spitfp_error_count(self) -> GetSPITFPErrorCount:
         """
@@ -236,7 +236,7 @@ class BrickletIsolator(BrickletWithMCU):
         self,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        response_expected=True,
+        response_expected: bool = True,
     ) -> None:
         """
         The period is the period with which the :cb:`Statistics`

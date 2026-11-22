@@ -11,7 +11,7 @@ from tinkerforge_async.devices import GetSPITFPBaudrateConfig, GetSPITFPErrorCou
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, summary
+from .fake_connection import Call, FakeConnection, read_events, summary
 
 DEVICE = BrickMaster
 FunctionID = BrickMaster.FunctionID
@@ -252,7 +252,7 @@ REJECTED = [
 ]
 
 
-def test_identity(brick):
+def test_identity(brick: BrickMaster) -> None:
     """The Brick knows who it is."""
     assert brick.DEVICE_IDENTIFIER.value == 13
     assert brick.get_api_version() == (2, 0, 4)
@@ -263,7 +263,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_events(brick, connection):
+def test_events(brick: BrickMaster, connection: FakeConnection) -> None:
     """The USB voltage is sid 0, the stack voltage sid 1 and the stack current sid 2. They are converted to V and A."""
     connection.callback(CallbackID.USB_VOLTAGE, "H", 5010)
     connection.callback(CallbackID.USB_VOLTAGE_REACHED, "H", 4750)

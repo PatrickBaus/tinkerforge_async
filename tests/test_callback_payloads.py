@@ -1,26 +1,27 @@
 """The payloads of the callbacks of the generated devices are named after their callback."""
 
 import sys
+from enum import Enum
+from typing import Any
 
 import pytest
 
-from tinkerforge_async.device_factory import device_factory
-
+from .device_tests import RegisteredDevice, registered_devices
 from .fake_connection import UID, FakeConnection, read_events
 
 
-def generated_devices():
+def generated_devices() -> list[RegisteredDevice]:
     """All registered devices, that were generated from the Tinkerforge API definitions."""
-    devices = device_factory._DeviceFactory__available_devices.values()  # pylint: disable=protected-access
+    devices = registered_devices()
     marker = "generated from the Tinkerforge API definitions"
     return sorted(
         (cls for cls in devices if marker in (sys.modules[cls.__module__].__doc__ or "")), key=lambda cls: cls.__name__
     )
 
 
-def zeros(form):
+def zeros(form: str) -> list[Any]:
     """A payload of zeros for the Tinkerforge format string."""
-    values = []
+    values: list[Any] = []
     for item in form.split():
         count = int(item[:-1]) if item[:-1] else 1
         kind = item[-1]
@@ -35,7 +36,7 @@ def zeros(form):
     return values
 
 
-def callbacks():
+def callbacks() -> list[tuple[RegisteredDevice, Enum]]:
     """All callbacks of the generated devices"""
     return [
         (device_class, callback_id)
@@ -45,7 +46,7 @@ def callbacks():
     ]
 
 
-def names(callback_id):
+def names(callback_id: Enum) -> set[str]:
     """The allowed names of the named tuple of a callback, without underscores and in lower case."""
     name = callback_id.name.replace("_", "").lower()
     allowed = {f"get{name}", f"{name}event", f"get{name}result"}
@@ -57,13 +58,13 @@ def names(callback_id):
 @pytest.mark.parametrize(
     "device_class, callback_id", callbacks(), ids=lambda value: getattr(value, "__name__", None) or value.name
 )
-def test_the_payload_is_named_after_the_callback(device_class, callback_id):
+def test_the_payload_is_named_after_the_callback(device_class: RegisteredDevice, callback_id: Enum) -> None:
     """A named tuple of one callback must not be reused for another callback, that happens to have the same fields."""
     connection = FakeConnection()
     form = device_class.CALLBACK_FORMATS[callback_id]
     connection.callback(callback_id, form, *zeros(form))
     try:
-        events = read_events(device_class(UID, connection))
+        events = read_events(device_class(UID, connection.ipcon))
     except ValueError:
         pytest.skip("A raw value of 0 is not a valid enum member of this callback")
     assert len(events) <= 1

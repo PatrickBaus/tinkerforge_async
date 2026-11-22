@@ -9,7 +9,7 @@ from tinkerforge_async.bricklet_lcd_20x4 import BrickletLCD20x4, GetConfig
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletLCD20x4
 FunctionID = BrickletLCD20x4.FunctionID
@@ -114,14 +114,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletLCD20x4) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 212
     assert device.get_api_version() == (2, 0, 2)
     assert str(device).startswith("LCD 20x4 Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -134,13 +134,13 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_button_pressed(device, connection):
+def test_callback_button_pressed(device: BrickletLCD20x4, connection: FakeConnection) -> None:
     """The callback BUTTON_PRESSED is converted to an event."""
     connection.callback(CallbackID.BUTTON_PRESSED, "B", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.BUTTON_PRESSED, 3)]
 
 
-def test_callback_button_released(device, connection):
+def test_callback_button_released(device: BrickletLCD20x4, connection: FakeConnection) -> None:
     """The callback BUTTON_RELEASED is converted to an event."""
     connection.callback(CallbackID.BUTTON_RELEASED, "B", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.BUTTON_RELEASED, 3)]

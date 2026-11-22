@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -197,7 +197,7 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_distance(self) -> Decimal:
         """
@@ -517,7 +517,7 @@ class BrickletLaserRangeFinder(Device):  # pylint: disable=too-many-public-metho
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_LASER_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_sensor_hardware_version(self) -> Version:
         """

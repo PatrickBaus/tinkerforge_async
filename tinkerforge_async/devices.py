@@ -342,6 +342,8 @@ class Device:
     RESPONSE_EXPECTED_TRUE = 2  # setter
     RESPONSE_EXPECTED_FALSE = 3  # setter, default
 
+    # Every Brick and Bricklet is identified by its type, when it is enumerated
+    DEVICE_IDENTIFIER: ClassVar[DeviceIdentifier]
     # The following attributes are defined by every device with callbacks. See `read_events()`.
     CallbackID: ClassVar[Any]
     CALLBACK_FORMATS: ClassVar[Mapping[Any, str]]
@@ -686,7 +688,7 @@ class DeviceWithMCU(Device):
             device=self, function_id=FunctionID.GET_CHIP_TEMPERATURE, response_expected=True
         )
         result = unpack_payload(payload, "h")
-        return result + CELSIUS_ZERO
+        return cast(Decimal, result + CELSIUS_ZERO)
 
     async def reset(self) -> None:
         """
@@ -820,7 +822,7 @@ class BrickletWithMCU(DeviceWithMCU):
             data=pack_payload((list(map(int, data)),), "64B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_status_led_config(
         self, config: LedConfig | int = LedConfig.SHOW_STATUS, response_expected: bool = False
@@ -876,7 +878,7 @@ class BrickletWithMCU(DeviceWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.READ_BRICKLET_UID, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def get_spitfp_error_count(self) -> GetSPITFPErrorCount:
         """

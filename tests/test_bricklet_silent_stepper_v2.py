@@ -22,7 +22,7 @@ from tinkerforge_async.bricklet_silent_stepper_v2 import (
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletSilentStepperV2
 FunctionID = BrickletSilentStepperV2.FunctionID
@@ -562,14 +562,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletSilentStepperV2) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2166
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Silent Stepper Bricklet 2.0 with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -582,19 +582,19 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_under_voltage(device, connection):
+def test_callback_under_voltage(device: BrickletSilentStepperV2, connection: FakeConnection) -> None:
     """The callback UNDER_VOLTAGE is converted to an event."""
     connection.callback(CallbackID.UNDER_VOLTAGE, "H", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.UNDER_VOLTAGE, Decimal("0.003"))]
 
 
-def test_callback_position_reached(device, connection):
+def test_callback_position_reached(device: BrickletSilentStepperV2, connection: FakeConnection) -> None:
     """The callback POSITION_REACHED is converted to an event."""
     connection.callback(CallbackID.POSITION_REACHED, "i", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.POSITION_REACHED, 3)]
 
 
-def test_callback_all_data(device, connection):
+def test_callback_all_data(device: BrickletSilentStepperV2, connection: FakeConnection) -> None:
     """The callback ALL_DATA is converted to an event."""
     connection.callback(CallbackID.ALL_DATA, "H i i H H", *(3, 4, 5, 6, 7))
     assert summary(read_events(device)) == [
@@ -602,7 +602,7 @@ def test_callback_all_data(device, connection):
     ]
 
 
-def test_callback_new_state(device, connection):
+def test_callback_new_state(device: BrickletSilentStepperV2, connection: FakeConnection) -> None:
     """The callback NEW_STATE is converted to an event."""
     connection.callback(CallbackID.NEW_STATE, "B B", *(6, 6))
     assert summary(read_events(device)) == [
@@ -614,13 +614,13 @@ def test_callback_new_state(device, connection):
     ]
 
 
-def test_callback_gpio_state(device, connection):
+def test_callback_gpio_state(device: BrickletSilentStepperV2, connection: FakeConnection) -> None:
     """The callback GPIO_STATE is converted to an event."""
     connection.callback(CallbackID.GPIO_STATE, "2!", *([i % 2 == 0 for i in range(2)],))
     assert summary(read_events(device)) == [(4, CallbackID.GPIO_STATE, tuple(i % 2 == 0 for i in range(2)))]
 
 
-def test_callback_motor_stalled(device, connection):
+def test_callback_motor_stalled(device: BrickletSilentStepperV2, connection: FakeConnection) -> None:
     """The callback MOTOR_STALLED is converted to an event."""
     connection.callback(CallbackID.MOTOR_STALLED, "i", *(3,))
     assert summary(read_events(device)) == [(5, CallbackID.MOTOR_STALLED, 3)]

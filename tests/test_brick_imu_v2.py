@@ -22,7 +22,7 @@ from tinkerforge_async.devices import GetSPITFPBaudrateConfig, GetSPITFPErrorCou
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickIMUV2
 FunctionID = BrickIMUV2.FunctionID
@@ -485,14 +485,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickIMUV2) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 18
     assert device.get_api_version() == (2, 0, 3)
     assert str(device).startswith("IMU Brick 2.0 with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -505,7 +505,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_acceleration(device, connection):
+def test_callback_acceleration(device: BrickIMUV2, connection: FakeConnection) -> None:
     """The callback ACCELERATION is converted to an event."""
     connection.callback(CallbackID.ACCELERATION, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -513,7 +513,7 @@ def test_callback_acceleration(device, connection):
     ]
 
 
-def test_callback_magnetic_field(device, connection):
+def test_callback_magnetic_field(device: BrickIMUV2, connection: FakeConnection) -> None:
     """The callback MAGNETIC_FIELD is converted to an event."""
     connection.callback(CallbackID.MAGNETIC_FIELD, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -521,7 +521,7 @@ def test_callback_magnetic_field(device, connection):
     ]
 
 
-def test_callback_angular_velocity(device, connection):
+def test_callback_angular_velocity(device: BrickIMUV2, connection: FakeConnection) -> None:
     """The callback ANGULAR_VELOCITY is converted to an event."""
     connection.callback(CallbackID.ANGULAR_VELOCITY, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -529,13 +529,13 @@ def test_callback_angular_velocity(device, connection):
     ]
 
 
-def test_callback_temperature(device, connection):
+def test_callback_temperature(device: BrickIMUV2, connection: FakeConnection) -> None:
     """The callback TEMPERATURE is converted to an event."""
     connection.callback(CallbackID.TEMPERATURE, "b", *(3,))
     assert summary(read_events(device)) == [(3, CallbackID.TEMPERATURE, Decimal("276.15"))]
 
 
-def test_callback_linear_acceleration(device, connection):
+def test_callback_linear_acceleration(device: BrickIMUV2, connection: FakeConnection) -> None:
     """The callback LINEAR_ACCELERATION is converted to an event."""
     connection.callback(CallbackID.LINEAR_ACCELERATION, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -543,7 +543,7 @@ def test_callback_linear_acceleration(device, connection):
     ]
 
 
-def test_callback_gravity_vector(device, connection):
+def test_callback_gravity_vector(device: BrickIMUV2, connection: FakeConnection) -> None:
     """The callback GRAVITY_VECTOR is converted to an event."""
     connection.callback(CallbackID.GRAVITY_VECTOR, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -551,7 +551,7 @@ def test_callback_gravity_vector(device, connection):
     ]
 
 
-def test_callback_orientation(device, connection):
+def test_callback_orientation(device: BrickIMUV2, connection: FakeConnection) -> None:
     """The callback ORIENTATION is converted to an event."""
     connection.callback(CallbackID.ORIENTATION, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -559,7 +559,7 @@ def test_callback_orientation(device, connection):
     ]
 
 
-def test_callback_quaternion(device, connection):
+def test_callback_quaternion(device: BrickIMUV2, connection: FakeConnection) -> None:
     """The callback QUATERNION is converted to an event."""
     connection.callback(CallbackID.QUATERNION, "h h h h", *(3, 4, 5, 6))
     assert summary(read_events(device)) == [
@@ -576,7 +576,7 @@ def test_callback_quaternion(device, connection):
     ]
 
 
-def test_callback_all_data(device, connection):
+def test_callback_all_data(device: BrickIMUV2, connection: FakeConnection) -> None:
     """The callback ALL_DATA is converted to an event."""
     connection.callback(
         CallbackID.ALL_DATA,

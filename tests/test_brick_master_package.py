@@ -69,13 +69,13 @@ EXTENSION_BASES = {
 
 
 @pytest.mark.parametrize("name", FORMER_NAMES)
-def test_former_names_are_still_importable(name):
+def test_former_names_are_still_importable(name: str) -> None:
     """All classes, enums and named tuples of the former module can be imported from the package."""
     assert hasattr(brick_master, name)
     assert name in brick_master.__all__
 
 
-def test_all_lists_exactly_the_public_names_of_the_modules():
+def test_all_lists_exactly_the_public_names_of_the_modules() -> None:
     """__all__ contains the classes of all modules, except for the extensions, which are mixins of the BrickMaster."""
     defined = set()
     for module_info in pkgutil.iter_modules(brick_master.__path__):
@@ -88,7 +88,7 @@ def test_all_lists_exactly_the_public_names_of_the_modules():
 
 
 @pytest.mark.parametrize("name,module_name", EXTENSION_BASES.items())
-def test_functions_of_the_extensions_are_inherited_by_the_master_brick(name, module_name):
+def test_functions_of_the_extensions_are_inherited_by_the_master_brick(name: str, module_name: str) -> None:
     """The BrickMaster inherits the functions of each extension from its own module."""
     extension = getattr(importlib.import_module(f"{brick_master.__name__}.{module_name}"), name)
     assert issubclass(BrickMaster, extension)
@@ -98,7 +98,7 @@ def test_functions_of_the_extensions_are_inherited_by_the_master_brick(name, mod
         assert getattr(BrickMaster, function).__qualname__.startswith(f"{name}.")
 
 
-def test_the_enums_are_available_as_attributes_of_the_master_brick():
+def test_the_enums_are_available_as_attributes_of_the_master_brick() -> None:
     """The enums that are used as arguments of the functions are also available as attributes of the BrickMaster."""
     for name in ("ChibiFrequency", "Rs485Parity", "WifiConnection", "EthernetConnection", "PhyMode", "ConnectionType"):
         assert getattr(BrickMaster, name) is getattr(brick_master, name)

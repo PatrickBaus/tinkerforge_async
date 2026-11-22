@@ -10,7 +10,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletMotorizedLinearPoti
 FunctionID = BrickletMotorizedLinearPoti.FunctionID
@@ -122,14 +122,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletMotorizedLinearPoti) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 267
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Motorized Linear Poti Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -142,13 +142,13 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_position(device, connection):
+def test_callback_position(device: BrickletMotorizedLinearPoti, connection: FakeConnection) -> None:
     """The callback POSITION is converted to an event."""
     connection.callback(CallbackID.POSITION, "H", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.POSITION, 3)]
 
 
-def test_callback_position_reached(device, connection):
+def test_callback_position_reached(device: BrickletMotorizedLinearPoti, connection: FakeConnection) -> None:
     """The callback POSITION_REACHED is converted to an event."""
     connection.callback(CallbackID.POSITION_REACHED, "H", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.POSITION_REACHED, 3)]

@@ -9,7 +9,7 @@ from tinkerforge_async.bricklet_tilt import BrickletTilt
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletTilt
 FunctionID = BrickletTilt.FunctionID
@@ -45,14 +45,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletTilt) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 239
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Tilt Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -65,7 +65,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_tilt_state(device, connection):
+def test_callback_tilt_state(device: BrickletTilt, connection: FakeConnection) -> None:
     """The callback TILT_STATE is converted to an event."""
     connection.callback(CallbackID.TILT_STATE, "B", *(2,))
     assert summary(read_events(device)) == [(0, CallbackID.TILT_STATE, DEVICE.TiltState.CLOSED_VIBRATING)]

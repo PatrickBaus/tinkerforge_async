@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -154,7 +154,7 @@ class BrickletJoystick(Device):  # pylint: disable=too-many-public-methods,too-f
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_PRESSED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_analog_value(self) -> GetAnalogValue:
         """

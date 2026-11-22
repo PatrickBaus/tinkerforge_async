@@ -12,7 +12,7 @@ from asyncio import CancelledError
 from collections.abc import AsyncGenerator, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias, TypedDict, override
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias, TypedDict, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -93,7 +93,7 @@ class EdgeType(Enum):
 
 class _EdgeCountTaskConfig(TypedDict):
     queue: asyncio.Queue[Event]
-    task: asyncio.Task | None
+    task: asyncio.Task[None] | None
     lock: asyncio.Lock
     period: Decimal
     value_has_to_change: bool
@@ -223,7 +223,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "4!")
+        return cast(tuple[bool, bool, bool, bool], unpack_payload(payload, "4!"))
 
     async def set_selected_value(self, channel: int, value: bool, response_expected: bool = True) -> None:
         """
@@ -580,7 +580,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             ),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_edge_count_configuration(
         self,

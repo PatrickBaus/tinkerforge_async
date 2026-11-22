@@ -537,14 +537,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletRS485) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 277
     assert device.get_api_version() == (2, 0, 1)
     assert str(device).startswith("RS485 Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -557,7 +557,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_write_transfers_the_stream(device, connection):
+def test_write_transfers_the_stream(device: BrickletRS485, connection: FakeConnection) -> None:
     """The high-level function write() uses write_low_level()."""
     data = ("abc" * 3)[:3]
     connection.reply(FunctionID.WRITE_LOW_LEVEL, "B", *(3,))
@@ -569,7 +569,7 @@ def test_write_transfers_the_stream(device, connection):
     assert result == 3
 
 
-def test_read_transfers_the_stream(device, connection):
+def test_read_transfers_the_stream(device: BrickletRS485, connection: FakeConnection) -> None:
     """The high-level function read() uses read_low_level()."""
     data = list(("abc" * 3)[:3])
     for offset in range(0, 1, 60):
@@ -579,7 +579,9 @@ def test_read_transfers_the_stream(device, connection):
     assert result == ("abc" * 3)[:3]
 
 
-def test_modbus_slave_answer_read_coils_request_transfers_the_stream(device, connection):
+def test_modbus_slave_answer_read_coils_request_transfers_the_stream(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The high-level function modbus_slave_answer_read_coils_request() uses modbus_slave_answer_read_coils_request_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     result = run(device.modbus_slave_answer_read_coils_request(*(3, data)))
@@ -594,7 +596,9 @@ def test_modbus_slave_answer_read_coils_request_transfers_the_stream(device, con
     assert result is None
 
 
-def test_modbus_slave_answer_read_holding_registers_request_transfers_the_stream(device, connection):
+def test_modbus_slave_answer_read_holding_registers_request_transfers_the_stream(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The high-level function modbus_slave_answer_read_holding_registers_request() uses modbus_slave_answer_read_holding_registers_request_low_level()."""
     data = [3] * 3
     result = run(device.modbus_slave_answer_read_holding_registers_request(*(3, data)))
@@ -609,7 +613,9 @@ def test_modbus_slave_answer_read_holding_registers_request_transfers_the_stream
     assert result is None
 
 
-def test_modbus_master_write_multiple_coils_transfers_the_stream(device, connection):
+def test_modbus_master_write_multiple_coils_transfers_the_stream(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The high-level function modbus_master_write_multiple_coils() uses modbus_master_write_multiple_coils_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     connection.reply(FunctionID.MODBUS_MASTER_WRITE_MULTIPLE_COILS_LOW_LEVEL, "B", *(3,))
@@ -625,7 +631,9 @@ def test_modbus_master_write_multiple_coils_transfers_the_stream(device, connect
     assert result is not None
 
 
-def test_modbus_master_write_multiple_registers_transfers_the_stream(device, connection):
+def test_modbus_master_write_multiple_registers_transfers_the_stream(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The high-level function modbus_master_write_multiple_registers() uses modbus_master_write_multiple_registers_low_level()."""
     data = [3] * 3
     connection.reply(FunctionID.MODBUS_MASTER_WRITE_MULTIPLE_REGISTERS_LOW_LEVEL, "B", *(3,))
@@ -641,7 +649,9 @@ def test_modbus_master_write_multiple_registers_transfers_the_stream(device, con
     assert result is not None
 
 
-def test_modbus_slave_answer_read_discrete_inputs_request_transfers_the_stream(device, connection):
+def test_modbus_slave_answer_read_discrete_inputs_request_transfers_the_stream(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The high-level function modbus_slave_answer_read_discrete_inputs_request() uses modbus_slave_answer_read_discrete_inputs_request_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     result = run(device.modbus_slave_answer_read_discrete_inputs_request(*(3, data)))
@@ -656,7 +666,9 @@ def test_modbus_slave_answer_read_discrete_inputs_request_transfers_the_stream(d
     assert result is None
 
 
-def test_modbus_slave_answer_read_input_registers_request_transfers_the_stream(device, connection):
+def test_modbus_slave_answer_read_input_registers_request_transfers_the_stream(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The high-level function modbus_slave_answer_read_input_registers_request() uses modbus_slave_answer_read_input_registers_request_low_level()."""
     data = [3] * 3
     result = run(device.modbus_slave_answer_read_input_registers_request(*(3, data)))
@@ -671,7 +683,7 @@ def test_modbus_slave_answer_read_input_registers_request_transfers_the_stream(d
     assert result is None
 
 
-def test_callback_read(device, connection):
+def test_callback_read(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback READ is converted to an event."""
     data = list(("abc" * 3)[:3])
     for offset in range(0, 1, 60):
@@ -681,16 +693,16 @@ def test_callback_read(device, connection):
     assert events[0].payload == ("abc" * 3)[:3]
     connection_2 = FakeConnection()
     connection_2.callback(CallbackID.READ, "H H 60c", *(63, 60, chunk(data, 0, 60, "\x00")))
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))
 
 
-def test_callback_error_count(device, connection):
+def test_callback_error_count(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback ERROR_COUNT is converted to an event."""
     connection.callback(CallbackID.ERROR_COUNT, "I I", *(3, 4))
     assert summary(read_events(device)) == [(0, CallbackID.ERROR_COUNT, GetErrorCount(3, 4))]
 
 
-def test_callback_modbus_slave_read_coils_request(device, connection):
+def test_callback_modbus_slave_read_coils_request(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback MODBUS_SLAVE_READ_COILS_REQUEST is converted to an event."""
     connection.callback(CallbackID.MODBUS_SLAVE_READ_COILS_REQUEST, "B I H", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -698,7 +710,7 @@ def test_callback_modbus_slave_read_coils_request(device, connection):
     ]
 
 
-def test_callback_modbus_master_read_coils_response(device, connection):
+def test_callback_modbus_master_read_coils_response(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback MODBUS_MASTER_READ_COILS_RESPONSE is converted to an event."""
     data = [i % 2 == 0 for i in range(3)]
     for offset in range(0, 1, 464):
@@ -714,10 +726,12 @@ def test_callback_modbus_master_read_coils_response(device, connection):
     connection_2.callback(
         CallbackID.MODBUS_MASTER_READ_COILS_RESPONSE, "B b H H 464!", *(3, 11, 467, 464, chunk(data, 0, 464, False))
     )
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))
 
 
-def test_callback_modbus_slave_read_holding_registers_request(device, connection):
+def test_callback_modbus_slave_read_holding_registers_request(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The callback MODBUS_SLAVE_READ_HOLDING_REGISTERS_REQUEST is converted to an event."""
     connection.callback(CallbackID.MODBUS_SLAVE_READ_HOLDING_REGISTERS_REQUEST, "B I H", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -729,7 +743,9 @@ def test_callback_modbus_slave_read_holding_registers_request(device, connection
     ]
 
 
-def test_callback_modbus_master_read_holding_registers_response(device, connection):
+def test_callback_modbus_master_read_holding_registers_response(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The callback MODBUS_MASTER_READ_HOLDING_REGISTERS_RESPONSE is converted to an event."""
     data = [3] * 3
     for offset in range(0, 1, 29):
@@ -747,10 +763,10 @@ def test_callback_modbus_master_read_holding_registers_response(device, connecti
     connection_2.callback(
         CallbackID.MODBUS_MASTER_READ_HOLDING_REGISTERS_RESPONSE, "B b H H 29H", *(3, 11, 32, 29, chunk(data, 0, 29, 0))
     )
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))
 
 
-def test_callback_modbus_slave_write_single_coil_request(device, connection):
+def test_callback_modbus_slave_write_single_coil_request(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback MODBUS_SLAVE_WRITE_SINGLE_COIL_REQUEST is converted to an event."""
     connection.callback(CallbackID.MODBUS_SLAVE_WRITE_SINGLE_COIL_REQUEST, "B I !", *(3, 4, True))
     assert summary(read_events(device)) == [
@@ -758,7 +774,7 @@ def test_callback_modbus_slave_write_single_coil_request(device, connection):
     ]
 
 
-def test_callback_modbus_master_write_single_coil_response(device, connection):
+def test_callback_modbus_master_write_single_coil_response(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback MODBUS_MASTER_WRITE_SINGLE_COIL_RESPONSE is converted to an event."""
     connection.callback(CallbackID.MODBUS_MASTER_WRITE_SINGLE_COIL_RESPONSE, "B b", *(3, 11))
     assert summary(read_events(device)) == [
@@ -770,7 +786,7 @@ def test_callback_modbus_master_write_single_coil_response(device, connection):
     ]
 
 
-def test_callback_modbus_slave_write_single_register_request(device, connection):
+def test_callback_modbus_slave_write_single_register_request(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST is converted to an event."""
     connection.callback(CallbackID.MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST, "B I H", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -778,7 +794,9 @@ def test_callback_modbus_slave_write_single_register_request(device, connection)
     ]
 
 
-def test_callback_modbus_master_write_single_register_response(device, connection):
+def test_callback_modbus_master_write_single_register_response(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The callback MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE is converted to an event."""
     connection.callback(CallbackID.MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE, "B b", *(3, 11))
     assert summary(read_events(device)) == [
@@ -792,7 +810,7 @@ def test_callback_modbus_master_write_single_register_response(device, connectio
     ]
 
 
-def test_callback_modbus_slave_write_multiple_coils_request(device, connection):
+def test_callback_modbus_slave_write_multiple_coils_request(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback MODBUS_SLAVE_WRITE_MULTIPLE_COILS_REQUEST is converted to an event."""
     data = [i % 2 == 0 for i in range(3)]
     for offset in range(0, 1, 440):
@@ -812,10 +830,12 @@ def test_callback_modbus_slave_write_multiple_coils_request(device, connection):
         "B I H H 440!",
         *(3, 4, 443, 440, chunk(data, 0, 440, False)),
     )
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))
 
 
-def test_callback_modbus_master_write_multiple_coils_response(device, connection):
+def test_callback_modbus_master_write_multiple_coils_response(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The callback MODBUS_MASTER_WRITE_MULTIPLE_COILS_RESPONSE is converted to an event."""
     connection.callback(CallbackID.MODBUS_MASTER_WRITE_MULTIPLE_COILS_RESPONSE, "B b", *(3, 11))
     assert summary(read_events(device)) == [
@@ -829,7 +849,9 @@ def test_callback_modbus_master_write_multiple_coils_response(device, connection
     ]
 
 
-def test_callback_modbus_slave_write_multiple_registers_request(device, connection):
+def test_callback_modbus_slave_write_multiple_registers_request(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The callback MODBUS_SLAVE_WRITE_MULTIPLE_REGISTERS_REQUEST is converted to an event."""
     data = [3] * 3
     for offset in range(0, 1, 27):
@@ -847,10 +869,12 @@ def test_callback_modbus_slave_write_multiple_registers_request(device, connecti
     connection_2.callback(
         CallbackID.MODBUS_SLAVE_WRITE_MULTIPLE_REGISTERS_REQUEST, "B I H H 27H", *(3, 4, 30, 27, chunk(data, 0, 27, 0))
     )
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))
 
 
-def test_callback_modbus_master_write_multiple_registers_response(device, connection):
+def test_callback_modbus_master_write_multiple_registers_response(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The callback MODBUS_MASTER_WRITE_MULTIPLE_REGISTERS_RESPONSE is converted to an event."""
     connection.callback(CallbackID.MODBUS_MASTER_WRITE_MULTIPLE_REGISTERS_RESPONSE, "B b", *(3, 11))
     assert summary(read_events(device)) == [
@@ -864,7 +888,7 @@ def test_callback_modbus_master_write_multiple_registers_response(device, connec
     ]
 
 
-def test_callback_modbus_slave_read_discrete_inputs_request(device, connection):
+def test_callback_modbus_slave_read_discrete_inputs_request(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback MODBUS_SLAVE_READ_DISCRETE_INPUTS_REQUEST is converted to an event."""
     connection.callback(CallbackID.MODBUS_SLAVE_READ_DISCRETE_INPUTS_REQUEST, "B I H", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -872,7 +896,9 @@ def test_callback_modbus_slave_read_discrete_inputs_request(device, connection):
     ]
 
 
-def test_callback_modbus_master_read_discrete_inputs_response(device, connection):
+def test_callback_modbus_master_read_discrete_inputs_response(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The callback MODBUS_MASTER_READ_DISCRETE_INPUTS_RESPONSE is converted to an event."""
     data = [i % 2 == 0 for i in range(3)]
     for offset in range(0, 1, 464):
@@ -892,10 +918,10 @@ def test_callback_modbus_master_read_discrete_inputs_response(device, connection
         "B b H H 464!",
         *(3, 11, 467, 464, chunk(data, 0, 464, False)),
     )
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))
 
 
-def test_callback_modbus_slave_read_input_registers_request(device, connection):
+def test_callback_modbus_slave_read_input_registers_request(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST is converted to an event."""
     connection.callback(CallbackID.MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST, "B I H", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -903,7 +929,9 @@ def test_callback_modbus_slave_read_input_registers_request(device, connection):
     ]
 
 
-def test_callback_modbus_master_read_input_registers_response(device, connection):
+def test_callback_modbus_master_read_input_registers_response(
+    device: BrickletRS485, connection: FakeConnection
+) -> None:
     """The callback MODBUS_MASTER_READ_INPUT_REGISTERS_RESPONSE is converted to an event."""
     data = [3] * 3
     for offset in range(0, 1, 29):
@@ -921,10 +949,10 @@ def test_callback_modbus_master_read_input_registers_response(device, connection
     connection_2.callback(
         CallbackID.MODBUS_MASTER_READ_INPUT_REGISTERS_RESPONSE, "B b H H 29H", *(3, 11, 32, 29, chunk(data, 0, 29, 0))
     )
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))
 
 
-def test_callback_frame_readable(device, connection):
+def test_callback_frame_readable(device: BrickletRS485, connection: FakeConnection) -> None:
     """The callback FRAME_READABLE is converted to an event."""
     connection.callback(CallbackID.FRAME_READABLE, "H", *(3,))
     assert summary(read_events(device)) == [(11, CallbackID.FRAME_READABLE, 3)]

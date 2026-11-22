@@ -9,7 +9,7 @@ from tinkerforge_async.bricklet_e_paper_296x128 import BrickletEPaper296x128, Re
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletEPaper296x128
 FunctionID = BrickletEPaper296x128.FunctionID
@@ -217,14 +217,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletEPaper296x128) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2146
     assert device.get_api_version() == (2, 0, 1)
     assert str(device).startswith("E-Paper 296x128 Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -237,7 +237,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_write_black_white_transfers_the_stream(device, connection):
+def test_write_black_white_transfers_the_stream(device: BrickletEPaper296x128, connection: FakeConnection) -> None:
     """The high-level function write_black_white() uses write_black_white_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     result = run(device.write_black_white(*(3, 3, 3, 3, data)))
@@ -252,7 +252,7 @@ def test_write_black_white_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_read_black_white_transfers_the_stream(device, connection):
+def test_read_black_white_transfers_the_stream(device: BrickletEPaper296x128, connection: FakeConnection) -> None:
     """The high-level function read_black_white() uses read_black_white_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     for offset in range(0, 1, 464):
@@ -264,7 +264,7 @@ def test_read_black_white_transfers_the_stream(device, connection):
     assert result == tuple(i % 2 == 0 for i in range(3))
 
 
-def test_write_color_transfers_the_stream(device, connection):
+def test_write_color_transfers_the_stream(device: BrickletEPaper296x128, connection: FakeConnection) -> None:
     """The high-level function write_color() uses write_color_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     result = run(device.write_color(*(3, 3, 3, 3, data)))
@@ -279,7 +279,7 @@ def test_write_color_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_read_color_transfers_the_stream(device, connection):
+def test_read_color_transfers_the_stream(device: BrickletEPaper296x128, connection: FakeConnection) -> None:
     """The high-level function read_color() uses read_color_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     for offset in range(0, 1, 464):
@@ -289,7 +289,7 @@ def test_read_color_transfers_the_stream(device, connection):
     assert result == tuple(i % 2 == 0 for i in range(3))
 
 
-def test_callback_draw_status(device, connection):
+def test_callback_draw_status(device: BrickletEPaper296x128, connection: FakeConnection) -> None:
     """The callback DRAW_STATUS is converted to an event."""
     connection.callback(CallbackID.DRAW_STATUS, "B", *(2,))
     assert summary(read_events(device)) == [(0, CallbackID.DRAW_STATUS, DEVICE.DrawStatus.DRAWING)]

@@ -70,7 +70,7 @@ async def run_example(bricklet: BrickletAnalogIn) -> None:
         callback_task.cancel()
 
 
-async def shutdown(tasks: set[asyncio.Task]) -> None:
+async def shutdown(tasks: set[asyncio.Task[None]]) -> None:
     """Clean up by stopping all consumers"""
     for task in tasks:
         task.cancel()

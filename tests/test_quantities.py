@@ -8,14 +8,14 @@ import pytest
 from tinkerforge_async.quantities import CELSIUS_ZERO, TEMPERATURE, LinearQuantity, Quantity
 
 
-def test_scale():
+def test_scale() -> None:
     """The raw value is divided by the scale."""
     millivolt = Quantity(1000)
     assert millivolt.to_si(12345) == Decimal("12.345")
     assert millivolt.from_si(Decimal("12.345")) == 12345
 
 
-def test_offset():
+def test_offset() -> None:
     """The raw temperature is in 1/100 °C, the SI value is in K."""
     assert TEMPERATURE.to_si(2345) == Decimal("296.60")
     assert TEMPERATURE.to_si(-1000) == Decimal("263.15")
@@ -24,7 +24,7 @@ def test_offset():
     assert TEMPERATURE.from_si(CELSIUS_ZERO) == 0
 
 
-def test_result_types():
+def test_result_types() -> None:
     """The SI value is a Decimal, the raw value is an int, whatever type the SI value is passed as."""
     assert isinstance(TEMPERATURE.to_si(1), Decimal)
     for value in (296, 296.6, Decimal("296.6")):
@@ -32,7 +32,7 @@ def test_result_types():
 
 
 @pytest.mark.parametrize("quantity", [Quantity(10), Quantity(100), Quantity(1000), Quantity(10**9), TEMPERATURE])
-def test_round_trip(quantity):
+def test_round_trip(quantity: Quantity) -> None:
     """Converting a raw value to SI and back returns the raw value, also for floats."""
     generator = random.Random(1234)
     for _ in range(1000):
@@ -41,14 +41,14 @@ def test_round_trip(quantity):
         assert quantity.from_si(float(quantity.to_si(raw))) == raw
 
 
-def test_floats_are_rounded_not_truncated():
+def test_floats_are_rounded_not_truncated() -> None:
     """0.29 * 100 = 28.999999999999996 must not become 28."""
     assert Quantity(100).from_si(0.29) == 29
     assert Quantity(10**9).from_si(0.0029) == 2_900_000
     assert TEMPERATURE.from_si(296.6) == 2345
 
 
-def test_rounding_of_ties_matches_the_builtin_round():
+def test_rounding_of_ties_matches_the_builtin_round() -> None:
     """Values exactly between two raw values are rounded to the even value, like round() does. The offset is applied
     after rounding."""
     assert Quantity(10).from_si(Decimal("0.25")) == 2
@@ -56,7 +56,7 @@ def test_rounding_of_ties_matches_the_builtin_round():
     assert TEMPERATURE.from_si(Decimal("296.605")) == round(Decimal("29660.5")) - 27315
 
 
-def test_matches_the_formulas_of_the_bricklets():
+def test_matches_the_formulas_of_the_bricklets() -> None:
     """The generic conversion gives the same result as the formulas that were used by the Bricklets before."""
     for raw in range(-30000, 30000, 7):
         assert TEMPERATURE.to_si(raw) == Decimal(raw + 27315) / 100
@@ -65,7 +65,7 @@ def test_matches_the_formulas_of_the_bricklets():
         assert TEMPERATURE.from_si(value) == round(value * 100) - 27315
 
 
-def test_linear_quantity_with_a_rational_scale():
+def test_linear_quantity_with_a_rational_scale() -> None:
     """The scale does not need to be the inverse of an integer, e.g. 1/16 °/s or 5/18 m/s per km/h."""
     degree_per_second = LinearQuantity(1, 16)
     assert degree_per_second.to_si(-8) == Decimal("-0.5")
@@ -77,7 +77,7 @@ def test_linear_quantity_with_a_rational_scale():
     assert gravity.to_si(2) == Decimal("19.6133")
 
 
-def test_linear_quantity_with_an_offset():
+def test_linear_quantity_with_an_offset() -> None:
     """A temperature in 1/10 °C is converted to K."""
     temperature = LinearQuantity(1, 10, CELSIUS_ZERO)
     assert temperature.to_si(250) == Decimal("298.15")
@@ -86,7 +86,7 @@ def test_linear_quantity_with_an_offset():
     assert temperature.from_si(273.25) == 1
 
 
-def test_linear_quantity_of_floating_point_values():
+def test_linear_quantity_of_floating_point_values() -> None:
     """Some devices transfer floats. Floats are converted without the binary representation error."""
     hectopascal = LinearQuantity(100)
     assert hectopascal.to_si(1013.25) == Decimal("101325.00")

@@ -11,7 +11,7 @@ import warnings
 from tinkerforge_async import IPConnectionAsync
 
 
-async def main():
+async def main() -> None:
     """
     The main loop, that will spawn all callback handlers and wait until they are done. There are two callback handlers,
     one waits for the bricklet to connect and run the demo, the other handles messages sent by the bricklet.
