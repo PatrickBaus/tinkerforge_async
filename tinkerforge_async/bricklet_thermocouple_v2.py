@@ -169,6 +169,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
     async def get_value(self, sid: int) -> Decimal | GetErrorState:
         return cast(Decimal | GetErrorState, await self._get_value(sid))
 
+    @override
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
@@ -183,6 +184,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
+    @override
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         # Only the temperature (sid 0) has a callback configuration. The error state is always reported.
         return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))

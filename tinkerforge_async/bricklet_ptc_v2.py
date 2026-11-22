@@ -165,12 +165,13 @@ class BrickletPtcV2(BrickletWithMCU):
     async def get_value(self, sid: int) -> Decimal | bool:
         return cast(Decimal | bool, await self._get_value(sid))
 
+    @override
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
         period: Duration = 0,
         value_has_to_change: bool = False,
-        option: Threshold = Threshold.OFF,
+        option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
@@ -180,6 +181,7 @@ class BrickletPtcV2(BrickletWithMCU):
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
+    @override
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         # The sensor connected callback (sid 2) cannot be configured.
         return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))

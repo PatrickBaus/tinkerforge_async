@@ -189,7 +189,9 @@ conventions as the hand-written modules:
   `*_low_level()` functions are available, too. Streamed callbacks are reassembled before they are yielded by
   `read_events()`.
 - `get_value()`, `set_callback_configuration()` and `get_callback_configuration()` work with the secondary ids
-  (sids) listed in the `CHANNELS` table of each device.
+  (sids) listed in the `CHANNELS` table of each device. `set_callback_configuration()` and
+  `get_callback_configuration()` are methods of `Device`, so they can be called on any Brick or Bricklet. Devices
+  without such a channel raise an `InvalidSidError`.
 
 The function ids and payload formats are checked against the official Python bindings by the tests.
 ## Documentation

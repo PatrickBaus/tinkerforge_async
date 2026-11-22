@@ -136,6 +136,7 @@ class BrickletXMC1400Breakout(BrickletWithMCU):  # pylint: disable=too-many-publ
         """
         return await self._get_value(sid)
 
+    @override
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sid: int,
@@ -154,6 +155,7 @@ class BrickletXMC1400Breakout(BrickletWithMCU):  # pylint: disable=too-many-publ
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
+    @override
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
