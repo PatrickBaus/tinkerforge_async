@@ -5,7 +5,7 @@
 from decimal import Decimal
 from typing import Any
 
-from tinkerforge_async.bricklet_nfc_rfid import BrickletNFCRFID, GetState, GetTagID
+from tinkerforge_async.bricklet_nfc_rfid import BrickletNFCRFID, GetState, GetTagID, StateChangedEvent
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
@@ -122,5 +122,5 @@ def test_callback_state_changed(device, connection):
     """The callback STATE_CHANGED is converted to an event."""
     connection.callback(CallbackID.STATE_CHANGED, "B !", *(197, True))
     assert summary(read_events(device)) == [
-        (0, CallbackID.STATE_CHANGED, GetState(DEVICE.State.REQUEST_PAGE_ERROR, True))
+        (0, CallbackID.STATE_CHANGED, StateChangedEvent(DEVICE.State.REQUEST_PAGE_ERROR, True))
     ]

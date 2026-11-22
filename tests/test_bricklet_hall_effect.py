@@ -5,7 +5,7 @@
 from decimal import Decimal
 from typing import Any
 
-from tinkerforge_async.bricklet_hall_effect import BrickletHallEffect, EdgeInterrupt, GetEdgeCountConfig
+from tinkerforge_async.bricklet_hall_effect import BrickletHallEffect, EdgeCountEvent, EdgeInterrupt, GetEdgeCountConfig
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
@@ -109,4 +109,4 @@ class TestRequests(DeviceTests):
 def test_callback_edge_count(device, connection):
     """The callback EDGE_COUNT is converted to an event."""
     connection.callback(CallbackID.EDGE_COUNT, "I !", *(3, True))
-    assert summary(read_events(device)) == [(0, CallbackID.EDGE_COUNT, EdgeInterrupt(3, True))]
+    assert summary(read_events(device)) == [(0, CallbackID.EDGE_COUNT, EdgeCountEvent(3, True))]

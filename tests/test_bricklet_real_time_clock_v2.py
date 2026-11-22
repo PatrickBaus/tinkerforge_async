@@ -5,7 +5,7 @@
 from decimal import Decimal
 from typing import Any
 
-from tinkerforge_async.bricklet_real_time_clock_v2 import BrickletRealTimeClockV2, GetAlarm, GetDateTime
+from tinkerforge_async.bricklet_real_time_clock_v2 import AlarmEvent, BrickletRealTimeClockV2, GetAlarm, GetDateTime
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
@@ -251,5 +251,5 @@ def test_callback_alarm(device, connection):
     """The callback ALARM is converted to an event."""
     connection.callback(CallbackID.ALARM, "H B B B B B B B q", *(2000, 4, 5, 6, 7, 8, 9, 7, 11))
     assert summary(read_events(device)) == [
-        (1, CallbackID.ALARM, GetDateTime(2000, 4, 5, 6, 7, 8, 9, DEVICE.Weekday.SUNDAY, Decimal("0.011")))
+        (1, CallbackID.ALARM, AlarmEvent(2000, 4, 5, 6, 7, 8, 9, DEVICE.Weekday.SUNDAY, Decimal("0.011")))
     ]

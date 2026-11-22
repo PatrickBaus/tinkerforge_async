@@ -410,7 +410,7 @@ def test_callback_magnetic_field(device, connection):
     """The callback MAGNETIC_FIELD is converted to an event."""
     connection.callback(CallbackID.MAGNETIC_FIELD, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
-        (1, CallbackID.MAGNETIC_FIELD, GetAcceleration(Decimal("3E-7"), Decimal("4E-7"), Decimal("5E-7")))
+        (1, CallbackID.MAGNETIC_FIELD, GetMagneticField(Decimal("3E-7"), Decimal("4E-7"), Decimal("5E-7")))
     ]
 
 
@@ -421,7 +421,7 @@ def test_callback_angular_velocity(device, connection):
         (
             2,
             CallbackID.ANGULAR_VELOCITY,
-            GetAcceleration(
+            GetAngularVelocity(
                 Decimal("0.2086956521739130434782608696"),
                 Decimal("0.2782608695652173913043478261"),
                 Decimal("0.3478260869565217391304347826"),

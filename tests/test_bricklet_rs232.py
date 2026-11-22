@@ -5,7 +5,7 @@
 from decimal import Decimal
 from typing import Any
 
-from tinkerforge_async.bricklet_rs232 import BrickletRS232, GetConfiguration, Read, ReadFrame
+from tinkerforge_async.bricklet_rs232 import BrickletRS232, GetConfiguration, Read, ReadEvent, ReadFrame
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
@@ -228,7 +228,7 @@ class TestRequests(DeviceTests):
 def test_callback_read(device, connection):
     """The callback READ is converted to an event."""
     connection.callback(CallbackID.READ, "60c B", *(list(("abcdefgh" * 60)[:60]), 4))
-    assert summary(read_events(device)) == [(0, CallbackID.READ, Read(tuple(("abcdefgh" * 60)[:60]), 4))]
+    assert summary(read_events(device)) == [(0, CallbackID.READ, ReadEvent(tuple(("abcdefgh" * 60)[:60]), 4))]
 
 
 def test_callback_error(device, connection):

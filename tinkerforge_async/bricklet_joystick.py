@@ -383,13 +383,13 @@ class BrickletJoystick(Device):  # pylint: disable=too-many-public-methods,too-f
             return 0, GetPosition(x, y)
         if callback_id is CallbackID.ANALOG_VALUE:
             x, y = value
-            return 1, GetPosition(x, y)
+            return 1, GetAnalogValue(x, y)
         if callback_id is CallbackID.POSITION_REACHED:
             x, y = value
             return 2, GetPosition(x, y)
         if callback_id is CallbackID.ANALOG_VALUE_REACHED:
             x, y = value
-            return 3, GetPosition(x, y)
+            return 3, GetAnalogValue(x, y)
         if callback_id is CallbackID.PRESSED:
             return 4, None
         return 5, None

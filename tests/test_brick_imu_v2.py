@@ -517,7 +517,7 @@ def test_callback_magnetic_field(device, connection):
     """The callback MAGNETIC_FIELD is converted to an event."""
     connection.callback(CallbackID.MAGNETIC_FIELD, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
-        (1, CallbackID.MAGNETIC_FIELD, GetAcceleration(Decimal("1.875E-7"), Decimal("2.5E-7"), Decimal("3.125E-7")))
+        (1, CallbackID.MAGNETIC_FIELD, GetMagneticField(Decimal("1.875E-7"), Decimal("2.5E-7"), Decimal("3.125E-7")))
     ]
 
 
@@ -525,7 +525,7 @@ def test_callback_angular_velocity(device, connection):
     """The callback ANGULAR_VELOCITY is converted to an event."""
     connection.callback(CallbackID.ANGULAR_VELOCITY, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
-        (2, CallbackID.ANGULAR_VELOCITY, GetAcceleration(Decimal("0.1875"), Decimal("0.25"), Decimal("0.3125")))
+        (2, CallbackID.ANGULAR_VELOCITY, GetAngularVelocity(Decimal("0.1875"), Decimal("0.25"), Decimal("0.3125")))
     ]
 
 
@@ -539,7 +539,7 @@ def test_callback_linear_acceleration(device, connection):
     """The callback LINEAR_ACCELERATION is converted to an event."""
     connection.callback(CallbackID.LINEAR_ACCELERATION, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
-        (4, CallbackID.LINEAR_ACCELERATION, GetAcceleration(Decimal("0.03"), Decimal("0.04"), Decimal("0.05")))
+        (4, CallbackID.LINEAR_ACCELERATION, GetLinearAcceleration(Decimal("0.03"), Decimal("0.04"), Decimal("0.05")))
     ]
 
 
@@ -547,7 +547,7 @@ def test_callback_gravity_vector(device, connection):
     """The callback GRAVITY_VECTOR is converted to an event."""
     connection.callback(CallbackID.GRAVITY_VECTOR, "h h h", *(3, 4, 5))
     assert summary(read_events(device)) == [
-        (5, CallbackID.GRAVITY_VECTOR, GetAcceleration(Decimal("0.03"), Decimal("0.04"), Decimal("0.05")))
+        (5, CallbackID.GRAVITY_VECTOR, GetGravityVector(Decimal("0.03"), Decimal("0.04"), Decimal("0.05")))
     ]
 
 

@@ -996,18 +996,18 @@ class BrickletIMUV3(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             return 0, GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
         if callback_id is CallbackID.MAGNETIC_FIELD:
             x, y, z = value
-            return 1, GetAcceleration(X_2.to_si(x), Y_2.to_si(y), Z_2.to_si(z))
+            return 1, GetMagneticField(X_2.to_si(x), Y_2.to_si(y), Z_2.to_si(z))
         if callback_id is CallbackID.ANGULAR_VELOCITY:
             x, y, z = value
-            return 2, GetAcceleration(X_3.to_si(x), Y_3.to_si(y), Z_3.to_si(z))
+            return 2, GetAngularVelocity(X_3.to_si(x), Y_3.to_si(y), Z_3.to_si(z))
         if callback_id is CallbackID.TEMPERATURE:
             return 3, TEMPERATURE_2.to_si(value)
         if callback_id is CallbackID.LINEAR_ACCELERATION:
             x, y, z = value
-            return 4, GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+            return 4, GetLinearAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
         if callback_id is CallbackID.GRAVITY_VECTOR:
             x, y, z = value
-            return 5, GetAcceleration(X.to_si(x), Y.to_si(y), Z.to_si(z))
+            return 5, GetGravityVector(X.to_si(x), Y.to_si(y), Z.to_si(z))
         if callback_id is CallbackID.ORIENTATION:
             heading, roll, pitch = value
             return 6, GetOrientation(HEADING.to_si(heading), ROLL.to_si(roll), PITCH.to_si(pitch))

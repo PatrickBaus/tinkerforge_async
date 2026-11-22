@@ -13,8 +13,14 @@ from tinkerforge_async.bricklet_rs485 import (
     GetModbusCommonErrorCount,
     GetModbusConfiguration,
     GetRS485Configuration,
+    ModbusMasterWriteMultipleCoilsResponseEvent,
+    ModbusMasterWriteMultipleRegistersResponseEvent,
     ModbusMasterWriteSingleCoilResponseEvent,
+    ModbusMasterWriteSingleRegisterResponseEvent,
     ModbusSlaveReadCoilsRequestEvent,
+    ModbusSlaveReadDiscreteInputsRequestEvent,
+    ModbusSlaveReadHoldingRegistersRequestEvent,
+    ModbusSlaveReadInputRegistersRequestEvent,
     ModbusSlaveWriteSingleCoilRequestEvent,
     ModbusSlaveWriteSingleRegisterRequestEvent,
     Read,
@@ -715,7 +721,11 @@ def test_callback_modbus_slave_read_holding_registers_request(device, connection
     """The callback MODBUS_SLAVE_READ_HOLDING_REGISTERS_REQUEST is converted to an event."""
     connection.callback(CallbackID.MODBUS_SLAVE_READ_HOLDING_REGISTERS_REQUEST, "B I H", *(3, 4, 5))
     assert summary(read_events(device)) == [
-        (2, CallbackID.MODBUS_SLAVE_READ_HOLDING_REGISTERS_REQUEST, ModbusSlaveReadCoilsRequestEvent(3, 4, 5))
+        (
+            2,
+            CallbackID.MODBUS_SLAVE_READ_HOLDING_REGISTERS_REQUEST,
+            ModbusSlaveReadHoldingRegistersRequestEvent(3, 4, 5),
+        )
     ]
 
 
@@ -775,7 +785,9 @@ def test_callback_modbus_master_write_single_register_response(device, connectio
         (
             6,
             CallbackID.MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE,
-            ModbusMasterWriteSingleCoilResponseEvent(3, DEVICE.ExceptionCode.GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND),
+            ModbusMasterWriteSingleRegisterResponseEvent(
+                3, DEVICE.ExceptionCode.GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND
+            ),
         )
     ]
 
@@ -810,7 +822,9 @@ def test_callback_modbus_master_write_multiple_coils_response(device, connection
         (
             7,
             CallbackID.MODBUS_MASTER_WRITE_MULTIPLE_COILS_RESPONSE,
-            ModbusMasterWriteSingleCoilResponseEvent(3, DEVICE.ExceptionCode.GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND),
+            ModbusMasterWriteMultipleCoilsResponseEvent(
+                3, DEVICE.ExceptionCode.GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND
+            ),
         )
     ]
 
@@ -843,7 +857,9 @@ def test_callback_modbus_master_write_multiple_registers_response(device, connec
         (
             8,
             CallbackID.MODBUS_MASTER_WRITE_MULTIPLE_REGISTERS_RESPONSE,
-            ModbusMasterWriteSingleCoilResponseEvent(3, DEVICE.ExceptionCode.GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND),
+            ModbusMasterWriteMultipleRegistersResponseEvent(
+                3, DEVICE.ExceptionCode.GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND
+            ),
         )
     ]
 
@@ -852,7 +868,7 @@ def test_callback_modbus_slave_read_discrete_inputs_request(device, connection):
     """The callback MODBUS_SLAVE_READ_DISCRETE_INPUTS_REQUEST is converted to an event."""
     connection.callback(CallbackID.MODBUS_SLAVE_READ_DISCRETE_INPUTS_REQUEST, "B I H", *(3, 4, 5))
     assert summary(read_events(device)) == [
-        (9, CallbackID.MODBUS_SLAVE_READ_DISCRETE_INPUTS_REQUEST, ModbusSlaveReadCoilsRequestEvent(3, 4, 5))
+        (9, CallbackID.MODBUS_SLAVE_READ_DISCRETE_INPUTS_REQUEST, ModbusSlaveReadDiscreteInputsRequestEvent(3, 4, 5))
     ]
 
 
@@ -883,7 +899,7 @@ def test_callback_modbus_slave_read_input_registers_request(device, connection):
     """The callback MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST is converted to an event."""
     connection.callback(CallbackID.MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST, "B I H", *(3, 4, 5))
     assert summary(read_events(device)) == [
-        (10, CallbackID.MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST, ModbusSlaveReadCoilsRequestEvent(3, 4, 5))
+        (10, CallbackID.MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST, ModbusSlaveReadInputRegistersRequestEvent(3, 4, 5))
     ]
 
 
