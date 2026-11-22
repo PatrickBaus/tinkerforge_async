@@ -63,7 +63,7 @@
 | tinkerforge\_async/bricklet\_gps.py                              |      160 |        0 |        8 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_gps\_v2.py                          |      227 |        0 |       10 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_gps\_v3.py                          |      227 |        0 |       10 |        0 |     100% |           |
-| tinkerforge\_async/bricklet\_hall\_effect.py                     |       78 |        0 |        0 |        0 |     100% |           |
+| tinkerforge\_async/bricklet\_hall\_effect.py                     |       81 |        0 |        0 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_hall\_effect\_v2.py                 |       91 |        0 |        2 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_humidity.py                         |       97 |        0 |       12 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_humidity\_v2.py                     |      122 |        0 |       18 |        0 |     100% |           |
@@ -110,8 +110,8 @@
 | tinkerforge\_async/bricklet\_motorized\_linear\_poti.py          |       84 |        0 |        2 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_multi\_touch.py                     |       50 |        0 |        0 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_multi\_touch\_v2.py                 |       82 |        0 |        0 |        0 |     100% |           |
-| tinkerforge\_async/bricklet\_nfc.py                              |      379 |        0 |        6 |        0 |     100% |           |
-| tinkerforge\_async/bricklet\_nfc\_rfid.py                        |       95 |        0 |        0 |        0 |     100% |           |
+| tinkerforge\_async/bricklet\_nfc.py                              |      388 |        0 |        6 |        0 |     100% |           |
+| tinkerforge\_async/bricklet\_nfc\_rfid.py                        |       98 |        0 |        0 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_oled\_64x48.py                      |       59 |        0 |        0 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_oled\_128x64.py                     |       59 |        0 |        0 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_oled\_128x64\_v2.py                 |      105 |        0 |        0 |        0 |     100% |           |
@@ -124,8 +124,8 @@
 | tinkerforge\_async/bricklet\_piezo\_speaker\_v2.py               |       97 |        0 |        2 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_ptc.py                              |      160 |        0 |       14 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_ptc\_v2.py                          |      159 |        0 |       30 |        0 |     100% |           |
-| tinkerforge\_async/bricklet\_real\_time\_clock.py                |      128 |        0 |        2 |        0 |     100% |           |
-| tinkerforge\_async/bricklet\_real\_time\_clock\_v2.py            |      119 |        0 |        2 |        0 |     100% |           |
+| tinkerforge\_async/bricklet\_real\_time\_clock.py                |      138 |        0 |        2 |        0 |     100% |           |
+| tinkerforge\_async/bricklet\_real\_time\_clock\_v2.py            |      129 |        0 |        2 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_remote\_switch.py                   |       81 |        0 |        0 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_remote\_switch\_v2.py               |      137 |        0 |        6 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_rgb\_led.py                         |       38 |        0 |        0 |        0 |     100% |           |
@@ -136,9 +136,9 @@
 | tinkerforge\_async/bricklet\_rotary\_encoder\_v2.py              |       59 |        0 |        4 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_rotary\_poti.py                     |      104 |        0 |        6 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_rotary\_poti\_v2.py                 |       54 |        0 |        0 |        0 |     100% |           |
-| tinkerforge\_async/bricklet\_rs232.py                            |      145 |        0 |        4 |        0 |     100% |           |
+| tinkerforge\_async/bricklet\_rs232.py                            |      148 |        0 |        4 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_rs232\_v2.py                        |      185 |        0 |       42 |        0 |     100% |           |
-| tinkerforge\_async/bricklet\_rs485.py                            |      560 |        0 |       50 |        0 |     100% |           |
+| tinkerforge\_async/bricklet\_rs485.py                            |      581 |        0 |       50 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_segment\_display\_4x7.py            |       52 |        0 |       12 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_segment\_display\_4x7\_v2.py        |       75 |        0 |       16 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_servo\_v2.py                        |      218 |        0 |        0 |        0 |     100% |           |
@@ -168,7 +168,7 @@
 | tinkerforge\_async/ip\_connection\_helper.py                     |       85 |        0 |       48 |        0 |     100% |           |
 | tinkerforge\_async/quantities.py                                 |       27 |        0 |        0 |        0 |     100% |           |
 | tinkerforge\_async/streams.py                                    |       77 |        0 |       36 |        0 |     100% |           |
-| **TOTAL**                                                        | **22135** |    **0** | **1320** |    **0** | **100%** |           |
+| **TOTAL**                                                        | **22194** |    **0** | **1320** |    **0** | **100%** |           |
 
 
 ## Setup coverage badge
