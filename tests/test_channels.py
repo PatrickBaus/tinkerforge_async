@@ -43,10 +43,10 @@ def methods(configuration):
 
 def test_the_tables_are_used_by_all_the_devices_with_sids():
     """
-    Guard against a device that is not converted. Devices with a bitmask (IO-16, IO-4) have no table. 77 of the
-    devices have callbacks and therefore a table.
+    Guard against a device that is not converted. Devices with a bitmask (IO-16, IO-4) have no table. 111 of the
+    generated devices have callbacks and therefore a table.
     """
-    assert len(DEVICES) == 18 + 77
+    assert len(DEVICES) == 18 + 111
 
 
 @pytest.mark.parametrize("device_class", DEVICES, ids=lambda cls: cls.__name__)

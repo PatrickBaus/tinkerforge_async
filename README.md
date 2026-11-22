@@ -15,50 +15,68 @@ The library is fully type-hinted.
 
 | Brick                                                                                                | Supported          | Tested             |
 |------------------------------------------------------------------------------------------------------|--------------------|--------------------|
+| [DC (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricks/DC_Brick.html)                | :heavy_check_mark: |                    |
 | [ESP32](https://www.tinkerforge.com/en/doc/Software/Bricks/ESP32_Brick_Python.html)                  | :heavy_check_mark: |                    |
 | [ESP32 Ethernet](https://www.tinkerforge.com/en/doc/Software/Bricks/ESP32Ethernet_Brick_Python.html) | :heavy_check_mark: |                    |
 | [HAT](https://www.tinkerforge.com/en/doc/Software/Bricks/HAT_Brick_Python.html)                      | :heavy_check_mark: |                    |
 | [HAT Zero](https://www.tinkerforge.com/en/doc/Software/Bricks/HATZero_Brick_Python.html)             | :heavy_check_mark: |                    |
+| [IMU (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricks/IMU_Brick.html)              | :heavy_check_mark: |                    |
 | [IMU 2.0](https://www.tinkerforge.com/en/doc/Software/Bricks/IMUV2_Brick_Python.html)                | :heavy_check_mark: |                    |
 | [Master](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Master_Brick.html)                       | :heavy_check_mark: | :heavy_check_mark: |
 | [RED](https://www.tinkerforge.com/en/doc/Software/Bricks/RED_Brick_Python.html)                      | :heavy_check_mark: |                    |
+| [Servo (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Servo_Brick.html)          | :heavy_check_mark: |                    |
 | [Silent Stepper](https://www.tinkerforge.com/en/doc/Software/Bricks/SilentStepper_Brick_Python.html) | :heavy_check_mark: |                    |
+| [Stepper (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricks/Stepper_Brick.html)      | :heavy_check_mark: |                    |
 
 | Bricklet                                                                                                                           | Supported          | Tested             |
 |------------------------------------------------------------------------------------------------------------------------------------|--------------------|--------------------|
+| [Accelerometer (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Accelerometer.html)                           | :heavy_check_mark: |                    |
 | [Accelerometer 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/AccelerometerV2_Bricklet_Python.html)                    | :heavy_check_mark: |                    |
 | [Air Quality](https://www.tinkerforge.com/en/doc/Software/Bricklets/AirQuality_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
-| [Ambient Light 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V2.html)                                   | :heavy_check_mark: | :heavy_check_mark: |
+| [Ambient Light (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light.html)                           | :heavy_check_mark: |                    |
+| [Ambient Light 2.0 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V2.html)                    | :heavy_check_mark: | :heavy_check_mark: |
 | [Ambient Light 3.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Ambient_Light_V3.html)                                   | :heavy_check_mark: | :heavy_check_mark: |
-| [Analog In](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)                                                  | :heavy_check_mark: | :heavy_check_mark: |
+| [Analog In (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In.html)                                   | :heavy_check_mark: | :heavy_check_mark: |
+| [Analog In 2.0 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_In_V2.html)                            | :heavy_check_mark: |                    |
 | [Analog In 3.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/AnalogInV3_Bricklet_Python.html)                             | :heavy_check_mark: |                    |
+| [Analog Out (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_Out.html)                                 | :heavy_check_mark: |                    |
+| [Analog Out 2.0 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Analog_Out_V2.html)                          | :heavy_check_mark: |                    |
 | [Analog Out 3.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/AnalogOutV3_Bricklet_Python.html)                           | :heavy_check_mark: |                    |
 | [Barometer](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer.html)                                                  | :heavy_check_mark: | :heavy_check_mark: |
 | [Barometer 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Barometer_V2.html)                                           | :heavy_check_mark: | :heavy_check_mark: |
 | [CAN](https://www.tinkerforge.com/en/doc/Software/Bricklets/CAN_Bricklet_Python.html)                                              | :heavy_check_mark: |                    |
 | [CAN 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/CANV2_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
+| [CO2 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/CO2.html)                                               | :heavy_check_mark: |                    |
 | [CO2 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/CO2V2_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
 | [Color](https://www.tinkerforge.com/en/doc/Software/Bricklets/Color_Bricklet_Python.html)                                          | :heavy_check_mark: |                    |
 | [Color 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/ColorV2_Bricklet_Python.html)                                    | :heavy_check_mark: |                    |
 | [Compass](https://www.tinkerforge.com/en/doc/Software/Bricklets/Compass_Bricklet_Python.html)                                      | :heavy_check_mark: |                    |
+| [Current12 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Current12.html)                                   | :heavy_check_mark: |                    |
+| [Current25 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Current25.html)                                   | :heavy_check_mark: |                    |
 | [DC 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/DCV2_Bricklet_Python.html)                                          | :heavy_check_mark: |                    |
 | [Distance IR](https://www.tinkerforge.com/en/doc/Software/Bricklets/DistanceIR_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
 | [Distance IR 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/DistanceIRV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [Distance US (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Distance_US.html)                               | :heavy_check_mark: |                    |
 | [Distance US 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/DistanceUSV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
 | [DMX](https://www.tinkerforge.com/en/doc/Software/Bricklets/DMX_Bricklet_Python.html)                                              | :heavy_check_mark: |                    |
+| [Dual Button (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Dual_Button.html)                               | :heavy_check_mark: |                    |
 | [Dual Button 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/DualButtonV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [Dual Relay (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Dual_Relay.html)                                 | :heavy_check_mark: |                    |
 | [Dust Detector](https://www.tinkerforge.com/en/doc/Software/Bricklets/DustDetector_Bricklet_Python.html)                           | :heavy_check_mark: |                    |
 | [E-Paper 296x128](https://www.tinkerforge.com/en/doc/Software/Bricklets/EPaper296x128_Bricklet_Python.html)                        | :heavy_check_mark: |                    |
 | [Energy Monitor](https://www.tinkerforge.com/en/doc/Software/Bricklets/EnergyMonitor_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [GPS (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/GPS.html)                                               | :heavy_check_mark: |                    |
 | [GPS 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/GPSV2_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
 | [GPS 3.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/GPSV3_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
 | [Hall Effect](https://www.tinkerforge.com/en/doc/Software/Bricklets/HallEffect_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
 | [Hall Effect 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/HallEffectV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
-| [Humidity](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)                                                    | :heavy_check_mark: | :heavy_check_mark: |
+| [Humidity (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity.html)                                     | :heavy_check_mark: | :heavy_check_mark: |
 | [Humidity 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Humidity_V2.html)                                             | :heavy_check_mark: | :heavy_check_mark: |
 | [IMU 3.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IMUV3_Bricklet_Python.html)                                        | :heavy_check_mark: |                    |
+| [Industrial Analog Out (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Analog_Out.html)           | :heavy_check_mark: |                    |
 | [Industrial Analog Out 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialAnalogOutV2_Bricklet_Python.html)      | :heavy_check_mark: |                    |
 | [Industrial Counter](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialCounter_Bricklet_Python.html)                 | :heavy_check_mark: |                    |
+| [Industrial Digital In 4 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Digital_In_4.html)       | :heavy_check_mark: |                    |
 | [Industrial Digital In 4 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDigitalIn4V2_Bricklet_Python.html)   | :heavy_check_mark: |                    |
 | [Industrial Digital Out 4](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDigitalOut4_Bricklet_Python.html)       | :heavy_check_mark: |                    |
 | [Industrial Digital Out 4 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDigitalOut4V2_Bricklet_Python.html) | :heavy_check_mark: |                    |
@@ -66,45 +84,60 @@ The library is fully type-hinted.
 | [Industrial Dual 0-20mA 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_020mA_V2.html)                  | :heavy_check_mark: | :heavy_check_mark: |
 | [Industrial Dual AC In](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDualACIn_Bricklet_Python.html)             | :heavy_check_mark: |                    |
 | [Industrial Dual AC Relay](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDualACRelay_Bricklet_Python.html)       | :heavy_check_mark: |                    |
+| [Industrial Dual Analog In (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In.html)   | :heavy_check_mark: |                    |
 | [Industrial Dual Analog In 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Dual_Analog_In_V2.html)           | :heavy_check_mark: | :heavy_check_mark: |
 | [Industrial Dual Relay](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialDualRelay_Bricklet_Python.html)            | :heavy_check_mark: |                    |
 | [Industrial PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_PTC.html)                                        | :heavy_check_mark: | :heavy_check_mark: |
+| [Industrial Quad Relay (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Industrial_Quad_Relay.html)           | :heavy_check_mark: |                    |
 | [Industrial Quad Relay 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IndustrialQuadRelayV2_Bricklet_Python.html)      | :heavy_check_mark: |                    |
 | [IO-16](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO16.html)                                                           | :heavy_check_mark: | :heavy_check_mark: |
 | [IO-16 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/IO16V2_Bricklet_Python.html)                                     | :heavy_check_mark: |                    |
+| [IO-4 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/IO4.html)                                              | :heavy_check_mark: |                    |
 | [IO-4 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/IO4_V2.html)                                                      | :heavy_check_mark: | :heavy_check_mark: |
 | [Isolator](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Isolator.html)                                                    | :heavy_check_mark: | :heavy_check_mark: |
 | [Joystick](https://www.tinkerforge.com/en/doc/Software/Bricklets/Joystick_Bricklet_Python.html)                                    | :heavy_check_mark: |                    |
 | [Joystick 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/JoystickV2_Bricklet_Python.html)                              | :heavy_check_mark: |                    |
+| [Laser Range Finder (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Laser_Range_Finder.html)                 | :heavy_check_mark: |                    |
 | [Laser Range Finder 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/LaserRangeFinderV2_Bricklet_Python.html)            | :heavy_check_mark: |                    |
 | [LCD 128x64](https://www.tinkerforge.com/en/doc/Software/Bricklets/LCD128x64_Bricklet_Python.html)                                 | :heavy_check_mark: |                    |
+| [LCD 16x2 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/LCD_16x2.html)                                     | :heavy_check_mark: |                    |
 | [LCD 20x4](https://www.tinkerforge.com/en/doc/Software/Bricklets/LCD20x4_Bricklet_Python.html)                                     | :heavy_check_mark: |                    |
+| [LED Strip (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/LED_Strip.html)                                   | :heavy_check_mark: |                    |
 | [LED Strip 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/LEDStripV2_Bricklet_Python.html)                             | :heavy_check_mark: |                    |
 | [Line](https://www.tinkerforge.com/en/doc/Software/Bricklets/Line_Bricklet_Python.html)                                            | :heavy_check_mark: |                    |
 | [Linear Poti](https://www.tinkerforge.com/en/doc/Software/Bricklets/LinearPoti_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
 | [Linear Poti 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/LinearPotiV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [Load Cell (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Load_Cell.html)                                   | :heavy_check_mark: |                    |
 | [Load Cell 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/LoadCellV2_Bricklet_Python.html)                             | :heavy_check_mark: |                    |
-| [Moisture](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)                                                    | :heavy_check_mark: | :heavy_check_mark: |
+| [Moisture (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Moisture.html)                                     | :heavy_check_mark: | :heavy_check_mark: |
+| [Motion Detector (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Motion_Detector.html)                       | :heavy_check_mark: |                    |
 | [Motion Detector 2.0](https://www.tinkerforge.com/de/doc/Hardware/Bricklets/Motion_Detector_V2.html)                               | :heavy_check_mark: | :heavy_check_mark: |
 | [Motorized Linear Poti](https://www.tinkerforge.com/en/doc/Software/Bricklets/MotorizedLinearPoti_Bricklet_Python.html)            | :heavy_check_mark: |                    |
 | [Multi Touch](https://www.tinkerforge.com/en/doc/Software/Bricklets/MultiTouch_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
 | [Multi Touch 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/MultiTouchV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
 | [NFC](https://www.tinkerforge.com/en/doc/Software/Bricklets/NFC_Bricklet_Python.html)                                              | :heavy_check_mark: |                    |
+| [NFC/RFID (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/NFC_RFID.html)                                     | :heavy_check_mark: |                    |
+| [OLED 128x64 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/OLED_128x64.html)                               | :heavy_check_mark: |                    |
 | [OLED 128x64 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/OLED128x64V2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
 | [OLED 64x48](https://www.tinkerforge.com/en/doc/Software/Bricklets/OLED64x48_Bricklet_Python.html)                                 | :heavy_check_mark: |                    |
 | [One Wire](https://www.tinkerforge.com/en/doc/Software/Bricklets/OneWire_Bricklet_Python.html)                                     | :heavy_check_mark: |                    |
 | [Outdoor Weather](https://www.tinkerforge.com/en/doc/Software/Bricklets/OutdoorWeather_Bricklet_Python.html)                       | :heavy_check_mark: |                    |
 | [Particulate Matter](https://www.tinkerforge.com/en/doc/Software/Bricklets/ParticulateMatter_Bricklet_Python.html)                 | :heavy_check_mark: |                    |
 | [Performance DC](https://www.tinkerforge.com/en/doc/Software/Bricklets/PerformanceDC_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
+| [Piezo Buzzer (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Piezo_Buzzer.html)                             | :heavy_check_mark: |                    |
 | [Piezo Speaker](https://www.tinkerforge.com/en/doc/Software/Bricklets/PiezoSpeaker_Bricklet_Python.html)                           | :heavy_check_mark: |                    |
 | [Piezo Speaker 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/PiezoSpeakerV2_Bricklet_Python.html)                     | :heavy_check_mark: |                    |
-| [PTC](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)                                                              | :heavy_check_mark: | :heavy_check_mark: |
-| [PTC 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)                                                       | :heavy_check_mark: | :heavy_check_mark: |
+| [PTC (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC.html)                                               | :heavy_check_mark: | :heavy_check_mark: |
+| [PTC 2.0 (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/PTC_V2.html)                                        | :heavy_check_mark: | :heavy_check_mark: |
 | [Real-Time Clock](https://www.tinkerforge.com/en/doc/Software/Bricklets/RealTimeClock_Bricklet_Python.html)                        | :heavy_check_mark: |                    |
 | [Real-Time Clock 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RealTimeClockV2_Bricklet_Python.html)                  | :heavy_check_mark: |                    |
+| [Remote Switch (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Remote_Switch.html)                           | :heavy_check_mark: |                    |
 | [Remote Switch 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RemoteSwitchV2_Bricklet_Python.html)                     | :heavy_check_mark: |                    |
+| [RGB LED (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/RGB_LED.html)                                       | :heavy_check_mark: |                    |
 | [RGB LED 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RGBLEDV2_Bricklet_Python.html)                                 | :heavy_check_mark: |                    |
 | [RGB LED Button](https://www.tinkerforge.com/en/doc/Software/Bricklets/RGBLEDButton_Bricklet_Python.html)                          | :heavy_check_mark: |                    |
+| [RGB LED Matrix (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/RGB_LED_Matrix.html)                         | :heavy_check_mark: |                    |
+| [Rotary Encoder (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Rotary_Encoder.html)                         | :heavy_check_mark: |                    |
 | [Rotary Encoder 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RotaryEncoderV2_Bricklet_Python.html)                   | :heavy_check_mark: |                    |
 | [Rotary Poti](https://www.tinkerforge.com/en/doc/Software/Bricklets/RotaryPoti_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
 | [Rotary Poti 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/RotaryPotiV2_Bricklet_Python.html)                         | :heavy_check_mark: |                    |
@@ -115,20 +148,27 @@ The library is fully type-hinted.
 | [Segment Display 4x7 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Segment_Display_4x7_V2.html)                       | :heavy_check_mark: | :heavy_check_mark: |
 | [Servo 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/ServoV2_Bricklet_Python.html)                                    | :heavy_check_mark: |                    |
 | [Silent Stepper 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/SilentStepperV2_Bricklet_Python.html)                   | :heavy_check_mark: |                    |
+| [Solid State Relay (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Solid_State_Relay.html)                   | :heavy_check_mark: |                    |
 | [Solid State Relay 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/SolidStateRelayV2_Bricklet_Python.html)              | :heavy_check_mark: |                    |
 | [Sound Intensity](https://www.tinkerforge.com/en/doc/Software/Bricklets/SoundIntensity_Bricklet_Python.html)                       | :heavy_check_mark: |                    |
 | [Sound Pressure Level](https://www.tinkerforge.com/en/doc/Software/Bricklets/SoundPressureLevel_Bricklet_Python.html)              | :heavy_check_mark: |                    |
 | [Temperature](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature.html)                                              | :heavy_check_mark: | :heavy_check_mark: |
 | [Temperature 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_V2.html)                                       | :heavy_check_mark: | :heavy_check_mark: |
+| [Temperature IR (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Temperature_IR.html)                         | :heavy_check_mark: |                    |
 | [Temperature IR 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/TemperatureIRV2_Bricklet_Python.html)                   | :heavy_check_mark: |                    |
 | [Thermal Imaging](https://www.tinkerforge.com/en/doc/Software/Bricklets/ThermalImaging_Bricklet_Python.html)                       | :heavy_check_mark: |                    |
+| [Thermocouple (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Thermocouple.html)                             | :heavy_check_mark: |                    |
 | [Thermocouple 2.0](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Thermocouple_V2.html)                                     | :heavy_check_mark: | :heavy_check_mark: |
 | [Tilt](https://www.tinkerforge.com/en/doc/Software/Bricklets/Tilt_Bricklet_Python.html)                                            | :heavy_check_mark: |                    |
+| [UV Light (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/UV_Light.html)                                     | :heavy_check_mark: |                    |
 | [UV Light 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/UVLightV2_Bricklet_Python.html)                               | :heavy_check_mark: |                    |
+| [Voltage (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Voltage.html)                                       | :heavy_check_mark: |                    |
+| [Voltage/Current (discontinued)](https://www.tinkerforge.com/en/doc/Hardware/Bricklets/Voltage_Current.html)                       | :heavy_check_mark: |                    |
 | [Voltage/Current 2.0](https://www.tinkerforge.com/en/doc/Software/Bricklets/VoltageCurrentV2_Bricklet_Python.html)                 | :heavy_check_mark: |                    |
 | [XMC1400 Breakout](https://www.tinkerforge.com/en/doc/Software/Bricklets/XMC1400Breakout_Bricklet_Python.html)                     | :heavy_check_mark: |                    |
 
 *Tested* means tested with the hardware. The other devices are tested against the protocol only, see below.
+Devices marked *(discontinued)* are no longer sold by Tinkerforge.
 
 ## Generated Bricks and Bricklets
 The modules of the Bricks and Bricklets without a check mark in the *Tested* column were generated from the

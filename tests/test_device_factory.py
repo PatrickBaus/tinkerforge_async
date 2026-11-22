@@ -32,11 +32,24 @@ def test_get_creates_the_registered_class(connection):
     )
 
 
-@pytest.mark.parametrize("device_identifier", [DeviceIdentifier.BRICKLET_AMBIENT_LIGHT, 9999, None])
+@pytest.mark.parametrize("device_identifier", [9999, None])
 def test_unknown_devices_raise_a_value_error(connection, device_identifier):
     """There is no driver for the device."""
     with pytest.raises(ValueError, match="No device available"):
         device_factory.get(connection, device_identifier, UID)
+
+
+def test_unregistered_devices_raise_a_value_error(connection):
+    """A known device, that was not registered with the factory, can not be created."""
+    with pytest.raises(ValueError, match="No device available"):
+        DeviceFactory().get(connection, DeviceIdentifier.BRICKLET_AMBIENT_LIGHT, UID)
+
+
+def test_all_device_identifiers_have_a_driver():
+    """Every Brick and Bricklet, that the library knows, can be created by the factory."""
+    connection = None
+    for device_identifier in DeviceIdentifier:
+        assert device_factory.get(connection, device_identifier, UID).DEVICE_IDENTIFIER is device_identifier
 
 
 def test_register():
