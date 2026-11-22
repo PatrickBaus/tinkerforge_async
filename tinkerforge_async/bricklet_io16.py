@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Generator, Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import AdvancedCallbackConfiguration, Device, DeviceIdentifier, Event
 from .devices import ThresholdOption as Threshold
@@ -558,6 +558,7 @@ class BrickletIO16(Device):
             yield bit.bit_length() - 1
             number ^= bit
 
+    @override
     def _get_registered_events(self, events: Sequence[Any] | None, sids: Sequence[int] | None) -> set[Any]:
         if not (events is None or sids is None):
             raise ValueError(
@@ -567,6 +568,7 @@ class BrickletIO16(Device):
             self._validate_sid(sid, range(16))
         return super()._get_registered_events(events, sids)
 
+    @override
     def _to_events(self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None) -> Iterable[Event]:
         port, interrupt_mask, value_mask = value
         port = Port(port)

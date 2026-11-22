@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -516,6 +516,7 @@ class BrickletVoltageCurrentV2(BrickletWithMCU):  # pylint: disable=too-many-pub
         voltage_multiplier, voltage_divisor, current_multiplier, current_divisor = unpack_payload(payload, "H H H H")
         return GetCalibration(voltage_multiplier, voltage_divisor, current_multiplier, current_divisor)
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.CURRENT:
             return 0, MILLI_AMPERE.to_si(value)

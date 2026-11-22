@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletPort as Port
 from .devices import Channel, DeviceIdentifier, DeviceWithMCU, GetSPITFPBaudrateConfig, GetSPITFPErrorCount, _FunctionID
@@ -841,6 +841,7 @@ class BrickServo(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-
         protocol_version, firmware_version, name = unpack_payload(payload, "B 3B 40s")
         return GetProtocol1BrickletName(protocol_version, tuple(firmware_version), name)
 
+    @override
     async def get_chip_temperature(self) -> Decimal:
         """
         Returns the temperature as measured inside the microcontroller. The value returned is not the ambient
@@ -894,6 +895,7 @@ class BrickServo(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-
         )
         return tuple(unpack_payload(payload, "32B"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.UNDER_VOLTAGE:
             return 0, MILLI_VOLT.to_si(value)

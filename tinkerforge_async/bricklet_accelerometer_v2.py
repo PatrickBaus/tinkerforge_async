@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -462,6 +462,7 @@ class BrickletAccelerometerV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         iir_bypass, low_pass_filter = unpack_payload(payload, "B B")
         return GetFilterConfiguration(IIRBypass(iir_bypass), LowPassFilter(low_pass_filter))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.ACCELERATION:
             x, y, z = value

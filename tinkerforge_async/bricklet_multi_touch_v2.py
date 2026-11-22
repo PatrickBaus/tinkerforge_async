@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -295,5 +295,6 @@ class BrickletMultiTouchV2(BrickletWithMCU):  # pylint: disable=too-many-public-
         )
         return TouchLEDConfig(unpack_payload(payload, "B"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         return 0, tuple(value)

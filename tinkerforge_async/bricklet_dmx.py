@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, Event, _FunctionID
 from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
@@ -484,6 +484,7 @@ class BrickletDMX(BrickletWithMCU):  # pylint: disable=too-many-public-methods,t
             frame_error_count_callback_enabled,
         )
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.FRAME_STARTED:
             return 0, None
@@ -492,6 +493,7 @@ class BrickletDMX(BrickletWithMCU):  # pylint: disable=too-many-public-methods,t
         overrun_error_count, framing_error_count = value
         return 2, GetFrameErrorCount(overrun_error_count, framing_error_count)
 
+    @override
     def _to_events(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches
         self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None
     ) -> Iterable[Event]:

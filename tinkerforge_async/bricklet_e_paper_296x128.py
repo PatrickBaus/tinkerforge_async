@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import check_length, check_range, encode_string
@@ -738,5 +738,6 @@ class BrickletEPaper296x128(BrickletWithMCU):  # pylint: disable=too-many-public
         )
         return DisplayDriver(unpack_payload(payload, "B"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         return 0, DrawStatus(value)

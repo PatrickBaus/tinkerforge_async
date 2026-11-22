@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import check_length, check_range
@@ -493,6 +493,7 @@ class BrickletCAN(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         )
         return unpack_payload(payload, "!")
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.FRAME_READ:
             frame_type, identifier, data, length = value

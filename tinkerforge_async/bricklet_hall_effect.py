@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_range, ms_to_seconds, seconds_to_ms
@@ -244,6 +244,7 @@ class BrickletHallEffect(Device):  # pylint: disable=too-many-public-methods,too
         count, value = unpack_payload(payload, "I !")
         return EdgeInterrupt(count, value)
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         count, value = value
         return 0, EdgeCountEvent(count, value)

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, override
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -344,6 +344,7 @@ class BrickletTemperatureIRV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         )
         return RATIO_1_65535.to_si(unpack_payload(payload, "H"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.AMBIENT_TEMPERATURE:
             return 0, DECI_DEGREE_CELSIUS.to_si(value)

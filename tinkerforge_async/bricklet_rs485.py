@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, Event, _FunctionID
 from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
@@ -1636,6 +1636,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         )
         return unpack_payload(payload, "H")
 
+    @override
     def _convert_callback(  # pylint: disable=too-many-return-statements,too-many-branches,too-many-locals
         self, callback_id: CallbackID, value: Any
     ) -> tuple[int, Any]:
@@ -1674,6 +1675,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             return 10, ModbusSlaveReadInputRegistersRequestEvent(request_id, starting_address, count)
         return 11, value
 
+    @override
     def _to_events(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches
         self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None
     ) -> Iterable[Event]:

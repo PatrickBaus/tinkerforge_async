@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -287,5 +287,6 @@ class BrickletTemperature(Device):
         )
         return I2cOption(unpack_payload(payload, "B"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         return 0, TEMPERATURE.to_si(value)

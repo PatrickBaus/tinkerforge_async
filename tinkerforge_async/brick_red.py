@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import check_length, check_range, encode_string
@@ -2030,6 +2030,7 @@ class BrickRED(Device):  # pylint: disable=too-many-public-methods,too-few-publi
         )
         return ErrorCode(unpack_payload(payload, "B"))
 
+    @override
     def _convert_callback(  # pylint: disable=too-many-return-statements,too-many-branches,too-many-locals
         self, callback_id: CallbackID, value: Any
     ) -> tuple[int, Any]:

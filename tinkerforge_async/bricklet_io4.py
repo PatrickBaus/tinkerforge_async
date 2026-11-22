@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_range, ms_to_seconds, seconds_to_ms
@@ -450,6 +450,7 @@ class BrickletIO4(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         edge_type, debounce = unpack_payload(payload, "B B")
         return GetEdgeCountConfig(EdgeType(edge_type), ms_to_seconds(debounce))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.INTERRUPT:
             interrupt_mask, value_mask = value

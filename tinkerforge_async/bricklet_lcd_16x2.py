@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import check_length, check_range, encode_string
@@ -246,6 +246,7 @@ class BrickletLCD16x2(Device):  # pylint: disable=too-many-public-methods,too-fe
         )
         return tuple(unpack_payload(payload, "8B"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.BUTTON_PRESSED:
             return 0, value

@@ -6,7 +6,8 @@ helpers implement the same rules as the official Tinkerforge bindings.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
+from itertools import batched
 from typing import Any, NamedTuple
 
 
@@ -17,11 +18,10 @@ class StreamOutOfSyncError(Exception):
     """
 
 
-def _chunk(data: Sequence[Any], offset: int, size: int, padding: Any) -> list[Any]:
-    chunk = list(data[offset : offset + size])
-    if len(chunk) < size:
-        chunk += [padding] * (size - len(chunk))
-    return chunk
+def _pad(chunk: Iterable[Any], size: int, padding: Any) -> list[Any]:
+    """Fill a chunk with the padding, so it has the size that is transferred."""
+    padded = list(chunk)
+    return padded + [padding] * (size - len(padded))
 
 
 async def write_stream(  # pylint: disable=too-many-arguments
@@ -75,8 +75,8 @@ async def write_stream(  # pylint: disable=too-many-arguments
         return await send_chunk(0, 0, [padding] * chunk_size)
 
     result = None
-    for offset in range(0, length, chunk_size):
-        result = await send_chunk(length, offset, _chunk(data, offset, chunk_size, padding))
+    for index, chunk in enumerate(batched(data, chunk_size)):
+        result = await send_chunk(length, index * chunk_size, _pad(chunk, chunk_size, padding))
     return result
 
 
@@ -109,8 +109,8 @@ async def write_stream_short(  # pylint: disable=too-many-arguments
 
     written = 0
     result = None
-    for offset in range(0, length, chunk_size):
-        chunk_written, result = await send_chunk(length, offset, _chunk(data, offset, chunk_size, padding))
+    for index, chunk in enumerate(batched(data, chunk_size)):
+        chunk_written, result = await send_chunk(length, index * chunk_size, _pad(chunk, chunk_size, padding))
         written += chunk_written
         if chunk_written < chunk_size:
             break  # Either the last chunk or a short write
@@ -128,7 +128,7 @@ def pad_single_chunk(data: Sequence[Any], *, name: str, chunk_size: int, padding
     """
     if len(data) > chunk_size:
         raise ValueError(f"Invalid argument: {name} can be at most {chunk_size} items long, got {len(data)} items")
-    return _chunk(data, 0, chunk_size, padding)
+    return _pad(data, chunk_size, padding)
 
 
 class Chunk(NamedTuple):

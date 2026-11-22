@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -371,6 +371,7 @@ class BrickletCompass(BrickletWithMCU):  # pylint: disable=too-many-public-metho
         offset, gain = unpack_payload(payload, "3h 3h")
         return GetCalibration(tuple(offset), tuple(gain))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.HEADING:
             return 0, DECI_DEGREE.to_si(value)

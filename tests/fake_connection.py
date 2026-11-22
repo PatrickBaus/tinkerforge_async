@@ -7,12 +7,10 @@ from collections import defaultdict
 from collections.abc import AsyncGenerator, Coroutine
 from contextlib import aclosing
 from enum import Enum
-from typing import Any, NamedTuple, TypeVar
+from typing import Any, NamedTuple, override
 
 from tinkerforge_async.ip_connection import Flags, HeaderPayload
 from tinkerforge_async.ip_connection_helper import pack_payload
-
-T = TypeVar("T")
 
 UID = 12345  # The uid of the devices under test
 
@@ -94,12 +92,12 @@ class FakeConnection:
         self.connected = False
 
 
-def run(coroutine: Coroutine[Any, Any, T]) -> T:
+def run[T](coroutine: Coroutine[Any, Any, T]) -> T:
     """Run a coroutine to completion."""
     return asyncio.run(coroutine)
 
 
-async def take(stream: AsyncGenerator[T, None], count: int | None = None) -> list[T]:
+async def take[T](stream: AsyncGenerator[T, None], count: int | None = None) -> list[T]:
     """
     Read items from an async generator, and close it. Stop after `count` items, or read until the generator is
     exhausted if no `count` is given.
@@ -157,6 +155,7 @@ class Call(NamedTuple):
     result: Any = None
     response_expected: bool = True
 
+    @override
     def __str__(self) -> str:
         return f"{self.method}{self.arguments}"
 
