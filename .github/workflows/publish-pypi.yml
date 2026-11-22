@@ -20,7 +20,8 @@ jobs:
     name: Upload to PyPI
     needs:
       - tests
-    # Only releases are uploaded to PyPI, never a build of a branch
+    # The version comes from the git tag. Run from a branch, it would be a development version like 1.9.1.dev3, which
+    # does not belong on PyPI.
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions: {}

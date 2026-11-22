@@ -38,6 +38,5 @@ jobs:
         with:
           password: ${{ secrets.TWINE_TEST_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
-          # The version is only changed for a release, so a version can be uploaded only once. Skip the uploads of the
-          # following commits instead of failing.
+          # Each commit gets its own development version. This only skips the upload when a run is repeated.
           skip-existing: true

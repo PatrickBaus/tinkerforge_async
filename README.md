@@ -290,6 +290,16 @@ python3 setup.py install
 I use [SemVer](http://semver.org/) for versioning. For the versions available, see the
 [tags on this repository](../../tags).
 
+The version is not stored in the source code. It is taken from the git tag by
+[setuptools-scm](https://setuptools-scm.readthedocs.io/) when the package is built. To release a new version, publish a
+GitHub release with a new tag, e.g. `1.9.0`. This builds the package as version 1.9.0 and uploads it to PyPI. Commits
+after a tag get a development version like `1.9.1.dev3`.
+
+For development, install the package in editable mode, which also generates `tinkerforge_async/_version.py`:
+```bash
+pip install -e .[dev]
+```
+
 ## Authors
 * **Patrick Baus** - *Initial work* - [PatrickBaus](https://github.com/PatrickBaus)
 
