@@ -10,7 +10,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, BasicCallba
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletVoltageCurrent
 FunctionID = BrickletVoltageCurrent.FunctionID
@@ -236,14 +236,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletVoltageCurrent) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 227
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Voltage/Current Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -256,7 +256,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_configuration_of_sid_0(device, connection):
+def test_callback_configuration_of_sid_0(device: BrickletVoltageCurrent, connection: FakeConnection) -> None:
     """The period and the threshold are configured by separate functions."""
     run(device.set_callback_configuration(0, 1, True, Threshold.OUTSIDE, Decimal("0.003"), Decimal("0.004")))
     assert sorted(connection.requests, key=lambda request: request.function_id.value) == sorted(
@@ -274,7 +274,7 @@ def test_callback_configuration_of_sid_0(device, connection):
     )
 
 
-def test_callback_configuration_of_sid_1(device, connection):
+def test_callback_configuration_of_sid_1(device: BrickletVoltageCurrent, connection: FakeConnection) -> None:
     """The period and the threshold are configured by separate functions."""
     run(device.set_callback_configuration(1, 1, True, Threshold.OUTSIDE, Decimal("0.003"), Decimal("0.004")))
     assert sorted(connection.requests, key=lambda request: request.function_id.value) == sorted(
@@ -292,7 +292,7 @@ def test_callback_configuration_of_sid_1(device, connection):
     )
 
 
-def test_callback_configuration_of_sid_2(device, connection):
+def test_callback_configuration_of_sid_2(device: BrickletVoltageCurrent, connection: FakeConnection) -> None:
     """The period and the threshold are configured by separate functions."""
     run(device.set_callback_configuration(2, 1, True, Threshold.OUTSIDE, Decimal("0.003"), Decimal("0.004")))
     assert sorted(connection.requests, key=lambda request: request.function_id.value) == sorted(
@@ -310,37 +310,37 @@ def test_callback_configuration_of_sid_2(device, connection):
     )
 
 
-def test_callback_current(device, connection):
+def test_callback_current(device: BrickletVoltageCurrent, connection: FakeConnection) -> None:
     """The callback CURRENT is converted to an event."""
     connection.callback(CallbackID.CURRENT, "i", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.CURRENT, Decimal("0.003"))]
 
 
-def test_callback_voltage(device, connection):
+def test_callback_voltage(device: BrickletVoltageCurrent, connection: FakeConnection) -> None:
     """The callback VOLTAGE is converted to an event."""
     connection.callback(CallbackID.VOLTAGE, "i", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.VOLTAGE, Decimal("0.003"))]
 
 
-def test_callback_power(device, connection):
+def test_callback_power(device: BrickletVoltageCurrent, connection: FakeConnection) -> None:
     """The callback POWER is converted to an event."""
     connection.callback(CallbackID.POWER, "i", *(3,))
     assert summary(read_events(device)) == [(2, CallbackID.POWER, Decimal("0.003"))]
 
 
-def test_callback_current_reached(device, connection):
+def test_callback_current_reached(device: BrickletVoltageCurrent, connection: FakeConnection) -> None:
     """The callback CURRENT_REACHED is converted to an event."""
     connection.callback(CallbackID.CURRENT_REACHED, "i", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.CURRENT_REACHED, Decimal("0.003"))]
 
 
-def test_callback_voltage_reached(device, connection):
+def test_callback_voltage_reached(device: BrickletVoltageCurrent, connection: FakeConnection) -> None:
     """The callback VOLTAGE_REACHED is converted to an event."""
     connection.callback(CallbackID.VOLTAGE_REACHED, "i", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.VOLTAGE_REACHED, Decimal("0.003"))]
 
 
-def test_callback_power_reached(device, connection):
+def test_callback_power_reached(device: BrickletVoltageCurrent, connection: FakeConnection) -> None:
     """The callback POWER_REACHED is converted to an event."""
     connection.callback(CallbackID.POWER_REACHED, "i", *(3,))
     assert summary(read_events(device)) == [(2, CallbackID.POWER_REACHED, Decimal("0.003"))]

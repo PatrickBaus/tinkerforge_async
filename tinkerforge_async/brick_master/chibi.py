@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 from ..devices import Device
 from ..ip_connection_helper import pack_payload, unpack_payload
@@ -48,7 +48,7 @@ class ChibiExtension(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_CHIBI_PRESENT, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_chibi_address(self, address: int, response_expected: bool = True) -> None:
         """
@@ -75,7 +75,7 @@ class ChibiExtension(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CHIBI_ADDRESS, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_chibi_master_address(self, address: int, response_expected: bool = True) -> None:
         """
@@ -103,7 +103,7 @@ class ChibiExtension(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CHIBI_MASTER_ADDRESS, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def __set_chibi_slave_address(self, num: int, address: int, response_expected: bool = True) -> None:
         """
@@ -175,7 +175,7 @@ class ChibiExtension(Device):
             response_expected=True,
         )
 
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def get_slave_addresses(self) -> tuple[int, ...]:
         """
@@ -197,7 +197,7 @@ class ChibiExtension(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CHIBI_SIGNAL_STRENGTH, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def get_chibi_error_log(self) -> GetChibiErrorLog:
         """
@@ -278,4 +278,4 @@ class ChibiExtension(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CHIBI_CHANNEL, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))

@@ -5,7 +5,7 @@ their device id
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Protocol
 
 from .brick_dc import BrickDC
 from .brick_esp32 import BrickESP32
@@ -155,10 +155,21 @@ from .bricklet_voltage import BrickletVoltage
 from .bricklet_voltage_current import BrickletVoltageCurrent
 from .bricklet_voltage_current_v2 import BrickletVoltageCurrentV2
 from .bricklet_xmc1400_breakout import BrickletXMC1400Breakout
+from .devices import DeviceIdentifier
 
 if TYPE_CHECKING:
-    from . import IPConnectionAsync
-    from .devices import Device, DeviceIdentifier
+    from .devices import Device
+    from .ip_connection import IPConnectionAsync
+
+
+class DeviceClass(Protocol):  # pylint: disable=too-few-public-methods
+    """
+    A Brick or Bricklet class, that can be registered with the factory
+    """
+
+    DEVICE_IDENTIFIER: DeviceIdentifier
+
+    def __call__(self, uid: int, ipcon: IPConnectionAsync) -> Device: ...
 
 
 class DeviceFactory:
@@ -167,23 +178,26 @@ class DeviceFactory:
     class object.
     """
 
-    def __init__(self):
-        self.__available_devices = {}
+    def __init__(self) -> None:
+        self.__available_devices: dict[DeviceIdentifier, DeviceClass] = {}
 
-    def register(self, device):
+    def register(self, device: DeviceClass) -> None:
         """
         Register a new Brick or Bricklet with the factory
         """
         self.__available_devices[device.DEVICE_IDENTIFIER] = device
 
-    def get(self, ipcon: IPConnectionAsync, device_id: DeviceIdentifier, uid: int, *_args, **_kwargs) -> Device:
+    def get(
+        self, ipcon: IPConnectionAsync, device_id: DeviceIdentifier | int | None, uid: int, *_args: Any, **_kwargs: Any
+    ) -> Device:
         """
-        Create a new instance of a Brick or Bricklet from its device id
+        Create a new instance of a Brick or Bricklet from its device id. Unknown devices keep their number as device id,
+        devices that were disconnected do not report it at all.
         """
-        try:
-            return self.__available_devices[device_id](uid, ipcon)
-        except KeyError:
-            raise ValueError(f"No device available for id {device_id!s}") from None
+        device_class = self.__available_devices.get(device_id) if isinstance(device_id, DeviceIdentifier) else None
+        if device_class is None:
+            raise ValueError(f"No device available for id {device_id!s}")
+        return device_class(uid, ipcon)
 
 
 device_factory = DeviceFactory()

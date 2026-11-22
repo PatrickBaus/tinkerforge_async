@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import check_range
@@ -337,7 +337,7 @@ class BrickletOutdoorWeather(BrickletWithMCU):  # pylint: disable=too-many-publi
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STATION_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_sensor_callback_configuration(
         self, enable_callback: bool = False, response_expected: bool = True
@@ -359,7 +359,7 @@ class BrickletOutdoorWeather(BrickletWithMCU):  # pylint: disable=too-many-publi
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_SENSOR_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

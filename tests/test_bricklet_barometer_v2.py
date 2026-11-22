@@ -14,7 +14,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, summary
+from .fake_connection import Call, FakeConnection, read_events, summary
 
 DEVICE = BrickletBarometerV2
 FunctionID = BrickletBarometerV2.FunctionID
@@ -202,7 +202,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletBarometerV2) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 2117
     assert bricklet.get_api_version() == (2, 0, 0)
@@ -213,7 +213,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletBarometerV2, connection: FakeConnection) -> None:
     """The air pressure (sid 0) is converted to Pa, the altitude (sid 1) to m and the temperature (sid 2) to K."""
     connection.callback(CallbackID.AIR_PRESSURE, "i", 1013250)
     connection.callback(CallbackID.ALTITUDE, "i", -1234)

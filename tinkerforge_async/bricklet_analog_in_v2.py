@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -150,7 +150,7 @@ class BrickletAnalogInV2(Device):  # pylint: disable=too-many-public-methods,too
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_voltage(self) -> Decimal:
         """
@@ -178,7 +178,7 @@ class BrickletAnalogInV2(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ANALOG_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_voltage_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -382,7 +382,7 @@ class BrickletAnalogInV2(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MOVING_AVERAGE, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

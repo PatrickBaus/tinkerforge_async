@@ -16,7 +16,7 @@ from tinkerforge_async.bricklet_rs232_v2 import (
 )
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, read_events, request, run, summary
 
 DEVICE = BrickletRS232V2
 FunctionID = BrickletRS232V2.FunctionID
@@ -100,7 +100,7 @@ def chunk(data: bytes) -> tuple[int, ...]:
     return tuple(data.ljust(60, b"\0"))
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletRS232V2) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 2108
     assert bricklet.get_api_version() == (2, 0, 1)
@@ -111,14 +111,14 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_empty_messages_are_not_requested(bricklet, connection):
+def test_empty_messages_are_not_requested(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """There is nothing to read or to write."""
     assert run(bricklet.read(0)) == b""
     assert run(bricklet.write(b"")) == 0
     assert not connection.requests
 
 
-def test_write_short_message(bricklet, connection):
+def test_write_short_message(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """A message is padded to 60 bytes. A string is encoded as UTF-8."""
     connection.reply(FunctionID.WRITE_LOW_LEVEL, "B", 7)
     assert run(bricklet.write("Grüße")) == 7
@@ -126,7 +126,7 @@ def test_write_short_message(bricklet, connection):
     assert connection.requests == [request(FunctionID.WRITE_LOW_LEVEL, "H H 60B", 7, 0, chunk(message))]
 
 
-def test_write_long_message(bricklet, connection):
+def test_write_long_message(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """A message is sent in chunks of 60 bytes. Each chunk has the length of the message and its offset."""
     message = bytes(range(130))
     for written in (60, 60, 10):
@@ -139,28 +139,30 @@ def test_write_long_message(bricklet, connection):
     ]
 
 
-def test_write_fails_if_the_bricklet_does_not_take_all_bytes(bricklet, connection):
+def test_write_fails_if_the_bricklet_does_not_take_all_bytes(
+    bricklet: BrickletRS232V2, connection: FakeConnection
+) -> None:
     """The send buffer of the Bricklet is full."""
     connection.reply(FunctionID.WRITE_LOW_LEVEL, "B", 3)
     with pytest.raises(Rs232IOError, match="3 bytes written out of 5 bytes"):
         run(bricklet.write(b"hello"))
 
 
-def test_write_rejects_a_message_that_is_too_long(bricklet, connection):
+def test_write_rejects_a_message_that_is_too_long(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """The length of the message is transferred as a 16 bit integer."""
     with pytest.raises(RuntimeError):
         run(bricklet.write(bytes(65536)))
     assert not connection.requests
 
 
-def test_read_short_message(bricklet, connection):
+def test_read_short_message(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """Only the bytes of the message are returned, not the padding."""
     connection.reply(FunctionID.READ_LOW_LEVEL, "H H 60B", 5, 0, chunk(b"hello"))
     assert run(bricklet.read(5)) == b"hello"
     assert connection.requests == [request(FunctionID.READ_LOW_LEVEL, "H", 5)]
 
 
-def test_read_long_message(bricklet, connection):
+def test_read_long_message(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """The chunks of the message are requested one by one."""
     message = bytes(range(130))
     connection.reply(FunctionID.READ_LOW_LEVEL, "H H 60B", 130, 0, chunk(message[:60]))
@@ -170,7 +172,7 @@ def test_read_long_message(bricklet, connection):
     assert connection.requests == [request(FunctionID.READ_LOW_LEVEL, "H", 130)] * 3
 
 
-def test_read_returns_less_if_the_buffer_is_empty(bricklet, connection):
+def test_read_returns_less_if_the_buffer_is_empty(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """An empty chunk with the offset 0 ends the message."""
     connection.reply(FunctionID.READ_LOW_LEVEL, "H H 60B", 60, 0, chunk(bytes(range(60))))
     connection.reply(FunctionID.READ_LOW_LEVEL, "H H 60B", 0, 0, chunk(b""))
@@ -178,7 +180,7 @@ def test_read_returns_less_if_the_buffer_is_empty(bricklet, connection):
     assert len(connection.requests) == 2
 
 
-def test_read_skips_the_rest_of_an_unfinished_message(bricklet, connection):
+def test_read_skips_the_rest_of_an_unfinished_message(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """If another reader did not finish its message, its chunks are dropped until a new message starts."""
     connection.reply(FunctionID.READ_LOW_LEVEL, "H H 60B", 130, 60, chunk(b"old"))
     connection.reply(FunctionID.READ_LOW_LEVEL, "H H 60B", 130, 120, chunk(b"old"))
@@ -187,7 +189,7 @@ def test_read_skips_the_rest_of_an_unfinished_message(bricklet, connection):
     assert len(connection.requests) == 3
 
 
-def test_read_fails_if_a_chunk_is_missing(bricklet, connection):
+def test_read_fails_if_a_chunk_is_missing(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """The offset of a chunk must be the number of bytes that were read so far."""
     connection.reply(FunctionID.READ_LOW_LEVEL, "H H 60B", 180, 0, chunk(bytes(60)))
     connection.reply(FunctionID.READ_LOW_LEVEL, "H H 60B", 180, 120, chunk(bytes(60)))
@@ -195,13 +197,15 @@ def test_read_fails_if_a_chunk_is_missing(bricklet, connection):
         run(bricklet.read(180))
 
 
-def test_read_and_write_do_not_interleave(bricklet, connection):
+def test_read_and_write_do_not_interleave(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """A message must be finished, before the next one is started. The calls are serialized by a lock."""
     connection.reply(FunctionID.WRITE_LOW_LEVEL, "B", 60)
     connection.reply(FunctionID.READ_LOW_LEVEL, "H H 60B", 5, 0, chunk(b"hello"))
 
-    async def scenario():
-        return await asyncio.gather(bricklet.write(bytes(120)), bricklet.write(bytes([1]) * 120), bricklet.read(5))
+    async def scenario() -> list[bytes | int]:
+        return list(
+            await asyncio.gather(bricklet.write(bytes(120)), bricklet.write(bytes([1]) * 120), bricklet.read(5))
+        )
 
     assert run(scenario()) == [120, 120, b"hello"]
     # The offset of the chunk and the first byte of its data
@@ -209,7 +213,7 @@ def test_read_and_write_do_not_interleave(bricklet, connection):
     assert connection.requests[4] == request(FunctionID.READ_LOW_LEVEL, "H", 5)
 
 
-def test_read_events_reassemble_the_message(bricklet, connection):
+def test_read_events_reassemble_the_message(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """The read callback delivers a message in chunks. One event with the whole message is yielded."""
     message = bytes(range(130))
     connection.callback(CallbackID.READ, "H H 60B", 130, 0, chunk(message[:60]))
@@ -219,7 +223,7 @@ def test_read_events_reassemble_the_message(bricklet, connection):
     assert summary(read_events(bricklet)) == [(0, CallbackID.READ, message), (0, CallbackID.READ, b"hello")]
 
 
-def test_other_events(bricklet, connection):
+def test_other_events(bricklet: BrickletRS232V2, connection: FakeConnection) -> None:
     """The error counters and the number of readable frames are passed on."""
     connection.callback(CallbackID.ERROR_COUNT, "I I", 1, 2)
     connection.callback(CallbackID.FRAME_READABLE, "H", 3)

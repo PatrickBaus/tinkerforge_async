@@ -9,7 +9,7 @@ from tinkerforge_async.bricklet_piezo_speaker import BrickletPiezoSpeaker
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletPiezoSpeaker
 FunctionID = BrickletPiezoSpeaker.FunctionID
@@ -47,14 +47,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletPiezoSpeaker) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 242
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Piezo Speaker Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -67,13 +67,13 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_beep_finished(device, connection):
+def test_callback_beep_finished(device: BrickletPiezoSpeaker, connection: FakeConnection) -> None:
     """The callback BEEP_FINISHED is converted to an event."""
     connection.callback(CallbackID.BEEP_FINISHED)
     assert summary(read_events(device)) == [(0, CallbackID.BEEP_FINISHED, None)]
 
 
-def test_callback_morse_code_finished(device, connection):
+def test_callback_morse_code_finished(device: BrickletPiezoSpeaker, connection: FakeConnection) -> None:
     """The callback MORSE_CODE_FINISHED is converted to an event."""
     connection.callback(CallbackID.MORSE_CODE_FINISHED)
     assert summary(read_events(device)) == [(1, CallbackID.MORSE_CODE_FINISHED, None)]

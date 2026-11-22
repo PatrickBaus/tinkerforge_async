@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, Event, _FunctionID
 from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
@@ -445,7 +445,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload((message_length, message_chunk_offset, list(message_chunk_data)), "H H 60c"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def write(self, message: str) -> int:
         """
@@ -540,7 +540,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_READ_CALLBACK_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_rs485_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -777,7 +777,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_ERROR_COUNT_CALLBACK_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_error_count(self) -> GetErrorCount:
         """
@@ -941,7 +941,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload((slave_address, starting_address, count), "B I H"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def modbus_slave_answer_read_holding_registers_request_low_level(
         self,
@@ -1047,7 +1047,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload((slave_address, starting_address, count), "B I H"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def modbus_slave_answer_write_single_coil_request(
         self, request_id: int, response_expected: bool = True
@@ -1099,7 +1099,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload((slave_address, coil_address, bool(coil_value)), "B I !"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def modbus_slave_answer_write_single_register_request(
         self, request_id: int, response_expected: bool = True
@@ -1158,7 +1158,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload((slave_address, register_address, register_value), "B I H"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def modbus_slave_answer_write_multiple_coils_request(
         self, request_id: int, response_expected: bool = True
@@ -1231,7 +1231,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             ),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def modbus_master_write_multiple_coils(
         self, slave_address: int, starting_address: int, coils: Sequence[bool]
@@ -1272,7 +1272,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                 padding=False,
                 max_length=65535,
             )
-        return result
+        return cast(int, result)
 
     async def modbus_slave_answer_write_multiple_registers_request(
         self, request_id: int, response_expected: bool = True
@@ -1346,7 +1346,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             ),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def modbus_master_write_multiple_registers(
         self, slave_address: int, starting_address: int, registers: Sequence[int]
@@ -1389,7 +1389,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                 padding=0,
                 max_length=65535,
             )
-        return result
+        return cast(int, result)
 
     async def modbus_slave_answer_read_discrete_inputs_request_low_level(
         self,
@@ -1495,7 +1495,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload((slave_address, starting_address, count), "B I H"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def modbus_slave_answer_read_input_registers_request_low_level(
         self,
@@ -1601,7 +1601,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             data=pack_payload((slave_address, starting_address, count), "B I H"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_frame_readable_callback_configuration(
         self, frame_size: int = 0, response_expected: bool = True
@@ -1634,7 +1634,7 @@ class BrickletRS485(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_FRAME_READABLE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     @override
     def _convert_callback(  # pylint: disable=too-many-return-statements,too-many-branches,too-many-locals

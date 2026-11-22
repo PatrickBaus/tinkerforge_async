@@ -6,7 +6,7 @@ import asyncio
 import struct
 from collections.abc import Callable
 from types import TracebackType
-from typing import NamedTuple, Self
+from typing import NamedTuple, Self, cast
 
 HEADER = "<IBBBB"  # uid, packet size, function id, sequence number and options, flags
 HEADER_SIZE = struct.calcsize(HEADER)
@@ -57,7 +57,7 @@ class FakeBrickd:
     def port(self) -> int:
         """The port the server listens on. It is chosen by the operating system."""
         assert self.__server is not None
-        return self.__server.sockets[0].getsockname()[1]
+        return cast(int, self.__server.sockets[0].getsockname()[1])
 
     async def __aenter__(self) -> Self:
         self.__server = await asyncio.start_server(self.__serve, "127.0.0.1", 0)

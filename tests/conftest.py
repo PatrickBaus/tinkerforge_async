@@ -1,5 +1,7 @@
 """The fixtures shared by the tests."""
 
+from typing import Any
+
 import pytest
 
 from .fake_connection import UID, FakeConnection
@@ -12,24 +14,24 @@ def connection_fixture() -> FakeConnection:
 
 
 @pytest.fixture(name="device")
-def device_fixture(request, connection):
+def device_fixture(request: pytest.FixtureRequest, connection: FakeConnection) -> Any:
     """The Brick or Bricklet under test. It is created from the class, that the test module names in `DEVICE`."""
     return request.module.DEVICE(UID, connection)
 
 
 @pytest.fixture(name="bricklet")
-def bricklet_fixture(device):
+def bricklet_fixture(device: Any) -> Any:
     """The Bricklet under test"""
     return device
 
 
 @pytest.fixture(name="brick")
-def brick_fixture(device):
+def brick_fixture(device: Any) -> Any:
     """The Brick under test"""
     return device
 
 
-def pytest_generate_tests(metafunc) -> None:
+def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     """Run the tests of `DeviceTests` once for every entry in the tables `CALLS` and `REJECTED` of the test module."""
     if "call" in metafunc.fixturenames:
         metafunc.parametrize("call", metafunc.module.CALLS, ids=str)

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -134,7 +134,7 @@ class BrickletAmbientLightV2(Device):
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> Decimal:
-        return await self._get_value(sid)
+        return cast(Decimal, await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -150,8 +150,8 @@ class BrickletAmbientLightV2(Device):
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
-    async def get_callback_configuration(self, sid) -> AdvancedCallbackConfiguration:
-        return await self._get_callback_configuration(sid)
+    async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_illuminance(self) -> Decimal:
         """
@@ -170,7 +170,7 @@ class BrickletAmbientLightV2(Device):
         )
         return ILLUMINANCE.to_si(unpack_payload(payload, "I"))
 
-    async def set_illuminance_callback_period(self, period: Duration = 0, response_expected=True) -> None:
+    async def set_illuminance_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
         Sets the period with which the :cb:`Illuminance` callback is triggered periodically. A value of 0 turns the
         callback off.

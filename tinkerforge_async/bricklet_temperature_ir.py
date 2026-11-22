@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -151,7 +151,7 @@ class BrickletTemperatureIR(Device):  # pylint: disable=too-many-public-methods,
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_ambient_temperature(self) -> Decimal:
         """

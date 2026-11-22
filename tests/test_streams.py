@@ -1,5 +1,8 @@
 """Tests for the helpers of the high-level functions, that transfer streams in chunks."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
+
 import pytest
 
 from tinkerforge_async.streams import (
@@ -18,18 +21,19 @@ from .fake_connection import run
 class Recorder:  # pylint: disable=too-few-public-methods
     """A low-level write function, that records the chunks and returns a result."""
 
-    def __init__(self, written=None):
-        self.chunks = []
+    def __init__(self, written: int | None = None) -> None:
+        self.chunks: list[tuple[int, int, list[Any]]] = []
         self.written = written  # The number of items, that the device accepts per chunk
 
-    async def __call__(self, length, offset, chunk):
+    async def __call__(self, length: int, offset: int, chunk: list[Any]) -> Any:
+        """Both kinds of write functions are recorded, so the result is either the result or (written, result)"""
         self.chunks.append((length, offset, chunk))
         if self.written is None:
             return f"result {len(self.chunks)}"
         return min(self.written, length - offset), f"result {len(self.chunks)}"
 
 
-def test_write_splits_the_data_into_padded_chunks():
+def test_write_splits_the_data_into_padded_chunks() -> None:
     """The last chunk is padded, and the result of the last chunk is returned."""
     send = Recorder()
     result = run(write_stream(send, [1, 2, 3, 4, 5], name="data", chunk_size=2, padding=0, max_length=10))
@@ -37,14 +41,14 @@ def test_write_splits_the_data_into_padded_chunks():
     assert result == "result 3"
 
 
-def test_write_of_an_empty_stream_sends_one_chunk():
+def test_write_of_an_empty_stream_sends_one_chunk() -> None:
     """An empty stream is sent as a single padded chunk with length 0."""
     send = Recorder()
     run(write_stream(send, "", name="data", chunk_size=3, padding="\0"))
     assert send.chunks == [(0, 0, ["\0", "\0", "\0"])]
 
 
-def test_write_rejects_invalid_lengths():
+def test_write_rejects_invalid_lengths() -> None:
     """Too long streams and streams that do not have the fixed length are rejected before anything is sent."""
     send = Recorder()
     with pytest.raises(ValueError):
@@ -56,7 +60,7 @@ def test_write_rejects_invalid_lengths():
     assert len(send.chunks) == 2
 
 
-def test_short_write_stops_at_the_first_incomplete_chunk():
+def test_short_write_stops_at_the_first_incomplete_chunk() -> None:
     """The device accepts less than a chunk, so the rest of the data is not sent."""
     send = Recorder(written=1)
     written, result = run(write_stream_short(send, "abcde", name="data", chunk_size=2, padding="\0", max_length=10))
@@ -65,7 +69,7 @@ def test_short_write_stops_at_the_first_incomplete_chunk():
     assert send.chunks == [(5, 0, ["a", "b"])]
 
 
-def test_short_write_of_a_complete_stream():
+def test_short_write_of_a_complete_stream() -> None:
     """All chunks are accepted. The written items of all chunks are added."""
     send = Recorder(written=2)
     written, _ = run(write_stream_short(send, "abcd", name="data", chunk_size=2, padding="\0"))
@@ -77,36 +81,36 @@ def test_short_write_of_a_complete_stream():
         run(write_stream_short(send, "abc", name="data", chunk_size=2, padding="\0", max_length=2))
 
 
-def test_pad_single_chunk():
+def test_pad_single_chunk() -> None:
     """A single chunk is padded to its size, and longer data is rejected."""
     assert pad_single_chunk([1, 2], name="data", chunk_size=4, padding=0) == [1, 2, 0, 0]
     with pytest.raises(ValueError):
         pad_single_chunk([1, 2, 3], name="data", chunk_size=2, padding=0)
 
 
-def reader(chunks):
+def reader(chunks: list[Chunk]) -> Callable[[], Coroutine[Any, Any, Chunk]]:
     """A low-level read function, that returns the given chunks one after another."""
     replies = iter(chunks)
 
-    async def read_chunk():
+    async def read_chunk() -> Chunk:
         return next(replies)
 
     return read_chunk
 
 
-def test_read_assembles_the_chunks():
+def test_read_assembles_the_chunks() -> None:
     """The chunks are concatenated and the padding of the last chunk is removed."""
     chunks = [Chunk(5, 0, [1, 2], "first"), Chunk(5, 2, [3, 4], "second"), Chunk(5, 4, [5, 0], "last")]
     assert run(read_stream(reader(chunks), name="data", chunk_size=2)) == ([1, 2, 3, 4, 5], "last")
 
 
-def test_read_of_an_empty_fixed_length_stream():
+def test_read_of_an_empty_fixed_length_stream() -> None:
     """Streams with a fixed length signal that there is no data with the maximum chunk offset."""
     chunks = [Chunk(4, 0xFFFF, [0, 0], "empty")]
     assert run(read_stream(reader(chunks), name="data", chunk_size=2, empty_offset=0xFFFF)) == ([], "empty")
 
 
-def test_read_out_of_sync_drops_the_rest_of_the_stream():
+def test_read_out_of_sync_drops_the_rest_of_the_stream() -> None:
     """A chunk at the wrong offset raises an error, after the rest of the stream was read."""
     chunks = [Chunk(6, 0, [1, 2], None), Chunk(6, 4, [5, 6], None)]
     with pytest.raises(StreamOutOfSyncError):
@@ -120,7 +124,7 @@ def test_read_out_of_sync_drops_the_rest_of_the_stream():
     assert run(read_chunk()) == Chunk(6, 0, [1, 2], None)  # The next stream starts in sync
 
 
-def test_assembler():
+def test_assembler() -> None:
     """The assembler returns the data once the stream is complete."""
     assembler = StreamAssembler()
     assert assembler.add(3, 0, [1, 2]) is None
@@ -129,7 +133,7 @@ def test_assembler():
     assert assembler.add(1, 0, [7, 0]) == [7]
 
 
-def test_assembler_drops_streams_that_are_out_of_sync():
+def test_assembler_drops_streams_that_are_out_of_sync() -> None:
     """Chunks without the start of the stream are ignored, and a gap drops the stream."""
     assembler = StreamAssembler()
     assert assembler.add(4, 2, [3, 4]) is None  # The start is missing

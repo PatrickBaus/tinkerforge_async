@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -167,7 +167,7 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_weight(self) -> Decimal:
         """
@@ -315,7 +315,7 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MOVING_AVERAGE, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def led_on(self, response_expected: bool = True) -> None:
         """
@@ -336,7 +336,7 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_LED_ON, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def calibrate(self, weight: float | Decimal, response_expected: bool = True) -> None:
         """

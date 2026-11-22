@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -411,7 +411,7 @@ class BrickletColor(Device):  # pylint: disable=too-many-public-methods,too-few-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ILLUMINANCE, response_expected=True
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def get_color_temperature(self) -> Decimal:
         """

@@ -1,6 +1,7 @@
 """Tests for the helper that merges async generators."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 
 import pytest
 
@@ -12,14 +13,16 @@ from .fake_connection import run, take
 class Source:  # pylint: disable=too-few-public-methods
     """An async generator, that records whether it was closed."""
 
-    def __init__(self, *items, error=None, delay=0.0, endless=False):
+    def __init__(
+        self, *items: int | str, error: RuntimeError | None = None, delay: float = 0.0, endless: bool = False
+    ) -> None:
         self.items = items
         self.error = error
         self.delay = delay
         self.endless = endless
         self.closed = False
 
-    async def generate(self):
+    async def generate(self) -> AsyncGenerator[int | str, None]:
         """Yield the items, then raise the error, wait forever or stop."""
         try:
             for item in self.items:
@@ -33,12 +36,12 @@ class Source:  # pylint: disable=too-few-public-methods
             self.closed = True
 
 
-async def collect(*sources, count=None):
+async def collect(*sources: Source, count: int | None = None) -> list[int | str]:
     """Read the merged stream of the sources. Stop after a number of items, if `count` is given."""
     return await take(join(*(source.generate() for source in sources)), count)
 
 
-def test_the_items_of_all_generators_are_merged():
+def test_the_items_of_all_generators_are_merged() -> None:
     """The stream ends, when all generators are exhausted."""
     sources = Source(1, 2, 3), Source("a", "b"), Source()
     items = run(collect(*sources))
@@ -49,18 +52,18 @@ def test_the_items_of_all_generators_are_merged():
     assert all(source.closed for source in sources)
 
 
-def test_items_are_yielded_in_the_order_they_arrive():
+def test_items_are_yielded_in_the_order_they_arrive() -> None:
     """A slow generator does not block a fast generator."""
     slow, fast = Source("slow", delay=0.05), Source("fast 1", "fast 2")
     assert run(collect(slow, fast)) == ["fast 1", "fast 2", "slow"]
 
 
-def test_join_without_generators_is_empty():
+def test_join_without_generators_is_empty() -> None:
     """There is nothing to merge."""
     assert run(collect()) == []
 
 
-def test_an_exception_is_raised_by_the_stream_and_all_generators_are_closed():
+def test_an_exception_is_raised_by_the_stream_and_all_generators_are_closed() -> None:
     """The error of one generator ends the stream."""
     failing, endless = Source(1, error=RuntimeError("broken")), Source("a", endless=True)
     with pytest.raises(RuntimeError, match="broken"):
@@ -69,14 +72,14 @@ def test_an_exception_is_raised_by_the_stream_and_all_generators_are_closed():
     assert endless.closed
 
 
-def test_leaving_the_loop_closes_all_generators():
+def test_leaving_the_loop_closes_all_generators() -> None:
     """The generators must not keep running, if nobody reads the stream any more."""
     sources = Source(1, 2, 3, endless=True), Source("a", endless=True)
     assert len(run(collect(*sources, count=2))) == 2
     assert all(source.closed for source in sources)
 
 
-def test_check_range():
+def test_check_range() -> None:
     """The limits are valid values. The error names the value, that the user passed."""
     check_range("value", 0, 0, 255)
     check_range("value", 255, 0, 255)
@@ -86,14 +89,14 @@ def test_check_range():
         check_range("voltage", 70000, 0, 65535, 70.0)
 
 
-def test_check_length():
+def test_check_length() -> None:
     """Arrays must have exactly the length, that the device expects."""
     check_length("data", bytes(4), 4)
     with pytest.raises(ValueError, match="expected 4 items for data, got 3 items"):
         check_length("data", [1, 2, 3], 4)
 
 
-def test_encode_string():
+def test_encode_string() -> None:
     """Strings are sent as Latin-1. Strings, that do not fit or cannot be encoded, are rejected."""
     assert encode_string("text", "20 °C", 5) == b"20 \xb0C"
     assert encode_string("text", "", 5) == b""

@@ -8,7 +8,7 @@ from tinkerforge_async.bricklet_industrial_ptc import BrickletIndustrialPtc
 from tinkerforge_async.bricklet_ptc_v2 import BrickletPtcV2
 
 from .device_tests import DeviceTests
-from .fake_connection import read_events, summary
+from .fake_connection import FakeConnection, read_events, summary
 from .test_bricklet_ptc_v2 import CALLS, REJECTED
 
 __all__ = ["CALLS", "REJECTED"]  # The tables of the PTC Bricklet 2.0 are used by `DeviceTests`
@@ -17,7 +17,7 @@ DEVICE = BrickletIndustrialPtc
 CallbackID = BrickletIndustrialPtc.CallbackID
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletIndustrialPtc) -> None:
     """The Bricklet knows who it is. It is a PTC Bricklet 2.0 with another name."""
     assert isinstance(bricklet, BrickletPtcV2)
     assert bricklet.DEVICE_IDENTIFIER.value == 2164
@@ -29,7 +29,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletIndustrialPtc, connection: FakeConnection) -> None:
     """The temperature is sid 0, the resistance sid 1 and the state of the sensor sid 2."""
     connection.callback(CallbackID.TEMPERATURE, "i", 2500)
     connection.callback(CallbackID.RESISTANCE, "i", 8192)

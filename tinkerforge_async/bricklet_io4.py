@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_range, ms_to_seconds, seconds_to_ms
@@ -169,7 +169,7 @@ class BrickletIO4(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_configuration(
         self,
@@ -283,7 +283,7 @@ class BrickletIO4(Device):  # pylint: disable=too-many-public-methods,too-few-pu
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_INTERRUPT, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_monoflop(
         self, selection_mask: int, value_mask: int, time: Duration, response_expected: bool = True
@@ -391,7 +391,7 @@ class BrickletIO4(Device):  # pylint: disable=too-many-public-methods,too-few-pu
             data=pack_payload((pin, bool(reset_counter)), "B !"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_edge_count_config(
         self,

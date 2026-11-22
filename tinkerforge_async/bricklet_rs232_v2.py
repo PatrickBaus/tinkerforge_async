@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -148,7 +148,7 @@ class BrickletRS232V2(BrickletWithMCU):
 
     SID_TO_CALLBACK = {0: (CallbackID.READ, CallbackID.ERROR_COUNT, CallbackID.FRAME_READABLE)}
 
-    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -219,7 +219,7 @@ class BrickletRS232V2(BrickletWithMCU):
                 f"Error writing message {data!r}, offset: {offset}. "
                 f"{bytes_written} bytes written out of {length} bytes."
             )
-        return bytes_written
+        return cast(int, bytes_written)
 
     async def set_read_callback(self, enable: bool = False, response_expected: bool = True) -> None:
         """
@@ -245,7 +245,7 @@ class BrickletRS232V2(BrickletWithMCU):
             device=self, function_id=FunctionID.IS_READ_CALLBACK_ENABLED, response_expected=True
         )
 
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -400,7 +400,7 @@ class BrickletRS232V2(BrickletWithMCU):
             device=self, function_id=FunctionID.GET_FRAME_READABLE_CALLBACK_CONFIGURATION, response_expected=True
         )
 
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def write(self, message: bytes | str) -> int:
         """

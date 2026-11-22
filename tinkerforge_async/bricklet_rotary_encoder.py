@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -126,7 +126,7 @@ class BrickletRotaryEncoder(Device):  # pylint: disable=too-many-public-methods,
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_count(self, reset: bool) -> int:
         """
@@ -145,7 +145,7 @@ class BrickletRotaryEncoder(Device):  # pylint: disable=too-many-public-methods,
             data=pack_payload((bool(reset),), "!"),
             response_expected=True,
         )
-        return unpack_payload(payload, "i")
+        return cast(int, unpack_payload(payload, "i"))
 
     async def set_count_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -260,7 +260,7 @@ class BrickletRotaryEncoder(Device):  # pylint: disable=too-many-public-methods,
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_PRESSED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

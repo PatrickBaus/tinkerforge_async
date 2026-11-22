@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -143,13 +143,13 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         return self.__sensor_type
 
     @sensor_type.setter
-    def sensor_type(self, value: SensorType):
+    def sensor_type(self, value: SensorType | int) -> None:
         if not isinstance(value, SensorType):
             self.__sensor_type: SensorType = SensorType(value)
         else:
             self.__sensor_type = value
 
-    def __init__(self, uid, ipcon: IPConnectionAsync, sensor_type: SensorType = SensorType.TYPE_K) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: SensorType | int = SensorType.TYPE_K) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -167,7 +167,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         )
 
     async def get_value(self, sid: int) -> Decimal | GetErrorState:
-        return await self._get_value(sid)
+        return cast(Decimal | GetErrorState, await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -185,7 +185,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         # Only the temperature (sid 0) has a callback configuration. The error state is always reported.
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_temperature(self) -> Decimal:
         """
@@ -213,7 +213,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         option: Threshold | str = Threshold.OFF,
         minimum: Decimal | int | float = CELSIUS_ZERO,
         maximum: Decimal | int | float = CELSIUS_ZERO,
-        response_expected=True,
+        response_expected: bool = True,
     ) -> None:
         """
         The period is the period with which the :cb:`Temperature` callback is triggered

@@ -7,7 +7,7 @@ from decimal import Decimal
 from tinkerforge_async.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7, GetSegments
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, summary
+from .fake_connection import Call, FakeConnection, read_events, summary
 
 DEVICE = BrickletSegmentDisplay4x7
 FunctionID = BrickletSegmentDisplay4x7.FunctionID
@@ -54,7 +54,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletSegmentDisplay4x7) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 237
     assert bricklet.get_api_version() == (2, 0, 0)
@@ -65,7 +65,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletSegmentDisplay4x7, connection: FakeConnection) -> None:
     """The callback has no payload."""
     connection.callback(CallbackID.COUNTER_FINISHED)
     assert summary(read_events(bricklet)) == [(0, CallbackID.COUNTER_FINISHED, None)]

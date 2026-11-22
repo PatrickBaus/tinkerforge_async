@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -116,7 +116,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         ),
     )
 
-    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -126,7 +126,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         self.api_version = (2, 0, 2)
 
     async def get_value(self, sid: int) -> Decimal:
-        return await self._get_value(sid)
+        return cast(Decimal, await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -143,7 +143,7 @@ class BrickletHumidityV2(BrickletWithMCU):
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_humidity(self) -> Decimal:
         """

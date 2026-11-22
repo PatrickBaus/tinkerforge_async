@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -156,7 +156,7 @@ class BrickletThermocouple(Device):  # pylint: disable=too-many-public-methods,t
         Channel(1, callbacks=(CallbackID.ERROR_STATE,)),
     )
 
-    def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: SensorType = SensorType.TYPE_K) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: SensorType | int = SensorType.TYPE_K) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -223,7 +223,7 @@ class BrickletThermocouple(Device):  # pylint: disable=too-many-public-methods,t
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_temperature(self) -> Decimal:
         """

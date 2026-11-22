@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 from ..devices import Device
 from ..ip_connection_helper import pack_payload, unpack_payload
@@ -76,7 +76,7 @@ class EthernetExtension(Device):
             device=self, function_id=FunctionID.IS_ETHERNET_PRESENT, response_expected=True
         )
 
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_ethernet_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -185,7 +185,7 @@ class EthernetExtension(Device):
 
         return GetEthernetStatus(*unpack_payload(payload, "6B 4B 4B 4B I I 32s"))
 
-    async def set_ethernet_hostname(self, hostname: bytes | str, response_expected: bool = True):
+    async def set_ethernet_hostname(self, hostname: bytes | str, response_expected: bool = True) -> None:
         """
         Sets the hostname of the Ethernet Extension. The hostname will be displayed
         by access points as the hostname in the DHCP clients table.
@@ -334,4 +334,4 @@ class EthernetExtension(Device):
             device=self, function_id=FunctionID.GET_ETHERNET_AUTHENTICATION_SECRET, response_expected=True
         )
 
-        return unpack_payload(payload, "64s")
+        return cast(str, unpack_payload(payload, "64s"))

@@ -9,7 +9,7 @@ from tinkerforge_async.bricklet_gps import BrickletGPS, GetAltitude, GetCoordina
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletGPS
 FunctionID = BrickletGPS.FunctionID
@@ -179,14 +179,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletGPS) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 222
     assert device.get_api_version() == (2, 0, 1)
     assert str(device).startswith("GPS Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -199,7 +199,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_coordinates(device, connection):
+def test_callback_coordinates(device: BrickletGPS, connection: FakeConnection) -> None:
     """The callback COORDINATES is converted to an event."""
     connection.callback(CallbackID.COORDINATES, "I c I c H H H H", *(3, "a", 5, "a", 7, 8, 9, 10))
     assert summary(read_events(device)) == [
@@ -220,19 +220,19 @@ def test_callback_coordinates(device, connection):
     ]
 
 
-def test_callback_status(device, connection):
+def test_callback_status(device: BrickletGPS, connection: FakeConnection) -> None:
     """The callback STATUS is converted to an event."""
     connection.callback(CallbackID.STATUS, "B B B", *(3, 4, 5))
     assert summary(read_events(device)) == [(1, CallbackID.STATUS, GetStatus(DEVICE.Fix.FIX_3D_FIX, 4, 5))]
 
 
-def test_callback_altitude(device, connection):
+def test_callback_altitude(device: BrickletGPS, connection: FakeConnection) -> None:
     """The callback ALTITUDE is converted to an event."""
     connection.callback(CallbackID.ALTITUDE, "i i", *(3, 4))
     assert summary(read_events(device)) == [(2, CallbackID.ALTITUDE, GetAltitude(Decimal("0.03"), Decimal("0.04")))]
 
 
-def test_callback_motion(device, connection):
+def test_callback_motion(device: BrickletGPS, connection: FakeConnection) -> None:
     """The callback MOTION is converted to an event."""
     connection.callback(CallbackID.MOTION, "I I", *(3, 4))
     assert summary(read_events(device)) == [
@@ -240,7 +240,7 @@ def test_callback_motion(device, connection):
     ]
 
 
-def test_callback_date_time(device, connection):
+def test_callback_date_time(device: BrickletGPS, connection: FakeConnection) -> None:
     """The callback DATE_TIME is converted to an event."""
     connection.callback(CallbackID.DATE_TIME, "I I", *(10100, 4))
     assert summary(read_events(device)) == [(4, CallbackID.DATE_TIME, GetDateTime(10100, 4))]

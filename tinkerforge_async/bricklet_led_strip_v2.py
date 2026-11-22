@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
@@ -458,7 +458,7 @@ class BrickletLEDStripV2(BrickletWithMCU):  # pylint: disable=too-many-public-me
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_FRAME_STARTED_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def start_frame(self, response_expected: bool = True) -> None:
         """
@@ -527,7 +527,7 @@ class BrickletLEDStripV2(BrickletWithMCU):  # pylint: disable=too-many-public-me
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_AUTO_TRUNCATE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

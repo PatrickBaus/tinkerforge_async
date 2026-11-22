@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from ..devices import BasicCallbackConfiguration
 from ..devices import BrickletPort as Port
@@ -606,7 +606,7 @@ class BrickMaster(
             data=pack_payload((communication_method.value,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_spitfp_baudrate(
         self, bricklet_port: Port, baudrate: int = 1400000, response_expected: bool = True
@@ -656,7 +656,7 @@ class BrickMaster(
             data=pack_payload((bricklet_port.value.encode(),), "c"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def get_spitfp_error_count(self, bricklet_port: Port) -> GetSPITFPErrorCount:
         """
@@ -725,7 +725,7 @@ class BrickMaster(
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_STATUS_LED_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_protocol1_bricklet_name(self, bricklet_port: Port) -> GetProtocol1BrickletName:
         """
@@ -795,7 +795,7 @@ class BrickMaster(
             data=pack_payload((list(map(int, data)),), "64B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_bricklets_enabled(self, bricklets_enabled: bool, response_expected: bool = True) -> None:
         """
@@ -824,7 +824,7 @@ class BrickMaster(
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_BRICKLETS_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     @override
     async def get_chip_temperature(self) -> Decimal:

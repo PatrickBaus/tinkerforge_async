@@ -9,7 +9,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, BasicCallba
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, read_events, request, run, summary
 
 DEVICE = BrickletTemperature
 FunctionID = BrickletTemperature.FunctionID
@@ -64,7 +64,7 @@ CALLS = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletTemperature) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 216
     assert bricklet.get_api_version() == (2, 0, 1)
@@ -87,7 +87,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_set_callback_configuration(bricklet, connection):
+def test_set_callback_configuration(bricklet: BrickletTemperature, connection: FakeConnection) -> None:
     """The period and the threshold are set by two requests. The default of the thresholds is 0 °C."""
     run(bricklet.set_callback_configuration(0, period=1, option=Threshold.LESS_THAN, minimum=Decimal("283.15")))
     assert connection.requests == [
@@ -96,7 +96,7 @@ def test_set_callback_configuration(bricklet, connection):
     ]
 
 
-def test_get_callback_configuration(bricklet, connection):
+def test_get_callback_configuration(bricklet: BrickletTemperature, connection: FakeConnection) -> None:
     """The period and the threshold are merged."""
     connection.reply(FunctionID.GET_TEMPERATURE_CALLBACK_PERIOD, "I", 250)
     connection.reply(FunctionID.GET_TEMPERATURE_CALLBACK_THRESHOLD, "c h h", "i", 100, 200)
@@ -105,7 +105,7 @@ def test_get_callback_configuration(bricklet, connection):
     )
 
 
-def test_events_are_converted_to_kelvin(bricklet, connection):
+def test_events_are_converted_to_kelvin(bricklet: BrickletTemperature, connection: FakeConnection) -> None:
     """Both callbacks belong to sid 0."""
     connection.callback(CallbackID.TEMPERATURE, "h", 2500)
     connection.callback(CallbackID.TEMPERATURE_REACHED, "h", -500)

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -157,7 +157,7 @@ class BrickletLoadCellV2(BrickletWithMCU):  # pylint: disable=too-many-public-me
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_weight(self) -> Decimal:
         """
@@ -263,7 +263,7 @@ class BrickletLoadCellV2(BrickletWithMCU):  # pylint: disable=too-many-public-me
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MOVING_AVERAGE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_info_led_config(
         self, config: InfoLEDConfig | int = InfoLEDConfig.OFF, response_expected: bool = True

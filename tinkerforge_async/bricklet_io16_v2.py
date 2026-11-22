@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -287,7 +287,7 @@ class BrickletIO16V2(BrickletWithMCU):  # pylint: disable=too-many-public-method
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def set_value(self, value: Sequence[bool], response_expected: bool = True) -> None:
         """
@@ -539,7 +539,7 @@ class BrickletIO16V2(BrickletWithMCU):  # pylint: disable=too-many-public-method
             data=pack_payload((channel, bool(reset_counter)), "B !"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_edge_count_configuration(
         self,

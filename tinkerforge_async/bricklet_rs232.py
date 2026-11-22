@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_length, check_range, seconds_to_ms
@@ -227,7 +227,7 @@ class BrickletRS232(Device):  # pylint: disable=too-many-public-methods,too-few-
             data=pack_payload((list(message), length), "60c B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def read(self) -> Read:
         """
@@ -269,7 +269,7 @@ class BrickletRS232(Device):  # pylint: disable=too-many-public-methods,too-few-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_READ_CALLBACK_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -371,7 +371,7 @@ class BrickletRS232(Device):  # pylint: disable=too-many-public-methods,too-few-
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_FRAME_READABLE_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def read_frame(self) -> ReadFrame:
         """

@@ -15,7 +15,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, SimpleCallb
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletIndustrialDigitalIn4V2
 FunctionID = BrickletIndustrialDigitalIn4V2.FunctionID
@@ -168,14 +168,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletIndustrialDigitalIn4V2) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2100
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Industrial Digital In 4 Bricklet 2.0 with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -188,13 +188,13 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_value(device, connection):
+def test_callback_value(device: BrickletIndustrialDigitalIn4V2, connection: FakeConnection) -> None:
     """The callback VALUE is converted to an event."""
     connection.callback(CallbackID.VALUE, "B ! !", *(3, True, True))
     assert summary(read_events(device)) == [(0, CallbackID.VALUE, ValueEvent(DEVICE.Channel.CHANNEL_3, True, True))]
 
 
-def test_callback_all_value(device, connection):
+def test_callback_all_value(device: BrickletIndustrialDigitalIn4V2, connection: FakeConnection) -> None:
     """The callback ALL_VALUE is converted to an event."""
     connection.callback(
         CallbackID.ALL_VALUE, "4! 4!", *([i % 2 == 0 for i in range(4)], [i % 2 == 0 for i in range(4)])

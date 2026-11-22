@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -133,7 +133,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         self.api_version = (2, 0, 1)
 
     async def get_value(self, sid: int) -> Decimal:
-        return await self._get_value(sid)
+        return cast(Decimal, await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -144,13 +144,13 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ):
+    ) -> None:
         await self._set_callback_configuration(
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
         )
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_air_pressure(self) -> Decimal:
         """
@@ -288,7 +288,7 @@ class BrickletBarometer(Device):  # pylint: disable=too-many-public-methods
         option: Threshold | str = Threshold.OFF,
         minimum: float | Decimal = 0,
         maximum: float | Decimal = 0,
-        response_expected=True,
+        response_expected: bool = True,
     ) -> None:
         """
         Sets the thresholds for the :cb:`Altitude Reached` callback.

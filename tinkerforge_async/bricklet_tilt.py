@@ -14,7 +14,7 @@ function.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .ip_connection_helper import unpack_payload
@@ -131,7 +131,7 @@ class BrickletTilt(Device):  # pylint: disable=too-many-public-methods,too-few-p
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_TILT_STATE_CALLBACK_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

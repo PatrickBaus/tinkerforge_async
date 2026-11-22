@@ -22,7 +22,7 @@ from tinkerforge_async.brick_master import (
 )
 
 from .device_tests import BSSID, GATEWAY, IP, MAC, MASK, NULL, DeviceTests
-from .fake_connection import Call, request, run
+from .fake_connection import Call, FakeConnection, request, run
 
 DEVICE = BrickMaster
 FunctionID = BrickMaster.FunctionID
@@ -216,7 +216,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_get_wifi_encryption(brick, connection):
+def test_get_wifi_encryption(brick: BrickMaster, connection: FakeConnection) -> None:
     """The key is not returned by the Brick."""
     connection.reply(FunctionID.GET_WIFI_ENCRYPTION, "B 50s B B H H H", 1, b"", 2, 0b10111, 100, 200, 300)
     encryption = run(brick.get_wifi_encryption())
@@ -227,7 +227,7 @@ def test_get_wifi_encryption(brick, connection):
     assert encryption[3:] == (100, 200, 300)
 
 
-def test_eap_options():
+def test_eap_options() -> None:
     """The options of the authentication are packed into one byte."""
     options = EapOptions(0b10111)
     assert options.outer_auth is WifiEapOuterAuth.EAP_PEAP

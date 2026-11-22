@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 from ..devices import Device
 from ..ip_connection_helper import pack_payload, unpack_payload
@@ -47,7 +47,7 @@ class Rs485Extension(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_RS485_PRESENT, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_rs485_address(self, address: int, response_expected: bool = True) -> None:
         """
@@ -75,7 +75,7 @@ class Rs485Extension(Device):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_RS485_ADDRESS, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def __set_rs485_slave_address(self, num: int, address: int, response_expected: bool = True) -> None:
         """
@@ -140,7 +140,7 @@ class Rs485Extension(Device):
             response_expected=True,
         )
 
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def get_rs485_slave_addresses(self) -> tuple[int, ...]:
         """
@@ -164,7 +164,7 @@ class Rs485Extension(Device):
             device=self, function_id=FunctionID.GET_RS485_ERROR_LOG, response_expected=True
         )
 
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_rs485_configuration(
         self, speed: int, parity: Rs485Parity, stopbits: int, response_expected: bool = True

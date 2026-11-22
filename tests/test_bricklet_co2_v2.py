@@ -10,7 +10,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, SimpleCallb
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletCO2V2
 FunctionID = BrickletCO2V2.FunctionID
@@ -259,14 +259,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletCO2V2) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2147
     assert device.get_api_version() == (2, 0, 1)
     assert str(device).startswith("CO2 Bricklet 2.0 with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -279,7 +279,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_all_values(device, connection):
+def test_callback_all_values(device: BrickletCO2V2, connection: FakeConnection) -> None:
     """The callback ALL_VALUES is converted to an event."""
     connection.callback(CallbackID.ALL_VALUES, "H h H", *(3, 4, 5))
     assert summary(read_events(device)) == [
@@ -287,19 +287,19 @@ def test_callback_all_values(device, connection):
     ]
 
 
-def test_callback_co2_concentration(device, connection):
+def test_callback_co2_concentration(device: BrickletCO2V2, connection: FakeConnection) -> None:
     """The callback CO2_CONCENTRATION is converted to an event."""
     connection.callback(CallbackID.CO2_CONCENTRATION, "H", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.CO2_CONCENTRATION, Decimal("3"))]
 
 
-def test_callback_temperature(device, connection):
+def test_callback_temperature(device: BrickletCO2V2, connection: FakeConnection) -> None:
     """The callback TEMPERATURE is converted to an event."""
     connection.callback(CallbackID.TEMPERATURE, "h", *(3,))
     assert summary(read_events(device)) == [(2, CallbackID.TEMPERATURE, Decimal("273.18"))]
 
 
-def test_callback_humidity(device, connection):
+def test_callback_humidity(device: BrickletCO2V2, connection: FakeConnection) -> None:
     """The callback HUMIDITY is converted to an event."""
     connection.callback(CallbackID.HUMIDITY, "H", *(3,))
     assert summary(read_events(device)) == [(3, CallbackID.HUMIDITY, Decimal("0.03"))]

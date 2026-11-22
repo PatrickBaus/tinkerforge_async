@@ -9,7 +9,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, BasicCallba
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, read_events, request, run, summary
 
 DEVICE = BrickletBarometer
 FunctionID = BrickletBarometer.FunctionID
@@ -130,7 +130,7 @@ REJECTED = [
 ]
 
 
-def test_identity(bricklet):
+def test_identity(bricklet: BrickletBarometer) -> None:
     """The Bricklet knows who it is."""
     assert bricklet.DEVICE_IDENTIFIER.value == 221
     assert bricklet.get_api_version() == (2, 0, 1)
@@ -141,7 +141,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_set_callback_configuration(bricklet, connection):
+def test_set_callback_configuration(bricklet: BrickletBarometer, connection: FakeConnection) -> None:
     """The period and the threshold are set by two requests."""
     run(bricklet.set_callback_configuration(0, 1, False, Threshold.GREATER_THAN, 100000))
     run(bricklet.set_callback_configuration(1, Decimal("0.1"), maximum=7, response_expected=False))
@@ -153,7 +153,7 @@ def test_set_callback_configuration(bricklet, connection):
     ]
 
 
-def test_get_callback_configuration(bricklet, connection):
+def test_get_callback_configuration(bricklet: BrickletBarometer, connection: FakeConnection) -> None:
     """The period and the threshold are merged."""
     connection.reply(FunctionID.GET_AIR_PRESSURE_CALLBACK_PERIOD, "I", 250)
     connection.reply(FunctionID.GET_AIR_PRESSURE_CALLBACK_THRESHOLD, "c i i", "i", 100, 200)
@@ -167,7 +167,7 @@ def test_get_callback_configuration(bricklet, connection):
     )
 
 
-def test_events(bricklet, connection):
+def test_events(bricklet: BrickletBarometer, connection: FakeConnection) -> None:
     """The air pressure is sid 0 and converted to Pa, the altitude is sid 1 and converted to m."""
     connection.callback(CallbackID.AIR_PRESSURE, "i", 1013250)
     connection.callback(CallbackID.ALTITUDE, "i", -1234)

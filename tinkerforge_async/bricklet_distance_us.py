@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import BasicCallbackConfiguration, Channel, Device, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -102,7 +102,7 @@ class BrickletDistanceUS(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DISTANCE_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_distance_callback_period(self, period: Duration = 0, response_expected: bool = True) -> None:
         """
@@ -227,7 +227,7 @@ class BrickletDistanceUS(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MOVING_AVERAGE, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

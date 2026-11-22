@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -376,7 +376,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
         """
         Returns the callback configuration of the channel with the secondary id `sid`.
         """
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def write_pixels_low_level(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -994,7 +994,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
             data=pack_payload((index,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_gui_slider(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -1138,7 +1138,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
             data=pack_payload((index,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_gui_tab_configuration(
         self,
@@ -1334,7 +1334,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_GUI_TAB_SELECTED, response_expected=True
         )
-        return unpack_payload(payload, "b")
+        return cast(int, unpack_payload(payload, "b"))
 
     async def set_gui_graph_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,

@@ -15,7 +15,7 @@ from tinkerforge_async.bricklet_real_time_clock import (
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletRealTimeClock
 FunctionID = BrickletRealTimeClock.FunctionID
@@ -222,14 +222,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletRealTimeClock) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 268
     assert device.get_api_version() == (2, 0, 1)
     assert str(device).startswith("Real-Time Clock Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -242,7 +242,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_date_time(device, connection):
+def test_callback_date_time(device: BrickletRealTimeClock, connection: FakeConnection) -> None:
     """The callback DATE_TIME is converted to an event."""
     connection.callback(CallbackID.DATE_TIME, "H B B B B B B B q", *(2000, 4, 5, 6, 7, 8, 9, 7, 11))
     assert summary(read_events(device)) == [
@@ -250,7 +250,7 @@ def test_callback_date_time(device, connection):
     ]
 
 
-def test_callback_alarm(device, connection):
+def test_callback_alarm(device: BrickletRealTimeClock, connection: FakeConnection) -> None:
     """The callback ALARM is converted to an event."""
     connection.callback(CallbackID.ALARM, "H B B B B B B B q", *(2000, 4, 5, 6, 7, 8, 9, 7, 11))
     assert summary(read_events(device)) == [

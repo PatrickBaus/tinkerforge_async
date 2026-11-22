@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias, cast
 
 from .devices import Device, DeviceIdentifier, _FunctionID
 from .helper import check_range
@@ -130,7 +130,7 @@ class BrickletIndustrialAnalogOut(Device):  # pylint: disable=too-many-public-me
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_voltage(self, voltage: float | Decimal, response_expected: bool = True) -> None:
         """

@@ -2,12 +2,14 @@
 
 # pylint: disable=duplicate-code  # The devices of a family have a similar API, and so have their tests
 
+from collections.abc import Sequence
+
 import pytest
 
 from tinkerforge_async.brick_master import BrickMaster, GetRS485Configuration, Rs485Parity
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, request, run
+from .fake_connection import Call, FakeConnection, request, run
 
 DEVICE = BrickMaster
 FunctionID = BrickMaster.FunctionID
@@ -63,7 +65,9 @@ class TestRequests(DeviceTests):
         ([1] * 253, (1,) * 253 + (0,)),  # The maximum number of slaves
     ],
 )
-def test_set_rs485_slave_addresses(brick, connection, addresses, sent):
+def test_set_rs485_slave_addresses(
+    brick: BrickMaster, connection: FakeConnection, addresses: Sequence[int], sent: tuple[int, ...]
+) -> None:
     """The addresses are sent one by one with their index."""
     run(brick.set_rs485_slave_addresses(addresses))
     assert connection.requests == [
@@ -71,7 +75,7 @@ def test_set_rs485_slave_addresses(brick, connection, addresses, sent):
     ]
 
 
-def test_set_rs485_slave_addresses_rejects_invalid_addresses(brick):
+def test_set_rs485_slave_addresses_rejects_invalid_addresses(brick: BrickMaster) -> None:
     """An address is a byte."""
     with pytest.raises(ValueError):
         run(brick.set_rs485_slave_addresses((17, 256), response_expected=False))
@@ -80,7 +84,7 @@ def test_set_rs485_slave_addresses_rejects_invalid_addresses(brick):
 
 
 @pytest.mark.parametrize("addresses", [(), (17,), (17, 23, 42)])
-def test_get_rs485_slave_addresses(brick, connection, addresses):
+def test_get_rs485_slave_addresses(brick: BrickMaster, connection: FakeConnection, addresses: tuple[int, ...]) -> None:
     """The addresses are read one by one until the terminator is found."""
     for address in (*addresses, 0):
         connection.reply(FunctionID.GET_RS485_SLAVE_ADDRESS, "B", address)

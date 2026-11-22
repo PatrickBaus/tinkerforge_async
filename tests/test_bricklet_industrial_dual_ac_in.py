@@ -10,7 +10,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, SimpleCallb
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletIndustrialDualACIn
 FunctionID = BrickletIndustrialDualACIn.FunctionID
@@ -126,14 +126,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletIndustrialDualACIn) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2174
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Industrial Dual AC In Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -146,13 +146,13 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_value(device, connection):
+def test_callback_value(device: BrickletIndustrialDualACIn, connection: FakeConnection) -> None:
     """The callback VALUE is converted to an event."""
     connection.callback(CallbackID.VALUE, "B ! !", *(1, True, True))
     assert summary(read_events(device)) == [(0, CallbackID.VALUE, ValueEvent(DEVICE.Channel.CHANNEL_1, True, True))]
 
 
-def test_callback_all_value(device, connection):
+def test_callback_all_value(device: BrickletIndustrialDualACIn, connection: FakeConnection) -> None:
     """The callback ALL_VALUE is converted to an event."""
     connection.callback(
         CallbackID.ALL_VALUE, "2! 2!", *([i % 2 == 0 for i in range(2)], [i % 2 == 0 for i in range(2)])

@@ -17,7 +17,7 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from enum import Enum, Flag, unique
 from types import TracebackType
-from typing import Literal, Self, cast, overload, override
+from typing import Literal, Self, overload, override
 
 from .async_event_bus import EventBus
 from .device_factory import device_factory
@@ -133,17 +133,17 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         return self.__port
 
     @property
-    def timeout(self) -> float:
+    def timeout(self) -> float | None:
         """
-        Returns the timeout for async operations in seconds.
+        Returns the timeout for async operations in seconds. *None* means, that there is no timeout.
         """
         return self.__timeout
 
     @timeout.setter
-    def timeout(self, value: float) -> None:
+    def timeout(self, value: float | None) -> None:
         """
         The timeout used for reading and writing packets, if not set, the
-        DEFAULT_WAIT_TIMEOUT will be used.
+        DEFAULT_WAIT_TIMEOUT will be used. *None* disables the timeout.
         """
         self.__timeout = None if value is None else abs(float(value))
 
@@ -169,9 +169,9 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         self.__pending_requests: dict[int, asyncio.Future[tuple[HeaderPayload, bytes]]] = {}
         self.__next_nonce: int = 0
 
-        self.__running_tasks: set[asyncio.Task] = set()
+        self.__running_tasks: set[asyncio.Task[None]] = set()
         # Hold a reference to the disconnect tasks, because the event loop only keeps weak references to tasks.
-        self.__disconnect_tasks: set[asyncio.Task] = set()
+        self.__disconnect_tasks: set[asyncio.Task[None]] = set()
 
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.WARNING)  # Only log really important messages
@@ -247,7 +247,11 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def __create_packet_header(
-        sequence_number: int, payload_size: int, function_id: int, uid=None, response_expected=False
+        sequence_number: int,
+        payload_size: int,
+        function_id: int,
+        uid: int | None = None,
+        response_expected: bool = False,
     ) -> bytes:
         uid = IPConnectionAsync.BROADCAST_UID if uid is None else uid
         packet_size = payload_size + struct.calcsize(IPConnectionAsync.HEADER_FORMAT)
@@ -260,7 +264,7 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         )
 
     @staticmethod
-    def __parse_enumerate_payload(payload) -> EnumerationPayload:
+    def __parse_enumerate_payload(payload: bytes) -> EnumerationPayload:
         uid: str
         connected_uid: str
         position: str | int
@@ -318,7 +322,7 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         async for data in self.__event_bus.register("/enumerations"):  # pragma: no branch
             if uid is None or uid == data.uid:
                 try:
-                    yield data.enumeration_type, device_factory.get(self, data.device_id, data.uid)  # type: ignore
+                    yield data.enumeration_type, device_factory.get(self, data.device_id, data.uid)
                 except ValueError:
                     self.__logger.warning("No driver for device id '%s' found.", data.device_id)
 
@@ -554,11 +558,8 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
         """
         Query the server for its nonce. Returns a bytestring  with length 4.
         """
-        _, payload = cast(
-            tuple[HeaderPayload, bytes],
-            await self.send_request(
-                device=self, function_id=FunctionID.GET_AUTHENTICATION_NONCE, response_expected=True
-            ),
+        _, payload = await self.send_request(
+            device=self, function_id=FunctionID.GET_AUTHENTICATION_NONCE, response_expected=True
         )
         return payload  # As bytestring with length 4
 

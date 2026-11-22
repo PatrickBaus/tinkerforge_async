@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletPort as Port
 from .devices import Channel, DeviceIdentifier, DeviceWithMCU, GetSPITFPBaudrateConfig, GetSPITFPErrorCount, _FunctionID
@@ -407,7 +407,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.ARE_LEDS_ON, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_acceleration_range(self, range_: int, response_expected: bool = True) -> None:
         """
@@ -429,7 +429,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ACCELERATION_RANGE, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_magnetometer_range(self, range_: int, response_expected: bool = True) -> None:
         """
@@ -451,7 +451,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MAGNETOMETER_RANGE, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_convergence_speed(self, speed: float | Decimal = 30, response_expected: bool = True) -> None:
         """
@@ -737,7 +737,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_ORIENTATION_CALCULATION_ON, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_spitfp_baudrate_config(
         self,
@@ -785,7 +785,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
             data=pack_payload((CommunicationMethod(communication_method).value,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_spitfp_baudrate(
         self, bricklet_port: Port | str, baudrate: int = 1400000, response_expected: bool = True
@@ -814,7 +814,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
             data=pack_payload((Port(bricklet_port).value,), "c"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def get_spitfp_error_count(self, bricklet_port: Port | str) -> GetSPITFPErrorCount:
         """
@@ -857,7 +857,7 @@ class BrickIMU(DeviceWithMCU):  # pylint: disable=too-many-public-methods,too-fe
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_STATUS_LED_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_protocol1_bricklet_name(self, port: Port | str) -> GetProtocol1BrickletName:
         """

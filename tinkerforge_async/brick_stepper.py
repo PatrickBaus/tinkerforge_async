@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletPort as Port
 from .devices import Channel, DeviceIdentifier, DeviceWithMCU, GetSPITFPBaudrateConfig, GetSPITFPErrorCount, _FunctionID
@@ -234,7 +234,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MAX_VELOCITY, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def get_current_velocity(self) -> int:
         """
@@ -243,7 +243,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT_VELOCITY, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_speed_ramping(
         self, acceleration: int = 1000, deacceleration: int = 1000, response_expected: bool = True
@@ -323,7 +323,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT_POSITION, response_expected=True
         )
-        return unpack_payload(payload, "i")
+        return cast(int, unpack_payload(payload, "i"))
 
     async def set_target_position(self, position: int, response_expected: bool = True) -> None:
         """
@@ -353,7 +353,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TARGET_POSITION, response_expected=True
         )
-        return unpack_payload(payload, "i")
+        return cast(int, unpack_payload(payload, "i"))
 
     async def set_steps(self, steps: int, response_expected: bool = True) -> None:
         """
@@ -378,7 +378,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STEPS, response_expected=True
         )
-        return unpack_payload(payload, "i")
+        return cast(int, unpack_payload(payload, "i"))
 
     async def get_remaining_steps(self) -> int:
         """
@@ -390,7 +390,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_REMAINING_STEPS, response_expected=True
         )
-        return unpack_payload(payload, "i")
+        return cast(int, unpack_payload(payload, "i"))
 
     async def set_step_mode(self, mode: StepMode | int = StepMode.EIGHTH_STEP, response_expected: bool = True) -> None:
         """
@@ -554,7 +554,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_decay(self, decay: int = 10000, response_expected: bool = True) -> None:
         """
@@ -600,7 +600,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_DECAY, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_minimum_voltage(self, voltage: float | Decimal = 8, response_expected: bool = True) -> None:
         """
@@ -667,7 +667,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_SYNC_RECT, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_time_base(self, time_base: float | Decimal = 1, response_expected: bool = True) -> None:
         """
@@ -803,7 +803,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
             data=pack_payload((CommunicationMethod(communication_method).value,), "B"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_spitfp_baudrate(
         self, bricklet_port: Port | str, baudrate: int = 1400000, response_expected: bool = True
@@ -832,7 +832,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
             data=pack_payload((Port(bricklet_port).value,), "c"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def get_spitfp_error_count(self, bricklet_port: Port | str) -> GetSPITFPErrorCount:
         """
@@ -875,7 +875,7 @@ class BrickStepper(DeviceWithMCU):  # pylint: disable=too-many-public-methods,to
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_STATUS_LED_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def get_protocol1_bricklet_name(self, port: Port | str) -> GetProtocol1BrickletName:
         """

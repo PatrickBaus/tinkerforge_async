@@ -14,7 +14,7 @@ function.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import check_range
@@ -104,7 +104,7 @@ class BrickletMultiTouch(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TOUCH_STATE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def recalibrate(self, response_expected: bool = True) -> None:
         """
@@ -148,7 +148,7 @@ class BrickletMultiTouch(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ELECTRODE_CONFIG, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_electrode_sensitivity(self, sensitivity: int = 181, response_expected: bool = True) -> None:
         """
@@ -178,7 +178,7 @@ class BrickletMultiTouch(Device):  # pylint: disable=too-many-public-methods,too
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ELECTRODE_SENSITIVITY, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

@@ -1,6 +1,7 @@
 """Tests for the encoding and decoding of the payloads of the Tinkerforge protocol."""
 
 import struct
+from typing import Any
 
 import pytest
 
@@ -26,7 +27,7 @@ from tinkerforge_async.ip_connection_helper import (
         (0xC0F0_FFC0_F0FF_F000, 0),  # These bits are dropped
     ],
 )
-def test_uid64_to_uid32(uid64, uid32):
+def test_uid64_to_uid32(uid64: int, uid32: int) -> None:
     """The uids of the newer devices have 64 bits. The protocol uses 32 bits of them."""
     assert uid64_to_uid32(uid64) == uid32
 
@@ -35,13 +36,13 @@ def test_uid64_to_uid32(uid64, uid32):
     "value, encoded",
     [(0, "1"), (1, "2"), (57, "Z"), (58, "21"), (58 * 58 - 1, "ZZ"), (58 * 58, "211"), (12345, "4ER")],
 )
-def test_base58(value, encoded):
+def test_base58(value: int, encoded: str) -> None:
     """The uids are printed on the devices in base58. The alphabet has no 0, O, I and l, because they look alike."""
     assert base58encode(value) == encoded
     assert base58decode(encoded) == value
 
 
-def test_base58_rejects_characters_that_are_not_in_the_alphabet():
+def test_base58_rejects_characters_that_are_not_in_the_alphabet() -> None:
     """A typo in a uid must not result in another uid."""
     with pytest.raises(ValueError):
         base58decode("0")
@@ -70,18 +71,18 @@ def test_base58_rejects_characters_that_are_not_in_the_alphabet():
         ("c B !", ("x", 1, True), b"x\x01\x01"),
     ],
 )
-def test_pack_payload(form, values, packed):
+def test_pack_payload(form: str, values: tuple[Any, ...], packed: bytes) -> None:
     """The values are packed without padding in little endian."""
     assert pack_payload(values, form) == packed
 
 
-def test_pack_payload_rejects_a_list_of_bools_of_the_wrong_length():
+def test_pack_payload_rejects_a_list_of_bools_of_the_wrong_length() -> None:
     """The length of the list is part of the format."""
     with pytest.raises(ValueError, match="bool list length"):
         pack_payload(((True, False),), "4!")
 
 
-def test_pack_payload_rejects_values_that_do_not_fit():
+def test_pack_payload_rejects_values_that_do_not_fit() -> None:
     """The errors of the struct module are passed on."""
     with pytest.raises(struct.error):
         pack_payload((256,), "B")
@@ -112,18 +113,18 @@ def test_pack_payload_rejects_values_that_do_not_fit():
         ("B", b"\x01\x02\x03", 1),  # Extra bytes are ignored
     ],
 )
-def test_unpack_payload(form, packed, values):
+def test_unpack_payload(form: str, packed: bytes, values: Any) -> None:
     """The payload is unpacked to a single value, or a list of values."""
     assert unpack_payload(packed, form) == values
 
 
 @pytest.mark.parametrize("form, packed", [("", b"\x01"), ("B", b"")])
-def test_unpack_payload_without_data(form, packed):
+def test_unpack_payload_without_data(form: str, packed: bytes) -> None:
     """There is nothing to unpack, if the format or the payload is empty."""
     assert unpack_payload(packed, form) is None
 
 
-def test_unpack_payload_rejects_a_payload_that_is_too_short():
+def test_unpack_payload_rejects_a_payload_that_is_too_short() -> None:
     """The errors of the struct module are passed on."""
     with pytest.raises(struct.error):
         unpack_payload(b"\x01", "H")
@@ -146,6 +147,6 @@ def test_unpack_payload_rejects_a_payload_that_is_too_short():
         ("H H 60B", (5, 0, tuple(range(60))), [5, 0, tuple(range(60))]),
     ],
 )
-def test_pack_and_unpack_are_inverse(form, packed, unpacked):
+def test_pack_and_unpack_are_inverse(form: str, packed: tuple[Any, ...], unpacked: Any) -> None:
     """What was packed is unpacked to the same values. Strings are packed from bytes."""
     assert unpack_payload(pack_payload(packed, form), form) == unpacked

@@ -15,7 +15,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, SimpleCallb
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletIndustrialCounter
 FunctionID = BrickletIndustrialCounter.FunctionID
@@ -325,14 +325,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletIndustrialCounter) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 293
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Industrial Counter Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -345,13 +345,13 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_all_counter(device, connection):
+def test_callback_all_counter(device: BrickletIndustrialCounter, connection: FakeConnection) -> None:
     """The callback ALL_COUNTER is converted to an event."""
     connection.callback(CallbackID.ALL_COUNTER, "4q", *([3] * 4,))
     assert summary(read_events(device)) == [(0, CallbackID.ALL_COUNTER, (3,) * 4)]
 
 
-def test_callback_all_signal_data(device, connection):
+def test_callback_all_signal_data(device: BrickletIndustrialCounter, connection: FakeConnection) -> None:
     """The callback ALL_SIGNAL_DATA is converted to an event."""
     connection.callback(
         CallbackID.ALL_SIGNAL_DATA, "4H 4Q 4I 4!", *([3] * 4, [4] * 4, [5] * 4, [i % 2 == 0 for i in range(4)])

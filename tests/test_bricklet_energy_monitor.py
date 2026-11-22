@@ -16,7 +16,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, SimpleCallb
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletEnergyMonitor
 FunctionID = BrickletEnergyMonitor.FunctionID
@@ -131,14 +131,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletEnergyMonitor) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2152
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Energy Monitor Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -151,7 +151,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_get_waveform_transfers_the_stream(device, connection):
+def test_get_waveform_transfers_the_stream(device: BrickletEnergyMonitor, connection: FakeConnection) -> None:
     """The high-level function get_waveform() uses get_waveform_low_level()."""
     data = [3] * 1536
     for offset in range(0, 1536, 30):
@@ -161,7 +161,7 @@ def test_get_waveform_transfers_the_stream(device, connection):
     assert result == (3,) * 1536
 
 
-def test_callback_energy_data(device, connection):
+def test_callback_energy_data(device: BrickletEnergyMonitor, connection: FakeConnection) -> None:
     """The callback ENERGY_DATA is converted to an event."""
     connection.callback(CallbackID.ENERGY_DATA, "i i i i i i H H", *(3, 4, 5, 6, 7, 8, 9, 10))
     assert summary(read_events(device)) == [

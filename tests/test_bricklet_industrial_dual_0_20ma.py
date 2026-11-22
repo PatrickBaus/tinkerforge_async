@@ -10,7 +10,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, BasicCallba
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletIndustrialDual020mA
 FunctionID = BrickletIndustrialDual020mA.FunctionID
@@ -116,14 +116,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletIndustrialDual020mA) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 228
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Industrial Dual 0-20mA Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -136,7 +136,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_configuration_of_sid_0(device, connection):
+def test_callback_configuration_of_sid_0(device: BrickletIndustrialDual020mA, connection: FakeConnection) -> None:
     """The period and the threshold are configured by separate functions."""
     run(device.set_callback_configuration(0, 1, True, Threshold.OUTSIDE, Decimal("3E-9"), Decimal("4E-9")))
     assert sorted(connection.requests, key=lambda request: request.function_id.value) == sorted(
@@ -154,7 +154,7 @@ def test_callback_configuration_of_sid_0(device, connection):
     )
 
 
-def test_callback_configuration_of_sid_1(device, connection):
+def test_callback_configuration_of_sid_1(device: BrickletIndustrialDual020mA, connection: FakeConnection) -> None:
     """The period and the threshold are configured by separate functions."""
     run(device.set_callback_configuration(1, 1, True, Threshold.OUTSIDE, Decimal("3E-9"), Decimal("4E-9")))
     assert sorted(connection.requests, key=lambda request: request.function_id.value) == sorted(
@@ -172,13 +172,13 @@ def test_callback_configuration_of_sid_1(device, connection):
     )
 
 
-def test_callback_current(device, connection):
+def test_callback_current(device: BrickletIndustrialDual020mA, connection: FakeConnection) -> None:
     """The callback CURRENT is converted to an event."""
     connection.callback(CallbackID.CURRENT, "B i", *(1, 4))
     assert summary(read_events(device)) == [(1, CallbackID.CURRENT, Decimal("4E-9"))]
 
 
-def test_callback_current_reached(device, connection):
+def test_callback_current_reached(device: BrickletIndustrialDual020mA, connection: FakeConnection) -> None:
     """The callback CURRENT_REACHED is converted to an event."""
     connection.callback(CallbackID.CURRENT_REACHED, "B i", *(1, 4))
     assert summary(read_events(device)) == [(1, CallbackID.CURRENT_REACHED, Decimal("4E-9"))]

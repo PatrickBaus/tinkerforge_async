@@ -155,14 +155,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletDMX) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 285
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("DMX Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -175,7 +175,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_write_frame_transfers_the_stream(device, connection):
+def test_write_frame_transfers_the_stream(device: BrickletDMX, connection: FakeConnection) -> None:
     """The high-level function write_frame() uses write_frame_low_level()."""
     data = [i % 256 for i in range(3)]
     result = run(device.write_frame(*(data,)))
@@ -188,7 +188,7 @@ def test_write_frame_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_read_frame_transfers_the_stream(device, connection):
+def test_read_frame_transfers_the_stream(device: BrickletDMX, connection: FakeConnection) -> None:
     """The high-level function read_frame() uses read_frame_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 56):
@@ -198,19 +198,19 @@ def test_read_frame_transfers_the_stream(device, connection):
     assert result.frame == bytes([i % 256 for i in range(3)])
 
 
-def test_callback_frame_started(device, connection):
+def test_callback_frame_started(device: BrickletDMX, connection: FakeConnection) -> None:
     """The callback FRAME_STARTED is converted to an event."""
     connection.callback(CallbackID.FRAME_STARTED)
     assert summary(read_events(device)) == [(0, CallbackID.FRAME_STARTED, None)]
 
 
-def test_callback_frame_available(device, connection):
+def test_callback_frame_available(device: BrickletDMX, connection: FakeConnection) -> None:
     """The callback FRAME_AVAILABLE is converted to an event."""
     connection.callback(CallbackID.FRAME_AVAILABLE, "I", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.FRAME_AVAILABLE, 3)]
 
 
-def test_callback_frame(device, connection):
+def test_callback_frame(device: BrickletDMX, connection: FakeConnection) -> None:
     """The callback FRAME is converted to an event."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 56):
@@ -220,10 +220,10 @@ def test_callback_frame(device, connection):
     assert events[0].payload.frame == bytes([i % 256 for i in range(3)])
     connection_2 = FakeConnection()
     connection_2.callback(CallbackID.FRAME, "H H 56B I", *(59, 56, chunk(data, 0, 56, 0), 6))
-    assert not read_events(DEVICE(UID, connection_2))
+    assert not read_events(DEVICE(UID, connection_2.ipcon))
 
 
-def test_callback_frame_error_count(device, connection):
+def test_callback_frame_error_count(device: BrickletDMX, connection: FakeConnection) -> None:
     """The callback FRAME_ERROR_COUNT is converted to an event."""
     connection.callback(CallbackID.FRAME_ERROR_COUNT, "I I", *(3, 4))
     assert summary(read_events(device)) == [(2, CallbackID.FRAME_ERROR_COUNT, GetFrameErrorCount(3, 4))]

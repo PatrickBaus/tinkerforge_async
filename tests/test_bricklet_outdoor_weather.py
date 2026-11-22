@@ -17,7 +17,7 @@ from tinkerforge_async.bricklet_outdoor_weather import (
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletOutdoorWeather
 FunctionID = BrickletOutdoorWeather.FunctionID
@@ -121,14 +121,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletOutdoorWeather) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 288
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Outdoor Weather Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -141,7 +141,9 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_get_station_identifiers_transfers_the_stream(device, connection):
+def test_get_station_identifiers_transfers_the_stream(
+    device: BrickletOutdoorWeather, connection: FakeConnection
+) -> None:
     """The high-level function get_station_identifiers() uses get_station_identifiers_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 60):
@@ -153,7 +155,9 @@ def test_get_station_identifiers_transfers_the_stream(device, connection):
     assert result == bytes([i % 256 for i in range(3)])
 
 
-def test_get_sensor_identifiers_transfers_the_stream(device, connection):
+def test_get_sensor_identifiers_transfers_the_stream(
+    device: BrickletOutdoorWeather, connection: FakeConnection
+) -> None:
     """The high-level function get_sensor_identifiers() uses get_sensor_identifiers_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 60):
@@ -165,7 +169,7 @@ def test_get_sensor_identifiers_transfers_the_stream(device, connection):
     assert result == bytes([i % 256 for i in range(3)])
 
 
-def test_callback_station_data(device, connection):
+def test_callback_station_data(device: BrickletOutdoorWeather, connection: FakeConnection) -> None:
     """The callback STATION_DATA is converted to an event."""
     connection.callback(CallbackID.STATION_DATA, "B h B I I I B !", *(3, 4, 10, 6, 7, 8, 255, True))
     assert summary(read_events(device)) == [
@@ -186,7 +190,7 @@ def test_callback_station_data(device, connection):
     ]
 
 
-def test_callback_sensor_data(device, connection):
+def test_callback_sensor_data(device: BrickletOutdoorWeather, connection: FakeConnection) -> None:
     """The callback SENSOR_DATA is converted to an event."""
     connection.callback(CallbackID.SENSOR_DATA, "B h B", *(3, 4, 5))
     assert summary(read_events(device)) == [

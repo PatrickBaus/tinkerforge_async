@@ -273,14 +273,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletCANV2) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2107
     assert device.get_api_version() == (2, 0, 1)
     assert str(device).startswith("CAN Bricklet 2.0 with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -293,7 +293,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_write_frame_transfers_the_stream(device, connection):
+def test_write_frame_transfers_the_stream(device: BrickletCANV2, connection: FakeConnection) -> None:
     """The high-level function write_frame() uses write_frame_low_level()."""
     data = [i % 256 for i in range(3)]
     connection.reply(FunctionID.WRITE_FRAME_LOW_LEVEL, "!", *(True,))
@@ -307,7 +307,7 @@ def test_write_frame_transfers_the_stream(device, connection):
     assert result is not None
 
 
-def test_read_frame_transfers_the_stream(device, connection):
+def test_read_frame_transfers_the_stream(device: BrickletCANV2, connection: FakeConnection) -> None:
     """The high-level function read_frame() uses read_frame_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 15):
@@ -317,7 +317,7 @@ def test_read_frame_transfers_the_stream(device, connection):
     assert result.data == bytes([i % 256 for i in range(3)])
 
 
-def test_set_queue_configuration_transfers_the_stream(device, connection):
+def test_set_queue_configuration_transfers_the_stream(device: BrickletCANV2, connection: FakeConnection) -> None:
     """The high-level function set_queue_configuration() uses set_queue_configuration_low_level()."""
     data = [-1] * 3
     result = run(device.set_queue_configuration(*(3, 3, 3, 3, data)))
@@ -332,7 +332,7 @@ def test_set_queue_configuration_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_get_queue_configuration_transfers_the_stream(device, connection):
+def test_get_queue_configuration_transfers_the_stream(device: BrickletCANV2, connection: FakeConnection) -> None:
     """The high-level function get_queue_configuration() uses get_queue_configuration_low_level()."""
     data = [-1] * 3
     for offset in range(0, 1, 32):
@@ -344,7 +344,7 @@ def test_get_queue_configuration_transfers_the_stream(device, connection):
     assert result.read_buffer_sizes == (-1,) * 3
 
 
-def test_get_error_log_transfers_the_stream(device, connection):
+def test_get_error_log_transfers_the_stream(device: BrickletCANV2, connection: FakeConnection) -> None:
     """The high-level function get_error_log() uses get_error_log_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     for offset in range(0, 1, 32):
@@ -358,7 +358,7 @@ def test_get_error_log_transfers_the_stream(device, connection):
     assert result.read_buffer_overflow_error_occurred == tuple(i % 2 == 0 for i in range(3))
 
 
-def test_callback_frame_read(device, connection):
+def test_callback_frame_read(device: BrickletCANV2, connection: FakeConnection) -> None:
     """The callback FRAME_READ is converted to an event."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 15):
@@ -368,13 +368,13 @@ def test_callback_frame_read(device, connection):
     assert events[0].payload.data == bytes([i % 256 for i in range(3)])
 
 
-def test_callback_frame_readable(device, connection):
+def test_callback_frame_readable(device: BrickletCANV2, connection: FakeConnection) -> None:
     """The callback FRAME_READABLE is converted to an event."""
     connection.callback(CallbackID.FRAME_READABLE)
     assert summary(read_events(device)) == [(0, CallbackID.FRAME_READABLE, None)]
 
 
-def test_callback_error_occurred(device, connection):
+def test_callback_error_occurred(device: BrickletCANV2, connection: FakeConnection) -> None:
     """The callback ERROR_OCCURRED is converted to an event."""
     connection.callback(CallbackID.ERROR_OCCURRED)
     assert summary(read_events(device)) == [(1, CallbackID.ERROR_OCCURRED, None)]

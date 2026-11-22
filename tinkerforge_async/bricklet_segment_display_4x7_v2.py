@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias, cast
 
 from .devices import BrickletWithMCU, DeviceIdentifier, _FunctionID
 from .helper import Duration, seconds_to_ms
@@ -70,7 +70,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
 
     SID_TO_CALLBACK = {0: (CallbackID.COUNTER_FINISHED,)}
 
-    def __init__(self, uid, ipcon: IPConnectionAsync) -> None:
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
         """
         Creates an object with the unique device ID *uid* and adds it to
         the IP Connection *ipcon*.
@@ -147,7 +147,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_BRIGHTNESS, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_numeric_value(self, value: Iterable[int], response_expected: bool = True) -> None:
         """
@@ -210,7 +210,7 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
             response_expected=True,
         )
 
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def start_counter(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self, value_from: int, value_to: int, increment: int, length: Duration, response_expected: bool = True
@@ -256,4 +256,4 @@ class BrickletSegmentDisplay4x7V2(BrickletWithMCU):
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_COUNTER_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))

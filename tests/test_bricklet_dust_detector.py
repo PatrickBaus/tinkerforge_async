@@ -10,7 +10,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, BasicCallba
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletDustDetector
 FunctionID = BrickletDustDetector.FunctionID
@@ -100,14 +100,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletDustDetector) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 260
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Dust Detector Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -120,7 +120,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_configuration_of_sid_0(device, connection):
+def test_callback_configuration_of_sid_0(device: BrickletDustDetector, connection: FakeConnection) -> None:
     """The period and the threshold are configured by separate functions."""
     run(device.set_callback_configuration(0, 1, True, Threshold.OUTSIDE, Decimal("3E-9"), Decimal("4E-9")))
     assert sorted(connection.requests, key=lambda request: request.function_id.value) == sorted(
@@ -138,13 +138,13 @@ def test_callback_configuration_of_sid_0(device, connection):
     )
 
 
-def test_callback_dust_density(device, connection):
+def test_callback_dust_density(device: BrickletDustDetector, connection: FakeConnection) -> None:
     """The callback DUST_DENSITY is converted to an event."""
     connection.callback(CallbackID.DUST_DENSITY, "H", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.DUST_DENSITY, Decimal("3E-9"))]
 
 
-def test_callback_dust_density_reached(device, connection):
+def test_callback_dust_density_reached(device: BrickletDustDetector, connection: FakeConnection) -> None:
     """The callback DUST_DENSITY_REACHED is converted to an event."""
     connection.callback(CallbackID.DUST_DENSITY_REACHED, "H", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.DUST_DENSITY_REACHED, Decimal("3E-9"))]

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_range, ms_to_seconds, seconds_to_ms
@@ -430,7 +430,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MAX_VELOCITY, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def get_current_velocity(self) -> int:
         """
@@ -439,7 +439,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT_VELOCITY, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_speed_ramping(
         self, acceleration: int = 1000, deacceleration: int = 1000, response_expected: bool = True
@@ -519,7 +519,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_CURRENT_POSITION, response_expected=True
         )
-        return unpack_payload(payload, "i")
+        return cast(int, unpack_payload(payload, "i"))
 
     async def set_target_position(self, position: int, response_expected: bool = True) -> None:
         """
@@ -549,7 +549,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_TARGET_POSITION, response_expected=True
         )
-        return unpack_payload(payload, "i")
+        return cast(int, unpack_payload(payload, "i"))
 
     async def set_steps(self, steps: int, response_expected: bool = True) -> None:
         """
@@ -574,7 +574,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_STEPS, response_expected=True
         )
-        return unpack_payload(payload, "i")
+        return cast(int, unpack_payload(payload, "i"))
 
     async def get_remaining_steps(self) -> int:
         """
@@ -586,7 +586,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_REMAINING_STEPS, response_expected=True
         )
-        return unpack_payload(payload, "i")
+        return cast(int, unpack_payload(payload, "i"))
 
     async def set_step_configuration(
         self,
@@ -732,7 +732,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_ENABLED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_basic_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
         self,
@@ -1490,7 +1490,7 @@ class BrickletSilentStepperV2(BrickletWithMCU):  # pylint: disable=too-many-publ
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_MOTOR_STALLED_CALLBACK_CONFIGURATON, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     @override
     def _convert_callback(  # pylint: disable=too-many-return-statements,too-many-branches,too-many-locals

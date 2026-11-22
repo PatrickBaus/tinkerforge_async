@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -151,7 +151,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         return self.__sensor_type
 
     @sensor_type.setter
-    def sensor_type(self, value: SensorType | int):
+    def sensor_type(self, value: SensorType | int) -> None:
         self.__sensor_type = SensorType(value)
 
     def __init__(self, uid: int, ipcon: IPConnectionAsync, sensor_type: SensorType | int = SensorType.PT_100) -> None:
@@ -162,7 +162,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
 
         self.api_version = (2, 0, 1)
-        self.sensor_type = sensor_type  # type: ignore  # Use the setter to automatically convert to enum
+        self.sensor_type = sensor_type  # Use the setter to automatically convert to enum
 
     @override
     def __repr__(self) -> str:
@@ -172,7 +172,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         )
 
     async def get_value(self, sid: int) -> Decimal | bool:
-        return await self._get_value(sid)
+        return cast(Decimal | bool, await self._get_value(sid))
 
     async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -183,7 +183,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         minimum: float | Decimal | None = None,
         maximum: float | Decimal | None = None,
         response_expected: bool = True,
-    ):
+    ) -> None:
         # The sensor connected callback (sid 2) cannot be configured.
         await self._set_callback_configuration(
             sid, period, value_has_to_change, option, minimum, maximum, response_expected
@@ -191,7 +191,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
 
     async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
         # The sensor connected callback (sid 2) cannot be configured.
-        return await self._get_callback_configuration(sid)
+        return cast(AdvancedCallbackConfiguration, await self._get_callback_configuration(sid))
 
     async def get_temperature(self) -> Decimal:
         """
@@ -463,7 +463,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.IS_SENSOR_CONNECTED, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     async def set_wire_mode(self, mode: WireMode | int = WireMode.WIRE_2, response_expected: bool = True) -> None:
         """
@@ -516,7 +516,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_SENSOR_CONNECTED_CALLBACK_CONFIGURATION, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     def __value_to_si_resistance(self, value: int) -> Decimal:
         """

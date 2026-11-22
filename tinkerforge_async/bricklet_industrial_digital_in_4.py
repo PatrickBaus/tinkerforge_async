@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
@@ -121,7 +121,7 @@ class BrickletIndustrialDigitalIn4(Device):  # pylint: disable=too-many-public-m
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_VALUE, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def set_group(self, group: str | Sequence[str], response_expected: bool = True) -> None:
         """
@@ -170,7 +170,7 @@ class BrickletIndustrialDigitalIn4(Device):  # pylint: disable=too-many-public-m
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_AVAILABLE_FOR_GROUP, response_expected=True
         )
-        return unpack_payload(payload, "B")
+        return cast(int, unpack_payload(payload, "B"))
 
     async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
         """
@@ -231,7 +231,7 @@ class BrickletIndustrialDigitalIn4(Device):  # pylint: disable=too-many-public-m
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.GET_INTERRUPT, response_expected=True
         )
-        return unpack_payload(payload, "H")
+        return cast(int, unpack_payload(payload, "H"))
 
     async def get_edge_count(self, pin: int, reset_counter: bool) -> int:
         """
@@ -253,7 +253,7 @@ class BrickletIndustrialDigitalIn4(Device):  # pylint: disable=too-many-public-m
             data=pack_payload((pin, bool(reset_counter)), "B !"),
             response_expected=True,
         )
-        return unpack_payload(payload, "I")
+        return cast(int, unpack_payload(payload, "I"))
 
     async def set_edge_count_config(
         self,

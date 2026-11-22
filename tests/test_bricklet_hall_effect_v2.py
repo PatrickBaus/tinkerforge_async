@@ -10,7 +10,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, SimpleCallb
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletHallEffectV2
 FunctionID = BrickletHallEffectV2.FunctionID
@@ -158,14 +158,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletHallEffectV2) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 2132
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("Hall Effect Bricklet 2.0 with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -178,13 +178,13 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_magnetic_flux_density(device, connection):
+def test_callback_magnetic_flux_density(device: BrickletHallEffectV2, connection: FakeConnection) -> None:
     """The callback MAGNETIC_FLUX_DENSITY is converted to an event."""
     connection.callback(CallbackID.MAGNETIC_FLUX_DENSITY, "h", *(3,))
     assert summary(read_events(device)) == [(0, CallbackID.MAGNETIC_FLUX_DENSITY, Decimal("0.000003"))]
 
 
-def test_callback_counter(device, connection):
+def test_callback_counter(device: BrickletHallEffectV2, connection: FakeConnection) -> None:
     """The callback COUNTER is converted to an event."""
     connection.callback(CallbackID.COUNTER, "I", *(3,))
     assert summary(read_events(device)) == [(1, CallbackID.COUNTER, 3)]

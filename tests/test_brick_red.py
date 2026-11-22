@@ -50,7 +50,7 @@ from tinkerforge_async.brick_red import (
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickRED
 FunctionID = BrickRED.FunctionID
@@ -842,14 +842,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickRED) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 17
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("RED Brick with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -862,7 +862,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_async_file_read(device, connection):
+def test_callback_async_file_read(device: BrickRED, connection: FakeConnection) -> None:
     """The callback ASYNC_FILE_READ is converted to an event."""
     connection.callback(CallbackID.ASYNC_FILE_READ, "H B 60B B", *(3, 144, [i % 256 for i in range(60)], 6))
     assert summary(read_events(device)) == [
@@ -874,7 +874,7 @@ def test_callback_async_file_read(device, connection):
     ]
 
 
-def test_callback_async_file_write(device, connection):
+def test_callback_async_file_write(device: BrickRED, connection: FakeConnection) -> None:
     """The callback ASYNC_FILE_WRITE is converted to an event."""
     connection.callback(CallbackID.ASYNC_FILE_WRITE, "H B B", *(3, 144, 5))
     assert summary(read_events(device)) == [
@@ -882,7 +882,7 @@ def test_callback_async_file_write(device, connection):
     ]
 
 
-def test_callback_file_events_occurred(device, connection):
+def test_callback_file_events_occurred(device: BrickRED, connection: FakeConnection) -> None:
     """The callback FILE_EVENTS_OCCURRED is converted to an event."""
     connection.callback(CallbackID.FILE_EVENTS_OCCURRED, "H H", *(3, 2))
     assert summary(read_events(device)) == [
@@ -890,7 +890,7 @@ def test_callback_file_events_occurred(device, connection):
     ]
 
 
-def test_callback_process_state_changed(device, connection):
+def test_callback_process_state_changed(device: BrickRED, connection: FakeConnection) -> None:
     """The callback PROCESS_STATE_CHANGED is converted to an event."""
     connection.callback(CallbackID.PROCESS_STATE_CHANGED, "H B Q B", *(3, 5, 5, 6))
     assert summary(read_events(device)) == [
@@ -898,13 +898,13 @@ def test_callback_process_state_changed(device, connection):
     ]
 
 
-def test_callback_program_scheduler_state_changed(device, connection):
+def test_callback_program_scheduler_state_changed(device: BrickRED, connection: FakeConnection) -> None:
     """The callback PROGRAM_SCHEDULER_STATE_CHANGED is converted to an event."""
     connection.callback(CallbackID.PROGRAM_SCHEDULER_STATE_CHANGED, "H", *(3,))
     assert summary(read_events(device)) == [(4, CallbackID.PROGRAM_SCHEDULER_STATE_CHANGED, 3)]
 
 
-def test_callback_program_process_spawned(device, connection):
+def test_callback_program_process_spawned(device: BrickRED, connection: FakeConnection) -> None:
     """The callback PROGRAM_PROCESS_SPAWNED is converted to an event."""
     connection.callback(CallbackID.PROGRAM_PROCESS_SPAWNED, "H", *(3,))
     assert summary(read_events(device)) == [(5, CallbackID.PROGRAM_PROCESS_SPAWNED, 3)]

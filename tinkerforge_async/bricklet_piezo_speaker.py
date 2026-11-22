@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias, override
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import check_range, encode_string
@@ -152,7 +152,7 @@ class BrickletPiezoSpeaker(Device):  # pylint: disable=too-many-public-methods,t
         _, payload = await self.ipcon.send_request(
             device=self, function_id=FunctionID.CALIBRATE, response_expected=True
         )
-        return unpack_payload(payload, "!")
+        return cast(bool, unpack_payload(payload, "!"))
 
     @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:

@@ -9,7 +9,7 @@ from tinkerforge_async.bricklet_rs232 import BrickletRS232, GetConfiguration, Re
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletRS232
 FunctionID = BrickletRS232.FunctionID
@@ -205,14 +205,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletRS232) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 254
     assert device.get_api_version() == (2, 0, 3)
     assert str(device).startswith("RS232 Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -225,19 +225,19 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_callback_read(device, connection):
+def test_callback_read(device: BrickletRS232, connection: FakeConnection) -> None:
     """The callback READ is converted to an event."""
     connection.callback(CallbackID.READ, "60c B", *(list(("abcdefgh" * 60)[:60]), 4))
     assert summary(read_events(device)) == [(0, CallbackID.READ, ReadEvent(tuple(("abcdefgh" * 60)[:60]), 4))]
 
 
-def test_callback_error(device, connection):
+def test_callback_error(device: BrickletRS232, connection: FakeConnection) -> None:
     """The callback ERROR is converted to an event."""
     connection.callback(CallbackID.ERROR, "B", *(4,))
     assert summary(read_events(device)) == [(1, CallbackID.ERROR, DEVICE.Error.FRAMING)]
 
 
-def test_callback_frame_readable(device, connection):
+def test_callback_frame_readable(device: BrickletRS232, connection: FakeConnection) -> None:
     """The callback FRAME_READABLE is converted to an event."""
     connection.callback(CallbackID.FRAME_READABLE, "B", *(3,))
     assert summary(read_events(device)) == [(2, CallbackID.FRAME_READABLE, 3)]

@@ -34,14 +34,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletRGBLED) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 271
     assert device.get_api_version() == (2, 0, 0)
     assert str(device).startswith("RGB LED Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name

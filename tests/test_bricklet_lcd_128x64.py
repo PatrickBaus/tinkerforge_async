@@ -25,7 +25,7 @@ from tinkerforge_async.devices import AdvancedCallbackConfiguration, SimpleCallb
 from tinkerforge_async.devices import ThresholdOption as Threshold
 
 from .device_tests import DeviceTests
-from .fake_connection import Call, chunk, read_events, request, run, summary
+from .fake_connection import Call, FakeConnection, chunk, read_events, request, run, summary
 
 DEVICE = BrickletLCD128x64
 FunctionID = BrickletLCD128x64.FunctionID
@@ -635,14 +635,14 @@ REJECTED: list[tuple[str, tuple[Any, ...]]] = [
 ]
 
 
-def test_identity(device):
+def test_identity(device: BrickletLCD128x64) -> None:
     """The device knows who it is."""
     assert device.DEVICE_IDENTIFIER.value == 298
     assert device.get_api_version() == (2, 0, 1)
     assert str(device).startswith("LCD 128x64 Bricklet with uid 12345")
 
 
-def test_ids_match_the_official_bindings():
+def test_ids_match_the_official_bindings() -> None:
     """The ids of all functions and callbacks, that the official bindings know, are the same."""
     for name, value in OFFICIAL_FUNCTION_IDS.items():
         assert FunctionID.__members__[name].value == value, name
@@ -655,7 +655,7 @@ class TestRequests(DeviceTests):
     """The requests of the table `CALLS` and the invalid arguments of the table `REJECTED`."""
 
 
-def test_write_pixels_transfers_the_stream(device, connection):
+def test_write_pixels_transfers_the_stream(device: BrickletLCD128x64, connection: FakeConnection) -> None:
     """The high-level function write_pixels() uses write_pixels_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     result = run(device.write_pixels(*(3, 3, 3, 3, data)))
@@ -670,7 +670,7 @@ def test_write_pixels_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_read_pixels_transfers_the_stream(device, connection):
+def test_read_pixels_transfers_the_stream(device: BrickletLCD128x64, connection: FakeConnection) -> None:
     """The high-level function read_pixels() uses read_pixels_low_level()."""
     data = [i % 2 == 0 for i in range(3)]
     for offset in range(0, 1, 480):
@@ -680,7 +680,7 @@ def test_read_pixels_transfers_the_stream(device, connection):
     assert result == tuple(i % 2 == 0 for i in range(3))
 
 
-def test_set_gui_graph_data_transfers_the_stream(device, connection):
+def test_set_gui_graph_data_transfers_the_stream(device: BrickletLCD128x64, connection: FakeConnection) -> None:
     """The high-level function set_gui_graph_data() uses set_gui_graph_data_low_level()."""
     data = [i % 256 for i in range(3)]
     result = run(device.set_gui_graph_data(*(3, data)))
@@ -695,7 +695,7 @@ def test_set_gui_graph_data_transfers_the_stream(device, connection):
     assert result is None
 
 
-def test_get_gui_graph_data_transfers_the_stream(device, connection):
+def test_get_gui_graph_data_transfers_the_stream(device: BrickletLCD128x64, connection: FakeConnection) -> None:
     """The high-level function get_gui_graph_data() uses get_gui_graph_data_low_level()."""
     data = [i % 256 for i in range(3)]
     for offset in range(0, 1, 59):
@@ -705,13 +705,13 @@ def test_get_gui_graph_data_transfers_the_stream(device, connection):
     assert result == bytes([i % 256 for i in range(3)])
 
 
-def test_callback_touch_position(device, connection):
+def test_callback_touch_position(device: BrickletLCD128x64, connection: FakeConnection) -> None:
     """The callback TOUCH_POSITION is converted to an event."""
     connection.callback(CallbackID.TOUCH_POSITION, "H H H I", *(3, 4, 5, 6))
     assert summary(read_events(device)) == [(0, CallbackID.TOUCH_POSITION, GetTouchPosition(3, 4, 5, Decimal("0.006")))]
 
 
-def test_callback_touch_gesture(device, connection):
+def test_callback_touch_gesture(device: BrickletLCD128x64, connection: FakeConnection) -> None:
     """The callback TOUCH_GESTURE is converted to an event."""
     connection.callback(CallbackID.TOUCH_GESTURE, "B I H H H H H I", *(3, 4, 5, 6, 7, 8, 9, 10))
     assert summary(read_events(device)) == [
@@ -723,19 +723,19 @@ def test_callback_touch_gesture(device, connection):
     ]
 
 
-def test_callback_gui_button_pressed(device, connection):
+def test_callback_gui_button_pressed(device: BrickletLCD128x64, connection: FakeConnection) -> None:
     """The callback GUI_BUTTON_PRESSED is converted to an event."""
     connection.callback(CallbackID.GUI_BUTTON_PRESSED, "B !", *(3, True))
     assert summary(read_events(device)) == [(2, CallbackID.GUI_BUTTON_PRESSED, GUIButtonPressedEvent(3, True))]
 
 
-def test_callback_gui_slider_value(device, connection):
+def test_callback_gui_slider_value(device: BrickletLCD128x64, connection: FakeConnection) -> None:
     """The callback GUI_SLIDER_VALUE is converted to an event."""
     connection.callback(CallbackID.GUI_SLIDER_VALUE, "B B", *(3, 4))
     assert summary(read_events(device)) == [(3, CallbackID.GUI_SLIDER_VALUE, GUISliderValueEvent(3, 4))]
 
 
-def test_callback_gui_tab_selected(device, connection):
+def test_callback_gui_tab_selected(device: BrickletLCD128x64, connection: FakeConnection) -> None:
     """The callback GUI_TAB_SELECTED is converted to an event."""
     connection.callback(CallbackID.GUI_TAB_SELECTED, "b", *(3,))
     assert summary(read_events(device)) == [(4, CallbackID.GUI_TAB_SELECTED, 3)]
