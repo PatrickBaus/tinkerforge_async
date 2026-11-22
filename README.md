@@ -4,7 +4,7 @@
 
 | Name                                                             |    Stmts |     Miss |   Branch |   BrPart |    Cover |   Missing |
 |----------------------------------------------------------------- | -------: | -------: | -------: | -------: | -------: | --------: |
-| tinkerforge\_async/\_\_init\_\_.py                               |        5 |        0 |        0 |        0 |     100% |           |
+| tinkerforge\_async/\_\_init\_\_.py                               |        6 |        0 |        0 |        0 |     100% |           |
 | tinkerforge\_async/async\_event\_bus.py                          |       22 |        0 |        4 |        0 |     100% |           |
 | tinkerforge\_async/brick\_dc.py                                  |      207 |        0 |        6 |        0 |     100% |           |
 | tinkerforge\_async/brick\_esp32.py                               |       18 |        0 |        0 |        0 |     100% |           |
@@ -161,14 +161,14 @@
 | tinkerforge\_async/bricklet\_voltage\_current.py                 |      186 |        0 |       10 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_voltage\_current\_v2.py             |      153 |        0 |        4 |        0 |     100% |           |
 | tinkerforge\_async/bricklet\_xmc1400\_breakout.py                |      119 |        0 |        2 |        0 |     100% |           |
-| tinkerforge\_async/device\_factory.py                            |      309 |        0 |        0 |        0 |     100% |           |
-| tinkerforge\_async/devices.py                                    |      425 |        0 |       34 |        0 |     100% |           |
+| tinkerforge\_async/device\_factory.py                            |      312 |        0 |        2 |        0 |     100% |           |
+| tinkerforge\_async/devices.py                                    |      426 |        0 |       34 |        0 |     100% |           |
 | tinkerforge\_async/helper.py                                     |       49 |        0 |       16 |        0 |     100% |           |
 | tinkerforge\_async/ip\_connection.py                             |      321 |        0 |       70 |        0 |     100% |           |
 | tinkerforge\_async/ip\_connection\_helper.py                     |       85 |        0 |       48 |        0 |     100% |           |
 | tinkerforge\_async/quantities.py                                 |       27 |        0 |        0 |        0 |     100% |           |
 | tinkerforge\_async/streams.py                                    |       76 |        0 |       34 |        0 |     100% |           |
-| **TOTAL**                                                        | **22279** |    **0** | **1338** |    **0** | **100%** |           |
+| **TOTAL**                                                        | **22284** |    **0** | **1340** |    **0** | **100%** |           |
 
 
 ## Setup coverage badge

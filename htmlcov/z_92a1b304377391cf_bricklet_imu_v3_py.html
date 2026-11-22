@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_industrial_analog_out_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 16:29 +0000
+            created at 2026-11-22 17:23 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -99,7 +99,7 @@
     <p class="pln"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">from</span> <span class="nam">decimal</span> <span class="key">import</span> <span class="nam">Decimal</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">enum</span> <span class="key">import</span> <span class="nam">Enum</span><span class="op">,</span> <span class="nam">unique</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TYPE_CHECKING</span><span class="op">,</span> <span class="nam">Any</span><span class="op">,</span> <span class="nam">NamedTuple</span><span class="op">,</span> <span class="nam">TypeAlias</span><span class="op">,</span> <span class="nam">override</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TYPE_CHECKING</span><span class="op">,</span> <span class="nam">Any</span><span class="op">,</span> <span class="nam">NamedTuple</span><span class="op">,</span> <span class="nam">TypeAlias</span><span class="op">,</span> <span class="nam">cast</span><span class="op">,</span> <span class="nam">override</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">devices</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">    <span class="nam">AdvancedCallbackConfiguration</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -449,7 +449,7 @@
     <p class="pln"><span class="n"><a id="t365" href="#t365">365</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t366" href="#t366">366</a></span><span class="t"><span class="str">        Returns the callback configuration of the channel with the secondary id `sid`.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t367" href="#t367">367</a></span><span class="t"><span class="str">        &quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t368" href="#t368">368</a></span><span class="t">        <span class="key">return</span> <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_get_callback_configuration</span><span class="op">(</span><span class="nam">sid</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t368" href="#t368">368</a></span><span class="t">        <span class="key">return</span> <span class="nam">cast</span><span class="op">(</span><span class="nam">AdvancedCallbackConfiguration</span><span class="op">,</span> <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_get_callback_configuration</span><span class="op">(</span><span class="nam">sid</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t369" href="#t369">369</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t370" href="#t370">370</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">get_acceleration</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">GetAcceleration</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
@@ -695,7 +695,7 @@
     <p class="run"><span class="n"><a id="t611" href="#t611">611</a></span><span class="t">        <span class="nam">_</span><span class="op">,</span> <span class="nam">payload</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">ipcon</span><span class="op">.</span><span class="nam">send_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t612" href="#t612">612</a></span><span class="t">            <span class="nam">device</span><span class="op">=</span><span class="nam">self</span><span class="op">,</span> <span class="nam">function_id</span><span class="op">=</span><span class="nam">FunctionID</span><span class="op">.</span><span class="nam">SAVE_CALIBRATION</span><span class="op">,</span> <span class="nam">response_expected</span><span class="op">=</span><span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t613" href="#t613">613</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t">        <span class="key">return</span> <span class="nam">unpack_payload</span><span class="op">(</span><span class="nam">payload</span><span class="op">,</span> <span class="str">&quot;!&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t">        <span class="key">return</span> <span class="nam">cast</span><span class="op">(</span><span class="nam">bool</span><span class="op">,</span> <span class="nam">unpack_payload</span><span class="op">(</span><span class="nam">payload</span><span class="op">,</span> <span class="str">&quot;!&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t615" href="#t615">615</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t616" href="#t616">616</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">set_sensor_configuration</span><span class="op">(</span>  <span class="com"># pylint: disable=too-many-arguments,too-many-positional-arguments</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t617" href="#t617">617</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -1151,7 +1151,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_industrial_analog_out_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 16:29 +0000
+            created at 2026-11-22 17:23 +0000
         </p>
     </div>
 </footer>
