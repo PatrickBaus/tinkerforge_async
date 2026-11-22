@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import pytest
 
-from tinkerforge_async.quantities import CELSIUS_ZERO, TEMPERATURE, Quantity
+from tinkerforge_async.quantities import CELSIUS_ZERO, TEMPERATURE, LinearQuantity, Quantity
 
 
 def test_scale():
@@ -63,3 +63,32 @@ def test_matches_the_formulas_of_the_bricklets():
         assert Quantity(1000).to_si(raw) == Decimal(raw) / 1000
     for value in (Decimal("273.15"), Decimal("300.01"), Decimal("12.34")):
         assert TEMPERATURE.from_si(value) == round(value * 100) - 27315
+
+
+def test_linear_quantity_with_a_rational_scale():
+    """The scale does not need to be the inverse of an integer, e.g. 1/16 °/s or 5/18 m/s per km/h."""
+    degree_per_second = LinearQuantity(1, 16)
+    assert degree_per_second.to_si(-8) == Decimal("-0.5")
+    assert degree_per_second.from_si(Decimal("-0.5")) == -8
+    speed = LinearQuantity(5, 18)  # raw: km/h
+    assert speed.to_si(36) == 10
+    assert speed.from_si(10) == 36
+    gravity = LinearQuantity(980665, 100000)  # raw: g
+    assert gravity.to_si(2) == Decimal("19.6133")
+
+
+def test_linear_quantity_with_an_offset():
+    """A temperature in 1/10 °C is converted to K."""
+    temperature = LinearQuantity(1, 10, CELSIUS_ZERO)
+    assert temperature.to_si(250) == Decimal("298.15")
+    assert temperature.to_si(-2731) == Decimal("0.05")
+    assert temperature.from_si(Decimal("298.15")) == 250
+    assert temperature.from_si(273.25) == 1
+
+
+def test_linear_quantity_of_floating_point_values():
+    """Some devices transfer floats. Floats are converted without the binary representation error."""
+    hectopascal = LinearQuantity(100)
+    assert hectopascal.to_si(1013.25) == Decimal("101325.00")
+    assert isinstance(hectopascal.from_si_float(101325), float)
+    assert hectopascal.from_si_float(Decimal("101325")) == 1013.25

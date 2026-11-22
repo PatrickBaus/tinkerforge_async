@@ -48,3 +48,45 @@ class Quantity:
 
 TEMPERATURE = Quantity(scale=100, offset=27315)
 """The temperature in K. Raw values are in hundredths of a degree Celsius."""
+
+
+@dataclass(frozen=True, slots=True)
+class LinearQuantity:
+    """
+    A physical quantity that is transferred as an integer, with an arbitrary rational scale. The SI value is
+    `raw * numerator / denominator + offset`. Unlike `Quantity`, the scale does not need to be the inverse of an
+    integer, e.g. 1/16 °/s, 9.80665 m/s² per g or 5/18 m/s per km/h. The offset is given in SI units, e.g. 273.15 K for
+    a temperature, that is transferred in degrees Celsius.
+
+    Parameters
+    ----------
+    numerator: int
+        The numerator of the scale.
+    denominator: int
+        The denominator of the scale.
+    offset: Decimal
+        The SI value of the raw value 0.
+    """
+
+    numerator: int
+    denominator: int = 1
+    offset: Decimal = Decimal(0)
+
+    def to_si(self, raw: int | float) -> Decimal:
+        """
+        Convert a raw value to SI units.
+        """
+        value = Decimal(str(raw)) if isinstance(raw, float) else Decimal(raw)
+        return value * self.numerator / self.denominator + self.offset
+
+    def from_si(self, value: float | Decimal) -> int:
+        """
+        Convert a value in SI units to the raw value. The result is rounded to the nearest integer.
+        """
+        return round((Decimal(str(value)) - self.offset) * self.denominator / self.numerator)
+
+    def from_si_float(self, value: float | Decimal) -> float:
+        """
+        Convert a value in SI units to the raw value of a device, that uses floating point numbers.
+        """
+        return float((Decimal(str(value)) - self.offset) * self.denominator / self.numerator)

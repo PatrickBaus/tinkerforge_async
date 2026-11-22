@@ -183,3 +183,9 @@ def check_rejected(
         assert not connection.requests
     else:
         raise AssertionError(f"{method}{arguments} did not raise {error.__name__}")
+
+
+def chunk(data: Any, offset: int, size: int, padding: Any) -> list[Any]:
+    """The chunk of a stream starting at `offset`, padded to `size` items, as it is transferred by the device."""
+    part = list(data[offset : offset + size])
+    return part + [padding] * (size - len(part))
