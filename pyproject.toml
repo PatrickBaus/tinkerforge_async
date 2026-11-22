@@ -34,16 +34,26 @@ dynamic = ["version"]
 "Download" = "https://github.com/PatrickBaus/tinkerforge_async/releases"
 
 [project.optional-dependencies]
-dev = [
-    "black", "build", "isort", "mypy", "pre-commit", "pylint", "setuptools", "twine",
+# Needed to run the test suite. pytest-cov measures the coverage, see the [tool.coverage] sections below.
+test = [
+    "pytest", "pytest-cov",
 ]
-
+# Linters and type checkers. pylint also checks examples/ and tests/, so it needs the test dependencies.
+lint = [
+    "tinkerforge-async[test]",
+    "black", "isort", "mypy", "pre-commit", "pylint", "setuptools",
+]
+# Building and publishing to PyPI
+build = [
+    "build", "twine",
+]
+# Building the documentation
 doc = [
     "myst-parser", "sphinx",
 ]
-
-test = [
-    "mypy", "pylint", "pytest", "pytest-cov", "setuptools"
+# Everything needed for development
+dev = [
+    "tinkerforge-async[test,lint,build,doc]",
 ]
 
 [tool.pylint.'MESSAGES CONTROL']

@@ -18,14 +18,6 @@ updates:
       # Prefix all commit messages with "[pip] "
       prefix: "[pip] "
 
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      # Prefix all commit messages with "[docker] "
-      prefix: "[docker] "
-
   - package-ecosystem: "pre-commit"
     # Reads .pre-commit-config.yaml and bumps each hook's `rev`
     directory: "/"
