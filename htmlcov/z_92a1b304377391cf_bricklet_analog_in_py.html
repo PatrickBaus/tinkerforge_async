@@ -55,8 +55,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">129 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">129<span class="text"> run</span></button>
+            <span class="text">130 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">130<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">3<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">0<span class="text"> partial</span></button>
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_analog_in_v2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 03:10 +0000
+            created at 2026-11-22 03:17 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -93,7 +93,7 @@
     <p class="pln"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="nam">decimal</span> <span class="key">import</span> <span class="nam">Decimal</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="nam">enum</span> <span class="key">import</span> <span class="nam">Enum</span><span class="op">,</span> <span class="nam">unique</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TYPE_CHECKING</span><span class="op">,</span> <span class="nam">Any</span><span class="op">,</span> <span class="nam">NamedTuple</span><span class="op">,</span> <span class="nam">TypeAlias</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TYPE_CHECKING</span><span class="op">,</span> <span class="nam">Any</span><span class="op">,</span> <span class="nam">NamedTuple</span><span class="op">,</span> <span class="nam">TypeAlias</span><span class="op">,</span> <span class="nam">override</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">devices</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">    <span class="nam">AdvancedCallbackConfiguration</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -509,10 +509,11 @@
     <p class="run run2"><span class="n"><a id="t425" href="#t425">425</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t426" href="#t426">426</a></span><span class="t">        <span class="key">return</span> <span class="nam">unpack_payload</span><span class="op">(</span><span class="nam">payload</span><span class="op">,</span> <span class="str">&quot;B&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t427" href="#t427">427</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t428" href="#t428">428</a></span><span class="t">    <span class="key">def</span> <span class="nam">_convert_callback</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">callback_id</span><span class="op">:</span> <span class="nam">CallbackID</span><span class="op">,</span> <span class="nam">value</span><span class="op">:</span> <span class="nam">Any</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">tuple</span><span class="op">[</span><span class="nam">int</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t429" href="#t429">429</a></span><span class="t">        <span class="key">if</span> <span class="nam">callback_id</span> <span class="key">in</span> <span class="op">(</span><span class="nam">CallbackID</span><span class="op">.</span><span class="nam">VOLTAGE</span><span class="op">,</span> <span class="nam">CallbackID</span><span class="op">.</span><span class="nam">VOLTAGE_REACHED</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t430" href="#t430">430</a></span><span class="t">            <span class="key">return</span> <span class="num">0</span><span class="op">,</span> <span class="nam">VOLTAGE</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">value</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t431" href="#t431">431</a></span><span class="t">        <span class="key">return</span> <span class="num">1</span><span class="op">,</span> <span class="nam">value</span>  <span class="com"># If it is not a voltage callback there is no need for conversion</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t428" href="#t428">428</a></span><span class="t">    <span class="op">@</span><span class="nam">override</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t429" href="#t429">429</a></span><span class="t">    <span class="key">def</span> <span class="nam">_convert_callback</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">callback_id</span><span class="op">:</span> <span class="nam">CallbackID</span><span class="op">,</span> <span class="nam">value</span><span class="op">:</span> <span class="nam">Any</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">tuple</span><span class="op">[</span><span class="nam">int</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t430" href="#t430">430</a></span><span class="t">        <span class="key">if</span> <span class="nam">callback_id</span> <span class="key">in</span> <span class="op">(</span><span class="nam">CallbackID</span><span class="op">.</span><span class="nam">VOLTAGE</span><span class="op">,</span> <span class="nam">CallbackID</span><span class="op">.</span><span class="nam">VOLTAGE_REACHED</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t431" href="#t431">431</a></span><span class="t">            <span class="key">return</span> <span class="num">0</span><span class="op">,</span> <span class="nam">VOLTAGE</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">value</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t432" href="#t432">432</a></span><span class="t">        <span class="key">return</span> <span class="num">1</span><span class="op">,</span> <span class="nam">value</span>  <span class="com"># If it is not a voltage callback there is no need for conversion</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -522,7 +523,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_analog_in_v2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 03:10 +0000
+            created at 2026-11-22 03:17 +0000
         </p>
     </div>
 </footer>
