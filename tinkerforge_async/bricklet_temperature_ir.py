@@ -1,0 +1,423 @@
+"""
+Module for the Tinkerforge Temperature IR Bricklet
+(https://www.tinkerforge.com/en/doc/Software/Bricklets/TemperatureIR_Bricklet_Python.html) implemented using
+Python asyncio. It does the low-level communication with the Tinkerforge ip connection and also handles
+conversion of raw units to SI units.
+
+This module was generated from the Tinkerforge API definitions (https://github.com/Tinkerforge/generators).
+The descriptions of the functions are taken from the official documentation. Numbers in them can refer to the
+raw values of the device. The library converts all values to the units given in the "Units" line of each
+function.
+"""
+
+# pylint: disable=duplicate-code,too-many-lines
+from __future__ import annotations
+
+from decimal import Decimal
+from enum import Enum, unique
+from typing import TYPE_CHECKING, Any, TypeAlias
+
+from .devices import (
+    AdvancedCallbackConfiguration,
+    BasicCallbackConfiguration,
+    Channel,
+    ChannelConfiguration,
+    Device,
+    DeviceIdentifier,
+)
+from .devices import ThresholdOption as Threshold
+from .devices import _FunctionID
+from .helper import Duration, check_range, ms_to_seconds, seconds_to_ms
+from .ip_connection_helper import pack_payload, unpack_payload
+from .quantities import CELSIUS_ZERO, LinearQuantity
+
+if TYPE_CHECKING:
+    from .ip_connection import IPConnectionAsync
+
+
+@unique
+class CallbackID(Enum):
+    """
+    The callbacks available to this bricklet
+    """
+
+    AMBIENT_TEMPERATURE = 15
+    OBJECT_TEMPERATURE = 16
+    AMBIENT_TEMPERATURE_REACHED = 17
+    OBJECT_TEMPERATURE_REACHED = 18
+
+
+@unique
+class FunctionID(_FunctionID):
+    """
+    The function calls available to this bricklet
+    """
+
+    GET_AMBIENT_TEMPERATURE = 1
+    GET_OBJECT_TEMPERATURE = 2
+    SET_EMISSIVITY = 3
+    GET_EMISSIVITY = 4
+    SET_AMBIENT_TEMPERATURE_CALLBACK_PERIOD = 5
+    GET_AMBIENT_TEMPERATURE_CALLBACK_PERIOD = 6
+    SET_OBJECT_TEMPERATURE_CALLBACK_PERIOD = 7
+    GET_OBJECT_TEMPERATURE_CALLBACK_PERIOD = 8
+    SET_AMBIENT_TEMPERATURE_CALLBACK_THRESHOLD = 9
+    GET_AMBIENT_TEMPERATURE_CALLBACK_THRESHOLD = 10
+    SET_OBJECT_TEMPERATURE_CALLBACK_THRESHOLD = 11
+    GET_OBJECT_TEMPERATURE_CALLBACK_THRESHOLD = 12
+    SET_DEBOUNCE_PERIOD = 13
+    GET_DEBOUNCE_PERIOD = 14
+
+
+EMISSIVITY = LinearQuantity(1, 65535)  # raw: 1/65535, dimensionless
+TEMPERATURE_2 = LinearQuantity(1, 10, CELSIUS_ZERO)  # raw: 1/10 Degree Celsius, returned in K
+
+
+class BrickletTemperatureIR(Device):  # pylint: disable=too-many-public-methods,too-few-public-methods
+    """
+    Measures contactless object temperature between 203.15 K and 653.15 K
+    """
+
+    DEVICE_IDENTIFIER = DeviceIdentifier.BRICKLET_TEMPERATURE_IR
+    DEVICE_DISPLAY_NAME = "Temperature IR Bricklet"
+
+    # Convenience imports, so that the user does not need to additionally import them
+    CallbackID: TypeAlias = CallbackID
+    FunctionID = FunctionID
+    ThresholdOption = Threshold
+
+    CALLBACK_FORMATS = {
+        CallbackID.AMBIENT_TEMPERATURE: "h",
+        CallbackID.OBJECT_TEMPERATURE: "h",
+        CallbackID.AMBIENT_TEMPERATURE_REACHED: "h",
+        CallbackID.OBJECT_TEMPERATURE_REACHED: "h",
+    }
+
+    CHANNELS = (
+        Channel(
+            0,
+            getter="get_ambient_temperature",
+            callbacks=(
+                CallbackID.AMBIENT_TEMPERATURE,
+                CallbackID.AMBIENT_TEMPERATURE_REACHED,
+            ),
+            configuration=ChannelConfiguration("ambient_temperature", split=True, default=CELSIUS_ZERO),
+        ),
+        Channel(
+            1,
+            getter="get_object_temperature",
+            callbacks=(
+                CallbackID.OBJECT_TEMPERATURE,
+                CallbackID.OBJECT_TEMPERATURE_REACHED,
+            ),
+            configuration=ChannelConfiguration("object_temperature", split=True, default=CELSIUS_ZERO),
+        ),
+    )
+
+    def __init__(self, uid: int, ipcon: IPConnectionAsync) -> None:
+        """
+        Creates an object with the unique device ID *uid* and adds it to
+        the IP Connection *ipcon*.
+        """
+        super().__init__(self.DEVICE_DISPLAY_NAME, uid, ipcon)
+
+        self.api_version = (2, 0, 0)
+
+    async def get_value(self, sid: int) -> Any:
+        """
+        Returns the value of the channel with the secondary id `sid`. See `CHANNELS` for the channels.
+        """
+        return await self._get_value(sid)
+
+    async def set_callback_configuration(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        sid: int,
+        period: Duration = 0,
+        value_has_to_change: bool = False,
+        option: Threshold | int = Threshold.OFF,
+        minimum: float | Decimal | None = None,
+        maximum: float | Decimal | None = None,
+        response_expected: bool = True,
+    ) -> None:
+        """
+        Configures the callbacks of the channel with the secondary id `sid`. The thresholds are ignored by
+        channels without thresholds.
+        """
+        await self._set_callback_configuration(
+            sid, period, value_has_to_change, option, minimum, maximum, response_expected
+        )
+
+    async def get_callback_configuration(self, sid: int) -> AdvancedCallbackConfiguration:
+        """
+        Returns the callback configuration of the channel with the secondary id `sid`.
+        """
+        return await self._get_callback_configuration(sid)
+
+    async def get_ambient_temperature(self) -> Decimal:
+        """
+        Returns the ambient temperature of the sensor.
+
+        If you want to get the ambient temperature periodically, it is recommended
+        to use the :attr:`CallbackID.AMBIENT_TEMPERATURE` callback and set the period with
+        :func:`set_ambient_temperature_callback_period`.
+
+        Units: temperature in K (233.15 to 398.15 K).
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_AMBIENT_TEMPERATURE, response_expected=True
+        )
+        return TEMPERATURE_2.to_si(unpack_payload(payload, "h"))
+
+    async def get_object_temperature(self) -> Decimal:
+        """
+        Returns the object temperature of the sensor, i.e. the temperature
+        of the surface of the object the sensor is aimed at.
+
+        The temperature of different materials is dependent on their `emissivity
+        <https://en.wikipedia.org/wiki/Emissivity>`__. The emissivity of the material
+        can be set with :func:`set_emissivity`.
+
+        If you want to get the object temperature periodically, it is recommended
+        to use the :attr:`CallbackID.OBJECT_TEMPERATURE` callback and set the period with
+        :func:`set_object_temperature_callback_period`.
+
+        Units: temperature in K (203.15 to 653.15 K).
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_OBJECT_TEMPERATURE, response_expected=True
+        )
+        return TEMPERATURE_2.to_si(unpack_payload(payload, "h"))
+
+    async def set_emissivity(self, emissivity: float | Decimal = 1, response_expected: bool = True) -> None:
+        """
+        Sets the `emissivity <https://en.wikipedia.org/wiki/Emissivity>`__ that is
+        used to calculate the surface temperature as returned by
+        :func:`get_object_temperature`.
+
+        The emissivity is usually given as a value between 0.0 and 1.0. A list of
+        emissivities of different materials can be found
+        `here <https://www.infrared-thermography.com/material.htm>`__.
+
+        The parameter of :func:`set_emissivity` has to be given with a factor of
+        65535 (16-bit). For example: An emissivity of 0.1 can be set with the
+        value 6553, an emissivity of 0.5 with the value 32767 and so on.
+
+        .. note::
+         If you need a precise measurement for the object temperature, it is
+         absolutely crucial that you also provide a precise emissivity.
+
+        The emissivity is stored in non-volatile memory and will still be used after a restart or power cycle of the
+        Bricklet.
+        """
+        emissivity_raw = EMISSIVITY.from_si(emissivity)
+        check_range("emissivity", emissivity_raw, 0, 65535, emissivity)
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_EMISSIVITY,
+            data=pack_payload((emissivity_raw,), "H"),
+            response_expected=response_expected,
+        )
+
+    async def get_emissivity(self) -> Decimal:
+        """
+        Returns the emissivity as set by :func:`set_emissivity`.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_EMISSIVITY, response_expected=True
+        )
+        return EMISSIVITY.to_si(unpack_payload(payload, "H"))
+
+    async def set_ambient_temperature_callback_period(
+        self, period: Duration = 0, response_expected: bool = True
+    ) -> None:
+        """
+        Sets the period with which the :attr:`CallbackID.AMBIENT_TEMPERATURE` callback is
+        triggered periodically. A value of 0 turns the callback off.
+
+        The :attr:`CallbackID.AMBIENT_TEMPERATURE` callback is only triggered if the temperature has
+        changed since the last triggering.
+        """
+        period_raw = seconds_to_ms(period)
+        check_range("period", period_raw, 0, 4294967295, period)
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_AMBIENT_TEMPERATURE_CALLBACK_PERIOD,
+            data=pack_payload((period_raw,), "I"),
+            response_expected=response_expected,
+        )
+
+    async def get_ambient_temperature_callback_period(self) -> Decimal:
+        """
+        Returns the period as set by :func:`set_ambient_temperature_callback_period`.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_AMBIENT_TEMPERATURE_CALLBACK_PERIOD, response_expected=True
+        )
+        return ms_to_seconds(unpack_payload(payload, "I"))
+
+    async def set_object_temperature_callback_period(
+        self, period: Duration = 0, response_expected: bool = True
+    ) -> None:
+        """
+        Sets the period with which the :attr:`CallbackID.OBJECT_TEMPERATURE` callback is
+        triggered periodically. A value of 0 turns the callback off.
+
+        The :attr:`CallbackID.OBJECT_TEMPERATURE` callback is only triggered if the temperature
+        has changed since the last triggering.
+        """
+        period_raw = seconds_to_ms(period)
+        check_range("period", period_raw, 0, 4294967295, period)
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_OBJECT_TEMPERATURE_CALLBACK_PERIOD,
+            data=pack_payload((period_raw,), "I"),
+            response_expected=response_expected,
+        )
+
+    async def get_object_temperature_callback_period(self) -> Decimal:
+        """
+        Returns the period as set by :func:`set_object_temperature_callback_period`.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_OBJECT_TEMPERATURE_CALLBACK_PERIOD, response_expected=True
+        )
+        return ms_to_seconds(unpack_payload(payload, "I"))
+
+    async def set_ambient_temperature_callback_threshold(
+        self,
+        option: Threshold | str = Threshold.OFF,
+        minimum: float | Decimal = Decimal("273.15"),
+        maximum: float | Decimal = Decimal("273.15"),
+        response_expected: bool = True,
+    ) -> None:
+        """
+        Sets the thresholds for the :attr:`CallbackID.AMBIENT_TEMPERATURE_REACHED` callback.
+
+        The following options are possible:
+
+        .. csv-table::
+         :header: "Option", "Description"
+         :widths: 10, 100
+
+         "'x'",    "Callback is turned off"
+         "'o'",    "Callback is triggered when the ambient temperature is *outside* the min and max values"
+         "'i'",    "Callback is triggered when the ambient temperature is *inside* the min and max values"
+         "'<'",    "Callback is triggered when the ambient temperature is smaller than the min value (max is ignored)"
+         "'>'",    "Callback is triggered when the ambient temperature is greater than the min value (max is ignored)"
+
+        Units: minimum in K, maximum in K.
+        """
+        minimum_raw = TEMPERATURE_2.from_si(minimum)
+        check_range("minimum", minimum_raw, -32768, 32767, minimum)
+        maximum_raw = TEMPERATURE_2.from_si(maximum)
+        check_range("maximum", maximum_raw, -32768, 32767, maximum)
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_AMBIENT_TEMPERATURE_CALLBACK_THRESHOLD,
+            data=pack_payload((Threshold(option).value, minimum_raw, maximum_raw), "c h h"),
+            response_expected=response_expected,
+        )
+
+    async def get_ambient_temperature_callback_threshold(self) -> BasicCallbackConfiguration:
+        """
+        Returns the threshold as set by :func:`set_ambient_temperature_callback_threshold`.
+
+        Units: minimum in K, maximum in K.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_AMBIENT_TEMPERATURE_CALLBACK_THRESHOLD, response_expected=True
+        )
+        option, minimum, maximum = unpack_payload(payload, "c h h")
+        return BasicCallbackConfiguration(Threshold(option), TEMPERATURE_2.to_si(minimum), TEMPERATURE_2.to_si(maximum))
+
+    async def set_object_temperature_callback_threshold(
+        self,
+        option: Threshold | str = Threshold.OFF,
+        minimum: float | Decimal = Decimal("273.15"),
+        maximum: float | Decimal = Decimal("273.15"),
+        response_expected: bool = True,
+    ) -> None:
+        """
+        Sets the thresholds for the :attr:`CallbackID.OBJECT_TEMPERATURE_REACHED` callback.
+
+        The following options are possible:
+
+        .. csv-table::
+         :header: "Option", "Description"
+         :widths: 10, 100
+
+         "'x'",    "Callback is turned off"
+         "'o'",    "Callback is triggered when the object temperature is *outside* the min and max values"
+         "'i'",    "Callback is triggered when the object temperature is *inside* the min and max values"
+         "'<'",    "Callback is triggered when the object temperature is smaller than the min value (max is ignored)"
+         "'>'",    "Callback is triggered when the object temperature is greater than the min value (max is ignored)"
+
+        Units: minimum in K, maximum in K.
+        """
+        minimum_raw = TEMPERATURE_2.from_si(minimum)
+        check_range("minimum", minimum_raw, -32768, 32767, minimum)
+        maximum_raw = TEMPERATURE_2.from_si(maximum)
+        check_range("maximum", maximum_raw, -32768, 32767, maximum)
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_OBJECT_TEMPERATURE_CALLBACK_THRESHOLD,
+            data=pack_payload((Threshold(option).value, minimum_raw, maximum_raw), "c h h"),
+            response_expected=response_expected,
+        )
+
+    async def get_object_temperature_callback_threshold(self) -> BasicCallbackConfiguration:
+        """
+        Returns the threshold as set by :func:`set_object_temperature_callback_threshold`.
+
+        Units: minimum in K, maximum in K.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_OBJECT_TEMPERATURE_CALLBACK_THRESHOLD, response_expected=True
+        )
+        option, minimum, maximum = unpack_payload(payload, "c h h")
+        return BasicCallbackConfiguration(Threshold(option), TEMPERATURE_2.to_si(minimum), TEMPERATURE_2.to_si(maximum))
+
+    async def set_debounce_period(self, debounce: Duration = Decimal("0.1"), response_expected: bool = True) -> None:
+        """
+        Sets the period with which the threshold callbacks
+
+        * :attr:`CallbackID.AMBIENT_TEMPERATURE_REACHED`,
+        * :attr:`CallbackID.OBJECT_TEMPERATURE_REACHED`
+
+        are triggered, if the thresholds
+
+        * :func:`set_ambient_temperature_callback_threshold`,
+        * :func:`set_object_temperature_callback_threshold`
+
+        keep being reached.
+
+        Units: debounce in s.
+        """
+        debounce_raw = seconds_to_ms(debounce)
+        check_range("debounce", debounce_raw, 0, 4294967295, debounce)
+        await self.ipcon.send_request(
+            device=self,
+            function_id=FunctionID.SET_DEBOUNCE_PERIOD,
+            data=pack_payload((debounce_raw,), "I"),
+            response_expected=response_expected,
+        )
+
+    async def get_debounce_period(self) -> Decimal:
+        """
+        Returns the debounce period as set by :func:`set_debounce_period`.
+
+        Units: debounce in s.
+        """
+        _, payload = await self.ipcon.send_request(
+            device=self, function_id=FunctionID.GET_DEBOUNCE_PERIOD, response_expected=True
+        )
+        return ms_to_seconds(unpack_payload(payload, "I"))
+
+    def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
+        if callback_id is CallbackID.AMBIENT_TEMPERATURE:
+            return 0, TEMPERATURE_2.to_si(value)
+        if callback_id is CallbackID.OBJECT_TEMPERATURE:
+            return 1, TEMPERATURE_2.to_si(value)
+        if callback_id is CallbackID.AMBIENT_TEMPERATURE_REACHED:
+            return 0, TEMPERATURE_2.to_si(value)
+        return 1, TEMPERATURE_2.to_si(value)

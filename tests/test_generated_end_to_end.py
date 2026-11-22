@@ -56,8 +56,8 @@ def enumeration(uid: int, device_identifier: int) -> bytes:
 
 
 def test_all_devices_are_generated():
-    """All 85 requested Bricks and Bricklets were generated and are registered with the factory."""
-    assert len(GENERATED) == 85
+    """All 124 generated Bricks and Bricklets (85 current, 39 discontinued) are registered with the factory."""
+    assert len(GENERATED) == 124
     for cls in GENERATED:
         assert DeviceIdentifier(cls.DEVICE_IDENTIFIER.value) is cls.DEVICE_IDENTIFIER
 
