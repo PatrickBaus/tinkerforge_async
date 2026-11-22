@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_color_v2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -209,7 +209,7 @@
     <p class="run"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">    <span class="nam">integration_time</span><span class="op">:</span> <span class="nam">IntegrationTime</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t"><span class="nam">COLOR_TEMPERATURE</span> <span class="op">=</span> <span class="nam">LinearQuantity</span><span class="op">(</span><span class="num">1</span><span class="op">)</span>  <span class="com"># raw: 1/1 Kelvin, returned in K</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t"><span class="nam">KELVIN</span> <span class="op">=</span> <span class="nam">LinearQuantity</span><span class="op">(</span><span class="num">1</span><span class="op">)</span>  <span class="com"># raw: 1/1 Kelvin, returned in K</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t"><span class="key">class</span> <span class="nam">BrickletColor</span><span class="op">(</span><span class="nam">Device</span><span class="op">)</span><span class="op">:</span>  <span class="com"># pylint: disable=too-many-public-methods,too-few-public-methods</span>&nbsp;</span><span class="r"></span></p>
@@ -511,7 +511,7 @@
     <p class="run"><span class="n"><a id="t427" href="#t427">427</a></span><span class="t">        <span class="nam">_</span><span class="op">,</span> <span class="nam">payload</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">ipcon</span><span class="op">.</span><span class="nam">send_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t428" href="#t428">428</a></span><span class="t">            <span class="nam">device</span><span class="op">=</span><span class="nam">self</span><span class="op">,</span> <span class="nam">function_id</span><span class="op">=</span><span class="nam">FunctionID</span><span class="op">.</span><span class="nam">GET_COLOR_TEMPERATURE</span><span class="op">,</span> <span class="nam">response_expected</span><span class="op">=</span><span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t429" href="#t429">429</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t430" href="#t430">430</a></span><span class="t">        <span class="key">return</span> <span class="nam">COLOR_TEMPERATURE</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">unpack_payload</span><span class="op">(</span><span class="nam">payload</span><span class="op">,</span> <span class="str">&quot;H&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t430" href="#t430">430</a></span><span class="t">        <span class="key">return</span> <span class="nam">KELVIN</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">unpack_payload</span><span class="op">(</span><span class="nam">payload</span><span class="op">,</span> <span class="str">&quot;H&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t431" href="#t431">431</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t432" href="#t432">432</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">set_illuminance_callback_period</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">period</span><span class="op">:</span> <span class="nam">Duration</span> <span class="op">=</span> <span class="num">0</span><span class="op">,</span> <span class="nam">response_expected</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">True</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t433" href="#t433">433</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
@@ -574,7 +574,7 @@
     <p class="run"><span class="n"><a id="t490" href="#t490">490</a></span><span class="t">            <span class="key">return</span> <span class="num">1</span><span class="op">,</span> <span class="nam">GetColor</span><span class="op">(</span><span class="nam">r</span><span class="op">,</span> <span class="nam">g</span><span class="op">,</span> <span class="nam">b</span><span class="op">,</span> <span class="nam">c</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t491" href="#t491">491</a></span><span class="t">        <span class="key">if</span> <span class="nam">callback_id</span> <span class="key">is</span> <span class="nam">CallbackID</span><span class="op">.</span><span class="nam">ILLUMINANCE</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t492" href="#t492">492</a></span><span class="t">            <span class="key">return</span> <span class="num">2</span><span class="op">,</span> <span class="nam">value</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t493" href="#t493">493</a></span><span class="t">        <span class="key">return</span> <span class="num">3</span><span class="op">,</span> <span class="nam">COLOR_TEMPERATURE</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">value</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t493" href="#t493">493</a></span><span class="t">        <span class="key">return</span> <span class="num">3</span><span class="op">,</span> <span class="nam">KELVIN</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">value</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -584,7 +584,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_color_v2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
     </div>
 </footer>

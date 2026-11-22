@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_temperature_ir_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -196,7 +196,7 @@
     <p class="run run2"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">        <span class="nam">sid</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">        <span class="nam">period</span><span class="op">:</span> <span class="nam">Duration</span> <span class="op">=</span> <span class="num">0</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">        <span class="nam">value_has_to_change</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">        <span class="nam">option</span><span class="op">:</span> <span class="nam">Threshold</span> <span class="op">|</span> <span class="nam">int</span> <span class="op">=</span> <span class="nam">Threshold</span><span class="op">.</span><span class="nam">OFF</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">        <span class="nam">option</span><span class="op">:</span> <span class="nam">Threshold</span> <span class="op">|</span> <span class="nam">str</span> <span class="op">=</span> <span class="nam">Threshold</span><span class="op">.</span><span class="nam">OFF</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">        <span class="nam">minimum</span><span class="op">:</span> <span class="nam">float</span> <span class="op">|</span> <span class="nam">Decimal</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">        <span class="nam">maximum</span><span class="op">:</span> <span class="nam">float</span> <span class="op">|</span> <span class="nam">Decimal</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">        <span class="nam">response_expected</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -253,7 +253,7 @@
     <p class="pln"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t170" href="#t170">170</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">set_temperature_callback_threshold</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">        <span class="nam">option</span><span class="op">:</span> <span class="nam">Threshold</span> <span class="op">|</span> <span class="nam">int</span> <span class="op">=</span> <span class="nam">Threshold</span><span class="op">.</span><span class="nam">OFF</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">        <span class="nam">option</span><span class="op">:</span> <span class="nam">Threshold</span> <span class="op">|</span> <span class="nam">str</span> <span class="op">=</span> <span class="nam">Threshold</span><span class="op">.</span><span class="nam">OFF</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">        <span class="nam">minimum</span><span class="op">:</span> <span class="nam">float</span> <span class="op">|</span> <span class="nam">Decimal</span> <span class="op">=</span> <span class="nam">CELSIUS_ZERO</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">        <span class="nam">maximum</span><span class="op">:</span> <span class="nam">float</span> <span class="op">|</span> <span class="nam">Decimal</span> <span class="op">=</span> <span class="nam">CELSIUS_ZERO</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">        <span class="nam">response_expected</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -382,7 +382,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_temperature_ir_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
     </div>
 </footer>

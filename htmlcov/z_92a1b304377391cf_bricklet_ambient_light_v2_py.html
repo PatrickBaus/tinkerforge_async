@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_ambient_light_v3_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -225,7 +225,7 @@
     <p class="run run2"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">        <span class="nam">sid</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t">        <span class="nam">period</span><span class="op">:</span> <span class="nam">Duration</span> <span class="op">=</span> <span class="num">0</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">        <span class="nam">value_has_to_change</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">        <span class="nam">option</span><span class="op">:</span> <span class="nam">Threshold</span> <span class="op">|</span> <span class="nam">int</span> <span class="op">=</span> <span class="nam">Threshold</span><span class="op">.</span><span class="nam">OFF</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">        <span class="nam">option</span><span class="op">:</span> <span class="nam">Threshold</span> <span class="op">|</span> <span class="nam">str</span> <span class="op">=</span> <span class="nam">Threshold</span><span class="op">.</span><span class="nam">OFF</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t145" href="#t145">145</a></span><span class="t">        <span class="nam">minimum</span><span class="op">:</span> <span class="nam">float</span> <span class="op">|</span> <span class="nam">Decimal</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">        <span class="nam">maximum</span><span class="op">:</span> <span class="nam">float</span> <span class="op">|</span> <span class="nam">Decimal</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">        <span class="nam">response_expected</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -282,7 +282,7 @@
     <p class="pln"><span class="n"><a id="t198" href="#t198">198</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">set_illuminance_callback_threshold</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t200" href="#t200">200</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t201" href="#t201">201</a></span><span class="t">        <span class="nam">option</span><span class="op">:</span> <span class="nam">Threshold</span> <span class="op">|</span> <span class="nam">int</span> <span class="op">=</span> <span class="nam">Threshold</span><span class="op">.</span><span class="nam">OFF</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t201" href="#t201">201</a></span><span class="t">        <span class="nam">option</span><span class="op">:</span> <span class="nam">Threshold</span> <span class="op">|</span> <span class="nam">str</span> <span class="op">=</span> <span class="nam">Threshold</span><span class="op">.</span><span class="nam">OFF</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t202" href="#t202">202</a></span><span class="t">        <span class="nam">minimum</span><span class="op">:</span> <span class="nam">float</span> <span class="op">|</span> <span class="nam">Decimal</span> <span class="op">=</span> <span class="num">0</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t203" href="#t203">203</a></span><span class="t">        <span class="nam">maximum</span><span class="op">:</span> <span class="nam">float</span> <span class="op">|</span> <span class="nam">Decimal</span> <span class="op">=</span> <span class="num">0</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t204" href="#t204">204</a></span><span class="t">        <span class="nam">response_expected</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -428,7 +428,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_ambient_light_v3_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
     </div>
 </footer>

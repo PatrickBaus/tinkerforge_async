@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_piezo_speaker_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -101,7 +101,7 @@
     <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TYPE_CHECKING</span><span class="op">,</span> <span class="nam">Any</span><span class="op">,</span> <span class="nam">TypeAlias</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">devices</span> <span class="key">import</span> <span class="nam">Channel</span><span class="op">,</span> <span class="nam">Device</span><span class="op">,</span> <span class="nam">DeviceIdentifier</span><span class="op">,</span> <span class="nam">_FunctionID</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">helper</span> <span class="key">import</span> <span class="nam">Duration</span><span class="op">,</span> <span class="nam">check_range</span><span class="op">,</span> <span class="nam">seconds_to_ms</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">helper</span> <span class="key">import</span> <span class="nam">Duration</span><span class="op">,</span> <span class="nam">check_range</span><span class="op">,</span> <span class="nam">encode_string</span><span class="op">,</span> <span class="nam">seconds_to_ms</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">ip_connection_helper</span> <span class="key">import</span> <span class="nam">pack_payload</span>&nbsp;</span><span class="r"></span></p>
     <p class="exc show_exc"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="exc show_exc"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="key">if</span> <span class="nam">TYPE_CHECKING</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -187,7 +187,7 @@
     <p class="run"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">        <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">ipcon</span><span class="op">.</span><span class="nam">send_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">            <span class="nam">device</span><span class="op">=</span><span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">            <span class="nam">function_id</span><span class="op">=</span><span class="nam">FunctionID</span><span class="op">.</span><span class="nam">MORSE_CODE</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">            <span class="nam">data</span><span class="op">=</span><span class="nam">pack_payload</span><span class="op">(</span><span class="op">(</span><span class="nam">str</span><span class="op">(</span><span class="nam">morse</span><span class="op">)</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span><span class="str">&quot;latin-1&quot;</span><span class="op">)</span><span class="op">,</span><span class="op">)</span><span class="op">,</span> <span class="str">&quot;60s&quot;</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">            <span class="nam">data</span><span class="op">=</span><span class="nam">pack_payload</span><span class="op">(</span><span class="op">(</span><span class="nam">encode_string</span><span class="op">(</span><span class="str">&quot;morse&quot;</span><span class="op">,</span> <span class="nam">morse</span><span class="op">,</span> <span class="num">60</span><span class="op">)</span><span class="op">,</span><span class="op">)</span><span class="op">,</span> <span class="str">&quot;60s&quot;</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">            <span class="nam">response_expected</span><span class="op">=</span><span class="nam">response_expected</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -204,7 +204,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_piezo_speaker_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
     </div>
 </footer>

@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_co2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -305,7 +305,7 @@
     <p class="run"><span class="n"><a id="t221" href="#t221">221</a></span><span class="t">    <span class="nam">data</span><span class="op">:</span> <span class="nam">bytes</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t222" href="#t222">222</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t223" href="#t223">223</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t224" href="#t224">224</a></span><span class="t"><span class="nam">SAMPLE_POINT</span> <span class="op">=</span> <span class="nam">LinearQuantity</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">10</span><span class="op">)</span>  <span class="com"># raw: 1/10 Percent, returned in %</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t224" href="#t224">224</a></span><span class="t"><span class="nam">DECI_PERCENT</span> <span class="op">=</span> <span class="nam">LinearQuantity</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">10</span><span class="op">)</span>  <span class="com"># raw: 1/10 Percent, returned in %</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t225" href="#t225">225</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t226" href="#t226">226</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t227" href="#t227">227</a></span><span class="t"><span class="key">class</span> <span class="nam">BrickletCANV2</span><span class="op">(</span><span class="nam">BrickletWithMCU</span><span class="op">)</span><span class="op">:</span>  <span class="com"># pylint: disable=too-many-public-methods,too-few-public-methods</span>&nbsp;</span><span class="r"></span></p>
@@ -548,7 +548,7 @@
     <p class="pln"><span class="n"><a id="t464" href="#t464">464</a></span><span class="t"><span class="str">        &quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t465" href="#t465">465</a></span><span class="t">        <span class="nam">baud_rate</span> <span class="op">=</span> <span class="nam">int</span><span class="op">(</span><span class="nam">baud_rate</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t466" href="#t466">466</a></span><span class="t">        <span class="nam">check_range</span><span class="op">(</span><span class="str">&quot;baud_rate&quot;</span><span class="op">,</span> <span class="nam">baud_rate</span><span class="op">,</span> <span class="num">10000</span><span class="op">,</span> <span class="num">1000000</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t467" href="#t467">467</a></span><span class="t">        <span class="nam">sample_point_raw</span> <span class="op">=</span> <span class="nam">SAMPLE_POINT</span><span class="op">.</span><span class="nam">from_si</span><span class="op">(</span><span class="nam">sample_point</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t467" href="#t467">467</a></span><span class="t">        <span class="nam">sample_point_raw</span> <span class="op">=</span> <span class="nam">DECI_PERCENT</span><span class="op">.</span><span class="nam">from_si</span><span class="op">(</span><span class="nam">sample_point</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t468" href="#t468">468</a></span><span class="t">        <span class="nam">check_range</span><span class="op">(</span><span class="str">&quot;sample_point&quot;</span><span class="op">,</span> <span class="nam">sample_point_raw</span><span class="op">,</span> <span class="num">500</span><span class="op">,</span> <span class="num">900</span><span class="op">,</span> <span class="nam">sample_point</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t469" href="#t469">469</a></span><span class="t">        <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">ipcon</span><span class="op">.</span><span class="nam">send_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t470" href="#t470">470</a></span><span class="t">            <span class="nam">device</span><span class="op">=</span><span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -568,7 +568,7 @@
     <p class="run run2"><span class="n"><a id="t484" href="#t484">484</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t485" href="#t485">485</a></span><span class="t">        <span class="nam">baud_rate</span><span class="op">,</span> <span class="nam">sample_point</span><span class="op">,</span> <span class="nam">transceiver_mode</span> <span class="op">=</span> <span class="nam">unpack_payload</span><span class="op">(</span><span class="nam">payload</span><span class="op">,</span> <span class="str">&quot;I H B&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t486" href="#t486">486</a></span><span class="t">        <span class="key">return</span> <span class="nam">GetTransceiverConfiguration</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t487" href="#t487">487</a></span><span class="t">            <span class="nam">baud_rate</span><span class="op">,</span> <span class="nam">SAMPLE_POINT</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">sample_point</span><span class="op">)</span><span class="op">,</span> <span class="nam">TransceiverMode</span><span class="op">(</span><span class="nam">transceiver_mode</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t487" href="#t487">487</a></span><span class="t">            <span class="nam">baud_rate</span><span class="op">,</span> <span class="nam">DECI_PERCENT</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">sample_point</span><span class="op">)</span><span class="op">,</span> <span class="nam">TransceiverMode</span><span class="op">(</span><span class="nam">transceiver_mode</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t488" href="#t488">488</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t489" href="#t489">489</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t490" href="#t490">490</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">set_queue_configuration_low_level</span><span class="op">(</span>  <span class="com"># pylint: disable=too-many-arguments,too-many-positional-arguments</span>&nbsp;</span><span class="r"></span></p>
@@ -1140,7 +1140,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_co2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
     </div>
 </footer>

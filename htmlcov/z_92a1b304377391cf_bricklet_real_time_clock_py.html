@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_real_time_clock_v2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -215,7 +215,7 @@
     <p class="run"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t">    <span class="nam">timestamp</span><span class="op">:</span> <span class="nam">Decimal</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t"><span class="nam">OFFSET</span> <span class="op">=</span> <span class="nam">LinearQuantity</span><span class="op">(</span><span class="num">217</span><span class="op">,</span> <span class="num">100</span><span class="op">)</span>  <span class="com"># raw: 217/100 Parts Per Million, returned in ppm</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t"><span class="nam">PARTS_PER_MILLION_217_100</span> <span class="op">=</span> <span class="nam">LinearQuantity</span><span class="op">(</span><span class="num">217</span><span class="op">,</span> <span class="num">100</span><span class="op">)</span>  <span class="com"># raw: 217/100 Parts Per Million, returned in ppm</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t"><span class="key">class</span> <span class="nam">BrickletRealTimeClock</span><span class="op">(</span><span class="nam">Device</span><span class="op">)</span><span class="op">:</span>  <span class="com"># pylint: disable=too-many-public-methods,too-few-public-methods</span>&nbsp;</span><span class="r"></span></p>
@@ -351,7 +351,7 @@
     <p class="pln"><span class="n"><a id="t267" href="#t267">267</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t268" href="#t268">268</a></span><span class="t"><span class="str">        Units: offset in ppm.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t269" href="#t269">269</a></span><span class="t"><span class="str">        &quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t270" href="#t270">270</a></span><span class="t">        <span class="nam">offset_raw</span> <span class="op">=</span> <span class="nam">OFFSET</span><span class="op">.</span><span class="nam">from_si</span><span class="op">(</span><span class="nam">offset</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t270" href="#t270">270</a></span><span class="t">        <span class="nam">offset_raw</span> <span class="op">=</span> <span class="nam">PARTS_PER_MILLION_217_100</span><span class="op">.</span><span class="nam">from_si</span><span class="op">(</span><span class="nam">offset</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t271" href="#t271">271</a></span><span class="t">        <span class="nam">check_range</span><span class="op">(</span><span class="str">&quot;offset&quot;</span><span class="op">,</span> <span class="nam">offset_raw</span><span class="op">,</span> <span class="op">-</span><span class="num">128</span><span class="op">,</span> <span class="num">127</span><span class="op">,</span> <span class="nam">offset</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t272" href="#t272">272</a></span><span class="t">        <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">ipcon</span><span class="op">.</span><span class="nam">send_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t273" href="#t273">273</a></span><span class="t">            <span class="nam">device</span><span class="op">=</span><span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -369,7 +369,7 @@
     <p class="run"><span class="n"><a id="t285" href="#t285">285</a></span><span class="t">        <span class="nam">_</span><span class="op">,</span> <span class="nam">payload</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">ipcon</span><span class="op">.</span><span class="nam">send_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t286" href="#t286">286</a></span><span class="t">            <span class="nam">device</span><span class="op">=</span><span class="nam">self</span><span class="op">,</span> <span class="nam">function_id</span><span class="op">=</span><span class="nam">FunctionID</span><span class="op">.</span><span class="nam">GET_OFFSET</span><span class="op">,</span> <span class="nam">response_expected</span><span class="op">=</span><span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t287" href="#t287">287</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t288" href="#t288">288</a></span><span class="t">        <span class="key">return</span> <span class="nam">OFFSET</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">unpack_payload</span><span class="op">(</span><span class="nam">payload</span><span class="op">,</span> <span class="str">&quot;b&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t288" href="#t288">288</a></span><span class="t">        <span class="key">return</span> <span class="nam">PARTS_PER_MILLION_217_100</span><span class="op">.</span><span class="nam">to_si</span><span class="op">(</span><span class="nam">unpack_payload</span><span class="op">(</span><span class="nam">payload</span><span class="op">,</span> <span class="str">&quot;b&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t289" href="#t289">289</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t290" href="#t290">290</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">set_date_time_callback_period</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">period</span><span class="op">:</span> <span class="nam">Duration</span> <span class="op">=</span> <span class="num">0</span><span class="op">,</span> <span class="nam">response_expected</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">True</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t291" href="#t291">291</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
@@ -499,7 +499,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_real_time_clock_v2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
     </div>
 </footer>

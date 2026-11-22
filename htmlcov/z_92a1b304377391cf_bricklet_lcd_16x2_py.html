@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_92a1b304377391cf_bricklet_lcd_20x4_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -102,7 +102,7 @@
     <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TYPE_CHECKING</span><span class="op">,</span> <span class="nam">Any</span><span class="op">,</span> <span class="nam">NamedTuple</span><span class="op">,</span> <span class="nam">TypeAlias</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">devices</span> <span class="key">import</span> <span class="nam">Channel</span><span class="op">,</span> <span class="nam">Device</span><span class="op">,</span> <span class="nam">DeviceIdentifier</span><span class="op">,</span> <span class="nam">_FunctionID</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">helper</span> <span class="key">import</span> <span class="nam">check_length</span><span class="op">,</span> <span class="nam">check_range</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">helper</span> <span class="key">import</span> <span class="nam">check_length</span><span class="op">,</span> <span class="nam">check_range</span><span class="op">,</span> <span class="nam">encode_string</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">ip_connection_helper</span> <span class="key">import</span> <span class="nam">pack_payload</span><span class="op">,</span> <span class="nam">unpack_payload</span>&nbsp;</span><span class="r"></span></p>
     <p class="exc show_exc"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="exc show_exc"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="key">if</span> <span class="nam">TYPE_CHECKING</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -195,7 +195,7 @@
     <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">ipcon</span><span class="op">.</span><span class="nam">send_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">            <span class="nam">device</span><span class="op">=</span><span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">            <span class="nam">function_id</span><span class="op">=</span><span class="nam">FunctionID</span><span class="op">.</span><span class="nam">WRITE_LINE</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">            <span class="nam">data</span><span class="op">=</span><span class="nam">pack_payload</span><span class="op">(</span><span class="op">(</span><span class="nam">line</span><span class="op">,</span> <span class="nam">position</span><span class="op">,</span> <span class="nam">str</span><span class="op">(</span><span class="nam">text</span><span class="op">)</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span><span class="str">&quot;latin-1&quot;</span><span class="op">)</span><span class="op">)</span><span class="op">,</span> <span class="str">&quot;B B 16s&quot;</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">            <span class="nam">data</span><span class="op">=</span><span class="nam">pack_payload</span><span class="op">(</span><span class="op">(</span><span class="nam">line</span><span class="op">,</span> <span class="nam">position</span><span class="op">,</span> <span class="nam">encode_string</span><span class="op">(</span><span class="str">&quot;text&quot;</span><span class="op">,</span> <span class="nam">text</span><span class="op">,</span> <span class="num">16</span><span class="op">)</span><span class="op">)</span><span class="op">,</span> <span class="str">&quot;B B 16s&quot;</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">            <span class="nam">response_expected</span><span class="op">=</span><span class="nam">response_expected</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -343,7 +343,7 @@
             <a class="nav" href="z_92a1b304377391cf_bricklet_lcd_20x4_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-22 02:56 +0000
+            created at 2026-11-22 03:10 +0000
         </p>
     </div>
 </footer>
