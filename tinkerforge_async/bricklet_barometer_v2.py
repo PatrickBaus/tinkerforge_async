@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -591,6 +591,7 @@ class BrickletBarometerV2(BrickletWithMCU):  # pylint: disable=too-many-public-m
 
         return GetSensorConfiguration(data_rate, air_pressure_low_pass_filter)
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.AIR_PRESSURE:
             return 0, AIR_PRESSURE.to_si(value)

@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -1582,6 +1582,7 @@ class BrickletLCD128x64(BrickletWithMCU):  # pylint: disable=too-many-public-met
         )
         return TouchLEDConfig(unpack_payload(payload, "B"))
 
+    @override
     def _convert_callback(  # pylint: disable=too-many-locals
         self, callback_id: CallbackID, value: Any
     ) -> tuple[int, Any]:

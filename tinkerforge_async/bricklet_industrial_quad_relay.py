@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
@@ -256,6 +256,7 @@ class BrickletIndustrialQuadRelay(Device):  # pylint: disable=too-many-public-me
             response_expected=response_expected,
         )
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         selection_mask, value_mask = value
         return 0, MonoflopDoneEvent(selection_mask, value_mask)

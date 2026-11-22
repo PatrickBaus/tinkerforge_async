@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -420,6 +420,7 @@ class BrickletThermocouple(Device):  # pylint: disable=too-many-public-methods,t
         over_under, open_circuit = unpack_payload(payload, "! !")
         return GetErrorState(over_under, open_circuit)
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.TEMPERATURE:
             return 0, self.__value_to_si(value)

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -381,6 +381,7 @@ class BrickletXMC1400Breakout(BrickletWithMCU):  # pylint: disable=too-many-publ
             ms_to_seconds(period), value_has_to_change, Threshold(option), Decimal(minimum), Decimal(maximum)
         )
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.ADC_VALUES:
             return 0, tuple(value)

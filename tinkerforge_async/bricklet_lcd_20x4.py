@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_length, check_range, encode_string, ms_to_seconds, seconds_to_ms
@@ -332,6 +332,7 @@ class BrickletLCD20x4(Device):  # pylint: disable=too-many-public-methods,too-fe
         )
         return ms_to_seconds(unpack_payload(payload, "i"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.BUTTON_PRESSED:
             return 0, value

@@ -12,7 +12,7 @@ from asyncio import CancelledError
 from collections.abc import AsyncGenerator, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias, TypedDict
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias, TypedDict, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -794,11 +794,10 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
             return
 
         async for header, payload in super()._read_events():
-            try:
-                function_id = CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
+            if header.function_id not in CallbackID:
+                # Not a callback of this device. Drop the packet.
                 continue
+            function_id = CallbackID(header.function_id)
 
             if function_id is CallbackID.INPUT_VALUE:
                 sid, value_has_changed, value = unpack_payload(payload, self.CALLBACK_FORMATS[function_id])
@@ -825,6 +824,7 @@ class BrickletIO4V2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
                     if sid in range(4):
                         yield Event(self, sid, function_id, values[sid], changed_sids[sid])
 
+    @override
     async def read_events(
         self,
         events: Sequence[int | CallbackID] | None = None,

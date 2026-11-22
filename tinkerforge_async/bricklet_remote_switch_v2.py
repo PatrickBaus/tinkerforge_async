@@ -14,7 +14,7 @@ function.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import check_range
@@ -370,6 +370,7 @@ class BrickletRemoteSwitchV2(BrickletWithMCU):  # pylint: disable=too-many-publi
         system_code, device_code, switch_to, repeats = unpack_payload(payload, "c B B H")
         return GetRemoteStatusC(system_code, device_code, SwitchTo(switch_to), repeats)
 
+    @override
     def _convert_callback(  # pylint: disable=too-many-locals
         self, callback_id: CallbackID, value: Any
     ) -> tuple[int, Any]:

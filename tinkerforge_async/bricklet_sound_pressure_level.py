@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -397,9 +397,11 @@ class BrickletSoundPressureLevel(BrickletWithMCU):  # pylint: disable=too-many-p
         fft_size, weighting = unpack_payload(payload, "B B")
         return GetConfiguration(FFTSize(fft_size), Weighting(weighting))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         return 0, DECI_DECIBEL.to_si(value)
 
+    @override
     def _to_events(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches
         self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None
     ) -> Iterable[Event]:

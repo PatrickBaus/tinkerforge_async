@@ -14,7 +14,7 @@ function.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_range, encode_string, seconds_to_ms
@@ -107,6 +107,7 @@ class BrickletPiezoBuzzer(Device):  # pylint: disable=too-many-public-methods,to
             response_expected=response_expected,
         )
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.BEEP_FINISHED:
             return 0, None

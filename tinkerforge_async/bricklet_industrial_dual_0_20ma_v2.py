@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -436,6 +436,7 @@ class BrickletIndustrialDual020mAV2(BrickletWithMCU):
         minimum, maximum, config = unpack_payload(payload, "i i B")
         return GetChannelLEDStatusConfig(CURRENT.to_si(minimum), CURRENT.to_si(maximum), ChannelLedStatusConfig(config))
 
+    @override
     def _to_events(self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None) -> Iterable[Event]:
         channel, current = value
         if sids is not None and channel not in sids:

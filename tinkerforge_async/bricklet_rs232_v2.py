@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Sequence
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, DeviceIdentifier, Event, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -484,6 +484,7 @@ class BrickletRS232V2(BrickletWithMCU):
                 result.extend(data)
             return bytes(result)
 
+    @override
     def _to_events(self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None) -> Iterable[Event]:
         if callback_id is not CallbackID.READ:
             return (Event(self, 1, callback_id, value),)

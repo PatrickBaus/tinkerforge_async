@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
@@ -529,5 +529,6 @@ class BrickletLEDStripV2(BrickletWithMCU):  # pylint: disable=too-many-public-me
         )
         return unpack_payload(payload, "H")
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         return 0, value

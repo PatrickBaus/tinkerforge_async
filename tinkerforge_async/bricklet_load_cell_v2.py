@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -352,5 +352,6 @@ class BrickletLoadCellV2(BrickletWithMCU):  # pylint: disable=too-many-public-me
         rate, gain = unpack_payload(payload, "B B")
         return GetConfiguration(Rate(rate), Gain(gain))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         return 0, GRAM.to_si(value)

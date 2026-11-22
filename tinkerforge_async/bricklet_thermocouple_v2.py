@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import AdvancedCallbackConfiguration, BrickletWithMCU, Channel, ChannelConfiguration, DeviceIdentifier
 from .devices import ThresholdOption as Threshold
@@ -159,6 +159,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
         self.api_version = (2, 0, 0)
         self.sensor_type = sensor_type  # Use the setter to automatically convert to enum
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__module__}.{self.__class__.__qualname__}"
@@ -370,6 +371,7 @@ class BrickletThermocoupleV2(BrickletWithMCU):
             return round(Decimal(str(value)) * G32_GAIN)
         return TEMPERATURE.from_si(value)
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.TEMPERATURE:
             return 0, self.__value_to_si(value)

@@ -8,7 +8,7 @@ the low-level communication with the Tinkerforge ip connection.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     BrickletWithMCU,
@@ -280,6 +280,7 @@ class BrickletIsolator(BrickletWithMCU):
         period, value_has_to_change = unpack_payload(payload, "I !")
         return SimpleCallbackConfiguration(ms_to_seconds(period), value_has_to_change)
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         messages_from_brick, messages_from_bricklet, device_identifier, uid = value
         return 0, GetStatistics(messages_from_brick, messages_from_bricklet, device_identifier, base58decode(uid))

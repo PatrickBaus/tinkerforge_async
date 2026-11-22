@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import check_range
@@ -178,5 +178,6 @@ class BrickletRGBLEDButton(BrickletWithMCU):  # pylint: disable=too-many-public-
         red, green, blue = unpack_payload(payload, "B B B")
         return GetColorCalibration(PERCENT.to_si(red), PERCENT.to_si(green), PERCENT.to_si(blue))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         return 0, ButtonState(value)

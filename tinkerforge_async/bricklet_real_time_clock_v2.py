@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .helper import Duration, check_range, ms_to_seconds, seconds_to_ms
@@ -381,6 +381,7 @@ class BrickletRealTimeClockV2(BrickletWithMCU):  # pylint: disable=too-many-publ
             AlarmInterval(interval),
         )
 
+    @override
     def _convert_callback(  # pylint: disable=too-many-locals
         self, callback_id: CallbackID, value: Any
     ) -> tuple[int, Any]:

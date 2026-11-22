@@ -10,7 +10,7 @@ from collections.abc import AsyncGenerator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, TypeAlias, cast, override
 
 from .ip_connection_helper import base58decode, pack_payload, uid64_to_uid32, unpack_payload
 from .quantities import CELSIUS_ZERO
@@ -349,14 +349,17 @@ class Device:
     # The channels of the device. If a class defines it, `SID_TO_CALLBACK` is generated from it.
     CHANNELS: ClassVar[Sequence[Channel]] = ()
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         if "CHANNELS" in cls.__dict__:
             cls.SID_TO_CALLBACK = {channel.sid: channel.callbacks for channel in cls.CHANNELS}
 
+    @override
     def __str__(self) -> str:
         return f"{self.__display_name} with uid {self.uid} connected at {self.__ipcon}"
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__module__}.{self.__class__.__qualname__}(uid={self.uid}, ipcon={self.ipcon!r})"
 
@@ -519,10 +522,8 @@ class Device:
             device=self, function_id=FunctionID.GET_IDENTITY, response_expected=True
         )
         uid, connected_uid, position, hw_version, fw_version, device_id = unpack_payload(payload, "8s 8s c 3B 3B H")
-        try:
-            position = BrickletPort(position)
-        except ValueError:
-            position = int(position)  # It is a Master brick. The position is its position in the stack.
+        # A Brick in a stack reports its position in the stack as a number
+        position = BrickletPort(position) if position in BrickletPort else int(position)
 
         return GetIdentity(
             base58decode(uid),
@@ -645,11 +646,10 @@ class Device:
         registered_events = self._get_registered_events(events, sids)
 
         async for header, payload in self._read_events():
-            try:
-                callback_id = self.CallbackID(header.function_id)
-            except ValueError:
-                # Invalid header. Drop the packet.
+            if header.function_id not in self.CallbackID:
+                # Not a callback of this device. Drop the packet.
                 continue
+            callback_id = self.CallbackID(header.function_id)
             if callback_id in registered_events:
                 value = unpack_payload(payload, self.CALLBACK_FORMATS[callback_id])
                 for event in self._to_events(callback_id, value, sids):
@@ -911,6 +911,7 @@ class Event:
     def __post_init__(self) -> None:
         self.timestamp = time.time()
 
+    @override
     def __str__(self) -> str:
         return (
             f"Event(timestamp={self.timestamp}, sender={self.sender}, sid={self.sid}, "

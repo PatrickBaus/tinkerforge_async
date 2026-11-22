@@ -17,7 +17,7 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from enum import Enum, Flag, unique
 from types import TracebackType
-from typing import Literal, Self, cast, overload
+from typing import Literal, Self, cast, overload, override
 
 from .async_event_bus import EventBus
 from .device_factory import device_factory
@@ -189,13 +189,15 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
 
         self.__event_bus = EventBus()
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__module__}.{self.__class__.__qualname__}"
             f"(host={self.__host}, port={self.__port}, "
-            f"authentication_secret={None if self.__authentication_secret is None else '*****'})"
+            f"authentication_secret={None if self.__authentication_secret is None else "*****"})"
         )
 
+    @override
     def __str__(self) -> str:
         return f"IPConnectionAsync({self.__host}:{self.__port})"
 
@@ -278,11 +280,9 @@ class IPConnectionAsync:  # pylint: disable=too-many-instance-attributes
 
         enumeration_type = EnumerationType(enumeration_type)
 
-        try:
+        if device_identifier in DeviceIdentifier:
+            # Unknown devices keep their number
             device_identifier = DeviceIdentifier(device_identifier)
-        except ValueError:
-            # Do not assign an enum, leave the int
-            pass
 
         try:
             position = int(position)

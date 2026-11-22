@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -408,6 +408,7 @@ class BrickletLoadCell(Device):  # pylint: disable=too-many-public-methods,too-f
         rate, gain = unpack_payload(payload, "B B")
         return GetConfiguration(Rate(rate), Gain(gain))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.WEIGHT:
             return 0, GRAM.to_si(value)

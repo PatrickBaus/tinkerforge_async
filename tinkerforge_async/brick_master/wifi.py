@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from enum import Enum, unique
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, override
 
 from ..devices import Device
 from ..ip_connection_helper import pack_payload, unpack_payload
@@ -125,6 +125,7 @@ class EapOptions:
     WifiEapCertType
     """
 
+    @override
     def __repr__(self) -> str:
         return f"EapOptions({self.__outer_auth}, {self.__inner_auth}, {self.__cert_type})"
 

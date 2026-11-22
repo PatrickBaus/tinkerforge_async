@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, Event, _FunctionID
 from .helper import check_length, check_range
@@ -1034,11 +1034,13 @@ class BrickletCANV2(BrickletWithMCU):  # pylint: disable=too-many-public-methods
         )
         return unpack_payload(payload, "!")
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.FRAME_READABLE:
             return 0, None
         return 1, None
 
+    @override
     def _to_events(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches
         self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None
     ) -> Iterable[Event]:

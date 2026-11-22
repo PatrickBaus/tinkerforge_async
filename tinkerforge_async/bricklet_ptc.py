@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -164,6 +164,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
         self.api_version = (2, 0, 1)
         self.sensor_type = sensor_type  # type: ignore  # Use the setter to automatically convert to enum
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__module__}.{self.__class__.__qualname__}"
@@ -531,6 +532,7 @@ class BrickletPtc(Device):  # pylint: disable=too-many-public-methods
             value /= 10
         return round(value * 32768 / 390)
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id in (CallbackID.TEMPERATURE, CallbackID.TEMPERATURE_REACHED):
             return 0, TEMPERATURE.to_si(value)

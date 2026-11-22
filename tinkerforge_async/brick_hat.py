@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -327,6 +327,7 @@ class BrickHAT(BrickletWithMCU):  # pylint: disable=too-many-public-methods,too-
         )
         return RTCDriver(unpack_payload(payload, "B"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         voltage_usb, voltage_dc = value
         return 0, GetVoltages(MILLI_VOLT.to_si(voltage_usb), MILLI_VOLT.to_si(voltage_dc))

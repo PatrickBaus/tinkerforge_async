@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import (
     AdvancedCallbackConfiguration,
@@ -500,6 +500,7 @@ class BrickletIndustrialDualAnalogInV2(BrickletWithMCU):
         minimum, maximum = VOLTAGE.to_si(minimum), VOLTAGE.to_si(maximum)
         return GetChannelLEDStatusConfig(minimum, maximum, config)
 
+    @override
     def _to_events(self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None) -> Iterable[Event]:
         if callback_id is CallbackID.VOLTAGE:
             channel, voltage = value

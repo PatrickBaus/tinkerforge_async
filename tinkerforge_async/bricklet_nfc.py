@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, Event, _FunctionID
 from .helper import Duration, check_length, check_range, ms_to_seconds, seconds_to_ms
@@ -1222,6 +1222,7 @@ class BrickletNFC(BrickletWithMCU):  # pylint: disable=too-many-public-methods,t
         )
         return ms_to_seconds(unpack_payload(payload, "I"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.READER_STATE_CHANGED:
             state, idle = value
@@ -1232,6 +1233,7 @@ class BrickletNFC(BrickletWithMCU):  # pylint: disable=too-many-public-methods,t
         state, idle = value
         return 2, P2PStateChangedEvent(P2PState(state), idle)
 
+    @override
     def _to_events(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches
         self, callback_id: CallbackID, value: Any, sids: Sequence[int] | None
     ) -> Iterable[Event]:

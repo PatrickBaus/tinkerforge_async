@@ -7,13 +7,11 @@ from collections.abc import AsyncGenerator, Sized
 from contextlib import aclosing
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TypeAlias, TypeVar, cast
-
-T = TypeVar("T")
+from typing import cast
 
 # A duration in s, as it is passed to the library. The library returns durations as `Decimal`. The Tinkerforge protocol
 # uses ms, the library converts them. See `seconds_to_ms()` and `ms_to_seconds()`.
-Duration: TypeAlias = float | Decimal
+type Duration = float | Decimal
 
 
 @dataclass
@@ -23,7 +21,7 @@ class _Failure:
     exception: BaseException
 
 
-async def join(*generators: AsyncGenerator[T, None]) -> AsyncGenerator[T, None]:
+async def join[T](*generators: AsyncGenerator[T, None]) -> AsyncGenerator[T, None]:
     """
     Merge the items of all `generators` into a single stream, in the order they arrive. The stream ends when all
     generators are exhausted. If one generator raises an exception, it is raised by the stream, and all generators are

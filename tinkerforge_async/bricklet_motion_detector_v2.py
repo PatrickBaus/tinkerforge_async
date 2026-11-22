@@ -9,7 +9,7 @@ units.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, override
 
 from .devices import BrickletWithMCU, Channel, DeviceIdentifier, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -162,6 +162,7 @@ class BrickletMotionDetectorV2(BrickletWithMCU):
 
         return GetIndicator(*unpack_payload(payload, "B B B"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         # The callbacks have no payload. The sid tells them apart.
         return (0 if callback_id is CallbackID.MOTION_DETECTED else 1), value

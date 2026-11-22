@@ -93,7 +93,7 @@ def unpack_payload(data: bytes, form: str) -> Any:  # pylint: disable=too-many-b
 
         if "!" in struct_format_str:
             if len(struct_format_str) > 1:
-                struct_format_str = f"{int(math.ceil(int(struct_format_str.replace('!', '')) / 8.0))}B"
+                struct_format_str = f"{int(math.ceil(int(struct_format_str.replace("!", "")) / 8.0))}B"
             else:
                 struct_format_str = "B"
 

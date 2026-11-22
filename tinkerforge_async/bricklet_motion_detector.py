@@ -14,7 +14,7 @@ function.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, override
 
 from .devices import Channel, Device, DeviceIdentifier, _FunctionID
 from .ip_connection_helper import pack_payload, unpack_payload
@@ -144,6 +144,7 @@ class BrickletMotionDetector(Device):  # pylint: disable=too-many-public-methods
         )
         return StatusLEDConfig(unpack_payload(payload, "B"))
 
+    @override
     def _convert_callback(self, callback_id: CallbackID, value: Any) -> tuple[int, Any]:
         if callback_id is CallbackID.MOTION_DETECTED:
             return 0, None
