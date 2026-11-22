@@ -1,4 +1,5 @@
 [![pylint](../../actions/workflows/pylint.yml/badge.svg)](../../actions/workflows/pylint.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/PatrickBaus/tinkerforge_async/python-coverage-comment-action-data/endpoint.json)](https://github.com/PatrickBaus/tinkerforge_async/tree/python-coverage-comment-action-data)
 [![PyPI](https://img.shields.io/pypi/v/tinkerforge-async)](https://pypi.org/project/tinkerforge-async/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tinkerforge-async)
 ![PyPI - Status](https://img.shields.io/pypi/status/tinkerforge-async)
